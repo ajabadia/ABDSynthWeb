@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { Metadata } from 'next';
 import { instruments } from '@/data/instruments';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/Button';
@@ -6,6 +7,13 @@ import { GlassPanel } from '@/components/ui/GlassPanel';
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher';
 import { Monitor, Apple, ArrowLeft, ShieldCheck, Cpu } from 'lucide-react';
 import Image from 'next/image';
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Downloads | ABD Virtual Instruments",
+    description: "Download the latest versions of NEURONIK, JUNiO 601, and OMEGA. Professional VST/AU plugins for macOS and Windows.",
+  };
+}
 
 export default async function DownloadsPage() {
   const tc = await getTranslations('common');

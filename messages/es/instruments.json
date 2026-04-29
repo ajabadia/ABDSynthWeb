@@ -18,5 +18,18 @@
     "dsp": "Base de DSP",
     "neural": "Síntesis Neural",
     "control": "Sistema de Control"
+  },
+  "audio": {
+    "telemetry": "Módulo de Análisis Acústico",
+    "title1": "Pruebas",
+    "title2": "Sónicas",
+    "sampleRate": "Frecuencia de Muestreo",
+    "bitDepth": "Profundidad de Bits",
+    "mastering": "Masterización",
+    "playlist": "Demos Disponibles",
+    "streamStatus": "Estado del Stream",
+    "streaming": "Transmitiendo",
+    "standby": "En Espera",
+    "initializing": "Listo para Cargar"
   }
 }

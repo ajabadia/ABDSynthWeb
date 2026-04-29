@@ -1,9 +1,17 @@
 import { getTranslations } from 'next-intl/server';
+import { Metadata } from 'next';
 import { Link } from '@/i18n/routing';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher';
 import { ArrowLeft, Mail, MessageSquare, Terminal, MapPin } from 'lucide-react';
 import { ContactForm } from '@/components/ui/ContactForm';
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Contact & Support | ABD Virtual Instruments",
+    description: "Get in touch with the ABD team for support, business inquiries, or technical feedback regarding our virtual instruments.",
+  };
+}
 
 export default async function ContactPage() {
   const tc = await getTranslations('common');

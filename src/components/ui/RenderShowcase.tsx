@@ -59,6 +59,17 @@ export function RenderShowcase({
         </motion.div>
       </AnimatePresence>
 
+      {/* Preload next image for instant transition */}
+      <div className="hidden pointer-events-none">
+        <Image
+          src={`/images/renders/${cleanId}/${variant}_${views[(currentIndex + 1) % views.length]}.png`}
+          alt="preload"
+          width={1}
+          height={1}
+          priority
+        />
+      </div>
+
       {/* Industrial Overlay Decor - No borders */}
       <div className="absolute inset-0 pointer-events-none z-20">
         <div className="absolute top-0 left-0 flex gap-2">

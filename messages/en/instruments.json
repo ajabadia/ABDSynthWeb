@@ -18,5 +18,18 @@
     "dsp": "DSP Foundation",
     "neural": "Neural Synthesis",
     "control": "Control System"
+  },
+  "audio": {
+    "telemetry": "Acoustic Analysis Module",
+    "title1": "Sonic",
+    "title2": "Artifacts",
+    "sampleRate": "Sample Rate",
+    "bitDepth": "Bit Depth",
+    "mastering": "Mastering",
+    "playlist": "Available Demos",
+    "streamStatus": "Stream Status",
+    "streaming": "Streaming",
+    "standby": "Standby",
+    "initializing": "Ready to Load"
   }
 }

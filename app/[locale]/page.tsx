@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { Metadata } from 'next';
 import { Button } from "@/components/ui/Button";
 import { Link } from "@/i18n/routing";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -7,6 +8,26 @@ import { instruments } from "@/data/instruments";
 import { Download, Grid, Activity as ActivityIcon, Mail, Zap } from "lucide-react";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { HeroBackground } from "@/components/ui/HeroBackground";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('home');
+  return {
+    title: t('hero.title1') + " " + t('hero.title2') + " | ABD",
+    description: t('hero.description'),
+    openGraph: {
+      title: "ABD Virtual Instruments - The Future of Analog Legacy",
+      description: "Experience high-fidelity neural and analog emulations of iconic hardware.",
+      images: ["/images/og-image.png"],
+    },
+    alternates: {
+      canonical: `https://abdsynths.com/`,
+      languages: {
+        'en': `https://abdsynths.com/en`,
+        'es': `https://abdsynths.com/es`,
+      },
+    },
+  };
+}
 
 export default async function Home() {
   const t = await getTranslations('home');

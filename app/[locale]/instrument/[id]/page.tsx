@@ -8,6 +8,7 @@ import { ImageGallery } from "@/components/ui/ImageGallery";
 import { SignalPath } from "@/components/ui/SignalPath";
 import { SpecsMatrix } from "@/components/ui/SpecsMatrix";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
+import { AudioShowcase } from "@/components/ui/AudioShowcase";
 import { getTranslations } from "next-intl/server";
 import { 
   ArrowLeft, 
@@ -18,6 +19,36 @@ import { HeroBackground } from "@/components/ui/HeroBackground";
 import { RenderShowcase } from "@/components/ui/RenderShowcase";
 import fs from "fs/promises";
 import path from "path";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string, id: string }> }): Promise<Metadata> {
+  const { id, locale } = await params;
+  const instrument = instruments.find((i) => i.id === id);
+  if (!instrument) return {};
+
+  return {
+    title: `${instrument.name} | ABD Virtual Instruments`,
+    description: instrument.description,
+    openGraph: {
+      title: `${instrument.name} - Gold Standard Emulation`,
+      description: instrument.description,
+      images: [instrument.image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: instrument.name,
+      description: instrument.description,
+      images: [instrument.image],
+    },
+    alternates: {
+      canonical: `https://abdsynths.com/${locale}/instrument/${id}`,
+      languages: {
+        'en': `https://abdsynths.com/en/instrument/${id}`,
+        'es': `https://abdsynths.com/es/instrument/${id}`,
+      },
+    },
+  };
+}
 
 export default async function InstrumentDetail({ params }: { params: Promise<{ locale: string, id: string }> }) {
   const { id, locale } = await params;
@@ -92,6 +123,32 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
 
   return (
     <main className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": instrument.name,
+            "image": [
+              `https://abdsynths.com${instrument.image}`
+            ],
+            "description": instrument.description,
+            "brand": {
+              "@type": "Brand",
+              "name": "ABD Virtual Instruments"
+            },
+            "category": instrument.category,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock"
+            }
+          })
+        }}
+      />
       {/* Navigation Bar */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-background/50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
@@ -222,6 +279,9 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
         <GlassPanel className="w-full p-8 md:p-12 border-primary/10 relative overflow-hidden">
           <SignalPath path={instrument.signalPath} accentColor={instrument.colors.primary} />
         </GlassPanel>
+
+        {/* Audio Showcase */}
+        <AudioShowcase instrumentId={instrument.id} />
 
         {/* Gallery Section */}
         {galleryItems.length > 0 && (
