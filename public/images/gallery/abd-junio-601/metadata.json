@@ -1,0 +1,8 @@
+{
+  "images": {
+    "junio-601.png": {
+      "en": { "caption": "Vintage Interface", "description": "Classic analog-inspired UI with meticulous 80017A VCF/VCA simulation controls." },
+      "es": { "caption": "Interfaz Vintage", "description": "IU clásica de inspiración analógica con controles de simulación VCF/VCA 80017A meticulosos." }
+    }
+  }
+}

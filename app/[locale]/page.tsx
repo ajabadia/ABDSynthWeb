@@ -12,9 +12,9 @@ export default async function Home() {
   const t = await getTranslations('home');
   const tc = await getTranslations('common');
 
-  // Select a random instrument that has a hero render (ignoring Omega for now)
+  // Select the first instrument for stable SSR (Math.random is not allowed in render)
   const heroInstruments = instruments.filter(i => i.image.includes('hero_'));
-  const randomInstrument = heroInstruments[Math.floor(Math.random() * heroInstruments.length)] || instruments[0];
+  const randomInstrument = heroInstruments[0] || instruments[0];
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white selection:bg-primary/20 overflow-x-hidden">

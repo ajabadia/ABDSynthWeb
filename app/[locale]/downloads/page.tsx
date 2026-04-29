@@ -4,11 +4,10 @@ import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/Button';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher';
-import { Download, Monitor, Apple, ArrowLeft, ShieldCheck, Cpu } from 'lucide-react';
+import { Monitor, Apple, ArrowLeft, ShieldCheck, Cpu } from 'lucide-react';
 import Image from 'next/image';
 
 export default async function DownloadsPage() {
-  const t = await getTranslations('home');
   const tc = await getTranslations('common');
   const ti = await getTranslations('instruments');
 

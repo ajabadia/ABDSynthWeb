@@ -68,7 +68,7 @@ export function RenderShowcase({
           </div>
         </div>
         <div className="absolute bottom-0 right-0 text-[9px] font-headline text-zinc-700 uppercase tracking-[0.4em]">
-          {variant.toUpperCase()} // {views[currentIndex].toUpperCase()}
+          {variant.toUpperCase()} <span className="opacity-30">/</span> {views[currentIndex].toUpperCase()}
         </div>
       </div>
     </div>

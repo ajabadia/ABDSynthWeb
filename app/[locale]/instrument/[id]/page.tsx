@@ -11,10 +11,7 @@ import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { getTranslations } from "next-intl/server";
 import { 
   ArrowLeft, 
-  Cpu, 
   Activity, 
-  Zap, 
-  Download, 
   ShieldCheck,
 } from "lucide-react";
 import { HeroBackground } from "@/components/ui/HeroBackground";
@@ -23,7 +20,7 @@ import fs from "fs/promises";
 import path from "path";
 
 export default async function InstrumentDetail({ params }: { params: Promise<{ locale: string, id: string }> }) {
-  const { id } = await params;
+  const { id, locale } = await params;
   const instrument = instruments.find((i) => i.id === id);
 
   if (!instrument) {
@@ -51,9 +48,43 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
       if (b === 'front') return 1;
       return a.localeCompare(b);
     });
-  } catch (error) {
-    // Directory might not exist for some instruments
+  } catch {
     availableViews = [];
+  }
+
+  // Gallery Discovery Logic
+  const galleryDirPath = path.join(process.cwd(), 'public', 'images', 'gallery', instrument.id);
+  let galleryItems: { url: string; caption?: string; description?: string }[] = [];
+
+  try {
+    const galleryFiles = await fs.readdir(galleryDirPath);
+    
+    // Look for metadata.json
+    let galleryMetadata: Record<string, any> = {};
+    if (galleryFiles.includes('metadata.json')) {
+      const metadataContent = await fs.readFile(path.join(galleryDirPath, 'metadata.json'), 'utf-8');
+      galleryMetadata = JSON.parse(metadataContent).images || {};
+    }
+
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+    const validGalleryFiles = galleryFiles.filter(file => 
+      imageExtensions.includes(path.extname(file).toLowerCase())
+    );
+
+    galleryItems = validGalleryFiles.map(file => {
+      const meta = galleryMetadata[file] || {};
+      
+      // Specifically handle the locale translation
+      const translatedMeta = meta[locale] || meta['en'] || {};
+
+      return {
+        url: `/images/gallery/${instrument.id}/${file}`,
+        caption: translatedMeta.caption || "",
+        description: translatedMeta.description || ""
+      };
+    });
+  } catch {
+    galleryItems = [];
   }
   
   // Normalize ID to match translation keys (e.g., abd-junio-601 -> junio601)
@@ -193,9 +224,9 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
         </GlassPanel>
 
         {/* Gallery Section */}
-        {instrument.gallery && instrument.gallery.length > 0 && (
+        {galleryItems.length > 0 && (
           <ImageGallery 
-            items={instrument.gallery} 
+            items={galleryItems} 
             title="Interface Modules"
             altBase={instrument.name} 
           />

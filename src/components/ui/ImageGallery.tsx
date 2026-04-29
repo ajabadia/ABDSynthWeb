@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ZoomIn, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { GlassPanel } from "./GlassPanel";
 import { cn } from "@/lib/utils";
 
@@ -72,27 +72,28 @@ export function ImageGallery({
         </div>
       )}
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {items.map((item, i) => (
           <motion.div
             key={item.url}
-            whileHover={{ y: -5 }}
+            whileHover={{ y: -5, scale: 1.05 }}
             onClick={() => setSelectedIndex(i)}
-            className="cursor-pointer group"
+            className="cursor-pointer group relative"
           >
-            <GlassPanel className="p-1 border-white/5 aspect-square relative overflow-hidden">
+            <div className="aspect-square relative overflow-hidden rounded-sm bg-zinc-900/20">
               <Image
                 src={item.url}
                 alt={item.caption || `${altBase} ${i + 1}`}
                 fill
-                className="object-cover opacity-60 group-hover:opacity-100 transition-all duration-300 group-hover:scale-105"
+                className="object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-black/60 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform">
-                <p className="text-[8px] font-headline font-bold uppercase text-primary truncate text-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                <p className="text-[10px] font-headline font-bold uppercase text-primary tracking-[0.2em] truncate">
                   {item.caption || `Module 0${i + 1}`}
                 </p>
               </div>
-            </GlassPanel>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -103,37 +104,37 @@ export function ImageGallery({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/98 backdrop-blur-2xl perspective-[1200px] overflow-hidden"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/98 backdrop-blur-3xl perspective-[2000px] overflow-hidden"
             onClick={() => setSelectedIndex(null)}
           >
             {/* Close Button */}
             <motion.button
-              className="absolute top-8 right-8 text-white/30 hover:text-white transition-colors z-[150]"
+              className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors z-[150] p-2 hover:bg-white/5 rounded-full"
               onClick={() => setSelectedIndex(null)}
             >
-              <X size={40} />
+              <X size={32} />
             </motion.button>
 
-            {/* Cover Flow Container */}
+            {/* Cinematic Container */}
             <div className="relative w-full h-full flex flex-col items-center justify-center py-20 overflow-hidden">
               {/* Navigation Arrows */}
-              <div className="absolute inset-x-12 top-1/2 -translate-y-1/2 flex justify-between items-center z-[140] pointer-events-none">
+              <div className="absolute inset-x-8 md:inset-x-24 top-1/2 -translate-y-1/2 flex justify-between items-center z-[140] pointer-events-none">
                 <button
                   onClick={handlePrev}
-                  className="p-5 bg-white/2 border border-white/5 text-white/50 rounded-full hover:bg-primary/20 hover:text-primary hover:border-primary transition-all pointer-events-auto backdrop-blur-md"
+                  className="p-4 bg-white/2 border border-white/5 text-white/30 rounded-full hover:bg-primary/20 hover:text-primary hover:border-primary transition-all pointer-events-auto backdrop-blur-sm"
                 >
-                  <ChevronLeft size={40} />
+                  <ChevronLeft size={32} />
                 </button>
                 <button
                   onClick={handleNext}
-                  className="p-5 bg-white/2 border border-white/5 text-white/50 rounded-full hover:bg-primary/20 hover:text-primary hover:border-primary transition-all pointer-events-auto backdrop-blur-md"
+                  className="p-4 bg-white/2 border border-white/5 text-white/30 rounded-full hover:bg-primary/20 hover:text-primary hover:border-primary transition-all pointer-events-auto backdrop-blur-sm"
                 >
-                  <ChevronRight size={40} />
+                  <ChevronRight size={32} />
                 </button>
               </div>
 
-              {/* Cover Flow Items */}
-              <div className="relative flex items-center justify-center w-full max-w-7xl h-[60vh]">
+              {/* Central Stage */}
+              <div className="relative flex items-center justify-center w-full max-w-7xl h-[65vh]">
                 {items.map((item, i) => {
                   let offset = i - selectedIndex;
                   if (offset > items.length / 2) offset -= items.length;
@@ -147,16 +148,16 @@ export function ImageGallery({
                       key={item.url}
                       initial={false}
                       animate={{
-                        x: offset * 350,
-                        z: absOffset * -250,
-                        rotateY: offset * -65,
-                        opacity: i === selectedIndex ? 1 : 0.4,
-                        scale: i === selectedIndex ? 1.15 : 0.8,
-                        filter: i === selectedIndex ? "blur(0px) brightness(1)" : "blur(8px) brightness(0.5)",
+                        x: offset * 450,
+                        z: absOffset * -400,
+                        rotateY: offset * -45,
+                        opacity: i === selectedIndex ? 1 : 0.3,
+                        scale: i === selectedIndex ? 1 : 0.7,
+                        filter: i === selectedIndex ? "blur(0px) brightness(1)" : "blur(12px) brightness(0.4)",
                         zIndex: 100 - Math.round(absOffset)
                       }}
-                      transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                      className="absolute w-[85vw] md:w-[750px] aspect-video border border-white/10 glass-panel overflow-hidden cursor-pointer shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+                      transition={{ type: "spring", stiffness: 150, damping: 20 }}
+                      className="absolute w-[90vw] md:w-[850px] aspect-video cursor-pointer select-none"
                       style={{ transformStyle: "preserve-3d" }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -164,13 +165,35 @@ export function ImageGallery({
                         setSelectedIndex(i);
                       }}
                     >
-                      <Image
-                        src={item.url}
-                        alt={item.caption || `${altBase} zoom ${i + 1}`}
-                        fill
-                        className="object-contain p-2"
-                        priority={i === selectedIndex}
-                      />
+                      {/* Main Image */}
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={item.url}
+                          alt={item.caption || `${altBase} zoom ${i + 1}`}
+                          fill
+                          className="object-contain"
+                          priority={i === selectedIndex}
+                        />
+                      </div>
+                      
+                      {/* Reflection Effect - Only for active item */}
+                      {i === selectedIndex && (
+                        <div 
+                          className="absolute top-full left-0 w-full h-1/2 opacity-30 pointer-events-none mt-4"
+                          style={{
+                            transform: "scaleY(-1)",
+                            maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 80%)",
+                            WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 80%)"
+                          }}
+                        >
+                          <Image
+                            src={item.url}
+                            alt="reflection"
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}

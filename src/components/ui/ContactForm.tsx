@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "./Button";
-import { GlassPanel } from "./GlassPanel";
 import { Send, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

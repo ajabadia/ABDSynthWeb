@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface GlassPanelProps extends React.HTMLAttributes<HTMLDivElement> {
+interface GlassPanelProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'> {
   hoverEffect?: boolean;
   accent?: boolean;
 }

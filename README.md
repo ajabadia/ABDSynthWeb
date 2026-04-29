@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ABD Virtual Instruments: Aseptic Synthesis Research Lab
+
+![ABD Virtual Instruments Banner](/public/images/instruments/hero_junio_601_render.png)
+
+## Overview
+ABD Virtual Instruments is a next-generation platform for high-fidelity digital synthesis and hardware emulation. Built with an "Anti-AI" industrial aesthetic, the platform prioritizes precision, character, and boutique engineering.
+
+This repository hosts the web interface, instrument catalog, and the communication terminal for the ABD research lab.
+
+## Key Features
+
+### 🔬 Industrial 3D Showcase
+- **Cinematic Renders**: Professional studio-grade 3D renders for every instrument.
+- **Dynamic Render Engine**: A custom React component that automatically detects and cycles through available 3D views (Front, Diagonal, Top, Rear) with smooth cross-fades and telemetrical overlays.
+- **High-Key & Low-Key Modes**: Optimized for dark and light industrial themes.
+
+### 🌍 Global Localization (i18n)
+- **Full Bilingual Support**: Seamless switching between English and Spanish.
+- **Namespace Architecture**: Optimized translation loading using `next-intl`.
+- **Rich Text Support**: Preserves industrial formatting and highlighting across languages.
+
+### 🛡️ Secure Communication
+- **Contact Terminal**: A hardened communication interface with built-in math challenge verification.
+- **Serverless Dispatch**: Live email transmission powered by the **Resend API**.
+- **Diagnostic Logging**: Server-side telemetry for monitoring dispatch health.
+
+## Tech Stack
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/)
+- **i18n**: [next-intl](https://next-intl-docs.vercel.app/)
+- **Email Engine**: [Resend](https://resend.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Styling**: Tailwind CSS & Modern Industrial CSS variables.
+
+## Project Structure
+```text
+/app/[locale]     # i18n-ready App Router
+/messages         # Translation dictionaries
+/public/images    # 4K Textures and 3D Renders
+/src/components   # High-end boutique UI components
+/src/data         # Instrument metadata and specs
+/docs             # Visual Style Guides and Rendering Manuals
+```
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone and Install**:
+   ```bash
+   git clone https://github.com/ajabadia/ABDSynthWeb.git
+   cd ABDSynthWeb
+   npm install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. **Environment Setup**:
+   Create a `.env` file with your Resend credentials:
+   ```env
+   RESEND_API_KEY="re_..."
+   RESEND_FROM_EMAIL="Your Lab <noreply@resend.dev>"
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Run Laboratory**:
+   ```bash
+   npm run dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development Standards
+All visual assets must adhere to the [Visual Style Guide](docs/VISUAL_STYLE_GUIDE.md) and the [Studio Render Guide](docs/STUDIO_RENDER_GUIDE.md).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+© 2026 / **ABD Virtual Instruments** / Global Digital Matrix

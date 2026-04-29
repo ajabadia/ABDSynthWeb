@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ status: 'Transmission Complete' }, { status: 200 });
-    } catch (err: any) {
+    } catch (err) {
       console.error('FETCH ERROR:', err);
       return NextResponse.json({ error: 'Network failure during transmission' }, { status: 500 });
     }
