@@ -18,7 +18,10 @@ export function ContactForm() {
   useEffect(() => {
     const a = Math.floor(Math.random() * 10) + 1;
     const b = Math.floor(Math.random() * 10) + 1;
-    setChallenge({ a, b, answer: a + b });
+    // Using a microtask to avoid the 'synchronous setState in effect' warning
+    Promise.resolve().then(() => {
+      setChallenge({ a, b, answer: a + b });
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -64,9 +67,10 @@ export function ContactForm() {
       setCooldown(true);
       setTimeout(() => setCooldown(false), 5000); // 5s cooldown
       (e.target as HTMLFormElement).reset();
-    } catch (error: any) {
+    } catch (error) {
       setStatus("error");
-      setErrorMessage(error.message || t("error"));
+      const msg = error instanceof Error ? error.message : t("error");
+      setErrorMessage(msg);
     }
   };
 

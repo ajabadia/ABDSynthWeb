@@ -3,8 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { motion } from "framer-motion";
-import { ArrowUpRight, Cpu, Zap, Activity } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { GlassPanel } from "./GlassPanel";
 import { Button } from "./Button";
 import { type Instrument } from "@/data/instruments";

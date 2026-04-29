@@ -4,7 +4,6 @@ import * as React from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Info } from "lucide-react";
-import { GlassPanel } from "./GlassPanel";
 import { cn } from "@/lib/utils";
 
 interface GalleryItem {

@@ -60,7 +60,7 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
     const galleryFiles = await fs.readdir(galleryDirPath);
     
     // Look for metadata.json
-    let galleryMetadata: Record<string, any> = {};
+    let galleryMetadata: Record<string, Record<string, Record<string, string>>> = {};
     if (galleryFiles.includes('metadata.json')) {
       const metadataContent = await fs.readFile(path.join(galleryDirPath, 'metadata.json'), 'utf-8');
       galleryMetadata = JSON.parse(metadataContent).images || {};

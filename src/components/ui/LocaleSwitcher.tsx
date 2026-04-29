@@ -2,7 +2,6 @@
 
 import { useLocale } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
-import { motion } from "framer-motion";
 import { Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 

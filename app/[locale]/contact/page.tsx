@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-import { Button } from '@/components/ui/Button';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher';
 import { ArrowLeft, Mail, MessageSquare, Terminal, MapPin } from 'lucide-react';

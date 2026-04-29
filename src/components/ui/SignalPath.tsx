@@ -7,13 +7,11 @@ import {
   Cpu, 
   Zap, 
   Layers, 
-  Maximize2, 
   Mic, 
   Radio,
   Share2,
   Waves
 } from "lucide-react";
-import { GlassPanel } from "./GlassPanel";
 import { cn } from "@/lib/utils";
 
 interface SignalNode {

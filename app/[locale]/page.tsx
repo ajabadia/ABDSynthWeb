@@ -4,7 +4,7 @@ import { Link } from "@/i18n/routing";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { InstrumentCard } from "@/components/ui/InstrumentCard";
 import { instruments } from "@/data/instruments";
-import { Activity, Download, ShoppingCart, Grid, Zap, Activity as ActivityIcon, Mail } from "lucide-react";
+import { Download, Grid, Activity as ActivityIcon, Mail, Zap } from "lucide-react";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { HeroBackground } from "@/components/ui/HeroBackground";
 
