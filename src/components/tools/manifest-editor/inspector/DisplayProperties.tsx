@@ -1,0 +1,83 @@
+'use client';
+
+import React from 'react';
+import { Monitor, Hash } from 'lucide-react';
+
+interface DisplayPropertiesProps {
+  item: any;
+  onUpdate: (updates: any) => void;
+}
+
+export default function DisplayProperties({ item, onUpdate }: DisplayPropertiesProps) {
+  const pres = item.presentation || {};
+  const currentVariant = pres.variant || 'A';
+  const precision = pres.ui_precision ?? 2;
+
+  const updateVariant = (v: string) => {
+    onUpdate({ presentation: { ...pres, variant: v } });
+  };
+
+  const updatePrecision = (p: number) => {
+    onUpdate({ presentation: { ...pres, ui_precision: p } });
+  };
+
+  const tech = [
+    { id: 'A', label: 'OLED Cyan', desc: 'Modern high-contrast' },
+    { id: 'B', label: 'LCD Retro', desc: 'Liquid crystal aesthetic' },
+    { id: 'C', label: '7-Segment', desc: 'Vintage red LED glow' },
+  ];
+
+  return (
+    <div className="space-y-6 pt-2">
+      <div className="space-y-3">
+        <label className="text-[8px] text-foreground/60 uppercase font-black tracking-widest flex items-center gap-2">
+          <Monitor className="w-3 h-3 text-primary" />
+          <span>Panel Technology</span>
+        </label>
+        <div className="space-y-2">
+          {tech.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => updateVariant(t.id)}
+              className={`w-full p-3 border rounded-xs transition-all flex flex-col items-start gap-1 group relative overflow-hidden ${
+                currentVariant === t.id 
+                  ? 'bg-primary/10 border-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
+                  : 'bg-black/40 border-outline/10 hover:border-outline/30'
+              }`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span className={`text-[9px] font-black uppercase tracking-widest ${currentVariant === t.id ? 'text-primary' : 'text-foreground/60'}`}>
+                  {t.label}
+                </span>
+                <span className="text-[8px] font-mono opacity-20 group-hover:opacity-100 transition-opacity">.{t.id}</span>
+              </div>
+              <p className="text-[7px] text-foreground/30 italic uppercase">{t.desc}</p>
+              {currentVariant === t.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <label className="text-[8px] text-foreground/60 uppercase font-black tracking-widest flex items-center gap-2">
+          <Hash className="w-3 h-3 text-primary" />
+          <span>Visual UI Precision</span>
+        </label>
+        <div className="flex items-center gap-4 bg-black/40 border border-outline/10 p-3 rounded-xs">
+           <input 
+             type="range" 
+             min="0" 
+             max="6" 
+             value={precision}
+             onChange={(e) => updatePrecision(parseInt(e.target.value))}
+             className="flex-1 accent-primary h-1 bg-white/10 rounded-full"
+           />
+           <span className="text-[12px] font-mono font-black text-primary min-w-[20px] text-center">
+              {precision}
+           </span>
+           <span className="text-[7px] text-foreground/30 uppercase font-bold">Decimals</span>
+        </div>
+      </div>
+    </div>
+  );
+}

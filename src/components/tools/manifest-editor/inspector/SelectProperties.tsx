@@ -1,0 +1,117 @@
+'use client';
+
+import React from 'react';
+import { List, Plus, Trash2, Hash, Type, Zap } from 'lucide-react';
+import { INDUSTRIAL_PRESETS } from './presets';
+
+interface SelectPropertiesProps {
+  item: any;
+  onUpdate: (updates: any) => void;
+}
+
+export default function SelectProperties({ item, onUpdate }: SelectPropertiesProps) {
+  const pres = item.presentation || {};
+  const options = pres.options || [];
+
+  const updateOptions = (newOptions: any[]) => {
+    onUpdate({ presentation: { ...pres, options: newOptions } });
+  };
+
+  const addOption = () => {
+    const nextValue = options.length > 0 ? Math.max(...options.map((o: any) => o.value || 0)) + 1 : 0;
+    updateOptions([...options, { label: `Option ${options.length + 1}`, value: nextValue }]);
+  };
+
+  const applyPreset = (presetId: string) => {
+    if (options.length > 0 && !confirm("This will replace current options. Proceed?")) return;
+    updateOptions(INDUSTRIAL_PRESETS[presetId].options);
+  };
+
+  return (
+    <div className="space-y-8 pt-2">
+      {/* INDUSTRIAL PRESETS */}
+      <div className="space-y-3">
+        <label className="text-[8px] text-foreground/60 uppercase font-black tracking-widest flex items-center gap-2">
+           <Zap className="w-3 h-3 text-primary" />
+           <span>Inject Industrial Presets</span>
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {Object.entries(INDUSTRIAL_PRESETS).map(([id, p]) => (
+            <button
+              key={id}
+              onClick={() => applyPreset(id)}
+              className="flex items-center gap-3 p-2 bg-black/40 border border-outline/10 rounded-xs hover:border-primary/40 hover:bg-primary/5 transition-all group text-left"
+            >
+              <div className="w-6 h-6 shrink-0 rounded-xs bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                 <p.icon className="w-3 h-3 text-foreground/40 group-hover:text-primary" />
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-tighter text-foreground/60 group-hover:text-foreground truncate">
+                {p.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-px bg-outline/10 w-full" />
+
+      {/* CUSTOM OPTIONS REGISTRY */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <label className="text-[8px] text-foreground/60 uppercase font-black tracking-widest flex items-center gap-2">
+            <List className="w-3 h-3 text-primary" />
+            <span>Custom Option Registry</span>
+          </label>
+          <button 
+            onClick={addOption}
+            className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-xs text-primary hover:bg-primary/20 transition-all"
+          >
+            <Plus className="w-2.5 h-2.5" />
+            <span className="text-[8px] font-black uppercase">Add Entry</span>
+          </button>
+        </div>
+
+        <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+          {options.map((opt: any, idx: number) => (
+            <div key={idx} className="flex gap-2 items-center group">
+              <div className="flex-1 flex gap-px bg-black/40 border border-outline/10 rounded-xs overflow-hidden focus-within:border-primary/40 transition-colors">
+                <div className="flex items-center gap-1.5 px-2 bg-white/5 border-r border-outline/5 flex-1">
+                   <Type className="w-2.5 h-2.5 text-foreground/20" />
+                   <input 
+                     type="text" 
+                     value={opt.label}
+                     onChange={(e) => {
+                       const next = [...options];
+                       next[idx] = { ...next[idx], label: e.target.value };
+                       updateOptions(next);
+                     }}
+                     className="bg-transparent border-none outline-none text-[10px] font-bold text-foreground py-2 w-full"
+                   />
+                </div>
+                <div className="flex items-center gap-1.5 px-2 w-24">
+                   <Hash className="w-2.5 h-2.5 text-foreground/20" />
+                   <input 
+                     type="number" 
+                     value={opt.value}
+                     onChange={(e) => {
+                       const next = [...options];
+                       next[idx] = { ...next[idx], value: parseFloat(e.target.value) };
+                       updateOptions(next);
+                     }}
+                     className="bg-transparent border-none outline-none text-[10px] font-mono text-primary py-2 w-full"
+                   />
+                </div>
+              </div>
+              <button 
+                onClick={() => updateOptions(options.filter((_: any, i: number) => i !== idx))}
+                className="p-2 text-foreground/20 hover:text-red-400 hover:bg-red-500/5 rounded-xs transition-all opacity-0 group-hover:opacity-100"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

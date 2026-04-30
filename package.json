@@ -9,8 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "js-yaml": "^4.1.1",
     "lucide-react": "^1.11.0",
     "music-metadata": "^11.12.3",
     "next": "16.2.4",

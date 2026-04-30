@@ -1,0 +1,63 @@
+'use client';
+
+import React from 'react';
+import { Move, Grid3X3 } from 'lucide-react';
+
+interface SpatialSectionProps {
+  item: any;
+  onUpdate: (updates: any) => void;
+}
+
+export default function SpatialSection({ item, onUpdate }: SpatialSectionProps) {
+  const pos = item.pos || { x: 0, y: 0 };
+  const pres = item.presentation || {};
+
+  return (
+    <div className="grid grid-cols-1 gap-4 pt-2">
+      {/* COORDINATES */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+            <Move className="w-2.5 h-2.5" />
+            <span>Absolute X</span>
+          </label>
+          <input 
+            type="number" 
+            value={pos.x || 0} 
+            onChange={(e) => onUpdate({ pos: { ...pos, x: parseFloat(e.target.value) } })}
+            className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-colors"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+            <Move className="w-2.5 h-2.5" />
+            <span>Absolute Y</span>
+          </label>
+          <input 
+            type="number" 
+            value={pos.y || 0} 
+            onChange={(e) => onUpdate({ pos: { ...pos, y: parseFloat(e.target.value) } })}
+            className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* GRID LOGIC (Era 6 Compatibility) */}
+      <div className="space-y-1">
+        <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+          <Grid3X3 className="w-2.5 h-2.5" />
+          <span>Column Span</span>
+        </label>
+        <select 
+          value={pres.colSpan || 1} 
+          onChange={(e) => onUpdate({ presentation: { ...pres, colSpan: parseInt(e.target.value) } })}
+          className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none"
+        >
+          <option value={1}>1 Column (Standard)</option>
+          <option value={2}>2 Columns (Wide)</option>
+          <option value={3}>3 Columns (Full Width)</option>
+        </select>
+      </div>
+    </div>
+  );
+}
