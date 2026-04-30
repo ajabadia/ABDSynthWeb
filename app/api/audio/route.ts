@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
           // Extract cover art if available
           if (metadata.common.picture && metadata.common.picture.length > 0) {
             const pic = metadata.common.picture[0];
-            cover = `data:${pic.format};base64,${pic.data.toString('base64')}`;
+            cover = `data:${pic.format};base64,${Buffer.from(pic.data).toString('base64')}`;
           }
         } catch (e) {
           console.error(`Error parsing metadata for ${file}:`, e);
