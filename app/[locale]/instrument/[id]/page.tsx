@@ -210,6 +210,13 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
                 <Button size="lg" className="px-12">{tc('nav.download')}</Button>
               </Link>
               <Button size="lg" variant="outline">{tc('buttons.manual')}</Button>
+              {instrument.id === 'abd-omega' && (
+                <Link href="/tools/manifest-editor">
+                  <Button size="lg" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
+                    {tc('buttons.manifestEditor')}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
  
@@ -229,6 +236,13 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
                       <div className="inline-flex items-center gap-3 px-6 py-2 bg-primary/10 border border-primary/30 text-primary font-headline font-bold uppercase tracking-[0.3em] animate-pulse">
                         <Activity size={18} />
                         Lab Status: Restricted
+                      </div>
+                      <div className="pt-4">
+                        <Link href="/tools/manifest-editor">
+                          <Button variant="outline" size="sm" className="border-primary/20 text-primary/60 hover:text-primary hover:border-primary">
+                            {tc('buttons.manifestEditor')}
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </div>
