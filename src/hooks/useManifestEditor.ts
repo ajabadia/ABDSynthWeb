@@ -120,7 +120,7 @@ export const useManifestEditor = () => {
   };
 
   const syncManifestWithContract = (newContract: OmegaContract, filename: string) => {
-    setManifest(prev => ({
+    setManifest((prev: any) => ({
       ...prev,
       id: newContract.id || prev.id,
       metadata: {

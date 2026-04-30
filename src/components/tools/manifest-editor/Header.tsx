@@ -8,8 +8,8 @@ interface HeaderProps {
   onExport: () => void;
   onToggleLogs: () => void;
   showLogs: boolean;
-  viewMode: string;
-  setViewMode: (mode: string) => void;
+  viewMode: 'orbital' | 'rack' | 'source';
+  setViewMode: (mode: 'orbital' | 'rack' | 'source') => void;
 }
 
 export default function Header({ onReset, onExport, onToggleLogs, showLogs, viewMode, setViewMode }: HeaderProps) {

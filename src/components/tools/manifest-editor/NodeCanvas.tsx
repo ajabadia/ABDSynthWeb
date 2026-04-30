@@ -29,9 +29,10 @@ interface NodeCanvasProps {
   } | null;
   selectedItemId: string | null;
   onSelectItem: (id: string) => void;
+  onUpdateItem: (id: string, updates: any) => void;
 }
 
-export default function NodeCanvas({ manifest, contract, selectedItemId, onSelectItem }: NodeCanvasProps) {
+export default function NodeCanvas({ manifest, contract, selectedItemId, onSelectItem, onUpdateItem }: NodeCanvasProps) {
   const isV7 = manifest?.schemaVersion?.startsWith('7') || manifest?.schemaVersion === '7.0';
   
   // Combine all items for visualization
