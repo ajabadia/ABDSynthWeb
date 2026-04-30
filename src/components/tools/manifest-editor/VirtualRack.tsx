@@ -92,9 +92,20 @@ export default function VirtualRack({ manifest, selectedItemId, onSelectItem }: 
         );
       case 'display':
         return (
-          <div key={key} className={`absolute ${posClasses[att.position] || ''} bg-black border border-outline px-1 rounded-xs flex flex-col items-center min-w-[20px]`} style={marginStyle}>
-            <span className="text-[4px] font-mono text-primary italic leading-tight">88.8</span>
-            {att.unit && <span className="text-[3px] text-primary/40 uppercase font-black">{att.unit}</span>}
+          <div 
+            key={key} 
+            className={`absolute ${posClasses[att.position] || ''} bg-black border border-primary/30 px-1.5 py-0.5 rounded-xs flex flex-col items-center min-w-[28px] shadow-[0_0_10px_rgba(0,240,255,0.1)]`} 
+            style={marginStyle}
+          >
+            <div className="flex items-baseline gap-0.5">
+              {att.prefix && <span className="text-[4px] text-primary/40 font-black uppercase">{att.prefix}</span>}
+              <span className="text-[6px] font-mono text-primary font-bold leading-none tracking-tighter">88.8</span>
+            </div>
+            {att.unit ? (
+              <span className="text-[3px] text-primary/60 uppercase font-black tracking-widest">{att.unit}</span>
+            ) : (
+              <div className="w-full h-[1px] bg-primary/20 mt-0.5" />
+            )}
           </div>
         );
       case 'label':
@@ -127,11 +138,11 @@ export default function VirtualRack({ manifest, selectedItemId, onSelectItem }: 
         return (
           <div style={{ width: `${80 * scale}px`, height: `${28 * scale}px` }} className="bg-black border-2 border-outline/40 rounded-sm flex items-center overflow-hidden shadow-[0_0_15px_rgba(0,240,255,0.1)]">
             <div className="flex-1 h-full flex flex-col items-center justify-center border-r border-outline/20 bg-primary/5">
-              <span className="text-[9px] font-mono text-primary font-bold animate-pulse">000</span>
+              <span className="text-[10px] font-mono text-primary font-black animate-pulse tracking-tighter">000.0</span>
             </div>
             <div className="w-6 h-full flex flex-col">
-              <div className="flex-1 bg-white/5 border-b border-outline/20 flex items-center justify-center text-[8px] text-primary/60 hover:text-primary transition-colors">+</div>
-              <div className="flex-1 bg-white/5 flex items-center justify-center text-[8px] text-primary/60 hover:text-primary transition-colors">-</div>
+              <div className="flex-1 bg-white/5 border-b border-outline/20 flex items-center justify-center text-[10px] text-primary/60 hover:text-primary transition-colors cursor-pointer">+</div>
+              <div className="flex-1 bg-white/5 flex items-center justify-center text-[10px] text-primary/60 hover:text-primary transition-colors cursor-pointer">-</div>
             </div>
           </div>
         );

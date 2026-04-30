@@ -2,12 +2,14 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Fingerprint, Settings, Palette, Paperclip, Shield, Package } from 'lucide-react';
+import { X, Fingerprint, Settings, Palette, Paperclip, Shield, Package, Settings2, Zap, Move } from 'lucide-react';
 import IdentitySection from './inspector/IdentitySection';
 import LogicSection from './inspector/LogicSection';
 import AestheticSection from './inspector/AestheticSection';
 import AttachmentsSection from './inspector/AttachmentsSection';
 import EngineeringSection from './inspector/EngineeringSection';
+import EntityListSection from './inspector/EntityListSection';
+import SpatialSection from './inspector/SpatialSection';
 import CellPreview from './inspector/CellPreview';
 
 interface ManifestEntity {
@@ -28,21 +30,38 @@ interface PropertyPanelProps {
   onClose: () => void;
   availableBinds?: string[];
   scale?: number;
+  onSelectItem?: (id: string) => void;
+  onAddEntity?: (type: 'control' | 'jack') => void;
+  onDuplicateItem?: (id: string) => void;
+  onRemoveItem?: (id: string) => void;
 }
 
-export default function PropertyPanel({ item, onUpdate, onClose, availableBinds = [], scale = 1 }: PropertyPanelProps) {
+export default function PropertyPanel({ 
+  item, 
+  onUpdate, 
+  onClose, 
+  availableBinds = [], 
+  scale = 1,
+  onSelectItem,
+  onAddEntity,
+  onDuplicateItem,
+  onRemoveItem
+}: PropertyPanelProps) {
   const [activeSection, setActiveSection] = React.useState<string>('identity');
 
   // Detect if we are editing the module itself or a specific control/jack
-  const isModule = !!item.metadata;
+  const isModule = !!item?.metadata;
 
   const sections = React.useMemo(() => (
     isModule ? [
       { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
+      { id: 'controls', label: 'Controls', icon: Settings2, color: 'text-blue-400' },
+      { id: 'signals', label: 'Signals', icon: Zap, color: 'text-yellow-400' },
     ] : [
       { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
       { id: 'engineering', label: 'Engineering', icon: Shield, color: 'text-accent' },
       { id: 'logic', label: 'Logic', icon: Settings, color: 'text-blue-400' },
+      { id: 'spatial', label: 'Spatial', icon: Move, color: 'text-amber-400' },
       { id: 'aesthetic', label: 'Aesthetic', icon: Palette, color: 'text-purple-400' },
       { id: 'attachments', label: 'Attachments', icon: Paperclip, color: 'text-green-400' },
     ]
@@ -58,6 +77,8 @@ export default function PropertyPanel({ item, onUpdate, onClose, availableBinds 
   const handleFieldUpdate = (fieldUpdates: Partial<ManifestEntity>) => {
     onUpdate({ ...item, ...fieldUpdates });
   };
+
+  if (!item) return null;
 
   return (
     <div className="h-full bg-[#0a0a0a] border-l border-outline flex flex-col shadow-2xl overflow-hidden">
@@ -119,7 +140,32 @@ export default function PropertyPanel({ item, onUpdate, onClose, availableBinds 
               <IdentitySection item={item} onUpdate={handleFieldUpdate} />
             )}
 
-            {!isModule && (
+            {isModule ? (
+              <>
+                {activeSection === 'controls' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
+                  <EntityListSection 
+                    items={item.ui?.controls || []}
+                    title="Interactive Controls"
+                    type="control"
+                    onSelectItem={onSelectItem}
+                    onAddEntity={onAddEntity}
+                    onDuplicateItem={onDuplicateItem}
+                    onRemoveItem={onRemoveItem}
+                  />
+                )}
+                {activeSection === 'signals' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
+                  <EntityListSection 
+                    items={item.ui?.jacks || []}
+                    title="Signal Ports / Jacks"
+                    type="jack"
+                    onSelectItem={onSelectItem}
+                    onAddEntity={onAddEntity}
+                    onDuplicateItem={onDuplicateItem}
+                    onRemoveItem={onRemoveItem}
+                  />
+                )}
+              </>
+            ) : (
               <>
                 {activeSection === 'engineering' && (
                   <EngineeringSection item={item} onUpdate={handleFieldUpdate} />
@@ -127,6 +173,10 @@ export default function PropertyPanel({ item, onUpdate, onClose, availableBinds 
 
                 {activeSection === 'logic' && (
                   <LogicSection item={item} onUpdate={handleFieldUpdate} availableBinds={availableBinds} />
+                )}
+
+                {activeSection === 'spatial' && (
+                  <SpatialSection item={item} onUpdate={handleFieldUpdate} />
                 )}
 
                 {activeSection === 'aesthetic' && (

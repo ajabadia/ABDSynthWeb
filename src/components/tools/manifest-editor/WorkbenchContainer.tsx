@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './Header';
 import ModuleHub from './ModuleHub';
-import ControlRegistry from './ControlRegistry';
 import VirtualRack from './VirtualRack';
 import NodeCanvas from './NodeCanvas';
 import PropertyPanel from './PropertyPanel';
@@ -57,6 +56,11 @@ export default function WorkbenchContainer() {
     if (newId) handleSelectItem(newId);
   }, [duplicateItem, handleSelectItem]);
 
+  const handleRemoveItem = useCallback((id: string) => {
+    removeItem(id);
+    if (selectedItemId === id) setSelectedItemId(null);
+  }, [removeItem, selectedItemId]);
+
   // Derived Data
   const availableBinds = contract ? [
     ...(contract.parameters?.map((p: { id: string }) => p.id) || []),
@@ -89,15 +93,6 @@ export default function WorkbenchContainer() {
               manifest={manifest} 
               contract={contract} 
               triggerUpload={triggerUpload} 
-            />
-            
-            <ControlRegistry 
-              manifest={manifest}
-              selectedItemId={selectedItemId}
-              onSelectItem={handleSelectItem}
-              onAddEntity={handleAddEntity}
-              onDuplicateItem={handleDuplicateItem}
-              onRemoveItem={removeItem}
             />
           </div>
         </aside>
@@ -160,10 +155,19 @@ export default function WorkbenchContainer() {
           >
             <PropertyPanel 
               item={selectedItem}
-              onUpdate={selectedItemId ? (updates: any) => updateItem(selectedItemId, updates) : updateManifest}
+              onUpdate={selectedItemId ? (updates: any) => {
+                updateItem(selectedItemId, updates);
+                if (updates.id && updates.id !== selectedItemId) {
+                  setSelectedItemId(updates.id);
+                }
+              } : updateManifest}
               onClose={() => setSelectedItemId(null)}
               availableBinds={availableBinds}
               scale={1}
+              onSelectItem={handleSelectItem}
+              onAddEntity={handleAddEntity}
+              onDuplicateItem={handleDuplicateItem}
+              onRemoveItem={handleRemoveItem}
             />
           </motion.aside>
         </AnimatePresence>

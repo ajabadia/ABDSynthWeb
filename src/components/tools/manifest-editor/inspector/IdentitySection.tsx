@@ -89,6 +89,16 @@ export default function IdentitySection({ item, onUpdate }: IdentitySectionProps
         </div>
         <div className="space-y-4">
           <div className="space-y-1.5">
+            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Schema Version</label>
+            <input 
+              type="text" 
+              value={item.schemaVersion || '7.0'} 
+              onChange={(e) => onUpdate({ schemaVersion: e.target.value })}
+              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all"
+              placeholder="7.0"
+            />
+          </div>
+          <div className="space-y-1.5">
             <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Canonical ID (Unique)</label>
             <input 
               type="text" 
@@ -109,6 +119,18 @@ export default function IdentitySection({ item, onUpdate }: IdentitySectionProps
                 />
               </div>
               <div className="space-y-1.5">
+                <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Version</label>
+                <input 
+                  type="text" 
+                  value={metadata.version || ''} 
+                  onChange={(e) => updateMetadata('version', e.target.value)}
+                  className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-foreground outline-none focus:border-primary/40 transition-all"
+                  placeholder="1.0.0"
+                />
+              </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
                 <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Status</label>
                 <select 
                   value={metadata.status || 'experimental'} 
@@ -120,6 +142,16 @@ export default function IdentitySection({ item, onUpdate }: IdentitySectionProps
                   <option value="experimental">Experimental</option>
                 </select>
               </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Industrial Tags (Comma separated)</label>
+            <input 
+              type="text" 
+              value={(metadata.tags || []).join(', ')} 
+              onChange={(e) => updateMetadata('tags', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
+              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] text-foreground/80 outline-none focus:border-primary/40 transition-all"
+              placeholder="era7, low-latency, industrial"
+            />
           </div>
         </div>
         <div className="space-y-1.5">

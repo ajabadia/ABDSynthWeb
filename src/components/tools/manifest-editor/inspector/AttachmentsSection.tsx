@@ -138,43 +138,45 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
               </div>
             </div>
 
-            {/* FORMATTING BLOCK (New Era 6 feature in Era 7) */}
+            {/* FORMATTING & UNIT (Era 7 Standard) */}
             <div className="p-2 border border-outline/10 bg-white/5 rounded-xs space-y-3">
                <div className="text-[7px] font-black text-foreground/20 uppercase tracking-tighter flex items-center gap-1">
                   <Hash className="w-2 h-2" />
-                  <span>Value Formatting</span>
+                  <span>Engineering Formatting</span>
                </div>
-               <div className="grid grid-cols-3 gap-2">
+               <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">Prefix</label>
+                    <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">Unit (Suffix)</label>
                     <input 
                       type="text" 
-                      value={att.format?.prefix || ''} 
-                      onChange={(e) => updateFormat(idx, { prefix: e.target.value })}
-                      className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-foreground outline-none"
-                      placeholder="e.g. Vol:"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">Suffix</label>
-                    <input 
-                      type="text" 
-                      value={att.format?.suffix || ''} 
-                      onChange={(e) => updateFormat(idx, { suffix: e.target.value })}
+                      value={att.unit || ''} 
+                      onChange={(e) => updateAttachment(idx, { unit: e.target.value })}
                       className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-foreground outline-none"
                       placeholder="e.g. Hz"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">Decimals</label>
+                    <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">UI Precision</label>
                     <input 
                       type="number" 
-                      value={att.format?.decimals ?? 2} 
-                      onChange={(e) => updateFormat(idx, { decimals: parseInt(e.target.value) })}
+                      value={att.precision ?? 2} 
+                      onChange={(e) => updateAttachment(idx, { precision: parseInt(e.target.value) })}
                       className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-primary outline-none font-mono"
                     />
                   </div>
                </div>
+               {att.type === 'display' && (
+                 <div className="space-y-1">
+                   <label className="text-[6px] text-foreground/40 uppercase font-bold block">Prefix</label>
+                   <input 
+                     type="text" 
+                     value={att.prefix || ''} 
+                     onChange={(e) => updateAttachment(idx, { prefix: e.target.value })}
+                     className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-foreground outline-none"
+                     placeholder="e.g. VOL:"
+                   />
+                 </div>
+               )}
             </div>
 
             {/* OFFSET SLIDER */}

@@ -64,6 +64,27 @@ export default function LogicSection({ item, onUpdate, availableBinds = [] }: Lo
         </div>
       </div>
 
+      {/* TECHNICAL PROTOCOL */}
+      <div className="space-y-3">
+        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
+           <Box className="w-3 h-3 text-accent" />
+           <span>Technical Protocol</span>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Data Type</label>
+          <select 
+            value={item.type || 'float'} 
+            onChange={(e) => onUpdate({ type: e.target.value })}
+            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-bold text-foreground/80 outline-none appearance-none"
+          >
+            <option value="float">Float (Analog)</option>
+            <option value="int">Integer (Digital)</option>
+            <option value="bool">Boolean (Gate)</option>
+            <option value="string">String (Text)</option>
+          </select>
+        </div>
+      </div>
+
       {/* COMPONENT TYPE SELECTION */}
       <div className="space-y-3">
         <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">

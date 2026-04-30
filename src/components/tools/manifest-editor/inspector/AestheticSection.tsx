@@ -68,6 +68,38 @@ export default function AestheticSection({ item, onUpdate }: AestheticSectionPro
         </div>
       </div>
 
+      {/* COMMON AESTHETICS */}
+      <div className="space-y-4 bg-white/[0.02] border border-outline/10 p-4 rounded-xs">
+        <div className="space-y-1.5">
+          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Era 7 Plane (Tab)</label>
+          <div className="flex flex-wrap gap-1">
+            {['MAIN', 'PATCHING', 'SETUP', 'MIDI', 'ADVANCED'].map(t => (
+              <button
+                key={t}
+                onClick={() => onUpdate({ presentation: { ...item.presentation, tab: t } })}
+                className={`px-2 py-1 text-[7px] font-black uppercase rounded-xs border transition-all ${
+                  (item.presentation?.tab || 'MAIN') === t 
+                    ? 'bg-primary/20 border-primary text-primary' 
+                    : 'bg-black/40 border-outline/10 text-foreground/20 hover:border-outline/30'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-1.5 pt-2">
+          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Visual Group</label>
+          <input 
+            type="text" 
+            value={item.presentation?.group || ''} 
+            onChange={(e) => onUpdate({ presentation: { ...item.presentation, group: e.target.value.toUpperCase() } })}
+            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-black text-foreground outline-none focus:border-primary/40 transition-all"
+            placeholder="NONE"
+          />
+        </div>
+      </div>
+
       {/* DYNAMIC SPECIALIZED EDITOR */}
       <div className="min-h-[200px]">
         {renderSpecializedEditor()}
