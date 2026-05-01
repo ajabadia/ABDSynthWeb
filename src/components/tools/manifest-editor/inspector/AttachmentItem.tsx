@@ -141,8 +141,11 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
               <label className="text-[6px] text-foreground/40 uppercase font-bold block">Step Amount</label>
               <input 
                 type="number" 
-                value={att.amount ?? 1} 
-                onChange={(e) => onUpdate({ amount: parseFloat(e.target.value) })}
+                value={isNaN(att.amount) ? '' : (att.amount ?? 1)} 
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  onUpdate({ amount: isNaN(val) ? 0 : val });
+                }}
                 className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-accent outline-none font-mono"
               />
             </div>
