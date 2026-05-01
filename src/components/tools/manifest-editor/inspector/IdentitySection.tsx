@@ -3,9 +3,12 @@
 import React from 'react';
 import { Fingerprint, Info, Tags, Box, Layout, Shield } from 'lucide-react';
 
+import { OMEGA_Manifest, ManifestEntity } from '../../../types/manifest';
+
 interface IdentitySectionProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: OMEGA_Manifest | ManifestEntity;
+  onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => void;
+  onHelp?: (sectionId?: string) => void;
 }
 
 const FAMILIES = [
@@ -24,18 +27,24 @@ const SKINS = [
   { id: 'industrial', label: 'Industrial', color: 'bg-[#1a1a1a]' },
   { id: 'carbon', label: 'Carbon Fiber', color: 'bg-[#0a0a0a]' },
   { id: 'glass', label: 'Aseptic Glass', color: 'bg-[#2a3035]' },
+  { id: 'minimal', label: 'Minimalist', color: 'bg-[#f0f0f0]' },
 ];
 
-export default function IdentitySection({ item, onUpdate }: IdentitySectionProps) {
+export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySectionProps) {
   const isModule = !!item.metadata;
 
   if (!isModule) {
     return (
       <div className="space-y-6 pt-2">
         <div className="space-y-3">
-          <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
-             <Fingerprint className="w-3 h-3" />
-             <span>Entity Identification</span>
+          <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+             <div className="flex items-center gap-2">
+               <Fingerprint className="w-3 h-3" />
+               <span>Entity Identification</span>
+             </div>
+             <button onClick={() => onHelp?.('cells')} className="hover:text-primary transition-colors">
+                <Info className="w-3 h-3" />
+             </button>
           </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -63,39 +72,45 @@ export default function IdentitySection({ item, onUpdate }: IdentitySectionProps
   }
 
   // GLOBAL MODULE EDITING
-  const metadata = item.metadata;
+  const manifest = item as OMEGA_Manifest;
+  const metadata = manifest.metadata;
   const rack = metadata.rack || { slot: 'main', height_mode: 'full', hp: 12 };
-  const ui = item.ui || {};
+  const ui = manifest.ui || {};
 
-  const updateMetadata = (field: string, value: any) => {
-    onUpdate({ metadata: { ...metadata, [field]: value } });
+  const updateMetadata = (field: keyof typeof metadata, value: unknown) => {
+    onUpdate({ metadata: { ...metadata, [field]: value } } as Partial<OMEGA_Manifest>);
   };
 
-  const updateRack = (field: string, value: any) => {
-    onUpdate({ metadata: { ...metadata, rack: { ...rack, [field]: value } } });
+  const updateRack = (field: string, value: unknown) => {
+    onUpdate({ metadata: { ...metadata, rack: { ...rack, [field]: value } } } as Partial<OMEGA_Manifest>);
   };
 
-  const updateUI = (field: string, value: any) => {
-    onUpdate({ ui: { ...ui, [field]: value } });
+  const updateUI = (field: string, value: unknown) => {
+    onUpdate({ ui: { ...ui, [field]: value } } as Partial<OMEGA_Manifest>);
   };
 
   return (
     <div className="space-y-10 pt-2 pb-10">
       {/* 1. SIGNATURE */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
-           <Box className="w-3 h-3" />
-           <span>Module Signature</span>
+        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+           <div className="flex items-center gap-2">
+             <Box className="w-3 h-3" />
+             <span>Module Signature</span>
+           </div>
+           <button onClick={() => onHelp?.('introduccion')} className="hover:text-primary transition-colors">
+              <Info className="w-3 h-3" />
+           </button>
         </div>
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Schema Version</label>
             <input 
               type="text" 
-              value={item.schemaVersion || '7.0'} 
-              onChange={(e) => onUpdate({ schemaVersion: e.target.value })}
+              value={manifest.schemaVersion || '7.1'} 
+              onChange={(e) => onUpdate({ schemaVersion: e.target.value } as Partial<OMEGA_Manifest>)}
               className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all"
-              placeholder="7.0"
+              placeholder="7.1"
             />
           </div>
           <div className="space-y-1.5">
@@ -191,9 +206,14 @@ export default function IdentitySection({ item, onUpdate }: IdentitySectionProps
 
       {/* 3. AESTHETICS (SKIN) */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
-           <Shield className="w-3 h-3" />
-           <span>Visual Engineering (Skin)</span>
+        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+           <div className="flex items-center gap-2">
+             <Shield className="w-3 h-3" />
+             <span>Visual Engineering (Skin)</span>
+           </div>
+           <button onClick={() => onHelp?.('estetica')} className="hover:text-primary transition-colors">
+              <Info className="w-3 h-3" />
+           </button>
         </div>
         <div className="flex gap-2">
            {SKINS.map(s => (
@@ -213,9 +233,14 @@ export default function IdentitySection({ item, onUpdate }: IdentitySectionProps
 
       {/* 4. RACK SPECIFICATION */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
-           <Layout className="w-3 h-3" />
-           <span>Rack Mechanical Spec</span>
+        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+           <div className="flex items-center gap-2">
+             <Layout className="w-3 h-3" />
+             <span>Rack Mechanical Spec</span>
+           </div>
+           <button onClick={() => onHelp?.('dimensiones')} className="hover:text-primary transition-colors">
+              <Info className="w-3 h-3" />
+           </button>
         </div>
         <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">

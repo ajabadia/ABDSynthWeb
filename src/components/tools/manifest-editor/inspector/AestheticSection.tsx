@@ -10,18 +10,16 @@ import DisplayProperties from './DisplayProperties';
 import SwitchProperties from './SwitchProperties';
 import SelectProperties from './SelectProperties';
 
+import { ManifestEntity } from '../../../types/manifest';
+import { Info } from 'lucide-react';
+
 interface AestheticSectionProps {
-  item: {
-    presentation?: {
-      component?: string;
-      [key: string]: any;
-    };
-    [key: string]: any;
-  };
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
+  onHelp?: (sectionId?: string) => void;
 }
 
-export default function AestheticSection({ item, onUpdate }: AestheticSectionProps) {
+export default function AestheticSection({ item, onUpdate, onHelp }: AestheticSectionProps) {
   const componentType = item.presentation?.component || 'knob';
 
   const renderSpecializedEditor = () => {
@@ -62,6 +60,9 @@ export default function AestheticSection({ item, onUpdate }: AestheticSectionPro
         <div className="flex items-center gap-2">
           <Palette className="w-3.5 h-3.5 text-primary" />
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">Aesthetic Engineering</h3>
+          <button onClick={() => onHelp?.('estetica')} className="ml-1 hover:text-primary transition-colors">
+            <Info className="w-3 h-3 opacity-40" />
+          </button>
         </div>
         <div className="px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
            <span className="text-[7px] font-black text-primary uppercase tracking-tighter">{componentType}</span>
@@ -71,12 +72,17 @@ export default function AestheticSection({ item, onUpdate }: AestheticSectionPro
       {/* COMMON AESTHETICS */}
       <div className="space-y-4 bg-white/[0.02] border border-outline/10 p-4 rounded-xs">
         <div className="space-y-1.5">
-          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Era 7 Plane (Tab)</label>
+          <div className="flex items-center justify-between pr-1">
+            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Era 7 Plane (Tab)</label>
+            <button onClick={() => onHelp?.('tabs')} className="hover:text-primary transition-colors">
+              <Info className="w-2.5 h-2.5 opacity-20" />
+            </button>
+          </div>
           <div className="flex flex-wrap gap-1">
-            {['MAIN', 'PATCHING', 'SETUP', 'MIDI', 'ADVANCED'].map(t => (
+            {['MAIN', 'FX', 'EDIT', 'MIDI', 'MOD'].map(t => (
               <button
                 key={t}
-                onClick={() => onUpdate({ presentation: { ...item.presentation, tab: t } })}
+                onClick={() => onUpdate({ presentation: { ...item.presentation, tab: t as any } })}
                 className={`px-2 py-1 text-[7px] font-black uppercase rounded-xs border transition-all ${
                   (item.presentation?.tab || 'MAIN') === t 
                     ? 'bg-primary/20 border-primary text-primary' 

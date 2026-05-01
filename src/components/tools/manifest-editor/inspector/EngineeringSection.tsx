@@ -1,18 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Shield, Target, Eye, Layers } from 'lucide-react';
+import { Shield, Target, Eye, Layers, Info } from 'lucide-react';
+import { ManifestEntity } from '../../../types/manifest';
 
 interface EngineeringSectionProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
+  onHelp?: (sectionId?: string) => void;
 }
 
 const EXTENDED_ROLES = [
   'control', 'input', 'output', 'telemetry', 'expert', 'stream', 'mod_source', 'mod_target'
 ];
 
-export default function EngineeringSection({ item, onUpdate }: EngineeringSectionProps) {
+export default function EngineeringSection({ item, onUpdate, onHelp }: EngineeringSectionProps) {
   const currentRoles = item.roles || ['control'];
 
   const toggleRole = (role: string) => {
@@ -27,10 +29,15 @@ export default function EngineeringSection({ item, onUpdate }: EngineeringSectio
       {/* PRECISION CONTROLS */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-[7px] text-foreground/40 uppercase font-black flex items-center gap-1 tracking-widest">
-            <Target className="w-2.5 h-2.5 text-primary" />
-            <span>DSP Precision</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-[7px] text-foreground/40 uppercase font-black flex items-center gap-1 tracking-widest">
+              <Target className="w-2.5 h-2.5 text-primary" />
+              <span>DSP Precision</span>
+            </label>
+            <button onClick={() => onHelp?.('precision')} className="hover:text-primary transition-colors">
+              <Info className="w-2.5 h-2.5 opacity-20" />
+            </button>
+          </div>
           <input 
             type="number" 
             value={item.presentation?.precision ?? 6} 
@@ -56,10 +63,15 @@ export default function EngineeringSection({ item, onUpdate }: EngineeringSectio
 
       {/* EXTENDED ROLES */}
       <div className="space-y-3">
-        <label className="text-[7px] text-foreground/40 uppercase font-black flex items-center gap-1 tracking-widest">
-          <Layers className="w-2.5 h-2.5" />
-          <span>Functional Roles</span>
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-[7px] text-foreground/40 uppercase font-black flex items-center gap-1 tracking-widest">
+            <Layers className="w-2.5 h-2.5" />
+            <span>Functional Roles</span>
+          </label>
+          <button onClick={() => onHelp?.('logic')} className="hover:text-primary transition-colors">
+            <Info className="w-2.5 h-2.5 opacity-20" />
+          </button>
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {EXTENDED_ROLES.map(role => (
             <button

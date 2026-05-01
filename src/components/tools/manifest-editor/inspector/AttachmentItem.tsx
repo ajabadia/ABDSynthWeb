@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Activity, Link2, Tag, Type, Hash } from 'lucide-react';
+import { Activity, Link2, Tag, Type, Hash, Move, Box } from 'lucide-react';
 
 interface AttachmentItemProps {
   att: any;
@@ -14,6 +14,9 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
   const isDisplay = att.type === 'display';
   const isLed = att.type === 'led';
   const isStepper = att.type === 'stepper';
+  const isCore = att.isCore === true; // New flag for the special Core attachment
+
+  const currentVariant = att.variant || 'B_cyan';
 
   return (
     <div className="space-y-4">
@@ -26,9 +29,16 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
           </label>
           <select 
             value={att.type} 
+            disabled={isCore}
             onChange={(e) => onUpdate({ type: e.target.value })}
-            className="w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-primary outline-none font-bold"
+            className={`w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] outline-none font-bold ${isCore ? 'text-primary/40' : 'text-primary'}`}
           >
+            <option value="knob">Knob</option>
+            <option value="port">Jack / Port</option>
+            <option value="slider-v">V-Slider</option>
+            <option value="slider-h">H-Slider</option>
+            <option value="switch">Switch</option>
+            <option value="push">Push Button</option>
             <option value="label">Label</option>
             <option value="display">Display</option>
             <option value="led">LED</option>
@@ -38,10 +48,12 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
         <div className="space-y-1">
           <label className="text-[7px] text-foreground/40 uppercase font-bold">Position</label>
           <select 
-            value={att.position} 
+            value={att.position || 'center'} 
+            disabled={isCore}
             onChange={(e) => onUpdate({ position: e.target.value })}
             className="w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-foreground outline-none"
           >
+            <option value="center">Center (Core)</option>
             <option value="top">Top</option>
             <option value="bottom">Bottom</option>
             <option value="left">Left</option>
@@ -50,8 +62,39 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
         </div>
       </div>
 
-      {/* DYNAMIC BINDING (Only for Displays, LEDs and Steppers) */}
-      {(isDisplay || isLed || isStepper) && (
+      {/* CANONICAL VARIANT SELECTION */}
+      <div className="space-y-1">
+        <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
+          <Box className="w-2 h-2 text-primary" />
+          <span>OMEGA Variant (Size_Color)</span>
+        </label>
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            value={currentVariant} 
+            onChange={(e) => onUpdate({ variant: e.target.value })}
+            placeholder="e.g. A_red, B_cyan"
+            className="flex-1 bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-primary font-mono outline-none"
+          />
+          <div className="flex gap-1">
+            {['A', 'B', 'C', 'D'].map(s => (
+              <button 
+                key={s}
+                onClick={() => {
+                  const parts = currentVariant.split('_');
+                  onUpdate({ variant: `${s}_${parts[1] || 'cyan'}` });
+                }}
+                className={`w-5 h-5 flex items-center justify-center text-[8px] font-black rounded-xs border transition-all ${currentVariant.startsWith(s) ? 'bg-primary/20 border-primary text-primary' : 'bg-black/40 border-outline text-white/20'}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* DYNAMIC BINDING */}
+      {(isDisplay || isLed || isStepper || isCore) && (
         <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
           <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
             <Link2 className="w-2 h-2 text-accent" />
@@ -70,147 +113,55 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
         </div>
       )}
 
-      {/* ROLE & TEXT/VALUE OVERRIDE */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
+      {/* TEXT/LITERAL OVERRIDE */}
+      {(isLabel || isStepper) && (
+        <div className="space-y-1 animate-in fade-in slide-in-from-left-1 duration-200">
           <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
-            <Tag className="w-2 h-2" />
-            <span>Functional Role</span>
+            <Type className="w-2 h-2" />
+            <span>{isStepper ? 'Button Literal' : 'Static Content'}</span>
           </label>
-          <select 
-            value={att.role || 'standard'} 
-            onChange={(e) => onUpdate({ role: e.target.value })}
-            className="w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-foreground outline-none"
-          >
-            {isLabel && (
-              <>
-                <option value="standard">Standard Label</option>
-                <option value="unit">Unit Marker</option>
-                <option value="status">Status Text</option>
-              </>
-            )}
-            {isDisplay && (
-              <>
-                <option value="value">Live Readout</option>
-                <option value="peak">Peak Value</option>
-              </>
-            )}
-            {isLed && (
-              <>
-                <option value="activity">Signal Activity</option>
-                <option value="gate">Gate / Note-On</option>
-                <option value="peak">Peak Clipping</option>
-              </>
-            )}
-            {isStepper && (
-              <>
-                <option value="inc">Increment (+)</option>
-                <option value="dec">Decrement (-)</option>
-                <option value="reset">Reset to Default</option>
-              </>
-            )}
-          </select>
+          <input 
+            type="text" 
+            value={att.text || ''} 
+            onChange={(e) => onUpdate({ text: e.target.value })}
+            placeholder={isStepper ? 'e.g. +, -, <, >' : 'Label text...'}
+            className="w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-foreground outline-none font-bold"
+          />
         </div>
+      )}
+
+      {/* DUAL OFFSETS (X/Y) */}
+      <div className="p-2 bg-black/40 border border-outline/10 rounded-xs space-y-3">
+        <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
+          <Move className="w-2 h-2" />
+          <span>Industrial Precision Offset</span>
+        </label>
         
-        {(isLabel || isStepper) && (
-          <div className="space-y-1 animate-in fade-in slide-in-from-left-1 duration-200">
-            <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
-              <Type className="w-2 h-2" />
-              <span>{isStepper ? 'Button Literal' : 'Static Content'}</span>
-            </label>
-            <input 
-              type="text" 
-              value={att.text || ''} 
-              onChange={(e) => onUpdate({ text: e.target.value })}
-              placeholder={isStepper ? 'e.g. +, -, <, >' : 'Label text...'}
-              className="w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-foreground outline-none"
-            />
+        <div className="space-y-1">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[6px] text-foreground/40 uppercase font-black tracking-widest">Vertical (Y)</span>
+            <span className="text-[8px] text-primary font-mono font-bold">{att.offsetY || 0}px</span>
           </div>
-        )}
-      </div>
+          <input 
+            type="range" min="-64" max="64" 
+            value={att.offsetY || 0} 
+            onChange={(e) => onUpdate({ offsetY: parseInt(e.target.value) })}
+            className="w-full accent-primary/40 h-1 bg-black/60 rounded-full appearance-none cursor-pointer"
+          />
+        </div>
 
-      {/* STEP CONFIG (Only for Steppers) */}
-      {isStepper && (
-        <div className="p-2 border border-accent/20 bg-accent/5 rounded-xs space-y-2 animate-in zoom-in-95 duration-200">
-          <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
-            <Hash className="w-2 h-2" />
-            <span>Stepper Operation</span>
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[6px] text-foreground/40 uppercase font-bold block">Step Amount</label>
-              <input 
-                type="number" 
-                value={isNaN(att.amount) ? '' : (att.amount ?? 1)} 
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  onUpdate({ amount: isNaN(val) ? 0 : val });
-                }}
-                className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-accent outline-none font-mono"
-              />
-            </div>
-            <div className="flex items-end pb-1">
-               <span className="text-[6px] text-foreground/20 italic uppercase leading-tight">Units per pulse</span>
-            </div>
+        <div className="space-y-1">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[6px] text-foreground/40 uppercase font-black tracking-widest">Horizontal (X)</span>
+            <span className="text-[8px] text-primary font-mono font-bold">{att.offsetX || 0}px</span>
           </div>
+          <input 
+            type="range" min="-64" max="64" 
+            value={att.offsetX || 0} 
+            onChange={(e) => onUpdate({ offsetX: parseInt(e.target.value) })}
+            className="w-full accent-primary/40 h-1 bg-black/60 rounded-full appearance-none cursor-pointer"
+          />
         </div>
-      )}
-
-      {/* ENGINEERING FORMATTING (Only for Displays) */}
-      {isDisplay && (
-        <div className="p-2 border border-primary/20 bg-primary/5 rounded-xs space-y-3 animate-in zoom-in-95 duration-200">
-           <div className="text-[7px] font-black text-primary/40 uppercase tracking-tighter flex items-center gap-1">
-              <Hash className="w-2 h-2" />
-              <span>Engineering Unit Formatting</span>
-           </div>
-           <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">Suffix (Unit)</label>
-                <input 
-                  type="text" 
-                  value={att.unit || ''} 
-                  onChange={(e) => onUpdate({ unit: e.target.value })}
-                  className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-foreground outline-none"
-                  placeholder="e.g. Hz, dB"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[6px] text-foreground/40 uppercase font-bold text-center block">UI Precision</label>
-                <input 
-                  type="number" 
-                  value={att.precision ?? 2} 
-                  onChange={(e) => onUpdate({ precision: parseInt(e.target.value) })}
-                  className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-primary outline-none font-mono"
-                />
-              </div>
-           </div>
-           <div className="space-y-1">
-             <label className="text-[6px] text-foreground/40 uppercase font-bold block">Display Prefix</label>
-             <input 
-               type="text" 
-               value={att.prefix || ''} 
-               onChange={(e) => onUpdate({ prefix: e.target.value })}
-               className="w-full bg-black/60 border border-outline rounded-xs p-1 text-[8px] text-foreground outline-none"
-               placeholder="e.g. VOL:"
-             />
-           </div>
-        </div>
-      )}
-
-      {/* UNIVERSAL POSITIONING */}
-      <div className="space-y-1 pb-2">
-        <div className="flex justify-between items-center">
-          <label className="text-[7px] text-foreground/40 uppercase font-bold tracking-widest">Vertical Offset</label>
-          <span className="text-[8px] text-primary font-mono font-bold bg-primary/5 px-1 rounded-xs">{att.offset || 0}px</span>
-        </div>
-        <input 
-          type="range" 
-          min="-40" 
-          max="40" 
-          value={att.offset || 0} 
-          onChange={(e) => onUpdate({ offset: parseInt(e.target.value) })}
-          className="w-full accent-primary/40 h-1 bg-black/60 rounded-full appearance-none cursor-pointer"
-        />
       </div>
     </div>
   );

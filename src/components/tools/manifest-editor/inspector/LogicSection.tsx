@@ -1,12 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Box, Settings2, Lock, EyeOff } from 'lucide-react';
+import { Box, Settings2, Lock, EyeOff, Info } from 'lucide-react';
+import { ManifestEntity } from '../../../types/manifest';
 
 interface LogicSectionProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
   availableBinds?: string[];
+  onHelp?: (sectionId?: string) => void;
 }
 
 const COMPONENT_TYPES = [
@@ -22,7 +24,7 @@ const COMPONENT_TYPES = [
   { id: 'hidden', label: 'Hidden Entity', icon: '👻' },
 ];
 
-export default function LogicSection({ item, onUpdate, availableBinds = [] }: LogicSectionProps) {
+export default function LogicSection({ item, onUpdate, availableBinds = [], onHelp }: LogicSectionProps) {
   const currentType = item.presentation?.component || 'knob';
 
   const updateType = (type: string) => {
@@ -43,9 +45,14 @@ export default function LogicSection({ item, onUpdate, availableBinds = [] }: Lo
     <div className="space-y-6 pt-2">
       {/* CANONICAL BINDING */}
       <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
-           <Settings2 className="w-3 h-3 text-primary" />
-           <span>Canonical Binding</span>
+        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+           <div className="flex items-center gap-2">
+             <Settings2 className="w-3 h-3 text-primary" />
+             <span>Canonical Binding</span>
+           </div>
+           <button onClick={() => onHelp?.('binding')} className="hover:text-primary transition-colors">
+              <Info className="w-3 h-3" />
+           </button>
         </div>
         <div className="space-y-1.5">
           <select 
@@ -64,6 +71,40 @@ export default function LogicSection({ item, onUpdate, availableBinds = [] }: Lo
         </div>
       </div>
 
+      {/* REGISTRY ROLE ERA 7.1 */}
+      <div className="space-y-3">
+        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+           <div className="flex items-center gap-2">
+             <Settings2 className="w-3 h-3 text-primary" />
+             <span>Registry Role (SOT)</span>
+           </div>
+           <button onClick={() => onHelp?.('roles')} className="hover:text-primary transition-colors">
+              <Info className="w-3 h-3" />
+           </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: 'control', label: 'UI Control', desc: 'Standard Input' },
+            { id: 'telemetry', label: 'Telemetry', desc: 'Visual Feedback' },
+            { id: 'stream', label: 'Signal Stream', desc: 'Audio / CV' },
+            { id: 'mod_target', label: 'Mod Target', desc: 'Matrix Dest' },
+          ].map(role => (
+            <button
+              key={role.id}
+              onClick={() => onUpdate({ role: role.id })}
+              className={`p-2 border rounded-xs transition-all flex flex-col items-start gap-0.5 ${
+                (item.role || 'control') === role.id 
+                  ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
+                  : 'bg-black/40 border-outline/10 text-foreground/40 hover:border-outline/30'
+              }`}
+            >
+              <span className="text-[9px] font-black uppercase tracking-tighter">{role.label}</span>
+              <span className="text-[6px] font-bold opacity-40 uppercase">{role.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* TECHNICAL PROTOCOL */}
       <div className="space-y-3">
         <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
@@ -71,16 +112,16 @@ export default function LogicSection({ item, onUpdate, availableBinds = [] }: Lo
            <span>Technical Protocol</span>
         </div>
         <div className="space-y-1.5">
-          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Data Type</label>
+          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Value Normalization</label>
           <select 
             value={item.type || 'float'} 
             onChange={(e) => onUpdate({ type: e.target.value })}
             className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-bold text-foreground/80 outline-none appearance-none"
           >
-            <option value="float">Float (Analog)</option>
-            <option value="int">Integer (Digital)</option>
-            <option value="bool">Boolean (Gate)</option>
-            <option value="string">String (Text)</option>
+            <option value="float">Float (0.0 to 1.0)</option>
+            <option value="int">Integer (Stepped)</option>
+            <option value="bool">Boolean (Binary)</option>
+            <option value="string">String (Metadata)</option>
           </select>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Download, Shield, RotateCcw, Terminal } from 'lucide-react';
+import { Download, Shield, RotateCcw, Terminal, HelpCircle } from 'lucide-react';
 
 interface HeaderProps {
   onReset: () => void;
@@ -10,9 +10,10 @@ interface HeaderProps {
   showLogs: boolean;
   viewMode: 'orbital' | 'rack' | 'source';
   setViewMode: (mode: 'orbital' | 'rack' | 'source') => void;
+  onHelp: () => void;
 }
 
-export default function Header({ onReset, onExport, onToggleLogs, showLogs, viewMode, setViewMode }: HeaderProps) {
+export default function Header({ onReset, onExport, onToggleLogs, showLogs, viewMode, setViewMode, onHelp }: HeaderProps) {
   return (
     <header className="h-14 border-b border-outline bg-black/80 backdrop-blur-md flex items-center justify-between px-6 z-50">
       <div className="flex items-center gap-6">
@@ -50,6 +51,14 @@ export default function Header({ onReset, onExport, onToggleLogs, showLogs, view
       </div>
 
       <div className="flex items-center gap-4">
+        <button 
+          onClick={onHelp}
+          className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-sm hover:bg-primary/20 transition-all text-[8px] font-black uppercase tracking-widest text-primary group"
+        >
+          <HelpCircle className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+          <span>Manual</span>
+        </button>
+
         <button 
           onClick={onReset}
           className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-outline rounded-sm hover:bg-red-500/10 hover:border-red-500/40 text-[8px] font-black uppercase tracking-widest text-foreground/40 hover:text-red-500/80 transition-all group"

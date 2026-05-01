@@ -12,21 +12,11 @@ import EntityListSection from './inspector/EntityListSection';
 import SpatialSection from './inspector/SpatialSection';
 import CellPreview from './inspector/CellPreview';
 
-interface ManifestEntity {
-  id: string;
-  label?: string;
-  metadata?: any;
-  presentation?: {
-    component?: string;
-    attachments?: any[];
-    [key: string]: any;
-  };
-  [key: string]: any;
-}
+import { ManifestEntity, OMEGA_Manifest } from '../../types/manifest';
 
 interface PropertyPanelProps {
-  item: ManifestEntity;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
+  item: ManifestEntity | OMEGA_Manifest;
+  onUpdate: (updates: Partial<ManifestEntity> | Partial<OMEGA_Manifest>) => void;
   onClose: () => void;
   availableBinds?: string[];
   scale?: number;
@@ -34,6 +24,7 @@ interface PropertyPanelProps {
   onAddEntity?: (type: 'control' | 'jack') => void;
   onDuplicateItem?: (id: string) => void;
   onRemoveItem?: (id: string) => void;
+  onHelp?: (sectionId?: string) => void;
 }
 
 export default function PropertyPanel({ 
@@ -45,7 +36,8 @@ export default function PropertyPanel({
   onSelectItem,
   onAddEntity,
   onDuplicateItem,
-  onRemoveItem
+  onRemoveItem,
+  onHelp
 }: PropertyPanelProps) {
   const [activeSection, setActiveSection] = React.useState<string>('identity');
 
@@ -137,14 +129,14 @@ export default function PropertyPanel({
             transition={{ duration: 0.15 }}
           >
             {activeSection === 'identity' && (
-              <IdentitySection item={item} onUpdate={handleFieldUpdate} />
+              <IdentitySection item={item} onUpdate={handleFieldUpdate} onHelp={onHelp} />
             )}
 
             {isModule ? (
               <>
                 {activeSection === 'controls' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
                   <EntityListSection 
-                    items={item.ui?.controls || []}
+                    items={(item as OMEGA_Manifest).ui?.controls || []}
                     title="Interactive Controls"
                     type="control"
                     onSelectItem={onSelectItem}
@@ -155,7 +147,7 @@ export default function PropertyPanel({
                 )}
                 {activeSection === 'signals' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
                   <EntityListSection 
-                    items={item.ui?.jacks || []}
+                    items={(item as OMEGA_Manifest).ui?.jacks || []}
                     title="Signal Ports / Jacks"
                     type="jack"
                     onSelectItem={onSelectItem}
@@ -168,26 +160,27 @@ export default function PropertyPanel({
             ) : (
               <>
                 {activeSection === 'engineering' && (
-                  <EngineeringSection item={item} onUpdate={handleFieldUpdate} />
+                  <EngineeringSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} />
                 )}
 
                 {activeSection === 'logic' && (
-                  <LogicSection item={item} onUpdate={handleFieldUpdate} availableBinds={availableBinds} />
+                  <LogicSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} availableBinds={availableBinds} onHelp={onHelp} />
                 )}
 
                 {activeSection === 'spatial' && (
-                  <SpatialSection item={item} onUpdate={handleFieldUpdate} />
+                  <SpatialSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} />
                 )}
 
                 {activeSection === 'aesthetic' && (
-                  <AestheticSection item={item} onUpdate={handleFieldUpdate} />
+                  <AestheticSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} />
                 )}
 
                 {activeSection === 'attachments' && (
                   <AttachmentsSection 
-                    item={item} 
+                    item={item as ManifestEntity} 
                     onUpdate={handleFieldUpdate} 
                     availableBinds={availableBinds}
+                    onHelp={onHelp}
                   />
                 )}
               </>

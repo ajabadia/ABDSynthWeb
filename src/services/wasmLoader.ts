@@ -31,16 +31,22 @@ export class WasmLoaderService {
     const arrayBuffer = await file.arrayBuffer();
     
     // Create a robust import object using a Proxy to catch all OMEGA host functions
-    const hostFunctions = {
+    const hostFunctions: Record<string, WebAssembly.ImportValue> = {
       memory: new WebAssembly.Memory({ initial: 256, maximum: 512 }),
       abort: () => console.warn('[WASM] Abort called'),
       // Standard OMEGA host functions that might be called during static init
       omega_log: (ptr: number) => console.log('[WASM LOG] Pointer:', ptr),
     };
+    
+    // Explicit type for instance exports to avoid 'any'
+    interface OmegaExports extends WebAssembly.Exports {
+      memory?: WebAssembly.Memory;
+      omega_get_contract?: () => number;
+    }
 
-    const importObject = {
+    const importObject: WebAssembly.Imports = {
       env: new Proxy(hostFunctions, {
-        get(target: any, prop: string) {
+        get(target: Record<string, WebAssembly.ImportValue>, prop: string): WebAssembly.ImportValue | undefined {
           if (prop in target) return target[prop];
           
           // Return a dummy callable for any requested OMEGA host function (omega_...)
@@ -56,7 +62,7 @@ export class WasmLoaderService {
 
     try {
       const { instance } = await WebAssembly.instantiate(arrayBuffer, importObject);
-      const exports = instance.exports as any;
+      const exports = instance.exports as OmegaExports;
 
       if (!exports.omega_get_contract) {
         throw new Error("WASM module is not OMEGA-compliant (missing 'omega_get_contract' export).");
@@ -66,13 +72,14 @@ export class WasmLoaderService {
       const ptr = exports.omega_get_contract();
       
       // Read the string from WASM memory
-      const memory = exports.memory || hostFunctions.memory;
+      const memory = exports.memory || (hostFunctions.memory as WebAssembly.Memory);
       const jsonString = this.readStringFromMemory(memory, ptr);
 
       return JSON.parse(jsonString) as OmegaContract;
-    } catch (err: any) {
-      console.error("Failed to extract OMEGA contract:", err);
-      throw new Error(`LinkError: Binary requires host functions or is corrupted. Details: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to extract OMEGA contract:", message);
+      throw new Error(`LinkError: Binary requires host functions or is corrupted. Details: ${message}`);
     }
   }
 

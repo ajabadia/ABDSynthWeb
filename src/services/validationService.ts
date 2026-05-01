@@ -14,6 +14,8 @@ addFormats(ajv);
 const validateV6 = ajv.compile(era6Schema);
 const validateV7 = ajv.compile(era7Schema);
 
+import { OMEGA_Manifest } from '../types/manifest';
+
 export interface ValidationIssue {
   path: string;
   message: string;
@@ -21,18 +23,35 @@ export interface ValidationIssue {
 }
 
 export class ValidationService {
-  static validate(manifest: any): ValidationIssue[] {
-    const isV7 = manifest?.schemaVersion?.startsWith('7') || manifest?.schemaVersion === '7.0';
+  static validate(manifest: OMEGA_Manifest): ValidationIssue[] {
+    const isV7 = manifest.schemaVersion?.startsWith('7') || manifest.schemaVersion === '7.0';
     const validator = isV7 ? validateV7 : validateV6;
     
     const isValid = validator(manifest);
-    if (isValid) return [];
-
-    return (validator.errors || []).map(err => ({
-      // Normalizamos instancePath a path para nuestra UI
+    const issues = (validator.errors || []).map(err => ({
       path: err.instancePath || '',
       message: err.message || 'Invalid value',
       keyword: err.keyword || 'schema'
     }));
+
+    // GOBERNANZA ERA 7.1: Validación de Roles Obligatorios
+    if (manifest.schemaVersion?.startsWith('7')) {
+      const allEntities = [
+        ...(manifest.ui?.controls || []),
+        ...(manifest.ui?.jacks || [])
+      ];
+
+      allEntities.forEach((entity, idx) => {
+        if (!entity.role) {
+          issues.push({
+            path: `/ui/${(entity as any).isJack ? 'jacks' : 'controls'}/${idx}`,
+            message: 'ERROR DE GOBERNANZA: Falta el Registry Role obligatorio.',
+            keyword: 'era7_governance'
+          });
+        }
+      });
+    }
+
+    return issues;
   }
 }

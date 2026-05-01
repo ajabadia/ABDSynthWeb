@@ -11,6 +11,7 @@ import PropertyPanel from './PropertyPanel';
 import LogTerminal from './LogTerminal';
 import SourceViewer from './SourceViewer';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
+import HelpModal from './HelpModal';
 
 /**
  * ViewportControls
@@ -92,10 +93,16 @@ export default function WorkbenchContainer() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(false);
+  const [helpState, setHelpState] = useState<{ isOpen: boolean; sectionId?: string }>({ isOpen: false });
 
   // VIEWPORT NAVIGATION STATE
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  // Help Handlers
+  const openHelp = useCallback((sectionId?: string) => {
+    setHelpState({ isOpen: true, sectionId });
+  }, []);
 
   // Event Handlers
   const triggerUpload = (id: string) => document.getElementById(id)?.click();
@@ -157,6 +164,7 @@ export default function WorkbenchContainer() {
         showLogs={showLogs}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        onHelp={() => openHelp()}
       />
 
       <main className="flex-1 flex overflow-hidden">
@@ -269,11 +277,19 @@ export default function WorkbenchContainer() {
                 onAddEntity={handleAddEntity}
                 onDuplicateItem={handleDuplicateItem}
                 onRemoveItem={handleRemoveItem}
+                onHelp={openHelp}
               />
             </motion.aside>
           )}
         </AnimatePresence>
       </main>
+
+      {/* HELP MODAL */}
+      <HelpModal 
+        isOpen={helpState.isOpen} 
+        initialSectionId={helpState.sectionId} 
+        onClose={() => setHelpState({ isOpen: false })} 
+      />
 
       {/* FLOATING LOG TERMINAL */}
       <AnimatePresence>
