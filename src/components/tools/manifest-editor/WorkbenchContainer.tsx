@@ -91,6 +91,7 @@ export default function WorkbenchContainer() {
   const [viewMode, setViewMode] = useState<'orbital' | 'rack' | 'source'>('orbital');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
+  const [isLiveMode, setIsLiveMode] = useState(false);
 
   // VIEWPORT NAVIGATION STATE
   const [zoom, setZoom] = useState(1.0);
@@ -225,6 +226,8 @@ export default function WorkbenchContainer() {
                   selectedItemId={selectedItemId}
                   onUpdateItem={updateItem}
                   zoom={zoom}
+                  isLiveMode={isLiveMode}
+                  setIsLiveMode={setIsLiveMode}
                 />
               </motion.div>
             ) : (
@@ -243,30 +246,32 @@ export default function WorkbenchContainer() {
 
         {/* RIGHT SIDEBAR: INSPECTOR */}
         <AnimatePresence>
-          <motion.aside 
-            key="inspector"
-            initial={{ x: 400 }}
-            animate={{ x: 0 }}
-            exit={{ x: 400 }}
-            className="w-[400px] shrink-0 h-full border-l border-outline/20"
-          >
-            <PropertyPanel 
-              item={selectedItem}
-              onUpdate={selectedItemId ? (updates: any) => {
-                updateItem(selectedItemId, updates);
-                if (updates.id && updates.id !== selectedItemId) {
-                  setSelectedItemId(updates.id);
-                }
-              } : updateManifest}
-              onClose={() => setSelectedItemId(null)}
-              availableBinds={availableBinds}
-              scale={1}
-              onSelectItem={handleSelectItem}
-              onAddEntity={handleAddEntity}
-              onDuplicateItem={handleDuplicateItem}
-              onRemoveItem={handleRemoveItem}
-            />
-          </motion.aside>
+          {(selectedItemId || !isLiveMode) && !isLiveMode && (
+            <motion.aside 
+              key="inspector"
+              initial={{ x: 400 }}
+              animate={{ x: 0 }}
+              exit={{ x: 400 }}
+              className="w-[400px] shrink-0 h-full border-l border-outline/20"
+            >
+              <PropertyPanel 
+                item={selectedItem}
+                onUpdate={selectedItemId ? (updates: any) => {
+                  updateItem(selectedItemId, updates);
+                  if (updates.id && updates.id !== selectedItemId) {
+                    setSelectedItemId(updates.id);
+                  }
+                } : updateManifest}
+                onClose={() => setSelectedItemId(null)}
+                availableBinds={availableBinds}
+                scale={1}
+                onSelectItem={handleSelectItem}
+                onAddEntity={handleAddEntity}
+                onDuplicateItem={handleDuplicateItem}
+                onRemoveItem={handleRemoveItem}
+              />
+            </motion.aside>
+          )}
         </AnimatePresence>
       </main>
 
