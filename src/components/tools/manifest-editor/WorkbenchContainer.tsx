@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Minus, Maximize, Target, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from './Header';
 import ModuleHub from './ModuleHub';
 import VirtualRack from './VirtualRack';
@@ -12,10 +13,62 @@ import SourceViewer from './SourceViewer';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
 
 /**
- * WorkbenchContainer
- * Pure Orchestrator for the OMEGA Manifest Engineering Suite.
- * Handles layout routing, visibility state, and component mapping.
+ * ViewportControls
+ * Industrial floating toolbar for viewport navigation.
  */
+function ViewportControls({ zoom, onZoom, onPan, onReset, onFit }: any) {
+  return (
+    <div className="absolute bottom-6 right-6 flex items-center gap-3 z-[100]">
+      {/* ZOOM GROUP */}
+      <div className="flex items-center bg-black/60 backdrop-blur-md border border-white/10 rounded-xs p-1 shadow-2xl">
+        <button onClick={() => onZoom(-0.1)} className="p-1.5 hover:bg-white/5 text-foreground/40 hover:text-primary transition-all rounded-xs">
+          <Minus className="w-3.5 h-3.5" />
+        </button>
+        <div className="px-3 min-w-[50px] text-center border-x border-white/5">
+          <span className="text-[9px] font-mono font-black text-primary/80">{Math.round(zoom * 100)}%</span>
+        </div>
+        <button onClick={() => onZoom(0.1)} className="p-1.5 hover:bg-white/5 text-foreground/40 hover:text-primary transition-all rounded-xs">
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* PAN & CENTER GROUP */}
+      <div className="flex items-center bg-black/60 backdrop-blur-md border border-white/10 rounded-xs p-1 shadow-2xl">
+        <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
+          <div />
+          <button onClick={() => onPan(0, 50)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
+            <ChevronUp className="w-3 h-3" />
+          </button>
+          <div />
+          <button onClick={() => onPan(50, 0)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+          <button onClick={onReset} className="p-1 bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-xs flex items-center justify-center">
+            <Target className="w-3 h-3" />
+          </button>
+          <button onClick={() => onPan(-50, 0)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
+            <ChevronRight className="w-3 h-3" />
+          </button>
+          <div />
+          <button onClick={() => onPan(0, -50)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          <div />
+        </div>
+      </div>
+
+      {/* FIT ACTION */}
+      <button 
+        onClick={onFit}
+        className="flex items-center gap-2 px-3 py-2 bg-black/60 backdrop-blur-md border border-white/10 hover:border-primary/40 hover:bg-primary/5 text-foreground/40 hover:text-primary transition-all rounded-xs shadow-2xl group"
+      >
+        <Maximize className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+        <span className="text-[8px] font-black uppercase tracking-widest">Fit</span>
+      </button>
+    </div>
+  );
+}
+
 export default function WorkbenchContainer() {
   const { 
     manifest, 
@@ -39,7 +92,11 @@ export default function WorkbenchContainer() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
 
-  // Event Handlers (Orchestration)
+  // VIEWPORT NAVIGATION STATE
+  const [zoom, setZoom] = useState(1.0);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  // Event Handlers
   const triggerUpload = (id: string) => document.getElementById(id)?.click();
 
   const handleSelectItem = useCallback((id: string) => {
@@ -61,7 +118,23 @@ export default function WorkbenchContainer() {
     if (selectedItemId === id) setSelectedItemId(null);
   }, [removeItem, selectedItemId]);
 
-  // Derived Data
+  // Viewport Actions
+  const handleZoom = (delta: number) => setZoom(prev => Math.max(0.2, Math.min(3, prev + delta)));
+  const handlePan = (dx: number, dy: number) => setPan(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+  const handleResetViewport = () => {
+    setZoom(1.0);
+    setPan({ x: 0, y: 0 });
+  };
+  const handleFitViewport = () => {
+    if (viewMode === 'rack') {
+      setZoom(0.85);
+      setPan({ x: 0, y: 0 });
+    } else {
+      setZoom(1.0);
+      setPan({ x: 0, y: 0 });
+    }
+  };
+
   const availableBinds = contract ? [
     ...(contract.parameters?.map((p: { id: string }) => p.id) || []),
     ...(contract.ports?.map((p: { id: string }) => p.id) || [])
@@ -86,7 +159,7 @@ export default function WorkbenchContainer() {
       />
 
       <main className="flex-1 flex overflow-hidden">
-        {/* LEFT SIDEBAR: HUB & REGISTRY */}
+        {/* LEFT SIDEBAR */}
         <aside className="w-80 border-r border-outline bg-black/40 flex flex-col min-w-[320px]">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
             <ModuleHub 
@@ -99,14 +172,30 @@ export default function WorkbenchContainer() {
 
         {/* CENTER VIEWPORT */}
         <section className="flex-1 relative bg-black overflow-hidden">
+          {viewMode !== 'source' && (
+            <ViewportControls 
+              zoom={zoom}
+              onZoom={handleZoom}
+              onPan={handlePan}
+              onReset={handleResetViewport}
+              onFit={handleFitViewport}
+            />
+          )}
+
           <AnimatePresence mode="wait">
             {viewMode === 'orbital' ? (
               <motion.div 
                 key="orbital"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
-                className="h-full"
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: 1,
+                  scale: zoom,
+                  x: pan.x,
+                  y: pan.y
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="h-full origin-center"
               >
                 <NodeCanvas 
                   manifest={manifest}
@@ -119,26 +208,34 @@ export default function WorkbenchContainer() {
             ) : viewMode === 'rack' ? (
               <motion.div 
                 key="rack"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="h-full"
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: 1,
+                  scale: zoom,
+                  x: pan.x,
+                  y: pan.y
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="h-full origin-center"
               >
                 <VirtualRack 
                   manifest={manifest}
                   onSelectItem={handleSelectItem}
                   selectedItemId={selectedItemId}
+                  onUpdateItem={updateItem}
+                  zoom={zoom}
                 />
               </motion.div>
             ) : (
               <motion.div 
                 key="source"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 className="h-full"
               >
-                <SourceViewer manifest={manifest} />
+                <SourceViewer manifest={manifest} selectedItemId={selectedItemId} />
               </motion.div>
             )}
           </AnimatePresence>

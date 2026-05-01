@@ -211,7 +211,6 @@ export const useManifestEditor = () => {
 
   const updateManifest = (updates: any) => {
     setManifest((prev: any) => {
-      // Deep-ish merge for the UI object to avoid losing skin/dimensions
       if (updates.ui && prev.ui) {
         updates.ui = { ...prev.ui, ...updates.ui };
       }
@@ -229,6 +228,18 @@ export const useManifestEditor = () => {
 
   const updateItem = useCallback((id: string, updates: any) => {
     const isJack = manifest.ui?.jacks?.some((j: any) => j.id === id);
+    
+    // INDUSTRIAL CLAMPING LOGIC
+    if (updates.pos) {
+      const rackSettings = manifest?.metadata?.rack || {};
+      const hp = rackSettings.hp || 12;
+      const width = hp * 15; // Industrial standard HP to pixels
+      const height = manifest.ui?.dimensions?.height || 420;
+      
+      updates.pos.x = Math.max(0, Math.min(width, updates.pos.x));
+      updates.pos.y = Math.max(0, Math.min(height, updates.pos.y));
+    }
+
     if (isJack) {
       const nextJacks = manifest.ui.jacks.map((j: any) => j.id === id ? { ...j, ...updates } : j);
       updateManifest({ ui: { jacks: nextJacks } });
