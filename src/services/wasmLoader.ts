@@ -38,12 +38,6 @@ export class WasmLoaderService {
       omega_log: (ptr: number) => console.log('[WASM LOG] Pointer:', ptr),
     };
     
-    // Explicit type for instance exports to avoid 'any'
-    interface OmegaExports extends WebAssembly.Exports {
-      memory?: WebAssembly.Memory;
-      omega_get_contract?: () => number;
-    }
-
     const importObject: WebAssembly.Imports = {
       env: new Proxy(hostFunctions, {
         get(target: Record<string, WebAssembly.ImportValue>, prop: string): WebAssembly.ImportValue | undefined {
@@ -62,7 +56,7 @@ export class WasmLoaderService {
 
     try {
       const { instance } = await WebAssembly.instantiate(arrayBuffer, importObject);
-      const exports = instance.exports as OmegaExports;
+      const exports = instance.exports as any;
 
       if (!exports.omega_get_contract) {
         throw new Error("WASM module is not OMEGA-compliant (missing 'omega_get_contract' export).");

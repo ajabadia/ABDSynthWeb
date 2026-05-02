@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, Trash2, ArrowRight, Activity, LayoutGrid } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Activity, LayoutGrid, Info } from 'lucide-react';
 import { OMEGA_Manifest, OMEGA_Modulation } from '../../../../types/manifest';
 
 interface ModulationSectionProps {
@@ -10,9 +10,10 @@ interface ModulationSectionProps {
   onRemove: (id: string) => void;
   onUpdate: (id: string, updates: Partial<OMEGA_Modulation>) => void;
   onOpenGrid?: () => void;
+  onHelp?: (sectionId?: string) => void;
 }
 
-export default function ModulationSection({ manifest, onAdd, onRemove, onUpdate, onOpenGrid }: ModulationSectionProps) {
+export default function ModulationSection({ manifest, onAdd, onRemove, onUpdate, onOpenGrid, onHelp }: ModulationSectionProps) {
   const allEntities = [
     ...(manifest.ui?.controls || []),
     ...(manifest.ui?.jacks || [])
@@ -35,6 +36,9 @@ export default function ModulationSection({ manifest, onAdd, onRemove, onUpdate,
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-cyan-400" />
           <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground/70">Internal Routings</h3>
+          <button onClick={() => onHelp?.('modulaciones')} className="hover:text-primary transition-colors ml-1">
+            <Info className="w-2.5 h-2.5 opacity-20" />
+          </button>
         </div>
         <div className="flex gap-1">
           <button 

@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Move, Grid3X3 } from 'lucide-react';
+import { Move, Grid3X3, Info } from 'lucide-react';
 
 interface SpatialSectionProps {
   item: any;
   onUpdate: (updates: any) => void;
+  onHelp?: (sectionId?: string) => void;
 }
 
-export default function SpatialSection({ item, onUpdate }: SpatialSectionProps) {
+export default function SpatialSection({ item, onUpdate, onHelp }: SpatialSectionProps) {
   const pos = item.pos || { x: 0, y: 0 };
   const pres = item.presentation || {};
 
@@ -17,10 +18,15 @@ export default function SpatialSection({ item, onUpdate }: SpatialSectionProps) 
       {/* COORDINATES */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
-            <Move className="w-2.5 h-2.5" />
-            <span>Absolute X</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+              <Move className="w-2.5 h-2.5" />
+              <span>Absolute X</span>
+            </label>
+            <button onClick={() => onHelp?.('spatial')} className="hover:text-primary transition-colors">
+              <Info className="w-2.5 h-2.5 opacity-20" />
+            </button>
+          </div>
           <input 
             type="number" 
             value={pos.x || 0} 
@@ -44,10 +50,15 @@ export default function SpatialSection({ item, onUpdate }: SpatialSectionProps) 
 
       {/* GRID LOGIC (Era 6 Compatibility) */}
       <div className="space-y-1">
-        <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
-          <Grid3X3 className="w-2.5 h-2.5" />
-          <span>Column Span</span>
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+            <Grid3X3 className="w-2.5 h-2.5" />
+            <span>Column Span</span>
+          </label>
+          <button onClick={() => onHelp?.('dimensiones')} className="hover:text-primary transition-colors">
+            <Info className="w-2.5 h-2.5 opacity-20" />
+          </button>
+        </div>
         <select 
           value={pres.colSpan || 1} 
           onChange={(e) => onUpdate({ presentation: { ...pres, colSpan: parseInt(e.target.value) } })}

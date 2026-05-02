@@ -15,13 +15,10 @@ const EXTENDED_ROLES = [
 ];
 
 export default function EngineeringSection({ item, onUpdate, onHelp }: EngineeringSectionProps) {
-  const currentRoles = item.roles || ['control'];
+  const currentRole = item.role || 'control';
 
-  const toggleRole = (role: string) => {
-    const newRoles = currentRoles.includes(role)
-      ? currentRoles.filter((r: string) => r !== role)
-      : [...currentRoles, role];
-    onUpdate({ roles: newRoles });
+  const setRole = (role: string) => {
+    onUpdate({ role });
   };
 
   return (
@@ -76,9 +73,9 @@ export default function EngineeringSection({ item, onUpdate, onHelp }: Engineeri
           {EXTENDED_ROLES.map(role => (
             <button
               key={role}
-              onClick={() => toggleRole(role)}
+              onClick={() => setRole(role)}
               className={`px-2 py-1 text-[7px] font-black uppercase tracking-tighter border rounded-full transition-all ${
-                currentRoles.includes(role)
+                currentRole === role
                   ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]'
                   : 'bg-black/40 border-outline/20 text-foreground/30 hover:border-outline/40 hover:text-foreground/60'
               }`}

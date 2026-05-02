@@ -47,7 +47,7 @@ export class AuditService {
     }
 
     // 3. CHEQUEO ESTÉTICO (IDENTIDAD VISUAL)
-    if (!manifest.ui?.skin) {
+    if (!(manifest.ui as any).skin) {
       aesthetic = false;
       details.push('MEJORA: No se ha definido una Skin industrial (usando default).');
     }

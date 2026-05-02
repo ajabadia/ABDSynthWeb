@@ -22,7 +22,7 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
   // VIRTUAL CORE ATTACHMENT: Represents the main component itself
   const coreAtt = {
     isCore: true,
-    type: item.presentation?.component || (item.isJack ? 'port' : 'knob'),
+    type: item.presentation?.component || (item.role === 'mod_target' ? 'port' : 'knob'),
     position: 'center',
     variant: item.presentation?.variant || 'B_cyan',
     bind: item.bind,
@@ -31,9 +31,9 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
   };
 
   const addAttachment = () => {
-    const newAtt = { type: 'label', position: 'bottom', offsetY: 0, offsetX: 0, role: 'standard', variant: 'B_cyan' };
+    const newAtt = { type: 'label', position: 'bottom' as const, offsetY: 0, offsetX: 0, role: 'standard', variant: 'B_cyan' };
     const nextAtts = [...attachments, newAtt];
-    onUpdate({ presentation: { ...item.presentation, attachments: nextAtts } });
+    onUpdate({ presentation: { ...item.presentation, attachments: nextAtts as any } });
     setExpandedIdx(nextAtts.length - 1);
   };
 

@@ -51,6 +51,7 @@ export interface ManifestEntity {
   id: string;
   type: string;
   role: RegistryRole | string;
+  roles?: string[]; // Industrial multi-role support
   bind: string;
   label?: string;
   pos: Position;
@@ -63,10 +64,13 @@ export interface ManifestMetadata {
   family: string;
   author?: string;
   version?: string;
+  status?: string;      // Industrial status (Stable, Alpha, etc.)
+  description?: string; // Module description
   tags?: string[];
   rack?: {
     hp?: number;
-    height_mode?: 'standard' | 'compact';
+    height_mode?: 'standard' | 'compact' | 'full';
+    slot?: string;      // Legacy/Visual slot mapping
     skin?: string;
   };
 }
@@ -87,6 +91,7 @@ export interface OMEGA_Manifest {
     dimensions: Dimensions;
     controls: ManifestEntity[];
     jacks: ManifestEntity[];
+    skin?: string; // Global UI skin
   };
   resources: {
     wasm: string;

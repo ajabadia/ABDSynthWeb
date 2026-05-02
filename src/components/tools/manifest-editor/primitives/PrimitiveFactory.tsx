@@ -26,34 +26,35 @@ interface PrimitiveProps {
   role?: string;
   options?: string[];
   lookup?: string;
+  item?: any;
 }
 
 export default function PrimitiveFactory(props: PrimitiveProps) {
-  const { type } = props;
+  const { type, item, ...rest } = props;
 
   switch (type) {
     case 'knob':
-      return <Knob {...props} />;
+      return <Knob {...rest} />;
     case 'port':
-      return <Port {...props} />;
+      return <Port {...rest} />;
     case 'display':
-      return <Display {...props} />;
+      return <Display {...rest} />;
     case 'select':
-      return <Select {...props} />;
+      return <Select {...rest} />;
     case 'led':
-      return <Led {...props} />;
+      return <Led {...rest} />;
     case 'switch':
-      return <Switch {...props} />;
+      return <Switch {...rest} />;
     case 'slider-v':
     case 'slider-h':
-      return <Slider {...props} type={type} />;
+      return <Slider {...rest} type={type} />;
     case 'stepper':
     case 'button':
     case 'push':
-      return <Stepper {...props} type={type} />;
+      return <Stepper {...rest} type={type} />;
     case 'label':
-      return <Label {...props} text={props.text || 'LABEL'} />;
+      return <Label {...rest} text={props.text || 'LABEL'} />;
     default:
-      return <Label {...props} text={props.text || 'UNKNOWN'} />;
+      return <Label {...rest} text={props.text || 'UNKNOWN'} />;
   }
 }

@@ -69,7 +69,7 @@ export default function WorkbenchContainer() {
   // Event Handlers
   const triggerUpload = (id: string) => document.getElementById(id)?.click();
 
-  const handleSelectItem = useCallback((id: string) => {
+  const handleSelectItem = useCallback((id: string | null) => {
     setSelectedItemId(id);
   }, []);
 
@@ -126,8 +126,7 @@ export default function WorkbenchContainer() {
       <input 
         id="folder-upload" 
         type="file" 
-        webkitdirectory="" 
-        directory="" 
+        {...({ webkitdirectory: "", directory: "" } as any)}
         className="hidden" 
         onChange={(e) => { if (e.target.files) { setPendingFiles(Array.from(e.target.files)); e.target.value = ''; } }} 
       />
@@ -221,6 +220,7 @@ export default function WorkbenchContainer() {
               >
                 <VirtualRack 
                   manifest={manifest}
+                  contract={contract}
                   onSelectItem={handleSelectItem}
                   selectedItemId={selectedItemId}
                   onUpdateItem={updateItem}
@@ -254,7 +254,7 @@ export default function WorkbenchContainer() {
               className="w-[400px] shrink-0 h-full border-l border-outline/20"
             >
               <PropertyPanel 
-                item={selectedItem}
+                item={selectedItem!}
                 onUpdate={selectedItemId ? (updates: any) => {
                   updateItem(selectedItemId, updates);
                   if (updates.id && updates.id !== selectedItemId) {

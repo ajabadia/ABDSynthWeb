@@ -124,7 +124,7 @@ export default function ResourceSection({ resources, onTriggerUpload, onRemove }
             <p className="text-[8px] font-black uppercase tracking-widest text-foreground/60 mb-1">Engine Tunnel Access</p>
             <p className="text-[7px] font-mono text-foreground/30 leading-relaxed">
               These assets are automatically served via <span className="text-primary/40">AceCatalog::getResourceStream</span>. 
-              Refer to them in your manifest using the path <span className="text-accent/60">"resources/{filename}"</span>.
+              Refer to them in your manifest using the path <span className="text-accent/60">"resources/[filename]"</span>.
             </p>
           </div>
         </div>

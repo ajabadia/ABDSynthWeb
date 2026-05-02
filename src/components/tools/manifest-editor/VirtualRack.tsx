@@ -15,7 +15,7 @@ interface VirtualRackProps {
   manifest: OMEGA_Manifest;
   contract: any;
   selectedItemId: string | null;
-  onSelectItem: (id: string) => void;
+  onSelectItem: (id: string | null) => void;
   onUpdateItem: (id: string, updates: Partial<ManifestEntity>) => void;
   zoom?: number;
   isLiveMode: boolean;

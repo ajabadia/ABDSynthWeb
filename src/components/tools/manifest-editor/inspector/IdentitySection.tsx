@@ -3,7 +3,7 @@
 import React from 'react';
 import { Fingerprint, Info, Tags, Box, Layout, Shield } from 'lucide-react';
 
-import { OMEGA_Manifest, ManifestEntity } from '../../../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity, ManifestMetadata } from '../../../../types/manifest';
 
 interface IdentitySectionProps {
   item: OMEGA_Manifest | ManifestEntity;
@@ -32,7 +32,7 @@ const SKINS = [
 ];
 
 export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySectionProps) {
-  const isModule = !!item.metadata;
+  const isModule = 'metadata' in item;
 
   if (!isModule) {
     return (
@@ -78,7 +78,7 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
   const rack = metadata.rack || { slot: 'main', height_mode: 'full', hp: 12 };
   const ui = manifest.ui || {};
 
-  const updateMetadata = (field: keyof typeof metadata, value: unknown) => {
+  const updateMetadata = (field: keyof ManifestMetadata, value: unknown) => {
     onUpdate({ metadata: { ...metadata, [field]: value } } as Partial<OMEGA_Manifest>);
   };
 
