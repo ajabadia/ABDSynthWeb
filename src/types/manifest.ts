@@ -29,13 +29,34 @@ export interface Attachment {
   bind?: string;
 }
 
+export type ContainerSizeUnit = 'full' | '3/4' | '2/3' | '1/2' | '1/3' | '1/4';
+export type ContainerVariant = 'default' | 'header' | 'section' | 'panel' | 'inset' | 'minimal';
+
+export interface ContainerSize {
+  w: ContainerSizeUnit | number;
+  h: number;
+}
+
+export interface LayoutContainer {
+  id: string;
+  label: string;
+  pos: Position;
+  size: ContainerSize;
+  variant: ContainerVariant;
+  zIndex?: number;
+  labelPosition?: 'top' | 'bottom' | 'inside-top' | 'inside-bottom';
+  tab?: TabName | string; // Era 7.2.1 Architectural Plane
+}
+
 export interface Presentation {
   tab: TabName | string;
   component: ComponentType | string;
   variant: string;
   offsetX: number;
   offsetY: number;
-  group?: string;
+  container?: string;     // Era 7.2 Container mapping
+  /** @deprecated Use container instead */
+  group?: string;         
   attachments: Attachment[];
   precision?: number;
   ui_precision?: number;
@@ -92,6 +113,10 @@ export interface OMEGA_Manifest {
     controls: ManifestEntity[];
     jacks: ManifestEntity[];
     skin?: string; // Global UI skin
+    layout?: {
+      containers: LayoutContainer[];
+      gridSnap?: number;
+    };
   };
   resources: {
     wasm: string;

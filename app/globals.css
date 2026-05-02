@@ -10,7 +10,41 @@
   --color-accent: #ff8c00;
   --color-surface: #141416;
   --color-outline: #2a2a2d;
+
+  /* OMEGA ERA 7.2.3 UNIFIED SKIN SYSTEM */
+  --carbon-texture: radial-gradient(#222 20%, transparent 20%), radial-gradient(#222 20%, transparent 20%);
+  --carbon-bg: #0a0a0a;
+  --glass-blur: 12px;
+  --glass-bg: rgba(20, 25, 30, 0.4);
+  --industrial-bg: #1a1c1e;
 }
+
+/* SKIN: CARBON */
+.skin-carbon {
+  background-color: var(--carbon-bg) !important;
+  background-image: var(--carbon-texture) !important;
+  background-size: 4px 4px !important;
+  background-position: 0 0, 2px 2px !important;
+}
+
+/* SKIN: GLASS */
+.skin-glass {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* SKIN: MINIMAL */
+.skin-minimal {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* CONTAINER SKIN ADAPTATION */
+.container-carbon { border-color: rgba(255, 255, 255, 0.05); background: rgba(0, 0, 0, 0.4); }
+.container-glass { backdrop-filter: blur(8px); background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.1); }
+.container-industrial { background: rgba(255, 255, 255, 0.015); border-color: rgba(255, 255, 255, 0.05); }
+.container-minimal { background: transparent; border: 1px dashed rgba(255, 255, 255, 0.1); }
 
 @layer base {
   body {
@@ -97,4 +131,26 @@
 @keyframes scanline-anim {
   0% { bottom: 100%; }
   100% { bottom: 0%; }
+}
+
+/* ═══════════════════════════════════════════════
+   OMEGA ERA 7.2 — LAYOUT CONTAINER TOKENS
+   ═══════════════════════════════════════════════ */
+:root {
+  --omega-container-border: rgba(255, 255, 255, 0.06);
+  --omega-container-bg: rgba(255, 255, 255, 0.015);
+  --omega-container-radius: 2px;
+  
+  --omega-container-selected-border: rgba(0, 240, 255, 0.4);
+  --omega-container-selected-bg: rgba(0, 240, 255, 0.03);
+  --omega-container-selected-glow: 0 0 30px rgba(0, 240, 255, 0.1);
+}
+
+.omega-container {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.omega-container-selected {
+  box-shadow: var(--omega-container-selected-glow);
+  z-index: 10;
 }

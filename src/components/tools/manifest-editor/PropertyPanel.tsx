@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Fingerprint, Settings, Palette, Paperclip, Shield, Package, Settings2, Zap, Move } from 'lucide-react';
+import { X, Fingerprint, Settings, Palette, Paperclip, Shield, Package, Settings2, Zap, Move, Layout } from 'lucide-react';
 import IdentitySection from './inspector/IdentitySection';
 import LogicSection from './inspector/LogicSection';
 import AestheticSection from './inspector/AestheticSection';
@@ -13,6 +13,7 @@ import SpatialSection from './inspector/SpatialSection';
 import CellPreview from './inspector/CellPreview';
 import ModulationSection from './inspector/ModulationSection';
 import ResourceSection from './inspector/ResourceSection';
+import ContainerSection from './inspector/ContainerSection';
 
 import { ManifestEntity, OMEGA_Manifest } from '../../../types/manifest';
 
@@ -31,8 +32,13 @@ interface PropertyPanelProps {
   onRemoveModulation?: (id: string) => void;
   onUpdateModulation?: (id: string, updates: any) => void;
   onOpenGrid?: () => void;
+  addContainer?: () => void;
+  updateContainer?: (id: string, updates: any) => void;
+  removeContainer?: (id: string) => void;
   extraResources?: { name: string, data: ArrayBuffer, type: string }[];
   onTriggerUpload?: (id: string) => void;
+  onRemoveResource?: (name: string) => void;
+  manifest: OMEGA_Manifest;
 }
 
 export default function PropertyPanel({ 
@@ -51,7 +57,12 @@ export default function PropertyPanel({
   onUpdateModulation,
   onOpenGrid,
   extraResources = [],
-  onTriggerUpload
+  onTriggerUpload,
+  onRemoveResource,
+  addContainer,
+  updateContainer,
+  removeContainer,
+  manifest
 }: PropertyPanelProps) {
   const [activeSection, setActiveSection] = React.useState<string>('identity');
 
@@ -61,6 +72,7 @@ export default function PropertyPanel({
   const sections = React.useMemo(() => (
     isModule ? [
       { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
+      { id: 'layout', label: 'Layout', icon: Layout, color: 'text-accent' },
       { id: 'controls', label: 'Controls', icon: Settings2, color: 'text-blue-400' },
       { id: 'signals', label: 'Signals', icon: Zap, color: 'text-yellow-400' },
       { id: 'assets', label: 'Assets', icon: Palette, color: 'text-purple-400' },
@@ -150,6 +162,14 @@ export default function PropertyPanel({
 
             {isModule ? (
               <>
+                {activeSection === 'layout' && addContainer && updateContainer && removeContainer && (
+                   <ContainerSection 
+                     containers={(item as OMEGA_Manifest).ui.layout?.containers || []}
+                     onAdd={addContainer}
+                     onUpdate={updateContainer}
+                     onRemove={removeContainer}
+                   />
+                )}
                 {activeSection === 'controls' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
                   <EntityListSection 
                     items={(item as OMEGA_Manifest).ui?.controls || []}
@@ -159,6 +179,7 @@ export default function PropertyPanel({
                     onAddEntity={onAddEntity}
                     onDuplicateItem={onDuplicateItem}
                     onRemoveItem={onRemoveItem}
+                    manifest={manifest}
                   />
                 )}
                 {activeSection === 'signals' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
@@ -170,6 +191,7 @@ export default function PropertyPanel({
                     onAddEntity={onAddEntity}
                     onDuplicateItem={onDuplicateItem}
                     onRemoveItem={onRemoveItem}
+                    manifest={manifest}
                   />
                 )}
                 {activeSection === 'modulations' && onAddModulation && onRemoveModulation && onUpdateModulation && (
@@ -185,6 +207,7 @@ export default function PropertyPanel({
                   <ResourceSection 
                     resources={extraResources} 
                     onTriggerUpload={() => onTriggerUpload('resource-upload')} 
+                    onRemove={onRemoveResource}
                   />
                 )}
               </>
@@ -203,7 +226,12 @@ export default function PropertyPanel({
                 )}
 
                 {activeSection === 'aesthetic' && (
-                  <AestheticSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} />
+                  <AestheticSection 
+                    item={item as ManifestEntity} 
+                    onUpdate={handleFieldUpdate} 
+                    onHelp={onHelp} 
+                    containers={manifest?.ui?.layout?.containers || []}
+                  />
                 )}
 
                 {activeSection === 'attachments' && (

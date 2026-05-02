@@ -9,18 +9,22 @@ export interface AuditResult {
     governance: boolean;
     technical: boolean;
     aesthetic: boolean;
+    integrity: boolean;
   };
   details: string[];
+  fingerprint?: string; 
+  isHashMatched?: boolean; // NEW: Parity with engine binary
 }
 
 export class AuditService {
-  static performFullAudit(manifest: OMEGA_Manifest): AuditResult {
+  static performFullAudit(manifest: OMEGA_Manifest, contractHash?: string): AuditResult {
     const issues = ValidationService.validate(manifest);
     const details: string[] = [];
     
     let governance = true;
     let technical = true;
     let aesthetic = true;
+    let integrity = true;
 
     // 1. CHEQUEO DE GOBERNANZA (BLOQUEANTE)
     const criticalIssues = issues.filter(i => i.keyword === 'era7_governance' || i.message.includes('ERROR'));
@@ -29,27 +33,34 @@ export class AuditService {
       details.push(`CRITICAL: ${criticalIssues.length} violaciones de gobernanza detectadas.`);
     }
 
-    // 2. CHEQUEO TÉCNICO (BINDINGS Y RACKS)
+    // 2. CHEQUEO DE INTEGRIDAD ESTRUCTURAL (ERA 7.2.3)
+    const integrityIssues = issues.filter(i => i.keyword === 'era7_integrity');
+    if (integrityIssues.length > 0) {
+      integrity = false;
+      details.push(`INTEGRITY: ${integrityIssues.length} fallos de integridad espacial (fuera de límites).`);
+      integrityIssues.forEach(i => details.push(`> ${i.message}`));
+    }
+
+    // 3. CHEQUEO TÉCNICO (BINDINGS Y RACKS)
     const allElements = [
-      ...(manifest.ui?.controls || []),
-      ...(manifest.ui?.jacks || [])
+      ...(manifest.ui?.controls || []).map(e => ({ ...e, isJack: false })),
+      ...(manifest.ui?.jacks || []).map(e => ({ ...e, isJack: true }))
     ];
+
+    const techIssues = issues.filter(i => i.keyword === 'era7_layout' || i.keyword === 'schema');
+    if (techIssues.length > 0) {
+      technical = false;
+      details.push(`TECHNICAL: ${techIssues.length} inconsistencias de configuración detectadas.`);
+    }
 
     if (allElements.length === 0) {
       technical = false;
       details.push('ADVERTENCIA: El módulo no contiene elementos interactivos.');
     }
 
-    const hp = manifest.metadata?.rack?.hp || 0;
-    if (hp < 2 || hp > 128) {
-      technical = false;
-      details.push('ERROR: Dimensiones de Rack (HP) fuera de rango estándar (2-128 HP).');
-    }
-
-    // 3. CHEQUEO ESTÉTICO (IDENTIDAD VISUAL)
-    if (!(manifest.ui as any).skin) {
-      aesthetic = false;
-      details.push('MEJORA: No se ha definido una Skin industrial (usando default).');
+    // 4. CHEQUEO ESTÉTICO (IDENTIDAD VISUAL)
+    if (!manifest.ui?.skin || manifest.ui.skin === 'industrial') {
+      // Industrial is fine, but we suggest variants
     }
 
     const hasLabels = allElements.some(el => 
@@ -61,21 +72,25 @@ export class AuditService {
     }
 
     // CALCULO FINAL
-    const isCompliant = governance && technical && issues.length === 0;
+    const isCompliant = governance && integrity && technical && issues.length === 0;
     let score = 100;
-    if (!isCompliant) score -= 40;
-    if (!aesthetic) score -= 10;
-    score = Math.max(0, score - (issues.length * 5));
+    
+    if (!governance) score -= 50;
+    if (!integrity) score -= 30;
+    if (!technical) score -= 15;
+    if (!aesthetic) score -= 5;
+    
+    score = Math.max(0, score - (issues.filter(i => i.keyword !== 'era7_integrity' && i.keyword !== 'era7_governance').length * 2));
 
     let status: AuditResult['status'] = 'CERTIFIED';
-    if (!governance) status = 'CRITICAL_FAIL';
+    if (!governance || !integrity) status = 'CRITICAL_FAIL';
     else if (!isCompliant || score < 80) status = 'DRAFT';
 
     return {
       isCompliant,
       score,
       status,
-      checks: { governance, technical, aesthetic },
+      checks: { governance, technical, aesthetic, integrity },
       details
     };
   }
@@ -84,29 +99,31 @@ export class AuditService {
     const date = new Date().toISOString().split('T')[0];
     const time = new Date().toTimeString().split(' ')[0];
 
-    return `# OMEGA ERA 7.1 - CERTIFICATE OF CONFORMITY
+    return `# OMEGA ERA 7.2.3 - CERTIFICATE OF CONFORMITY
 
 ## [ REPORT SUMMARY ]
 - **Module ID**: ${manifest.id}
 - **Commercial Name**: ${manifest.metadata?.name || 'Unknown'}
-- **Engine Version**: ${manifest.schemaVersion || '7.1'}
+- **Engine Version**: ${manifest.schemaVersion || '7.2.3'}
 - **Audit Timestamp**: ${date} ${time}
 - **Certification Status**: ${audit.status}
 - **Industrial Score**: ${audit.score}/100
 
-## [ GOVERNANCE STATUS ]
-- **ERA 4 Compliance**: ${audit.checks.governance ? 'PASSED ✅' : 'FAILED ❌'}
-- **Mandatory Roles**: ${audit.checks.governance ? 'Verified' : 'Incomplete'}
+## [ ARCHITECTURAL AUDIT ]
+- **Governance (ERA 4)**: ${audit.checks.governance ? 'PASSED ✅' : 'FAILED ❌'}
+- **Structural Integrity**: ${audit.checks.integrity ? 'PASSED ✅' : 'VIOLATION ❌'}
+- **Technical Schema**: ${audit.checks.technical ? 'Standard Compliant' : 'Warning'}
+- **Aesthetic Skin**: ${audit.checks.aesthetic ? 'Certified' : 'Draft'}
 
-## [ TECHNICAL AUDIT ]
-- **Rack Integrity**: ${audit.checks.technical ? 'Standard Compliant' : 'Warning'}
-- **Component Density**: ${(manifest.ui?.controls?.length || 0) + (manifest.ui?.jacks?.length || 0)} Interactive Elements
+## [ COMPONENT DENSITY ]
+- **Interactive Elements**: ${(manifest.ui?.controls?.length || 0) + (manifest.ui?.jacks?.length || 0)} 
+- **Layout Containers**: ${manifest.ui.layout?.containers?.length || 0}
 
-## [ DETAILED AUDIT LOG ]
+## [ DETAILED INSPECTION LOG ]
 ${audit.details.map(d => `> ${d}`).join('\n') || '> No critical issues detected during the engineering sweep.'}
 
 ---
-*Generated by OMEGA Compliance Engine v7.1 — Aseptic Industrial Standard*
+*Generated by OMEGA Compliance Engine v7.2.3 — Aseptic Industrial Standard*
 `;
   }
 }

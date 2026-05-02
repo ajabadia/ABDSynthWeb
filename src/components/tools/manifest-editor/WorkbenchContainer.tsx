@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './Header';
 import ModuleHub from './ModuleHub';
@@ -12,11 +12,14 @@ import SourceViewer from './SourceViewer';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
 import HelpModal from './HelpModal';
 import IngestionModal from './IngestionModal';
+import MockupModal from './MockupModal';
 import { AuditService } from '@/services/auditService';
 import ComplianceBadge from './ComplianceBadge';
 import ViewportControls from './ViewportControls';
 import ModulationGrid from './ModulationGrid';
 import { wasmRuntime } from '@/services/wasmRuntime';
+import { useViewport } from '@/hooks/manifest-editor/useViewport';
+import { useAudit } from '@/hooks/manifest-editor/useAudit';
 
 export default function WorkbenchContainer() {
   const { 
@@ -31,13 +34,18 @@ export default function WorkbenchContainer() {
     addModulation,
     removeModulation,
     updateModulation,
+    addContainer,
+    updateContainer,
+    removeContainer,
     exportManifest,
     exportOmegaPack,
+    exportCADBlueprint,
     handleDeploy,
     handleManifestUpload,
     handleWasmUpload,
     handleContractUpload,
     handleResourceUpload,
+    handleRemoveResource,
     handleBulkUpload,
     extraResources,
     reset,
@@ -53,13 +61,11 @@ export default function WorkbenchContainer() {
   const [isLiveMode, setIsLiveMode] = useState(false);
   const [showModGrid, setShowModGrid] = useState(false);
   const [helpState, setHelpState] = useState<{ isOpen: boolean; sectionId?: string }>({ isOpen: false });
+  const [mockupOpen, setMockupOpen] = useState(false);
 
-  // VIEWPORT NAVIGATION STATE
-  const [zoom, setZoom] = useState(1.0);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-
-  // REAL-TIME AUDIT ENGINE
-  const auditResult = useMemo(() => AuditService.performFullAudit(manifest), [manifest]);
+  // Viewport & Audit Hooks (Modularized)
+  const { zoom, pan, handleZoom, handlePan, handleResetViewport, handleFitViewport } = useViewport();
+  const { auditResult } = useAudit(manifest, contract);
 
   // Help Handlers
   const openHelp = useCallback((sectionId?: string) => {
@@ -89,21 +95,7 @@ export default function WorkbenchContainer() {
   }, [removeItem, selectedItemId]);
 
   // Viewport Actions
-  const handleZoom = (delta: number) => setZoom(prev => Math.max(0.2, Math.min(3, prev + delta)));
-  const handlePan = (dx: number, dy: number) => setPan(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-  const handleResetViewport = () => {
-    setZoom(1.0);
-    setPan({ x: 0, y: 0 });
-  };
-  const handleFitViewport = () => {
-    if (viewMode === 'rack') {
-      setZoom(0.85);
-      setPan({ x: 0, y: 0 });
-    } else {
-      setZoom(1.0);
-      setPan({ x: 0, y: 0 });
-    }
-  };
+  const onFitViewport = () => handleFitViewport(viewMode);
 
   const availableBinds = contract ? [
     ...(contract.parameters?.map((p: { id: string }) => p.id) || []),
@@ -136,6 +128,8 @@ export default function WorkbenchContainer() {
         onReset={reset}
         onExportManifest={exportManifest}
         onExportPack={exportOmegaPack}
+        onExportCAD={() => exportCADBlueprint()}
+        onGenerateMockup={() => setMockupOpen(true)}
         onDeploy={handleDeploy}
         onToggleLogs={() => setShowLogs(!showLogs)}
         showLogs={showLogs}
@@ -177,7 +171,7 @@ export default function WorkbenchContainer() {
               onZoom={handleZoom}
               onPan={handlePan}
               onReset={handleResetViewport}
-              onFit={handleFitViewport}
+              onFit={onFitViewport}
             />
           )}
 
@@ -227,6 +221,7 @@ export default function WorkbenchContainer() {
                   zoom={zoom}
                   isLiveMode={isLiveMode}
                   setIsLiveMode={setIsLiveMode}
+                  audit={auditResult}
                 />
               </motion.div>
             ) : (
@@ -254,6 +249,7 @@ export default function WorkbenchContainer() {
               className="w-[400px] shrink-0 h-full border-l border-outline/20"
             >
               <PropertyPanel 
+                manifest={manifest}
                 item={selectedItem!}
                 onUpdate={selectedItemId ? (updates: any) => {
                   updateItem(selectedItemId, updates);
@@ -272,9 +268,13 @@ export default function WorkbenchContainer() {
                 onRemoveModulation={removeModulation}
                 onUpdateModulation={updateModulation}
                 onOpenGrid={() => setShowModGrid(true)}
+                addContainer={addContainer}
+                updateContainer={updateContainer}
+                removeContainer={removeContainer}
                 onHelp={openHelp}
                 extraResources={extraResources}
                 onTriggerUpload={triggerUpload}
+                onRemoveResource={handleRemoveResource}
               />
             </motion.aside>
           )}
@@ -337,6 +337,11 @@ export default function WorkbenchContainer() {
           <div className="w-1.5 h-1.5 rounded-full bg-green-500/20 border border-green-500/40 animate-pulse" />
         </div>
       </footer>
+      <MockupModal 
+        isOpen={mockupOpen} 
+        onClose={() => setMockupOpen(false)} 
+        manifest={manifest} 
+      />
     </div>
   );
 }

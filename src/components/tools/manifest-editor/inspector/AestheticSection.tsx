@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Palette, Box, AlertCircle } from 'lucide-react';
+import { Palette, Box, AlertCircle, Info, Layout } from 'lucide-react';
 import KnobProperties from './KnobProperties';
 import LedProperties from './LedProperties';
 import PortProperties from './PortProperties';
@@ -10,16 +10,16 @@ import DisplayProperties from './DisplayProperties';
 import SwitchProperties from './SwitchProperties';
 import SelectProperties from './SelectProperties';
 
-import { ManifestEntity } from '../../../../types/manifest';
-import { Info } from 'lucide-react';
+import { ManifestEntity, LayoutContainer } from '../../../../types/manifest';
 
 interface AestheticSectionProps {
   item: ManifestEntity;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   onHelp?: (sectionId?: string) => void;
+  containers?: LayoutContainer[];
 }
 
-export default function AestheticSection({ item, onUpdate, onHelp }: AestheticSectionProps) {
+export default function AestheticSection({ item, onUpdate, onHelp, containers = [] }: AestheticSectionProps) {
   const componentType = item.presentation?.component || 'knob';
 
   const renderSpecializedEditor = () => {
@@ -54,75 +54,96 @@ export default function AestheticSection({ item, onUpdate, onHelp }: AestheticSe
   };
 
   return (
-    <div className="space-y-6">
-      {/* SECTION HEADER */}
-      <div className="flex items-center justify-between pb-2 border-b border-outline/10">
-        <div className="flex items-center gap-2">
-          <Palette className="w-3.5 h-3.5 text-primary" />
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">Aesthetic Engineering</h3>
-          <button onClick={() => onHelp?.('estetica')} className="ml-1 hover:text-primary transition-colors">
-            <Info className="w-3 h-3 opacity-40" />
+    <div className="space-y-8 pb-20">
+      {/* 1. COMPONENT PLANE (TAB) */}
+      <div className="space-y-3 bg-white/[0.02] border border-outline/10 p-4 rounded-xs">
+        <div className="flex items-center justify-between pr-1">
+          <label className="text-[8px] font-black text-foreground/40 uppercase ml-1 tracking-[0.1em]">Era 7 Plane (Tab)</label>
+          <button onClick={() => onHelp?.('tabs')} className="hover:text-primary transition-colors">
+            <Info className="w-2.5 h-2.5 opacity-20" />
           </button>
         </div>
-        <div className="px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
-           <span className="text-[7px] font-black text-primary uppercase tracking-tighter">{componentType}</span>
-        </div>
-      </div>
-
-      {/* COMMON AESTHETICS */}
-      <div className="space-y-4 bg-white/[0.02] border border-outline/10 p-4 rounded-xs">
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between pr-1">
-            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Era 7 Plane (Tab)</label>
-            <button onClick={() => onHelp?.('tabs')} className="hover:text-primary transition-colors">
-              <Info className="w-2.5 h-2.5 opacity-20" />
+        <div className="flex flex-wrap gap-1">
+          {['MAIN', 'FX', 'EDIT', 'MIDI', 'MOD'].map(t => (
+            <button
+              key={t}
+              onClick={() => onUpdate({ presentation: { ...item.presentation, tab: t as any } })}
+              className={`px-2 py-1 text-[7px] font-black uppercase rounded-xs border transition-all ${
+                (item.presentation?.tab || 'MAIN') === t 
+                  ? 'bg-primary/20 border-primary text-primary' 
+                  : 'bg-black/40 border-outline/10 text-foreground/20 hover:border-outline/30'
+              }`}
+            >
+              {t}
             </button>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {['MAIN', 'FX', 'EDIT', 'MIDI', 'MOD'].map(t => (
-              <button
-                key={t}
-                onClick={() => onUpdate({ presentation: { ...item.presentation, tab: t as any } })}
-                className={`px-2 py-1 text-[7px] font-black uppercase rounded-xs border transition-all ${
-                  (item.presentation?.tab || 'MAIN') === t 
-                    ? 'bg-primary/20 border-primary text-primary' 
-                    : 'bg-black/40 border-outline/10 text-foreground/20 hover:border-outline/30'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-1.5 pt-2">
-          <label className="text-[8px] font-black text-primary/60 uppercase ml-1 tracking-[0.1em]">Visual Group ID</label>
-          <input 
-            type="text" 
-            value={item.presentation?.group || ''} 
-            onChange={(e) => onUpdate({ presentation: { ...item.presentation, group: e.target.value.toUpperCase() } })}
-            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2.5 text-[10px] font-black text-primary outline-none focus:border-primary/40 transition-all placeholder:text-white/5"
-            placeholder="E.G. OSC_CORE"
-          />
-          <p className="text-[6px] text-foreground/30 uppercase font-bold italic ml-1">
-            * Elements sharing this ID will be visually framed in the Virtual Rack.
-          </p>
+          ))}
         </div>
       </div>
 
-      {/* DYNAMIC SPECIALIZED EDITOR */}
-      <div className="min-h-[200px]">
+      {/* 2. ARCHITECTURAL ANCHOR (CONTAINER) */}
+      <div className="space-y-4 p-4 bg-accent/5 border border-accent/10 rounded-xs">
+        <div className="flex items-center justify-between">
+           <div className="flex items-center gap-3 opacity-60">
+              <Layout className="w-3.5 h-3.5 text-accent" />
+              <span className="text-[9px] font-black uppercase tracking-widest italic text-accent">Architectural Anchor</span>
+           </div>
+           {onHelp && (
+             <button onClick={() => onHelp('layout')} className="p-1 text-white/20 hover:text-primary transition-colors">
+               <Info className="w-3 h-3" />
+             </button>
+           )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="relative group">
+            <select 
+              value={item.presentation?.container || ''} 
+              onChange={(e) => onUpdate({ 
+                presentation: { 
+                  ...item.presentation, 
+                  container: e.target.value || undefined,
+                  group: undefined 
+                } 
+              })}
+              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-accent/40 transition-all appearance-none cursor-pointer"
+            >
+              <option value="">NO CONTAINER (UNBOUND)</option>
+              {containers.map(c => (
+                <option key={c.id} value={c.id}>{c.label.toUpperCase()} ({c.id})</option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity">
+               <Box className="w-3 h-3" />
+            </div>
+          </div>
+
+          {item.presentation?.group && !item.presentation?.container && (
+            <div className="mt-2 p-2 bg-amber-500/5 border border-amber-500/20 rounded-xs flex items-center gap-2">
+               <AlertCircle className="w-3 h-3 text-amber-500" />
+               <span className="text-[7px] font-bold text-amber-500/80 uppercase">Legacy Group: {item.presentation.group}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. COMPONENT SPECIALIZED PROPERTIES */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 px-1 opacity-60">
+           <Palette className="w-3.5 h-3.5 text-primary" />
+           <span className="text-[9px] font-black uppercase tracking-widest italic">Component Aesthetics</span>
+        </div>
+        
         {renderSpecializedEditor()}
       </div>
 
       {/* SYSTEM NOTES */}
       <div className="p-4 bg-black/40 border border-outline/10 rounded-xs space-y-2 border-l-2 border-l-primary/40 mt-10">
          <div className="flex items-center gap-2 text-[7px] font-black text-foreground/20 uppercase tracking-widest">
-            <AlertCircle className="w-3 h-3" />
-            <span>Design System Integrity</span>
+            <Info className="w-2.5 h-2.5" />
+            <span>Industrial Note</span>
          </div>
-         <p className="text-[8px] text-foreground/30 leading-relaxed italic">
-            Specialized editors ensure that only canonical OMEGA Era 7 variants are used. 
-            All visual properties are synchronized with the hardware-accelerated render engine.
+         <p className="text-[6px] text-foreground/30 uppercase font-medium leading-relaxed">
+           Era 7.2 enforces strict architectural framing. Use containers to define columns and sections for studio parity.
          </p>
       </div>
     </div>

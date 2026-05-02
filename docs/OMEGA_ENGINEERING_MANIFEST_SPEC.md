@@ -1,6 +1,6 @@
-# OMEGA Engineering Manifest Specification (Era 7.1)
+# OMEGA Engineering Manifest Specification (Era 7.2.3)
 
-Este documento detalla las especificaciones técnicas para la construcción de módulos industriales bajo el estándar **OMEGA Era 7.1 (Industrial Hardening)**.
+Este documento detalla las especificaciones técnicas para la construcción de módulos industriales bajo el estándar **OMEGA Era 7.2.3 (Structural Integrity)**.
 
 ## 1. The Rack (Global Container)
 El Rack define las dimensiones físicas y el estilo visual del módulo.
@@ -10,68 +10,113 @@ El Rack define las dimensiones físicas y el estilo visual del módulo.
 | `hp` | Number | 4, 6, 8, 12, 16, 24... | Ancho industrial en HP. 1 HP ≈ 15px en este motor. |
 | `dimensions` | Object | `{ width, height }` | Definición de píxeles reales. Autoridad sobre `hp` en el renderizado. |
 | `skin` | Enum | `carbon`, `industrial`, `glass`, `minimal` | Estética del panel frontal. |
-| `grid_snap` | Number | 1, 2, 5, 10 | Paso de rejilla para el snapping. |
+| `layout` | Object | `containers[]`, `gridSnap` | [NUEVO 7.2.3] Estructura arquitectónica con validación espacial. |
 
 ---
 
-## 2. The Cells (Registry Entities)
-Las Cells son las entidades registradas en el motor. **IMPORTANTE**: El `id` debe ser un STRING (ej: `lfo_freq`).
+## OMEGA Manifest Engineering Specification (Era 7.2.3)
+**Standard: Aseptic Industrial & Architectural Integrity**
 
-### Roles del Registry (Era 7.1)
-Cada Cell debe tener un `role` definido para que el motor WASM identifique su función:
+## 1. Architectural Integrity (v7.2.1 - v7.2.3)
+### 1.1 Container Authority
+Containers (Groups) now exert total authority over their children. 
+- **Spatial Entrapment**: Every Cell must reside within the physical boundaries of its assigned container.
+- **Out of Bounds (OOB)**: Elements outside the Rack (Max Width based on HP) or their container will trigger a `CRITICAL_INTEGRITY_FAIL`.
+
+### 1.2 Architectural Planes (Tabs)
+Containers now support the `tab` property.
+- **Visibility Logic**: Elements only render if their parent container's tab is active.
+- **Global Containers**: Containers without a `tab` are visible in all planes.
+
+## 2. Aesthetic & Activity Systems (v7.2.3)
+### 2.1 Unified Skin System
+Four canonical skins are defined for industrial parity:
+- `industrial`: Metal dark/cyan standard.
+- `carbon`: High-tech carbon fiber micro-texture.
+- `glass`: Real-time glassmorphism (backdrop-blur: 12px).
+- `minimal`: Clean technical wireframe aesthetic.
+
+### 2.2 Activity Heatmap (Reactive Bubbling)
+- **Activity Pulses**: Interaction with any control triggers a visual pulse in the parent container.
+- **Decay System**: Activity levels fade organically after 2 seconds of inactivity.
+
+## 3. Cryptographic Integrity (v7.2.3)
+### 3.1 Firmware Fingerprint (SHA-256)
+All manifests must generate a SHA-256 hash for binary reconciliation.
+- **Normalization**: Hashing requires recursive alphabetical key sorting and minification.
+- **Binary Sync**: The manifest fingerprint must match the `firmwareHash` provided by the engine's technical contract.
+
+## 4. Compliance Handshake
+### 4.1 Detailed Inspection Log
+The audit engine provides a "Cartilla de Inspección" including:
+- **GOV**: Governance & Mandatory Roles.
+- **INT**: Structural & Spatial Integrity.
+- **TECH**: Schema & Binding Validity.
+- **STYLE**: Aesthetic & Identity Parity.
+
+---
+
+## 2. Layout Architecture (Era 7.2.3)
+Los contenedores son las entidades de autoridad sobre la estructura visual, lógica y **espacial**.
+
+### 2.1 Containers & Architectural Planes
+Cada contenedor puede estar vinculado a una pestaña específica o ser global.
+
+### 2.2 Container Authority (Jerarquía)
+Jerarquía de gobernanza estricta: **Rack > Contenedor > Cell > Elemento/Attachment**.
+
+### 2.3 Structural Integrity (Validación Espacial)
+La versión 7.2.3 introduce el cumplimiento obligatorio de los límites físicos:
+- **Rack Bounds**: Ningún contenedor ni Cell puede existir fuera de las dimensiones definidas por el HP y la altura del rack.
+- **Container Entrapment**: Si una Cell está anclada a un contenedor, sus coordenadas físicas DEBEN estar dentro del área del contenedor. 
+- **Enforcement**: Las violaciones de integridad estructural bloquean la certificación "Production Ready" del módulo.
+    - `header`: Cabecera cian con tipografía industrial expandida.
+    - `section`: Divisor con borde izquierdo grueso (enfocado a flujo de señal).
+    - `panel`: Área elevada para agrupaciones funcionales.
+    - `inset`: Zona hundida con sombras internas para I/O.
+    - `minimal`: Marco invisible, solo etiqueta técnica.
+
+### 2.2 Anchoring
+Los componentes se anclan a un contenedor mediante el campo `presentation.container`.
+- **Global Coordinates**: Las posiciones de las Cells siguen siendo absolutas respecto al rack (SOT), pero su pertenencia visual es gobernada por el ID del contenedor.
+
+---
+
+## 3. The Cells (Registry Entities)
+Las Cells son las entidades registradas en el motor.
+
+### Roles del Registry (Era 4)
 - `control`: Input de usuario (Knobs, Sliders, Switches).
 - `telemetry`: Feedback visual (LEDs, Displays pasivos).
 - `stream`: Datos de audio o CV de alta velocidad (Ports).
 - `mod_target`: Destino de modulación explícito.
 
-### Pestañas Canónicas (Tabs)
-La organización multi-capa se rige por estas pestañas:
-- `MAIN`: Controles principales de síntesis.
-- `FX`: Parámetros de efectos y post-procesado.
-- `EDIT`: Configuración profunda y sistema.
-- `MIDI`: Mapeos y ajustes de protocolo.
-- `MOD`: Matriz de modulación y ruteo interno.
-
-### Tipos de Componente (Core)
-| Tipo | Opciones Particulares | Descripción |
-| :--- | :--- | :--- |
-| `knob` | `variant_labels` | Giro continuo o por pasos. |
-| `display` | **Integrated Stepper** | Pantalla con botones `+`/`-` integrados. |
-| `select` | `options`, `lookup` | Selector de lista o tabla del motor. |
-| `slider-v/h` | `travel_length` | Faders de recorrido variable (A: 100mm, B: 30mm). |
-| `port` | `role: stream` | Punto de parcheo físico. |
+### Mapping Estético (Era 7.2)
+- **`container`**: ID del contenedor arquitectónico de la Era 7.2.
+- **`group`**: *Deprecated*. Usado solo para retrocompatibilidad con Era 7.1.
 
 ---
 
-## 3. Attachments (Visual Fragments)
+## 4. Attachments (Visual Fragments)
 Los Attachments son accesorios visuales con **Precisión Dual (X/Y)**.
 
 - **`offsetX / offsetY`**: Desplazamiento fino en píxeles relativo al Core.
-- **`type: stepper`**: *Deprecated*. Usar el componente core `display` para controles de paso integrados.
 - **`type: label`**: Serigrafía técnica con soporte de `role: unit`.
-
----
-
-## 4. Naming Convention (Estética)
-Las variantes deben seguir el patrón: `[SIZE]_[STYLE/COLOR]`.
-- Ejemplos: `A_red`, `B_cyan`, `C_silver_3mm`.
-- *Evitar nombres genéricos como "default" o "standard".*
+- **`type: led`**: Indicadores de estado vinculados a telemetría.
 
 ---
 
 ## 5. Technical Handshake (Contract Sync)
-La sincronización entre la UI y el motor WASM se rige por el contrato técnico:
 - **`bind`**: Debe coincidir exactamente con los IDs exportados por el hook `omega_get_contract` del binario.
-- **`precision`**: El motor industrial utiliza por defecto 6 decimales para cálculos internos y 2 para el readout de la UI.
+- **`precision`**: El motor industrial utiliza por defecto 6 decimales para cálculos internos.
 - **Source of Truth (SOT)**: El archivo `.acemm` es la autoridad estética, mientras que el binario `.wasm` es la autoridad lógica.
 
 ---
 
 ## 6. Governance ERA 4 (Hardening)
-Para cumplir con el Mandato Guardián V3, todo manifiesto debe ser:
 - **Strictly Typed**: No se permiten campos "ad-hoc" fuera de la especificación.
-- **String ID Authority**: Los IDs numéricos son volátiles; el sistema de ingeniería utiliza Strings persistentes para toda la cadena de suministro de datos.
-- **Registry Validated**: Todo componente sin un `role` válido será marcado como `orphan` y no recibirá eventos del motor.
+- **Architectural Integrity**: Todo componente debe preferiblemente estar anclado a un contenedor para obtener el scoring de "Industrial Compliance".
+- **Registry Validated**: Todo componente sin un `role` válido será marcado como `orphan`.
 
 ---
-*OMEGA — Engineering Standard V7.1 — Industrial Governance ERA 4 — SYS_READY*
+*OMEGA — Engineering Standard V7.2 — Industrial Governance ERA 4 — SYS_READY*

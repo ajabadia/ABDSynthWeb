@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Shield, RotateCcw, Terminal, HelpCircle, Zap, ChevronDown, FileCode, Package } from 'lucide-react';
+import { Download, Shield, RotateCcw, Terminal, HelpCircle, Zap, ChevronDown, FileCode, Package, Layers, Camera } from 'lucide-react';
 
 import { AuditResult } from '../../../services/auditService';
 import { OMEGA_Manifest } from '../../../types/manifest';
@@ -11,6 +11,8 @@ interface HeaderProps {
   onReset: () => void;
   onExportManifest: () => void;
   onExportPack: () => void;
+  onExportCAD: () => void;
+  onGenerateMockup: () => void;
   onDeploy: () => void;
   onToggleLogs: () => void;
   showLogs: boolean;
@@ -23,6 +25,8 @@ export default function Header({
   onReset, 
   onExportManifest, 
   onExportPack, 
+  onExportCAD,
+  onGenerateMockup,
   onDeploy, 
   onToggleLogs, 
   showLogs, 
@@ -133,6 +137,28 @@ export default function Header({
                   <div className="text-left">
                     <p>Export OmegaPack</p>
                     <p className="text-[6px] font-mono opacity-40">Bundled industrial ZIP</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => { onExportCAD(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xs text-[8px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary transition-all group"
+                >
+                  <Layers className="w-4 h-4 text-primary/40 group-hover:text-primary" />
+                  <div className="text-left">
+                    <p>Industrial CAD Blueprint</p>
+                    <p className="text-[6px] font-mono opacity-40">Technical SVG Plan</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => { onGenerateMockup(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xs text-[8px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary transition-all group"
+                >
+                  <Camera className="w-4 h-4 text-primary/40 group-hover:text-primary" />
+                  <div className="text-left">
+                    <p>Generate Studio Render</p>
+                    <p className="text-[6px] font-mono opacity-40">Photorealistic 3D Mockup</p>
                   </div>
                 </button>
 

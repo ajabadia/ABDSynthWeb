@@ -6,7 +6,7 @@ import { OmegaContract } from '../../services/wasmLoader';
 
 export const useManifestState = () => {
   const [manifest, setManifest] = useState<OMEGA_Manifest>({
-    schemaVersion: '7.1',
+    schemaVersion: '7.2',
     id: 'new_module',
     metadata: {
       name: 'New Module',
@@ -16,7 +16,11 @@ export const useManifestState = () => {
     ui: {
       dimensions: { width: 120, height: 420 },
       controls: [],
-      jacks: []
+      jacks: [],
+      layout: {
+        containers: [],
+        gridSnap: 5
+      }
     },
     resources: {
       wasm: 'module.wasm'

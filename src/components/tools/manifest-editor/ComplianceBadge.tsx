@@ -72,7 +72,7 @@ export default function ComplianceBadge({ audit, manifest }: ComplianceBadgeProp
         </div>
         <div className="flex flex-col items-start leading-none gap-0.5">
           <span className="text-[8px] font-black uppercase tracking-[0.2em]">{config.label}</span>
-          <span className="text-[6px] font-bold opacity-40 uppercase tracking-tighter">Compliance Engine v7.1</span>
+          <span className="text-[6px] font-bold opacity-40 uppercase tracking-tighter">Compliance Engine v7.2.3</span>
         </div>
         <div className="w-px h-4 bg-current opacity-20 mx-1" />
         <div className="flex flex-col items-center leading-none">
@@ -101,15 +101,16 @@ export default function ComplianceBadge({ audit, manifest }: ComplianceBadgeProp
                   </span>
                </div>
 
-               <div className="grid grid-cols-3 gap-2">
+               <div className="grid grid-cols-4 gap-1">
                   {[
                     { label: 'GOV', val: audit.checks.governance },
+                    { label: 'INT', val: audit.checks.integrity },
                     { label: 'TECH', val: audit.checks.technical },
                     { label: 'STYLE', val: audit.checks.aesthetic },
                   ].map(c => (
-                    <div key={c.label} className={`p-2 border rounded-xs flex flex-col items-center gap-1 ${c.val ? 'border-[#00ff9d]/20 bg-[#00ff9d]/5 text-[#00ff9d]' : 'border-red-500/20 bg-red-500/5 text-red-500'}`}>
-                       <span className="text-[6px] font-black uppercase">{c.label}</span>
-                       <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <div key={c.label} className={`p-1.5 border rounded-xs flex flex-col items-center gap-1 ${c.val ? 'border-[#00ff9d]/20 bg-[#00ff9d]/5 text-[#00ff9d]' : 'border-red-500/20 bg-red-500/5 text-red-500'}`}>
+                       <span className="text-[5px] font-black uppercase">{c.label}</span>
+                       <div className="w-1 h-1 rounded-full bg-current" />
                     </div>
                   ))}
                </div>
@@ -130,6 +131,23 @@ export default function ComplianceBadge({ audit, manifest }: ComplianceBadgeProp
                     )}
                   </div>
                </div>
+
+               {audit.fingerprint && (
+                  <div className={`p-2 bg-black/40 border rounded-xs space-y-1 ${audit.isHashMatched ? 'border-[#00ff9d]/40 shadow-[0_0_10px_rgba(0,255,157,0.1)]' : 'border-white/5'}`}>
+                    <div className="flex justify-between items-center">
+                      <div className="text-[6px] font-black uppercase text-primary/40 tracking-[0.2em]">Firmware Fingerprint (SHA-256)</div>
+                      {audit.isHashMatched && (
+                        <div className="flex items-center gap-1 text-[#00ff9d]">
+                          <ShieldCheck className="w-2 h-2" />
+                          <span className="text-[5px] font-black uppercase tracking-tighter">Binary Sync</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className={`text-[7px] font-mono break-all leading-tight select-all cursor-copy font-bold ${audit.isHashMatched ? 'text-[#00ff9d]' : 'text-primary/60'}`} title="Click to copy">
+                      {audit.fingerprint}
+                    </div>
+                  </div>
+               )}
 
                <button 
                  onClick={handleDownloadReport}

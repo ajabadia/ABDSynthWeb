@@ -1,6 +1,6 @@
-# OMEGA Manifest Editor - Industrial Roadmap (Era 7.1)
+# OMEGA Manifest Editor - Industrial Roadmap (Era 7.2.3)
 
-Este documento detalla la evolución técnica y los hitos alcanzados en el desarrollo del Editor de Manifiestos bajo los estándares de la **Era 7.1** y el **Mandato Guardián V3**.
+Este documento detalla la evolución técnica y los hitos alcanzados en el desarrollo del Editor de Manifiestos bajo los estándares de la **Era 7.2.3** y el **Mandato Guardián V3**.
 
 ## ✅ Fase 1: Cimentación Era 7.1 (Completado)
 - [x] Implementación de la arquitectura de 5 pestañas canónicas (`MAIN`, `FX`, `EDIT`, `MIDI`, `MOD`).
@@ -45,10 +45,27 @@ Este documento detalla la evolución técnica y los hitos alcanzados en el desar
 - [x] **Deployment Guide**: Sistema de descubrimiento automático verificado con el motor OMEGA.
 
 ---
+## ✅ Fase 9: Arquitectura de Layout Era 7.2.2 (Completado)
+- [x] **Declarative Containers**: Transición de grupos reactivos a entidades de contenedor en el manifiesto.
+- [x] **Industrial Sizing**: Sistema de anchuras fraccionales (`full`, `1/2`, `3/4`) para arquitectura de rack.
+- [x] **Visual Variants**: Implementación de variantes `header`, `section`, `inset` y `panel`.
+- [x] **Architectural Planes (v7.2.1)**: Contenedores vinculados a pestañas específicas para gestión de densidad visual.
+- [x] **Container Authority (v7.2.2)**: Prevalencia jerárquica del contenedor sobre la Cell para integridad del plano.
+- [x] **Structural Integrity (v7.2.3)**: Validación espacial estricta de límites de Rack y Contenedores (Engine & Editor).
+
+---
+## [/] Fase 10: Profesionalización & Rigor Industrial (v7.2.3+)
+- [ ] **Unified Skin System**: Normalización de tokens estéticos (Carbon, Industrial, Glass, Minimal) aplicados a contenedores.
+- [ ] **Activity Heatmap**: Feedback visual dinámico (pulsos de brillo) en contenedores basado en la actividad de señal/modulación.
+- [ ] **Detailed Compliance Report**: Interfaz de "Cartilla de Inspección" detallando fallos técnicos, espaciales y de gobernanza.
+- [ ] **Firmware Integrity Check**: Sistema de Hash (SHA-256) para verificar la coherencia entre el manifiesto .acemm y el binario .wasm.
+- [ ] **Architectural Blueprint Export**: Exportación de planos técnicos acotados (SVG/PDF) para fabricación de paneles físicos.
+
+---
 ## 🔮 Próximos Pasos: Integración Nativa (Propuesta)
 - [ ] **WebView2 Embedding**: Integración directa del editor en el binario de OMEGA (vía `OmegaWebViewComponent`).
 - [ ] **Live RPC Bridge**: Sustitución de los mocks por comunicación directa con el motor de C++ mediante `OmegaRPC`.
 - [ ] **Hot-Reloading**: Actualización en tiempo real del módulo en el rack sin reiniciar el motor.
 
 ---
-*OMEGA — Engineering Standard V7.1 — Industrial Governance ERA 4 — Roadmap Updated 2026-05-02*
+*OMEGA — Engineering Standard V7.2.3 — Industrial Governance ERA 4 — Roadmap Updated 2026-05-02*

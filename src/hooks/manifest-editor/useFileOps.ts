@@ -302,6 +302,24 @@ export const useFileOps = (
     addLog(`[SYSTEM] Batch Ingestion Complete.`);
   }, [handleContractUpload, handleWasmUpload, handleManifestUpload, handleResourceUpload, addLog]);
 
+  const handleRemoveResource = useCallback((name: string) => {
+    setExtraResources(prev => prev.filter(r => r.name !== name));
+    addLog(`[SYSTEM] Resource removed: ${name}`);
+  }, [setExtraResources, addLog]);
+
+  const exportCADBlueprint = useCallback(() => {
+    const { CADExportService } = require('../../services/cadExportService');
+    const svg = CADExportService.generateSVGBlueprint(manifest);
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CAD_BLUEPRINT_${manifest.id}.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addLog(`[OK] Exported Industrial CAD Blueprint: ${manifest.id}.svg`);
+  }, [manifest, addLog]);
+
   return {
     handleWasmUpload,
     handleContractUpload,
@@ -309,6 +327,8 @@ export const useFileOps = (
     handleResourceUpload,
     handleBulkUpload,
     exportManifest,
-    exportOmegaPack
+    exportOmegaPack,
+    exportCADBlueprint,
+    handleRemoveResource
   };
 };

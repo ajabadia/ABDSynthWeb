@@ -38,7 +38,10 @@ export const useManifestEditor = () => {
     addEntity,
     addModulation,
     removeModulation,
-    updateModulation
+    updateModulation,
+    addContainer,
+    updateContainer,
+    removeContainer
   } = useEntityManager(manifest, setManifest, updateManifest, addLog);
 
   // 4. File I/O Operations
@@ -48,7 +51,9 @@ export const useManifestEditor = () => {
     handleManifestUpload,
     exportManifest,
     exportOmegaPack,
+    exportCADBlueprint,
     handleResourceUpload,
+    handleRemoveResource,
     handleBulkUpload
   } = useFileOps(manifest, setManifest, setContract, setWasmBuffer, wasmBuffer, setExtraResources, extraResources, addLog, issues);
 
@@ -86,8 +91,13 @@ export const useManifestEditor = () => {
     addModulation,
     removeModulation,
     updateModulation,
+    addContainer,
+    updateContainer,
+    removeContainer,
     exportManifest,
     exportOmegaPack,
+    exportCADBlueprint,
+    handleRemoveResource,
     handleDeploy,
     addLog,
     reset

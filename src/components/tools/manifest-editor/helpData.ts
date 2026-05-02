@@ -1,5 +1,5 @@
 /**
- * OMEGA ERA 7.1 - MANUAL DE INGENIERÍA (BASE DE DATOS)
+ * OMEGA ERA 7.2 - MANUAL DE INGENIERÍA (BASE DE DATOS)
  * Idioma: Castellano (Manual de Referencia Industrial)
  */
 
@@ -13,13 +13,14 @@ export interface HelpSection {
     title: string;
     content: string;
     technical_params?: string[];
+    category?: string;
   }[];
 }
 
 export const HELP_DATA: HelpSection[] = [
   {
     id: 'introduccion',
-    title: 'Protocolo OMEGA 7.1',
+    title: 'Protocolo OMEGA 7.2.3',
     icon: '🚀',
     content: 'Bienvenido al entorno de ingeniería de OMEGA. Este editor permite construir manifiestos (.acemm) para módulos industriales con precisión sub-píxel y sincronización total con el motor WASM de la Era 7.'
   },
@@ -44,6 +45,62 @@ export const HELP_DATA: HelpSection[] = [
     ]
   },
   {
+    id: 'layout',
+    title: 'Arquitectura de Layout (Era 7.2.3)',
+    icon: '📐',
+    content: 'Define la estructura organizativa del módulo mediante contenedores declarativos.',
+    subsections: [
+      {
+        id: 'contenedores',
+        title: 'Layout Containers',
+        content: 'Los contenedores son marcos arquitectónicos con posición y tamaño fijos. Permiten agrupar visualmente componentes y definir la jerarquía del panel.',
+        technical_params: ['ui.layout.containers[]', 'container_id']
+      },
+      {
+        id: 'planos',
+        title: 'Container Authority',
+        content: 'Jerarquía: Rack > Contenedor > Cell. El Tab definido en el contenedor TIENE PRIORIDAD sobre el del elemento. Esto garantiza la integridad del plano arquitectónico.',
+        technical_params: ['tab: MAIN | FX | EDIT | MIDI | MOD | PATCHING']
+      },
+      {
+        id: 'integrity',
+        title: 'Firmware Integrity (SHA-256)',
+        content: 'Cada manifiesto genera una firma criptográfica SHA-256 (Fingerprint). Para que el módulo sea validado por el motor ABDOmega, el hash del manifiesto debe coincidir exactamente con el del binario .wasm (Binary Sync).',
+        category: 'professional'
+      },
+      {
+        id: 'heatmap',
+        title: 'Activity Heatmap',
+        content: 'Los contenedores reaccionan visualmente a la actividad. Al mover un control, el contenedor padre emitirá un pulso de brillo industrial que se desvanece suavemente, indicando flujo de señal activo.',
+        category: 'ui'
+      },
+      {
+        id: 'compliance-v7',
+        title: 'Inspección de Obra (Era 7.2.3)',
+        content: 'El sistema de cumplimiento (Audit) ahora desglosa 4 áreas: GOV (Gobernanza), INT (Integridad Espacial), TECH (Esquema Técnico) y STYLE (Identidad Visual).',
+        category: 'professional'
+      },
+      {
+        id: 'integridad',
+        title: 'Integridad Estructural',
+        content: 'Los componentes no pueden "escapar" de sus contenedores ni del rack. El sistema audita las coordenadas físicas para asegurar que todo encaje en el chasis.',
+        technical_params: ['pos.x', 'pos.y', 'size.w', 'size.h']
+      },
+      {
+        id: 'sizing',
+        title: 'Sizing Industrial',
+        content: 'Soporta anchos fraccionales respecto al ancho total del rack: full, 1/2, 3/4, 1/3, etc. Esto asegura que el diseño sea consistente en cualquier ancho de HP.',
+        technical_params: ['size.w: full | 1/2 | 3/4 | ...', 'size.h: pixels']
+      },
+      {
+        id: 'variantes',
+        title: 'Variantes Visuales',
+        content: 'Define el estilo del contenedor: "header" para cabeceras cian, "inset" para zonas hundidas, o "section" para divisores con borde lateral grueso.',
+        technical_params: ['variant: header | section | panel | inset | minimal']
+      }
+    ]
+  },
+  {
     id: 'cells',
     title: 'Cells (Entidades)',
     icon: '🧬',
@@ -51,48 +108,29 @@ export const HELP_DATA: HelpSection[] = [
     subsections: [
       {
         id: 'roles',
-        title: 'Roles del Registry',
-        content: 'Vital para la comunicación con C++. Define si el componente es de entrada (control), feedback visual (telemetry) o señal de audio (stream).',
-        technical_params: ['role: control | telemetry | stream | mod_target']
+        title: 'Registry Roles (Gobernanza)',
+        content: 'Cada cell DEBE tener un rol técnico (control, telemetry, mod_target, stream). Esto permite que el motor OMEGA sepa cómo tratar la señal interna del componente.',
+        technical_params: ['role: control | telemetry | mod_target | stream']
       },
       {
-        id: 'tabs',
-        title: 'Planos (Tabs)',
-        content: 'Organiza la interfaz en capas funcionales. MAIN para síntesis, FX para efectos, EDIT para setup, MIDI para ruteo y MOD para modulación.',
-        technical_params: ['presentation.tab: MAIN | FX | EDIT | MIDI | MOD']
-      }
-    ]
-  },
-  {
-    id: 'logic',
-    title: 'Lógica y Contratos',
-    icon: '🔌',
-    content: 'Configuración de la comunicación entre la UI y el código técnico (WASM).',
-    subsections: [
-      {
-        id: 'binding',
+        id: 'bindings',
         title: 'Canonical Binding',
-        content: 'Vincula este elemento visual con un parámetro interno del código WASM. El ID debe coincidir con el exportado por el binario.',
+        content: 'Vincula la cell física con un parámetro del binario WASM mediante su ID de contrato.',
         technical_params: ['bind: string']
-      },
-      {
-        id: 'precision',
-        title: 'Precisión y Normalización',
-        content: 'Determina cuántos decimales se usan para los cálculos y cómo se formatea el valor para el usuario.',
-        technical_params: ['precision', 'ui_precision']
       }
     ]
   },
   {
-    id: 'console',
-    title: 'Consola y Auditoría',
-    icon: '💻',
-    content: 'Muestra logs en tiempo real sobre la salud del módulo y errores de validación.',
+    id: 'senales',
+    title: 'Señales e I/O',
+    icon: '🔌',
+    content: 'Gestión de ruteos internos y modulación.',
     subsections: [
       {
-        id: 'audit',
-        title: 'Auditoría UI',
-        content: 'Al cargar un manifiesto, el sistema analiza si faltan bindings o si hay componentes huérfanos sin rol asignado.'
+        id: 'jack_config',
+        title: 'Configuración de Jacks',
+        content: 'Los jacks de entrada aceptan señales CV/Audio externas. Los jacks de salida permiten monitorizar la telemetría interna.',
+        technical_params: ['type: port']
       }
     ]
   }

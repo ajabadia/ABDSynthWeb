@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "enum": ["7.0"]
+      "enum": ["7.0", "7.1", "7.2"]
     },
     "id": {
       "type": "string",
@@ -60,6 +60,40 @@
           }
         },
         "skin": { "type": "string" },
+        "layout": {
+          "type": "object",
+          "properties": {
+            "gridSnap": { "type": "integer", "default": 5 },
+            "containers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "label", "pos", "size", "variant"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" },
+                  "pos": {
+                    "type": "object",
+                    "properties": {
+                      "x": { "type": "number" },
+                      "y": { "type": "number" }
+                    }
+                  },
+                  "size": {
+                    "type": "object",
+                    "properties": {
+                      "w": { "oneOf": [{ "type": "string" }, { "type": "number" }] },
+                      "h": { "type": "number" }
+                    }
+                  },
+                  "variant": { "type": "string" },
+                  "zIndex": { "type": "integer" },
+                  "labelPosition": { "type": "string", "enum": ["top", "bottom", "inside-top", "inside-bottom"] }
+                }
+              }
+            }
+          }
+        },
         "controls": {
           "type": "array",
           "items": {
@@ -86,6 +120,8 @@
                     "enum": ["knob", "slider-v", "slider-h", "select", "display", "switch", "button", "port", "led", "hidden"]
                   },
                   "variant": { "type": "string", "description": "Official OMEGA variant string (e.g. A_red, B_cyan_5mm)" },
+                  "container": { "type": "string" },
+                  "group": { "type": "string" },
                   "attachments": {
                     "type": "array",
                     "items": {
