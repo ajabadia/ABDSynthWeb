@@ -74,8 +74,26 @@ export class WasmLoaderService {
       // Read the string from WASM memory
       const memory = exports.memory || (hostFunctions.memory as WebAssembly.Memory);
       const jsonString = this.readStringFromMemory(memory, ptr);
+      const raw = JSON.parse(jsonString);
+      const data = raw.contract || raw;
 
-      return JSON.parse(jsonString) as OmegaContract;
+      // Normalization for Era 7.1 consistency
+      const contract: OmegaContract = {
+        omega_version: data.omega_version || data.version || "7.0",
+        id: String(data.id || 'unknown'),
+        name: data.name || data.id,
+        family: (data.family || "utility").toLowerCase(),
+        parameters: (data.parameters || []).map((p: any) => ({
+          ...p,
+          id: String(p.id || p.name || '').toLowerCase()
+        })),
+        ports: (data.ports || []).map((p: any) => ({
+          ...p,
+          id: String(p.id || p.name || '').toLowerCase()
+        }))
+      };
+
+      return contract;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("Failed to extract OMEGA contract:", message);

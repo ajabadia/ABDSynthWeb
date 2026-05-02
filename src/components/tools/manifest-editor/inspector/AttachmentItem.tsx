@@ -20,18 +20,18 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
 
   return (
     <div className="space-y-4">
-      {/* TYPE & POSITION */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* TYPE & POSITION SELECTORS (CANONICAL ANCHORS) */}
+      <div className="grid grid-cols-2 gap-3 bg-black/20 p-2 rounded-xs border border-outline/5">
         <div className="space-y-1">
-          <label className="text-[7px] text-foreground/40 uppercase font-bold flex items-center gap-1">
+          <label className="text-[7px] text-primary/60 uppercase font-black flex items-center gap-1 tracking-widest">
             <Activity className="w-2 h-2" />
-            <span>Type</span>
+            <span>Fragment Type</span>
           </label>
           <select 
             value={att.type} 
             disabled={isCore}
             onChange={(e) => onUpdate({ type: e.target.value })}
-            className={`w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] outline-none font-bold ${isCore ? 'text-primary/40' : 'text-primary'}`}
+            className={`w-full bg-black/60 border border-outline/20 rounded-xs p-1.5 text-[9px] outline-none font-bold ${isCore ? 'opacity-50 cursor-not-allowed' : 'text-primary hover:border-primary/40'} transition-all`}
           >
             <option value="knob">Knob</option>
             <option value="port">Jack / Port</option>
@@ -46,15 +46,15 @@ export default function AttachmentItem({ att, availableBinds, onUpdate }: Attach
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-[7px] text-foreground/40 uppercase font-bold">Position</label>
+          <label className="text-[7px] text-accent/60 uppercase font-black tracking-widest">Anchor Position</label>
           <select 
             value={att.position || 'center'} 
             disabled={isCore}
             onChange={(e) => onUpdate({ position: e.target.value })}
-            className="w-full bg-black/60 border border-outline rounded-xs p-1.5 text-[9px] text-foreground outline-none"
+            className={`w-full bg-black/60 border border-outline/20 rounded-xs p-1.5 text-[9px] outline-none font-bold ${isCore ? 'opacity-50 cursor-not-allowed' : 'text-foreground hover:border-accent/40'} transition-all`}
           >
             <option value="center">Center (Core)</option>
-            <option value="top">Top</option>
+            <option value="top">Top (3U/1U)</option>
             <option value="bottom">Bottom</option>
             <option value="left">Left</option>
             <option value="right">Right</option>

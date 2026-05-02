@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Zap, Database, Palette, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Zap, Database, Palette, CheckCircle, AlertTriangle, FolderOpen, ChevronRight } from 'lucide-react';
 
 interface UIElement {
   bind?: string;
@@ -91,22 +91,38 @@ export default function ModuleHub({ manifest, contract, triggerUpload }: ModuleH
             </div>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <button onClick={() => triggerUpload('wasm-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-primary/40 hover:bg-primary/5 transition-all group relative overflow-hidden">
-            <Zap className="w-3 h-3 text-primary group-hover:scale-125 transition-transform" />
-            <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">WASM</span>
-            {manifest.resources?.wasm && <div className="absolute top-0 right-0 w-1 h-full bg-primary/20" />}
+        <div className="flex flex-col gap-2">
+          <button 
+            onClick={() => triggerUpload('folder-upload')} 
+            className="w-full flex items-center justify-between p-3.5 bg-primary/10 border border-primary/20 rounded-sm hover:bg-primary/20 transition-all group relative overflow-hidden"
+          >
+            <div className="flex items-center gap-3">
+              <FolderOpen className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+              <div className="text-left">
+                <span className="block text-[9px] font-black uppercase tracking-widest text-primary">Ingest Module Folder</span>
+                <span className="block text-[6px] font-bold text-primary/40 uppercase">Auto-discovery & Sync</span>
+              </div>
+            </div>
+            <ChevronRight className="w-3 h-3 text-primary/40" />
           </button>
-          <button onClick={() => triggerUpload('contract-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-accent/40 hover:bg-accent/5 transition-all group relative overflow-hidden">
-            <Database className="w-3 h-3 text-accent group-hover:scale-125 transition-transform" />
-            <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">ABI</span>
-            {contract && <div className="absolute top-0 right-0 w-1 h-full bg-accent/20" />}
-          </button>
-          <button onClick={() => triggerUpload('manifest-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-cyan-400/40 hover:bg-cyan-400/5 transition-all group relative overflow-hidden">
-            <Palette className="w-3 h-3 text-cyan-400 group-hover:scale-125 transition-transform" />
-            <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">JSON</span>
-            {manifest.schemaVersion && <div className="absolute top-0 right-0 w-1 h-full bg-cyan-400/20" />}
-          </button>
+
+          <div className="grid grid-cols-3 gap-2">
+            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-primary/40 hover:bg-primary/5 transition-all group relative overflow-hidden">
+              <Zap className="w-3 h-3 text-primary group-hover:scale-125 transition-transform" />
+              <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">WASM</span>
+              {manifest.resources?.wasm && <div className="absolute top-0 right-0 w-1 h-full bg-primary/20" />}
+            </button>
+            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-accent/40 hover:bg-accent/5 transition-all group relative overflow-hidden">
+              <Database className="w-3 h-3 text-accent group-hover:scale-125 transition-transform" />
+              <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">CONTRACT</span>
+              {contract && <div className="absolute top-0 right-0 w-1 h-full bg-accent/20" />}
+            </button>
+            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-cyan-400/40 hover:bg-cyan-400/5 transition-all group relative overflow-hidden">
+              <Palette className="w-3 h-3 text-cyan-400 group-hover:scale-125 transition-transform" />
+              <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">ACEMM</span>
+              {manifest.schemaVersion && <div className="absolute top-0 right-0 w-1 h-full bg-cyan-400/20" />}
+            </button>
+          </div>
         </div>
         
         {contract && (
@@ -117,7 +133,7 @@ export default function ModuleHub({ manifest, contract, triggerUpload }: ModuleH
             </div>
             <div className="h-[1px] bg-outline/5 w-full" />
             <div className="flex justify-between items-center">
-              <span className="text-[7px] text-foreground/30 font-bold uppercase">ABI Ports</span>
+              <span className="text-[7px] text-foreground/30 font-bold uppercase">CONTRACT Ports</span>
               <span className="text-[8px] text-foreground/60 font-black">{contract.parameters?.length || 0}P / {contract.ports?.length || 0}S</span>
             </div>
           </div>

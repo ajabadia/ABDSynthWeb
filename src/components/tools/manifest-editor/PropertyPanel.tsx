@@ -11,6 +11,8 @@ import EngineeringSection from './inspector/EngineeringSection';
 import EntityListSection from './inspector/EntityListSection';
 import SpatialSection from './inspector/SpatialSection';
 import CellPreview from './inspector/CellPreview';
+import ModulationSection from './inspector/ModulationSection';
+import ResourceSection from './inspector/ResourceSection';
 
 import { ManifestEntity, OMEGA_Manifest } from '../../types/manifest';
 
@@ -25,6 +27,12 @@ interface PropertyPanelProps {
   onDuplicateItem?: (id: string) => void;
   onRemoveItem?: (id: string) => void;
   onHelp?: (sectionId?: string) => void;
+  onAddModulation?: (mod: any) => void;
+  onRemoveModulation?: (id: string) => void;
+  onUpdateModulation?: (id: string, updates: any) => void;
+  onOpenGrid?: () => void;
+  extraResources?: { name: string, data: ArrayBuffer, type: string }[];
+  onTriggerUpload?: (id: string) => void;
 }
 
 export default function PropertyPanel({ 
@@ -37,7 +45,13 @@ export default function PropertyPanel({
   onAddEntity,
   onDuplicateItem,
   onRemoveItem,
-  onHelp
+  onHelp,
+  onAddModulation,
+  onRemoveModulation,
+  onUpdateModulation,
+  onOpenGrid,
+  extraResources = [],
+  onTriggerUpload
 }: PropertyPanelProps) {
   const [activeSection, setActiveSection] = React.useState<string>('identity');
 
@@ -49,6 +63,8 @@ export default function PropertyPanel({
       { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
       { id: 'controls', label: 'Controls', icon: Settings2, color: 'text-blue-400' },
       { id: 'signals', label: 'Signals', icon: Zap, color: 'text-yellow-400' },
+      { id: 'assets', label: 'Assets', icon: Palette, color: 'text-purple-400' },
+      { id: 'modulations', label: 'Modulations', icon: Move, color: 'text-cyan-400' },
     ] : [
       { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
       { id: 'engineering', label: 'Engineering', icon: Shield, color: 'text-accent' },
@@ -156,6 +172,21 @@ export default function PropertyPanel({
                     onRemoveItem={onRemoveItem}
                   />
                 )}
+                {activeSection === 'modulations' && onAddModulation && onRemoveModulation && onUpdateModulation && (
+                  <ModulationSection 
+                    manifest={item as OMEGA_Manifest}
+                    onAdd={onAddModulation}
+                    onRemove={onRemoveModulation}
+                    onUpdate={onUpdateModulation}
+                    onOpenGrid={onOpenGrid}
+                  />
+                )}
+                {activeSection === 'assets' && extraResources && onTriggerUpload && (
+                  <ResourceSection 
+                    resources={extraResources} 
+                    onTriggerUpload={() => onTriggerUpload('resource-upload')} 
+                  />
+                )}
               </>
             ) : (
               <>
@@ -189,13 +220,6 @@ export default function PropertyPanel({
         </AnimatePresence>
       </div>
 
-      {/* FOOTER ACTION */}
-      <footer className="p-4 bg-black/40 border-t border-outline/20 shrink-0">
-        <div className="flex items-center justify-between text-[8px] font-mono text-foreground/20">
-          <span>{isModule ? 'Global Context' : 'Local Context'}</span>
-          <span>SYS_ID: {item.id.slice(0, 8)}</span>
-        </div>
-      </footer>
     </div>
   );
 }

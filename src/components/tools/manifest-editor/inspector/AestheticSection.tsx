@@ -95,14 +95,17 @@ export default function AestheticSection({ item, onUpdate, onHelp }: AestheticSe
           </div>
         </div>
         <div className="space-y-1.5 pt-2">
-          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Visual Group</label>
+          <label className="text-[8px] font-black text-primary/60 uppercase ml-1 tracking-[0.1em]">Visual Group ID</label>
           <input 
             type="text" 
             value={item.presentation?.group || ''} 
             onChange={(e) => onUpdate({ presentation: { ...item.presentation, group: e.target.value.toUpperCase() } })}
-            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-black text-foreground outline-none focus:border-primary/40 transition-all"
-            placeholder="NONE"
+            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2.5 text-[10px] font-black text-primary outline-none focus:border-primary/40 transition-all placeholder:text-white/5"
+            placeholder="E.G. OSC_CORE"
           />
+          <p className="text-[6px] text-foreground/30 uppercase font-bold italic ml-1">
+            * Elements sharing this ID will be visually framed in the Virtual Rack.
+          </p>
         </div>
       </div>
 

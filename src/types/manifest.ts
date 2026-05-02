@@ -71,6 +71,14 @@ export interface ManifestMetadata {
   };
 }
 
+export interface OMEGA_Modulation {
+  id: string;
+  source: string; // Entity ID (e.g., lfo_1)
+  target: string; // Entity ID (e.g., osc_freq)
+  amount: number; // 0.0 to 1.0
+  type?: 'unipolar' | 'bipolar';
+}
+
 export interface OMEGA_Manifest {
   schemaVersion: string;
   id: string;
@@ -84,4 +92,5 @@ export interface OMEGA_Manifest {
     wasm: string;
     contract?: string;
   };
+  modulations?: OMEGA_Modulation[];
 }

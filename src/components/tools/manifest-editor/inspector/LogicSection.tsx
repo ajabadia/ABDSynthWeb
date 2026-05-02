@@ -54,20 +54,31 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               <Info className="w-3 h-3" />
            </button>
         </div>
-        <div className="space-y-1.5">
-          <select 
-            value={item.bind || ''} 
-            onChange={(e) => onUpdate({ bind: e.target.value })}
-            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all appearance-none"
-          >
-            <option value="">-- UNBOUND (Static) --</option>
-            {availableBinds.map(b => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-          <p className="text-[7px] text-foreground/20 italic ml-1">
-            Connects this UI entity to a technical parameter in the WASM contract.
-          </p>
+        <div className="space-y-1.5 relative">
+          <div className="relative group">
+            <select 
+              value={item.bind || ''} 
+              onChange={(e) => onUpdate({ bind: e.target.value })}
+              className={`w-full bg-black/60 border ${availableBinds.length === 0 ? 'border-amber-500/20' : 'border-primary/20'} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10`}
+            >
+              <option value="">-- UNBOUND (Static) --</option>
+              {availableBinds.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-hover:opacity-100 transition-opacity">
+               <span className="text-[8px] text-primary">▼</span>
+            </div>
+          </div>
+          {availableBinds.length === 0 ? (
+            <p className="text-[7px] text-amber-500/60 font-bold uppercase tracking-tighter ml-1 animate-pulse">
+              ⚠ No technical contract loaded. Upload .wasm or .json to sync logic.
+            </p>
+          ) : (
+            <p className="text-[7px] text-foreground/20 italic ml-1">
+              Connects this UI entity to a technical parameter in the WASM contract.
+            </p>
+          )}
         </div>
       </div>
 

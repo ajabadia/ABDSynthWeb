@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Minus, Maximize, Target, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from './Header';
 import ModuleHub from './ModuleHub';
 import VirtualRack from './VirtualRack';
@@ -12,63 +11,12 @@ import LogTerminal from './LogTerminal';
 import SourceViewer from './SourceViewer';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
 import HelpModal from './HelpModal';
-
-/**
- * ViewportControls
- * Industrial floating toolbar for viewport navigation.
- */
-function ViewportControls({ zoom, onZoom, onPan, onReset, onFit }: any) {
-  return (
-    <div className="absolute bottom-6 right-6 flex items-center gap-3 z-[100]">
-      {/* ZOOM GROUP */}
-      <div className="flex items-center bg-black/60 backdrop-blur-md border border-white/10 rounded-xs p-1 shadow-2xl">
-        <button onClick={() => onZoom(-0.1)} className="p-1.5 hover:bg-white/5 text-foreground/40 hover:text-primary transition-all rounded-xs">
-          <Minus className="w-3.5 h-3.5" />
-        </button>
-        <div className="px-3 min-w-[50px] text-center border-x border-white/5">
-          <span className="text-[9px] font-mono font-black text-primary/80">{Math.round(zoom * 100)}%</span>
-        </div>
-        <button onClick={() => onZoom(0.1)} className="p-1.5 hover:bg-white/5 text-foreground/40 hover:text-primary transition-all rounded-xs">
-          <Plus className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* PAN & CENTER GROUP */}
-      <div className="flex items-center bg-black/60 backdrop-blur-md border border-white/10 rounded-xs p-1 shadow-2xl">
-        <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
-          <div />
-          <button onClick={() => onPan(0, 50)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
-            <ChevronUp className="w-3 h-3" />
-          </button>
-          <div />
-          <button onClick={() => onPan(50, 0)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
-            <ChevronLeft className="w-3 h-3" />
-          </button>
-          <button onClick={onReset} className="p-1 bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-xs flex items-center justify-center">
-            <Target className="w-3 h-3" />
-          </button>
-          <button onClick={() => onPan(-50, 0)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
-            <ChevronRight className="w-3 h-3" />
-          </button>
-          <div />
-          <button onClick={() => onPan(0, -50)} className="p-1 hover:bg-white/5 text-foreground/20 hover:text-primary transition-all rounded-xs">
-            <ChevronDown className="w-3 h-3" />
-          </button>
-          <div />
-        </div>
-      </div>
-
-      {/* FIT ACTION */}
-      <button 
-        onClick={onFit}
-        className="flex items-center gap-2 px-3 py-2 bg-black/60 backdrop-blur-md border border-white/10 hover:border-primary/40 hover:bg-primary/5 text-foreground/40 hover:text-primary transition-all rounded-xs shadow-2xl group"
-      >
-        <Maximize className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-        <span className="text-[8px] font-black uppercase tracking-widest">Fit</span>
-      </button>
-    </div>
-  );
-}
+import IngestionModal from './IngestionModal';
+import { AuditService } from '@/services/auditService';
+import ComplianceBadge from './ComplianceBadge';
+import ViewportControls from './ViewportControls';
+import ModulationGrid from './ModulationGrid';
+import { wasmRuntime } from '@/services/wasmRuntime';
 
 export default function WorkbenchContainer() {
   const { 
@@ -79,25 +27,39 @@ export default function WorkbenchContainer() {
     updateItem,
     removeItem,
     duplicateItem,
-    addEntity, 
-    exportManifest, 
+    addEntity,
+    addModulation,
+    removeModulation,
+    updateModulation,
+    exportManifest,
+    exportOmegaPack,
+    handleDeploy,
     handleManifestUpload,
     handleWasmUpload,
     handleContractUpload,
+    handleResourceUpload,
+    handleBulkUpload,
+    extraResources,
     reset,
+    addLog,
     logs
   } = useManifestEditor();
 
   // Navigation & Selection State
+  const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
   const [viewMode, setViewMode] = useState<'orbital' | 'rack' | 'source'>('orbital');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(false);
+  const [showModGrid, setShowModGrid] = useState(false);
   const [helpState, setHelpState] = useState<{ isOpen: boolean; sectionId?: string }>({ isOpen: false });
 
   // VIEWPORT NAVIGATION STATE
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  // REAL-TIME AUDIT ENGINE
+  const auditResult = useMemo(() => AuditService.performFullAudit(manifest), [manifest]);
 
   // Help Handlers
   const openHelp = useCallback((sectionId?: string) => {
@@ -153,19 +115,48 @@ export default function WorkbenchContainer() {
   return (
     <div className="h-screen flex flex-col bg-[#050505] text-foreground font-sans overflow-hidden relative">
       {/* HIDDEN FILE INPUTS */}
-      <input id="manifest-upload" type="file" accept=".json,.acemm" className="hidden" onChange={(e) => e.target.files?.[0] && handleManifestUpload(e.target.files[0])} />
-      <input id="wasm-upload" type="file" accept=".wasm" className="hidden" onChange={(e) => e.target.files?.[0] && handleWasmUpload(e.target.files[0])} />
-      <input id="contract-upload" type="file" accept=".json" className="hidden" onChange={(e) => e.target.files?.[0] && handleContractUpload(e.target.files[0])} />
-
+      <input 
+        id="bulk-upload" 
+        type="file" 
+        accept=".acemm,.wasm,.json" 
+        multiple 
+        className="hidden" 
+        onChange={(e) => { if (e.target.files) { setPendingFiles(Array.from(e.target.files)); e.target.value = ''; } }} 
+      />
+      <input 
+        id="folder-upload" 
+        type="file" 
+        webkitdirectory="" 
+        directory="" 
+        className="hidden" 
+        onChange={(e) => { if (e.target.files) { setPendingFiles(Array.from(e.target.files)); e.target.value = ''; } }} 
+      />
+      <input id="resource-upload" type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files) { handleBulkUpload(e.target.files); e.target.value = ''; } }} />
+      
       <Header 
         onReset={reset}
-        onExport={exportManifest}
+        onExportManifest={exportManifest}
+        onExportPack={exportOmegaPack}
+        onDeploy={handleDeploy}
         onToggleLogs={() => setShowLogs(!showLogs)}
         showLogs={showLogs}
         viewMode={viewMode}
         setViewMode={setViewMode}
         onHelp={() => openHelp()}
       />
+
+      <AnimatePresence>
+        {pendingFiles && (
+          <IngestionModal 
+            files={pendingFiles} 
+            onConfirm={(selected) => {
+              handleBulkUpload(selected);
+              setPendingFiles(null);
+            }}
+            onCancel={() => setPendingFiles(null)}
+          />
+        )}
+      </AnimatePresence>
 
       <main className="flex-1 flex overflow-hidden">
         {/* LEFT SIDEBAR */}
@@ -277,11 +268,27 @@ export default function WorkbenchContainer() {
                 onAddEntity={handleAddEntity}
                 onDuplicateItem={handleDuplicateItem}
                 onRemoveItem={handleRemoveItem}
+                onAddModulation={addModulation}
+                onRemoveModulation={removeModulation}
+                onUpdateModulation={updateModulation}
+                onOpenGrid={() => setShowModGrid(true)}
                 onHelp={openHelp}
+                extraResources={extraResources}
+                onTriggerUpload={triggerUpload}
               />
             </motion.aside>
           )}
         </AnimatePresence>
+
+        {showModGrid && (
+          <ModulationGrid 
+            manifest={manifest}
+            onAdd={addModulation}
+            onRemove={removeModulation}
+            onUpdate={updateModulation}
+            onClose={() => setShowModGrid(false)}
+          />
+        )}
       </main>
 
       {/* HELP MODAL */}
@@ -313,6 +320,23 @@ export default function WorkbenchContainer() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* INDUSTRIAL FOOTER */}
+      <footer className="h-6 border-t border-outline/20 bg-black flex items-center justify-between px-6 z-50 shrink-0">
+        <div className="flex-1 flex items-center gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">
+          <span className="text-primary/40 font-black">Build v7.0.8</span>
+          <span className="opacity-50">//</span>
+          <span>Aseptic Standard</span>
+        </div>
+
+        <div className="flex-1 flex justify-center scale-[0.7] origin-center opacity-80 hover:opacity-100 transition-opacity">
+          <ComplianceBadge audit={auditResult} manifest={manifest} />
+        </div>
+        
+        <div className="flex-1 flex items-center justify-end gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">
+          <span>Industrial Era 7 Engineering Suite</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500/20 border border-green-500/40 animate-pulse" />
+        </div>
+      </footer>
     </div>
   );
 }

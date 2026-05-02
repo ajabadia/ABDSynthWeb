@@ -41,7 +41,7 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
     : (manifest?.registry || []);
   
   return (
-    <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+    <div className="w-full h-full relative flex items-center justify-center overflow-hidden" onClick={() => onSelectItem(null)}>
       {/* BACKGROUND GRID */}
       <div 
         className="absolute inset-0 opacity-[0.03]" 
@@ -51,15 +51,16 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
         }} 
       />
 
-      <div className="relative flex items-center justify-center">
+      <div className="relative flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
         {/* CENTER NODE (WASM/MODULE) */}
         <motion.div 
           layoutId="center-node"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative z-20 w-32 h-32 rounded-full border-2 border-primary/40 flex flex-col items-center justify-center bg-black/80 cyan-bloom shadow-[0_0_30px_rgba(0,240,255,0.1)]"
+          onClick={() => onSelectItem(null)}
+          className="relative z-20 w-32 h-32 rounded-full border-2 border-primary/40 flex flex-col items-center justify-center bg-black/80 cyan-bloom shadow-[0_0_30px_rgba(0,240,255,0.1)] cursor-pointer hover:border-primary transition-colors group"
         >
-          <div className="text-[8px] font-bold text-primary/50 uppercase tracking-[0.2em] mb-1">Module ID</div>
+          <div className="text-[8px] font-bold text-primary/50 uppercase tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Module ID</div>
           <div className="text-sm font-headline font-bold text-primary italic uppercase tracking-tighter truncate max-w-[100px]">
             {manifest?.id || '???'}
           </div>

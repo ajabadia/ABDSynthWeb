@@ -24,7 +24,8 @@ const FAMILIES = [
 ];
 
 const SKINS = [
-  { id: 'industrial', label: 'Industrial', color: 'bg-[#1a1a1a]' },
+  { id: 'industrial', label: 'Industrial Black', color: 'bg-[#1a1a1a]' },
+  { id: 'silver', label: 'Industrial Silver', color: 'bg-[#d0d0d0]' },
   { id: 'carbon', label: 'Carbon Fiber', color: 'bg-[#0a0a0a]' },
   { id: 'glass', label: 'Aseptic Glass', color: 'bg-[#2a3035]' },
   { id: 'minimal', label: 'Minimalist', color: 'bg-[#f0f0f0]' },
@@ -39,8 +40,8 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
         <div className="space-y-3">
           <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
              <div className="flex items-center gap-2">
-               <Fingerprint className="w-3 h-3" />
-               <span>Entity Identification</span>
+                <Fingerprint className="w-3 h-3" />
+                <span>Entity Identification</span>
              </div>
              <button onClick={() => onHelp?.('cells')} className="hover:text-primary transition-colors">
                 <Info className="w-3 h-3" />
@@ -215,23 +216,23 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
               <Info className="w-3 h-3" />
            </button>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2">
            {SKINS.map(s => (
              <button
                key={s.id}
                onClick={() => updateUI('skin', s.id)}
-               className={`flex-1 p-3 border rounded-sm flex flex-col items-center gap-2 transition-all ${
+               className={`p-2 border rounded-sm flex flex-col items-center gap-2 transition-all ${
                  ui.skin === s.id ? 'border-accent bg-accent/5' : 'border-outline/10 bg-black/40'
                }`}
              >
-                <div className={`w-full h-1 rounded-full ${s.color}`} />
-                <span className={`text-[8px] font-black uppercase ${ui.skin === s.id ? 'text-accent' : 'text-foreground/30'}`}>{s.label}</span>
+                <div className={`w-full h-1.5 rounded-full ${s.color} border border-white/10`} />
+                <span className={`text-[7px] font-black uppercase leading-tight text-center ${ui.skin === s.id ? 'text-accent' : 'text-foreground/30'}`}>{s.label}</span>
              </button>
            ))}
         </div>
       </div>
 
-      {/* 4. RACK SPECIFICATION */}
+      {/* 4. RACK MECHANICAL SPECIFICATION */}
       <div className="space-y-4">
         <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
            <div className="flex items-center gap-2">
@@ -242,30 +243,45 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
               <Info className="w-3 h-3" />
            </button>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Rack Slot</label>
-              <select 
-                value={rack.slot || 'main'} 
-                onChange={(e) => updateRack('slot', e.target.value)}
-                className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-bold text-foreground/80 outline-none"
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Industrial Format (Slot & Height)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={() => {
+                  updateRack('slot', 'main');
+                  updateRack('height_mode', 'full');
+                }}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot !== 'top' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/40 border-outline/10 text-foreground/40 hover:text-foreground/60'}`}
               >
-                <option value="main">Main (3U)</option>
-                <option value="top">Utility (1U)</option>
-              </select>
+                <span>Main (3U)</span>
+                <span className="text-[6px] opacity-40">Primary Synthesis Rack</span>
+              </button>
+              <button 
+                onClick={() => {
+                  updateRack('slot', 'top');
+                  updateRack('height_mode', 'compact');
+                }}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'top' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/40 border-outline/10 text-foreground/40 hover:text-foreground/60'}`}
+              >
+                <span>Utility (1U)</span>
+                <span className="text-[6px] opacity-40">Top Management Strip</span>
+              </button>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Width (HP)</label>
-              <div className="relative">
-                <input 
-                  type="number" 
-                  value={rack.hp || 12} 
-                  onChange={(e) => updateRack('hp', parseInt(e.target.value))}
-                  className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-primary outline-none"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black text-primary/40 uppercase">HP</span>
-              </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Horizontal Width (HP)</label>
+            <div className="relative">
+              <input 
+                type="number" 
+                value={rack.hp || 12} 
+                onChange={(e) => updateRack('hp', Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-full bg-black/60 border border-outline/20 rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black text-primary/40 uppercase">HP Units</span>
             </div>
+          </div>
         </div>
       </div>
     </div>
