@@ -14,7 +14,7 @@ import CellPreview from './inspector/CellPreview';
 import ModulationSection from './inspector/ModulationSection';
 import ResourceSection from './inspector/ResourceSection';
 
-import { ManifestEntity, OMEGA_Manifest } from '../../types/manifest';
+import { ManifestEntity, OMEGA_Manifest } from '../../../types/manifest';
 
 interface PropertyPanelProps {
   item: ManifestEntity | OMEGA_Manifest;

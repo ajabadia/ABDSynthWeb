@@ -5,7 +5,7 @@ import { Plus, X, Activity, Paperclip, ChevronDown, ShieldCheck } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import AttachmentItem from './AttachmentItem';
 
-import { ManifestEntity } from '../../../types/manifest';
+import { ManifestEntity } from '../../../../types/manifest';
 import { Info } from 'lucide-react';
 
 interface AttachmentsSectionProps {

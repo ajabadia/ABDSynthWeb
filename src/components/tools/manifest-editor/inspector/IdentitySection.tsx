@@ -3,7 +3,7 @@
 import React from 'react';
 import { Fingerprint, Info, Tags, Box, Layout, Shield } from 'lucide-react';
 
-import { OMEGA_Manifest, ManifestEntity } from '../../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity } from '../../../../types/manifest';
 
 interface IdentitySectionProps {
   item: OMEGA_Manifest | ManifestEntity;

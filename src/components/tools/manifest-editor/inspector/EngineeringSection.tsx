@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Shield, Target, Eye, Layers, Info } from 'lucide-react';
-import { ManifestEntity } from '../../../types/manifest';
+import { ManifestEntity } from '../../../../types/manifest';
 
 interface EngineeringSectionProps {
   item: ManifestEntity;

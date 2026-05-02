@@ -10,7 +10,7 @@ import DisplayProperties from './DisplayProperties';
 import SwitchProperties from './SwitchProperties';
 import SelectProperties from './SelectProperties';
 
-import { ManifestEntity } from '../../../types/manifest';
+import { ManifestEntity } from '../../../../types/manifest';
 import { Info } from 'lucide-react';
 
 interface AestheticSectionProps {

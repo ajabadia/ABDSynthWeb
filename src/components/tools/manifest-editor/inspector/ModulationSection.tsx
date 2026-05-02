@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Plus, Trash2, ArrowRight, Activity, LayoutGrid } from 'lucide-react';
-import { OMEGA_Manifest, OMEGA_Modulation } from '../../../types/manifest';
+import { OMEGA_Manifest, OMEGA_Modulation } from '../../../../types/manifest';
 
 interface ModulationSectionProps {
   manifest: OMEGA_Manifest;

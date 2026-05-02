@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Settings2, Lock, EyeOff, Info } from 'lucide-react';
-import { ManifestEntity } from '../../../types/manifest';
+import { ManifestEntity } from '../../../../types/manifest';
 
 interface LogicSectionProps {
   item: ManifestEntity;
