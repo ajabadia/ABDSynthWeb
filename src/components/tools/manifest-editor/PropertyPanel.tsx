@@ -56,7 +56,7 @@ export default function PropertyPanel({
   const [activeSection, setActiveSection] = React.useState<string>('identity');
 
   // Detect if we are editing the module itself or a specific control/jack
-  const isModule = !!item?.metadata;
+  const isModule = 'metadata' in item;
 
   const sections = React.useMemo(() => (
     isModule ? [
@@ -82,7 +82,7 @@ export default function PropertyPanel({
     }
   }, [isModule, sections, activeSection]);
 
-  const handleFieldUpdate = (fieldUpdates: Partial<ManifestEntity>) => {
+  const handleFieldUpdate = (fieldUpdates: any) => {
     onUpdate({ ...item, ...fieldUpdates });
   };
 
