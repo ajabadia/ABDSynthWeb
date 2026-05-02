@@ -83,7 +83,7 @@ export default function HelpModal({ isOpen, onClose, initialSectionId }: HelpMod
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-12">
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-12">
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-xl"

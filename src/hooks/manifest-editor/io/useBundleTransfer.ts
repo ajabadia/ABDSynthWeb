@@ -90,22 +90,37 @@ export const useBundleTransfer = (
     const fileList = Array.from(files);
     if (fileList.length === 0) return;
     
-    addLog(`[SYSTEM] Batch Ingestion: Processing ${fileList.length} files...`);
+    addLog(`[SYSTEM] Batch Ingestion: Processing ${fileList.length} entities...`);
 
     const manifests = fileList.filter(f => f.name.endsWith('.acemm'));
     const wasms = fileList.filter(f => f.name.endsWith('.wasm'));
     const contracts = fileList.filter(f => f.name.endsWith('.json') && !f.name.endsWith('.acemm'));
     const others = fileList.filter(f => !f.name.endsWith('.acemm') && !f.name.endsWith('.wasm') && !f.name.endsWith('.json'));
 
-    if (contracts.length > 0) await handleContractUpload(contracts[0]);
-    if (wasms.length > 0) await handleWasmUpload(wasms[0]);
-    if (manifests.length > 0) await handleManifestUpload(manifests[0]);
+    try {
+      if (contracts.length > 0) {
+        addLog(`[TRACE] Ingesting contract: ${contracts[0].name}`);
+        await handleContractUpload(contracts[0]);
+      }
+      if (wasms.length > 0) {
+        addLog(`[TRACE] Ingesting binary: ${wasms[0].name}`);
+        await handleWasmUpload(wasms[0]);
+      }
+      if (manifests.length > 0) {
+        addLog(`[TRACE] Ingesting manifest: ${manifests[0].name}`);
+        await handleManifestUpload(manifests[0]);
+      }
 
-    for (const res of others) {
-      await handleResourceUpload(res);
+      for (const res of others) {
+        addLog(`[TRACE] Ingesting resource: ${res.name}`);
+        await handleResourceUpload(res);
+      }
+
+      addLog(`[SUCCESS] Industrial Batch Ingestion finalized.`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      addLog(`[CRITICAL] Batch Ingestion Aborted: ${message}`);
     }
-
-    addLog(`[SYSTEM] Batch Ingestion Complete.`);
   }, [handleContractUpload, handleWasmUpload, handleManifestUpload, handleResourceUpload, addLog]);
 
   const handleRemoveResource = useCallback((name: string) => {

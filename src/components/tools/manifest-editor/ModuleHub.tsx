@@ -79,7 +79,7 @@ export default function ModuleHub({ manifest, contract, triggerUpload, onDeploy 
     <div className="flex flex-col gap-8 h-full overflow-y-auto custom-scrollbar pr-2">
       {/* LOGIC ASSETS */}
       <div className="space-y-3">
-        <div className="text-[9px] font-black text-foreground/40 uppercase tracking-widest flex justify-between items-center">
+        <div className="text-[9px] font-black wb-text-muted uppercase tracking-widest flex justify-between items-center">
           <span>Logic Assets</span>
           {contract ? (
             <div className="flex items-center gap-1 text-green-400">
@@ -102,50 +102,50 @@ export default function ModuleHub({ manifest, contract, triggerUpload, onDeploy 
               <FolderOpen className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
               <div className="text-left">
                 <span className="block text-[9px] font-black uppercase tracking-widest text-primary">Ingest Module Folder</span>
-                <span className="block text-[6px] font-bold text-primary/40 uppercase">Auto-discovery & Sync</span>
+                <span className="block text-[6px] font-bold text-primary/80 uppercase">Auto-discovery & Sync</span>
               </div>
             </div>
-            <ChevronRight className="w-3 h-3 text-primary/40" />
+            <ChevronRight className="w-3 h-3 text-primary/60" />
           </button>
 
           <div className="grid grid-cols-3 gap-2">
-            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-primary/40 hover:bg-primary/5 transition-all group relative overflow-hidden">
+            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 wb-surface border wb-outline rounded-sm hover:border-primary/40 hover:bg-primary/5 transition-all group relative overflow-hidden">
               <Zap className="w-3 h-3 text-primary group-hover:scale-125 transition-transform" />
-              <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">WASM</span>
+              <span className="text-[7px] font-bold uppercase tracking-tighter wb-text-muted">WASM</span>
               {manifest.resources?.wasm && <div className="absolute top-0 right-0 w-1 h-full bg-primary/20" />}
             </button>
-            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-accent/40 hover:bg-accent/5 transition-all group relative overflow-hidden">
+            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 wb-surface border wb-outline rounded-sm hover:border-accent/40 hover:bg-accent/5 transition-all group relative overflow-hidden">
               <Database className="w-3 h-3 text-accent group-hover:scale-125 transition-transform" />
-              <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">CONTRACT</span>
+              <span className="text-[7px] font-bold uppercase tracking-tighter wb-text-muted">CONTRACT</span>
               {contract && <div className="absolute top-0 right-0 w-1 h-full bg-accent/20" />}
             </button>
-            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 bg-black/40 border border-outline rounded-sm hover:border-cyan-400/40 hover:bg-cyan-400/5 transition-all group relative overflow-hidden">
+            <button onClick={() => triggerUpload('bulk-upload')} className="flex flex-col items-center justify-center gap-1.5 p-3 wb-surface border wb-outline rounded-sm hover:border-cyan-400/40 hover:bg-cyan-400/5 transition-all group relative overflow-hidden">
               <Palette className="w-3 h-3 text-cyan-400 group-hover:scale-125 transition-transform" />
-              <span className="text-[7px] font-bold uppercase tracking-tighter text-foreground/40">ACEMM</span>
+              <span className="text-[7px] font-bold uppercase tracking-tighter wb-text-muted">ACEMM</span>
               {manifest.schemaVersion && <div className="absolute top-0 right-0 w-1 h-full bg-cyan-400/20" />}
             </button>
           </div>
         </div>
         
         {contract && (
-          <div className="p-2.5 bg-black/20 border border-outline/10 rounded-sm space-y-2">
+          <div className="p-2.5 bg-black/5 border wb-outline rounded-sm space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[7px] text-foreground/30 font-bold uppercase">Target ID</span>
+              <span className="text-[7px] wb-text-muted font-bold uppercase">Target ID</span>
               <span className="text-[8px] text-primary font-mono font-black">{contract.id}</span>
             </div>
             <div className="h-[1px] bg-outline/5 w-full" />
             <div className="flex justify-between items-center">
-              <span className="text-[7px] text-foreground/30 font-bold uppercase">CONTRACT Ports</span>
-              <span className="text-[8px] text-foreground/60 font-black">{contract.parameters?.length || 0}P / {contract.ports?.length || 0}S</span>
+              <span className="text-[7px] wb-text-muted font-bold uppercase">CONTRACT Ports</span>
+              <span className="text-[8px] wb-text font-black">{contract.parameters?.length || 0}P / {contract.ports?.length || 0}S</span>
             </div>
           </div>
         )}
       </div>
 
       {/* INDUSTRIAL STATUS ANALYZER */}
-      <div className="mt-auto p-4 bg-black/40 border border-outline/20 rounded-sm space-y-4">
+      <div className="mt-auto p-4 wb-surface border wb-outline rounded-sm space-y-4 shadow-sm">
          <div className="flex items-center justify-between">
-            <p className="text-[8px] font-black text-foreground/60 uppercase tracking-widest">Industrial Status</p>
+            <p className="text-[8px] font-black wb-text-muted uppercase tracking-widest">Industrial Status</p>
             <div className={`px-1.5 py-0.5 rounded-[2px] text-[6px] font-black uppercase ${sysReady ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
                {sysReady ? 'Stable' : 'Incomplete'}
             </div>
@@ -154,26 +154,26 @@ export default function ModuleHub({ manifest, contract, triggerUpload, onDeploy 
          <div className="flex justify-between items-end h-12 gap-2 px-1">
             {metrics.map((m, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                <div className="w-full bg-white/5 rounded-t-[1px] relative overflow-hidden h-10">
+                <div className="w-full bg-black/5 rounded-t-[1px] relative overflow-hidden h-10">
                    <div 
                       className={`absolute bottom-0 left-0 w-full transition-all duration-700 ease-out ${m.color}`} 
                       style={{ height: `${m.value}%` }} 
                    />
                 </div>
-                <span className="text-[6px] font-bold text-foreground/30">{m.label}</span>
+                <span className="text-[6px] font-bold wb-text-muted">{m.label}</span>
               </div>
             ))}
          </div>
 
          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-outline/5">
             <div className="flex flex-col">
-               <span className="text-[6px] text-foreground/30 uppercase font-black">Ready Score</span>
+               <span className="text-[6px] wb-text-muted uppercase font-black">Ready Score</span>
                <span className={`text-[10px] font-black font-mono ${sysReady ? 'text-green-400' : 'text-amber-400'}`}>
                   {Math.round(metrics[4].value)}%
                </span>
             </div>
             <div className="flex flex-col text-right">
-               <span className="text-[6px] text-foreground/30 uppercase font-black">Audit Mode</span>
+               <span className="text-[6px] wb-text-muted uppercase font-black">Audit Mode</span>
                <span className="text-[10px] font-black font-mono text-primary">ERA 7.1</span>
             </div>
          </div>
@@ -182,9 +182,9 @@ export default function ModuleHub({ manifest, contract, triggerUpload, onDeploy 
       <div className="space-y-2">
          <button 
            onClick={onDeploy}
-           className={`w-full flex items-center justify-center gap-3 p-4 rounded-sm transition-all shadow-xl group relative overflow-hidden ${sysReady ? 'bg-accent text-black hover:scale-[1.02]' : 'bg-white/5 text-foreground/40 border border-outline hover:bg-white/10'}`}
+           className={`w-full flex items-center justify-center gap-3 p-4 rounded-sm transition-all shadow-xl group relative overflow-hidden ${sysReady ? 'bg-accent text-white hover:scale-[1.02]' : 'bg-black/5 wb-text-muted border wb-outline hover:bg-black/10'}`}
          >
-            <Zap className={`w-4 h-4 ${sysReady ? 'fill-black' : ''} group-hover:scale-125 transition-transform`} />
+            <Zap className={`w-4 h-4 ${sysReady ? 'fill-white' : ''} group-hover:scale-125 transition-transform`} />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Deploy to Engine</span>
             {sysReady && (
               <motion.div 
@@ -195,7 +195,7 @@ export default function ModuleHub({ manifest, contract, triggerUpload, onDeploy 
             )}
          </button>
          
-         <p className="text-[6px] text-center text-foreground/20 font-bold uppercase tracking-widest italic">
+         <p className="text-[6px] text-center wb-text-muted font-bold uppercase tracking-widest italic">
            * Direct hot-swap injection into OMEGA runtime
          </p>
       </div>

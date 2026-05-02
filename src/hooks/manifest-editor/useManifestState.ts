@@ -34,9 +34,15 @@ export const useManifestState = () => {
   const updateManifest = useCallback((updates: Partial<OMEGA_Manifest>) => {
     setManifest((prev: OMEGA_Manifest) => {
       const next = { ...prev, ...updates };
-      if (next.metadata?.family) {
-        next.metadata.family = next.metadata.family.toLowerCase();
+      
+      // Ensure metadata is cloned if modified to avoid mutation
+      if (next.metadata) {
+        next.metadata = { 
+          ...next.metadata,
+          family: next.metadata.family?.toLowerCase() || next.metadata.family
+        };
       }
+      
       return next;
     });
   }, []);

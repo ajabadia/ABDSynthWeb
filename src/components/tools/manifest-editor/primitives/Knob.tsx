@@ -19,12 +19,13 @@ export default function Knob({ value, variant, skin, isMain, isSelected, onValue
   const colorId = parts[1] || 'cyan';
   
   const colorMap: Record<string, string> = {
-    cyan: '#00f2ff',
+    cyan: 'var(--color-primary, #00f2ff)',
     red: '#ff4444',
-    orange: '#ff8800',
+    orange: 'var(--color-accent, #ff8800)',
     green: '#00ff88',
     white: '#ffffff',
-    primary: '#00f0ff'
+    primary: 'var(--color-primary, #00f0ff)',
+    accent: 'var(--color-accent, #ff8c00)'
   };
   
   const color = colorMap[colorId] || colorMap.primary;

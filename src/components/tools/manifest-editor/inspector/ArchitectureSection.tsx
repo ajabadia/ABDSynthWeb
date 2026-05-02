@@ -14,9 +14,9 @@ export default function ArchitectureSection({ item, onUpdate, scale }: Architect
 
   return (
     <section className="space-y-4">
-      <div className="text-[9px] font-bold text-foreground/40 uppercase tracking-widest border-b border-outline/10 pb-2">Visual Architecture</div>
+      <div className="text-[9px] font-bold wb-text-muted uppercase tracking-widest border-b wb-outline pb-2 transition-colors duration-500">Visual Architecture</div>
       
-      <div className="w-full aspect-video bg-black/60 rounded-sm border border-outline flex items-center justify-center relative overflow-hidden">
+      <div className="w-full aspect-video wb-surface-inset rounded-sm border wb-outline flex items-center justify-center relative overflow-hidden transition-colors duration-500">
          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
          <div className="relative flex items-center justify-center">
             {/* ATTACHMENTS PREVIEW */}
@@ -82,11 +82,11 @@ export default function ArchitectureSection({ item, onUpdate, scale }: Architect
       </div>
 
       <div className="space-y-1">
-        <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter">Component Type</label>
+        <label className="text-[8px] wb-text-muted uppercase font-bold tracking-tighter transition-colors duration-500">Component Type</label>
         <select 
           value={compType} 
           onChange={(e) => onUpdate({ presentation: { ...item.presentation, component: e.target.value } })} 
-          className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] text-primary outline-none"
+          className="w-full wb-surface-inset border wb-outline rounded-sm p-2 text-[10px] text-primary outline-none transition-colors duration-500"
         >
           <option value="knob">Knob (Analog)</option>
           <option value="slider-v">Slider (Vertical)</option>

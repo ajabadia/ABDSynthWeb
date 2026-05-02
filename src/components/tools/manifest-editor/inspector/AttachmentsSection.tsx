@@ -66,16 +66,16 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
     const isExpanded = expandedIdx === idx;
     
     return (
-      <div key={idx} className={`border border-outline/20 rounded-sm overflow-hidden transition-all duration-300 ${isExpanded ? 'bg-black/60 shadow-xl' : 'bg-black/20 hover:bg-black/40'}`}>
+      <div key={idx} className={`border wb-outline rounded-sm overflow-hidden transition-all duration-300 ${isExpanded ? 'wb-surface-inset shadow-xl' : 'wb-surface hover:wb-surface-hover'}`}>
         <div 
           onClick={() => setExpandedIdx(isExpanded ? null : idx)}
           className="flex items-center justify-between p-3 cursor-pointer group select-none"
         >
           <div className="flex items-center gap-3">
-            <div className={`w-1.5 h-1.5 rounded-full ${isCore ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]' : att.type === 'led' ? 'bg-accent shadow-[0_0_5px_rgba(255,140,0,0.5)]' : att.type === 'display' ? 'bg-primary shadow-[0_0_5px_rgba(0,240,255,0.5)]' : 'bg-foreground/20'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${isCore ? 'bg-primary animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]' : att.type === 'led' ? 'bg-accent shadow-[0_0_5px_rgba(255,140,0,0.5)]' : att.type === 'display' ? 'bg-primary shadow-[0_0_5px_rgba(0,240,255,0.5)]' : 'wb-surface-inset'}`} />
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-black uppercase tracking-tighter ${isExpanded ? 'text-foreground' : 'text-foreground/40'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-tighter transition-colors duration-500 ${isExpanded ? 'wb-text' : 'wb-text-muted'}`}>
                   {att.type} • {att.position}
                 </span>
                 {isCore && (
@@ -87,8 +87,8 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
               </div>
               {(att.bind || att.variant) && (
                 <div className="flex gap-2">
-                   {att.variant && <span className="text-[7px] font-mono text-foreground/20 italic">{att.variant}</span>}
-                   {att.bind && <span className="text-[7px] font-mono text-accent/60">{att.bind}</span>}
+                   {att.variant && <span className="text-[7px] font-mono wb-text-muted italic opacity-60">{att.variant}</span>}
+                   {att.bind && <span className="text-[7px] font-mono text-accent font-bold">{att.bind}</span>}
                 </div>
               )}
             </div>
@@ -97,13 +97,13 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
             {!isCore && (
               <button 
                 onClick={(e) => { e.stopPropagation(); removeAttachment(idx as number); }} 
-                className="p-1 text-foreground/20 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1 wb-text-muted hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
             <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-               <ChevronDown className="w-3 h-3 text-foreground/20" />
+               <ChevronDown className="w-3 h-3 wb-text-muted" />
             </div>
           </div>
         </div>
@@ -132,12 +132,12 @@ export default function AttachmentsSection({ item, onUpdate, availableBinds = []
 
   return (
     <div className="space-y-4 pt-2">
-      <div className="flex justify-between items-center bg-white/5 p-2 rounded-xs border border-outline/10">
+      <div className="flex justify-between items-center wb-surface-inset p-2 rounded-xs border wb-outline transition-colors duration-500">
         <div className="flex items-center gap-2">
            <Paperclip className="w-3 h-3 text-primary" />
-           <span className="text-[8px] font-black text-foreground/40 uppercase tracking-widest">Aesthetic Components</span>
-           <button onClick={() => onHelp?.('attachments')} className="hover:text-primary transition-colors ml-1">
-              <Info className="w-3 h-3 opacity-40" />
+           <span className="text-[8px] font-black wb-text uppercase tracking-widest">Aesthetic Components</span>
+           <button onClick={() => onHelp?.('attachments')} className="wb-text-muted hover:text-primary transition-colors ml-1">
+              <Info className="w-3 h-3" />
            </button>
         </div>
         <button 

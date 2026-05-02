@@ -24,11 +24,10 @@ const FAMILIES = [
 ];
 
 const SKINS = [
-  { id: 'industrial', label: 'Industrial Black', color: 'bg-[#1a1a1a]' },
-  { id: 'silver', label: 'Industrial Silver', color: 'bg-[#d0d0d0]' },
+  { id: 'industrial', label: 'Industrial Black', color: 'bg-[#1a1c1e]' },
   { id: 'carbon', label: 'Carbon Fiber', color: 'bg-[#0a0a0a]' },
   { id: 'glass', label: 'Aseptic Glass', color: 'bg-[#2a3035]' },
-  { id: 'minimal', label: 'Minimalist', color: 'bg-[#f0f0f0]' },
+  { id: 'minimal', label: 'Minimalist', color: 'bg-[#000000]' },
 ];
 
 export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySectionProps) {
@@ -38,7 +37,7 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
     return (
       <div className="space-y-6 pt-2">
         <div className="space-y-3">
-          <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+          <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
              <div className="flex items-center gap-2">
                 <Fingerprint className="w-3 h-3" />
                 <span>Entity Identification</span>
@@ -49,21 +48,21 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
           </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Canonical ID</label>
+              <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Canonical ID</label>
               <input 
                 type="text" 
                 value={item.id} 
                 onChange={(e) => onUpdate({ id: e.target.value })}
-                className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all"
+                className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Display Label</label>
+              <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Display Label</label>
               <input 
                 type="text" 
                 value={item.label || ''} 
                 onChange={(e) => onUpdate({ label: e.target.value })}
-                className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-bold text-foreground outline-none focus:border-primary/40 transition-all"
+                className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
               />
             </div>
           </div>
@@ -94,7 +93,7 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
     <div className="space-y-10 pt-2 pb-10">
       {/* 1. SIGNATURE */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
            <div className="flex items-center gap-2">
              <Box className="w-3 h-3" />
              <span>Module Signature</span>
@@ -105,53 +104,53 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
         </div>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Schema Version</label>
+            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Schema Version</label>
             <input 
               type="text" 
               value={manifest.schemaVersion || '7.1'} 
               onChange={(e) => onUpdate({ schemaVersion: e.target.value } as Partial<OMEGA_Manifest>)}
-              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all"
+              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
               placeholder="7.1"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Canonical ID (Unique)</label>
+            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Canonical ID (Unique)</label>
             <input 
               type="text" 
               value={item.id || ''} 
               onChange={(e) => onUpdate({ id: e.target.value })}
-              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-accent outline-none focus:border-accent/40 transition-all"
+              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-accent outline-none focus:border-accent/40 transition-all transition-colors duration-500"
               placeholder="module_id_unique"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Commercial Name</label>
+                <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Commercial Name</label>
                 <input 
                   type="text" 
                   value={metadata.name || ''} 
                   onChange={(e) => updateMetadata('name', e.target.value)}
-                  className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[11px] font-black text-primary outline-none focus:border-primary/40 transition-all"
+                  className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[11px] font-black wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Version</label>
+                <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Version</label>
                 <input 
                   type="text" 
                   value={metadata.version || ''} 
                   onChange={(e) => updateMetadata('version', e.target.value)}
-                  className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-mono text-foreground outline-none focus:border-primary/40 transition-all"
+                  className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
                   placeholder="1.0.0"
                 />
               </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Status</label>
+                <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Status</label>
                 <select 
                   value={metadata.status || 'experimental'} 
                   onChange={(e) => updateMetadata('status', e.target.value)}
-                  className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-bold text-foreground/60 outline-none uppercase appearance-none"
+                  className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none uppercase appearance-none transition-colors duration-500"
                 >
                   <option value="stable">Stable</option>
                   <option value="beta">Beta</option>
@@ -160,29 +159,29 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
               </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Industrial Tags (Comma separated)</label>
+            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Industrial Tags (Comma separated)</label>
             <input 
               type="text" 
               value={(metadata.tags || []).join(', ')} 
               onChange={(e) => updateMetadata('tags', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
-              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] text-foreground/80 outline-none focus:border-primary/40 transition-all"
+              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
               placeholder="era7, low-latency, industrial"
             />
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Technical Description</label>
+          <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Technical Description</label>
           <textarea 
             value={metadata.description || ''} 
             onChange={(e) => updateMetadata('description', e.target.value)}
-            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] text-foreground/60 outline-none focus:border-primary/40 transition-all min-h-[60px] resize-none"
+            className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] wb-text outline-none focus:border-primary/40 transition-all min-h-[60px] resize-none transition-colors duration-500"
           />
         </div>
       </div>
 
       {/* 2. TAXONOMY */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
            <Tags className="w-3 h-3" />
            <span>Industrial Family</span>
         </div>
@@ -193,11 +192,11 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
               onClick={() => updateMetadata('family', f.id)}
               className={`p-2 border rounded-xs transition-all flex flex-col items-center gap-1 ${
                 metadata.family === f.id 
-                  ? 'bg-primary/10 border-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' 
-                  : 'bg-black/40 border-outline/10 hover:border-outline/30'
+                  ? 'bg-primary/20 border-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' 
+                  : 'bg-black/5 border wb-outline hover:border-outline/30 transition-colors duration-500'
               }`}
             >
-              <span className={`text-[9px] font-black ${metadata.family === f.id ? 'text-primary' : 'text-foreground/40'}`}>
+              <span className={`text-[9px] font-black ${metadata.family === f.id ? 'wb-text' : 'wb-text-muted'}`}>
                 {f.label}
               </span>
             </button>
@@ -207,7 +206,7 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
 
       {/* 3. AESTHETICS (SKIN) */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
            <div className="flex items-center gap-2">
              <Shield className="w-3 h-3" />
              <span>Visual Engineering (Skin)</span>
@@ -222,11 +221,11 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
                key={s.id}
                onClick={() => updateUI('skin', s.id)}
                className={`p-2 border rounded-sm flex flex-col items-center gap-2 transition-all ${
-                 ui.skin === s.id ? 'border-accent bg-accent/5' : 'border-outline/10 bg-black/40'
+                 ui.skin === s.id ? 'border-accent bg-accent/5' : 'wb-outline bg-black/5'
                }`}
              >
                 <div className={`w-full h-1.5 rounded-full ${s.color} border border-white/10`} />
-                <span className={`text-[7px] font-black uppercase leading-tight text-center ${ui.skin === s.id ? 'text-accent' : 'text-foreground/30'}`}>{s.label}</span>
+                <span className={`text-[7px] font-black uppercase leading-tight text-center ${ui.skin === s.id ? 'text-accent' : 'wb-text-muted'}`}>{s.label}</span>
              </button>
            ))}
         </div>
@@ -234,7 +233,7 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
 
       {/* 4. RACK MECHANICAL SPECIFICATION */}
       <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
            <div className="flex items-center gap-2">
              <Layout className="w-3 h-3" />
              <span>Rack Mechanical Spec</span>
@@ -245,41 +244,41 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
         </div>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Industrial Format (Slot & Height)</label>
+            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Industrial Format (Slot & Height)</label>
             <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={() => {
                   updateRack('slot', 'main');
                   updateRack('height_mode', 'full');
                 }}
-                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot !== 'top' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/40 border-outline/10 text-foreground/40 hover:text-foreground/60'}`}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot !== 'top' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>Main (3U)</span>
-                <span className="text-[6px] opacity-40">Primary Synthesis Rack</span>
+                <span className="text-[6px] wb-text-muted font-bold uppercase transition-colors duration-500">Primary Synthesis Rack</span>
               </button>
               <button 
                 onClick={() => {
                   updateRack('slot', 'top');
                   updateRack('height_mode', 'compact');
                 }}
-                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'top' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/40 border-outline/10 text-foreground/40 hover:text-foreground/60'}`}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'top' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>Utility (1U)</span>
-                <span className="text-[6px] opacity-40">Top Management Strip</span>
+                <span className="text-[6px] wb-text-muted font-bold uppercase transition-colors duration-500">Top Management Strip</span>
               </button>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Horizontal Width (HP)</label>
+            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Horizontal Width (HP)</label>
             <div className="relative">
               <input 
                 type="number" 
                 value={rack.hp || 12} 
                 onChange={(e) => updateRack('hp', Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-full bg-black/60 border border-outline/20 rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/40 transition-all"
+                className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2.5 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black text-primary/40 uppercase">HP Units</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black wb-text-muted uppercase transition-colors duration-500">HP Units</span>
             </div>
           </div>
         </div>

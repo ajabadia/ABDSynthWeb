@@ -56,17 +56,17 @@ export default function SourceViewer({ manifest, selectedItemId }: SourceViewerP
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#050505] p-8 overflow-hidden font-mono">
+    <div className="h-full flex flex-col wb-bg p-8 overflow-hidden font-mono transition-colors duration-500">
       <div className="max-w-4xl mx-auto w-full flex flex-col h-full space-y-4">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 bg-white/5 border border-white/10 flex items-center justify-center rounded-xs">
-                <FileCode className="w-5 h-5 text-foreground/40" />
+                <FileCode className="w-5 h-5 wb-text-muted" />
              </div>
              <div>
-                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/80">Manifest Source</h2>
-                <p className="text-[8px] text-foreground/20 uppercase tracking-widest">{manifest.id || 'unnamed_module'}.acemm</p>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] wb-text">Manifest Source</h2>
+                <p className="text-[8px] wb-text-muted uppercase tracking-widest">{manifest.id || 'unnamed_module'}.acemm</p>
              </div>
           </div>
           <button 
@@ -79,14 +79,14 @@ export default function SourceViewer({ manifest, selectedItemId }: SourceViewerP
         </div>
 
         {/* CODE BLOCK */}
-        <div className="flex-1 bg-black/40 border border-outline/10 rounded-sm overflow-hidden flex flex-col shadow-2xl">
-          <div className="flex items-center gap-1.5 px-4 py-2 border-b border-outline/5 bg-black/40">
+        <div className="flex-1 wb-surface border wb-outline rounded-sm overflow-hidden flex flex-col shadow-2xl transition-colors duration-500">
+          <div className="flex items-center gap-1.5 px-4 py-2 border-b wb-outline bg-black/5">
              <div className="w-2 h-2 rounded-full bg-red-500/20" />
              <div className="w-2 h-2 rounded-full bg-amber-500/20" />
              <div className="w-2 h-2 rounded-full bg-green-500/20" />
-             <span className="ml-4 text-[7px] font-black text-foreground/20 uppercase tracking-[0.2em]">YAML Serialized Output</span>
+             <span className="ml-4 text-[7px] font-black wb-text-muted uppercase tracking-[0.2em]">YAML Serialized Output</span>
           </div>
-          <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-[#020202]">
+          <div className="flex-1 overflow-auto p-4 custom-scrollbar wb-bg">
             <pre className="text-[11px] leading-relaxed font-mono">
               {lines.map((line, idx) => {
                 const isHighlighted = highlightRange && idx >= highlightRange[0] && idx <= highlightRange[1];
@@ -95,7 +95,7 @@ export default function SourceViewer({ manifest, selectedItemId }: SourceViewerP
                     key={idx} 
                     className={`px-4 min-h-[1.5em] transition-colors duration-300 ${isHighlighted ? 'bg-primary/10 border-l-2 border-primary' : 'border-l-2 border-transparent'}`}
                   >
-                    <span className={`mr-4 opacity-10 select-none inline-block w-6 text-right`}>{idx + 1}</span>
+                    <span className={`mr-4 opacity-20 select-none inline-block w-6 text-right wb-text-muted`}>{idx + 1}</span>
                     <span className={isHighlighted ? 'text-primary font-bold' : 'text-primary/60'}>
                       {line}
                     </span>
@@ -108,7 +108,7 @@ export default function SourceViewer({ manifest, selectedItemId }: SourceViewerP
 
         {/* FOOTER HINT */}
         <div className="text-center">
-           <p className="text-[7px] text-foreground/20 font-black uppercase tracking-[0.4em]">Aseptic Engineering Standard V7.1</p>
+           <p className="text-[7px] wb-text-muted font-black uppercase tracking-[0.4em]">Aseptic Engineering Standard V7.1</p>
         </div>
       </div>
     </div>

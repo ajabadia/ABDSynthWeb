@@ -66,14 +66,19 @@ export default function VirtualRack({
   const getSkinConfig = () => {
     switch (skin) {
       case 'industrial': 
-      case 'dark':
         return {
-          className: 'bg-[#121212] border-y-[#222] border-x-[#333] shadow-[0_60px_100px_rgba(0,0,0,0.9)]',
+          className: 'skin-industrial bg-[#1a1c1e] border-y-[#222] border-x-[#333] shadow-[0_60px_100px_rgba(0,0,0,0.9)]',
           style: {
             backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.2) 100%), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 100%)`,
             boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05), inset 0 -1px 1px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.5)'
           }
         };
+      case 'carbon':
+        return { className: 'skin-carbon border-white/5 shadow-2xl', style: {} };
+      case 'glass':
+        return { className: 'skin-glass shadow-2xl', style: {} };
+      case 'minimal':
+        return { className: 'skin-minimal border-white/5 shadow-xl', style: {} };
       default: return { className: `skin-${skin}`, style: {} };
     }
   };
@@ -96,7 +101,7 @@ export default function VirtualRack({
   });
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 gap-8 p-12 relative overflow-hidden" onClick={() => onSelectItem(null)}>
+    <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-12 relative overflow-hidden" onClick={() => onSelectItem(null)}>
       <RackHUD 
         isLiveMode={isLiveMode} 
         setIsLiveMode={setIsLiveMode} 

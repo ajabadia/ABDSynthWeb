@@ -47,7 +47,7 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
       <div 
         className="absolute inset-0 opacity-[0.03]" 
         style={{ 
-          backgroundImage: 'radial-gradient(circle, #00f0ff 1px, transparent 1px)', 
+          backgroundImage: 'radial-gradient(circle, var(--color-primary) 1px, transparent 1px)', 
           backgroundSize: '40px 40px' 
         }} 
       />
@@ -59,7 +59,7 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           onClick={() => onSelectItem(null)}
-          className="relative z-20 w-32 h-32 rounded-full border-2 border-primary/40 flex flex-col items-center justify-center bg-black/80 cyan-bloom shadow-[0_0_30px_rgba(0,240,255,0.1)] cursor-pointer hover:border-primary transition-colors group"
+          className="relative z-20 w-32 h-32 rounded-full border-2 border-primary/40 flex flex-col items-center justify-center wb-surface shadow-[0_0_30px_var(--wb-bloom)] cursor-pointer hover:border-primary transition-colors group transition-colors duration-500"
         >
           <div className="text-[8px] font-bold text-primary/50 uppercase tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Module ID</div>
           <div className="text-sm font-headline font-bold text-primary italic uppercase tracking-tighter truncate max-w-[100px]">
@@ -120,7 +120,7 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
                 <div className={`
                   w-10 h-10 rounded-sm border transform -translate-x-1/2 -translate-y-1/2 
                   flex items-center justify-center transition-all duration-300 cursor-pointer
-                  ${selectedItemId === item.id ? (isJack ? 'scale-110 border-accent ring-2 ring-accent/20 bg-accent/20' : 'scale-110 border-primary ring-2 ring-primary/20 bg-primary/20') : (hasError ? 'bg-red-500/20 border-red-500 hover:bg-red-500/40' : (isJack ? 'bg-black/60 border-accent/30 hover:border-accent hover:orange-bloom' : 'bg-black/60 border-primary/30 hover:border-primary hover:cyan-bloom'))}
+                  ${selectedItemId === item.id ? (isJack ? 'scale-110 border-accent ring-2 ring-accent/20 bg-accent/20' : 'scale-110 border-primary ring-2 ring-primary/20 bg-primary/20') : (hasError ? 'bg-red-500/20 border-red-500 hover:bg-red-500/40' : (isJack ? 'wb-surface border-accent/30 hover:border-accent hover:orange-bloom' : 'wb-surface border-primary/30 hover:border-primary hover:cyan-bloom'))}
                 `}>
                   <span className={`text-[8px] font-bold uppercase tracking-tighter text-center px-1 ${!hasError ? (isJack ? 'text-accent/70' : 'text-primary/70') : 'text-red-200'}`}>
                     {(item.label || item.id).substring(0, 4)}
@@ -158,7 +158,7 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
         />
       </div>
 
-      <div className="absolute bottom-8 left-8 text-[9px] font-mono text-primary/30 uppercase tracking-widest leading-relaxed">
+      <div className="absolute bottom-8 left-8 text-[9px] font-mono wb-text-muted uppercase tracking-widest leading-relaxed">
         Engine: OMEGA v7.0<br />
         Mode: Orbital Hub<br />
         Status: {items.length} Elements Online

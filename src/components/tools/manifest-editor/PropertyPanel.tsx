@@ -39,6 +39,7 @@ interface PropertyPanelProps {
   onTriggerUpload?: (id: string) => void;
   onRemoveResource?: (name: string) => void;
   manifest: OMEGA_Manifest;
+  uiTheme: 'dark' | 'light';
 }
 
 export default function PropertyPanel({ 
@@ -62,7 +63,8 @@ export default function PropertyPanel({
   addContainer,
   updateContainer,
   removeContainer,
-  manifest
+  manifest,
+  uiTheme
 }: PropertyPanelProps) {
   const [activeSection, setActiveSection] = React.useState<string>('identity');
 
@@ -101,24 +103,24 @@ export default function PropertyPanel({
   if (!item) return null;
 
   return (
-    <div className="h-full bg-[#0a0a0a] border-l border-outline flex flex-col shadow-2xl overflow-hidden">
+    <div className="h-full wb-surface border-l wb-outline flex flex-col shadow-2xl overflow-hidden transition-colors duration-500">
       {/* HEADER */}
-      <header className="p-4 border-b border-outline/20 bg-black/40 flex items-center justify-between shrink-0">
+      <header className="p-4 border-b wb-outline bg-black/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xs bg-primary/10 border border-primary/20 flex items-center justify-center">
              {isModule ? <Package className="w-4 h-4 text-primary" /> : <Settings className="w-4 h-4 text-primary" />}
           </div>
           <div>
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-foreground/80">
+            <h2 className="text-[10px] font-black uppercase tracking-widest wb-text">
               {isModule ? 'Module Configuration' : 'Entity Inspector'}
             </h2>
-            <p className="text-[8px] font-mono text-foreground/30 truncate max-w-[200px]">{item.id}</p>
+            <p className="text-[8px] font-mono wb-text-muted truncate max-w-[200px]">{item.id}</p>
           </div>
         </div>
         {!isModule && (
           <button 
             onClick={onClose}
-            className="p-1.5 hover:bg-white/5 rounded-xs text-foreground/40 hover:text-foreground transition-all"
+            className="p-1.5 hover:wb-surface-hover rounded-xs wb-text-muted hover:wb-text transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -129,15 +131,15 @@ export default function PropertyPanel({
       {!isModule && <CellPreview item={item} />}
 
       {/* NAVIGATION TABS */}
-      <nav className="flex border-b border-outline/10 bg-black/20 p-1 shrink-0">
+      <nav className="flex border-b wb-outline bg-black/5 p-1 shrink-0">
         {sections.map((section) => (
           <button
             key={section.id}
             onClick={() => setActiveSection(section.id)}
             className={`flex-1 py-2 flex flex-col items-center gap-1 rounded-xs transition-all ${
               activeSection === section.id 
-                ? 'bg-white/5 text-foreground' 
-                : 'text-foreground/30 hover:text-foreground/60 hover:bg-white/2'
+                ? 'wb-surface-hover wb-text' 
+                : 'wb-text-muted hover:wb-text hover:wb-surface-hover/50'
             }`}
           >
             <section.icon className={`w-3.5 h-3.5 ${activeSection === section.id ? section.color : ''}`} />

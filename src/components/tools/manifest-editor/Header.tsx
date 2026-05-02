@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Shield, RotateCcw, Terminal, HelpCircle, Zap, ChevronDown, FileCode, Package, Layers, Camera } from 'lucide-react';
+import { Download, Shield, RotateCcw, Terminal, HelpCircle, Zap, ChevronDown, FileCode, Package, Layers, Camera, Sun, Moon } from 'lucide-react';
 
 import { AuditResult } from '../../../services/auditService';
 import { OMEGA_Manifest } from '../../../types/manifest';
@@ -19,6 +19,8 @@ interface HeaderProps {
   viewMode: 'orbital' | 'rack' | 'source';
   setViewMode: (mode: 'orbital' | 'rack' | 'source') => void;
   onHelp: () => void;
+  uiTheme: 'dark' | 'light';
+  setUiTheme: (theme: 'dark' | 'light') => void;
 }
 
 export default function Header({ 
@@ -32,7 +34,9 @@ export default function Header({
   showLogs, 
   viewMode, 
   setViewMode, 
-  onHelp 
+  onHelp,
+  uiTheme,
+  setUiTheme
 }: HeaderProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -46,7 +50,7 @@ export default function Header({
   }, []);
 
   return (
-    <header className="h-11 border-b border-outline bg-black/80 backdrop-blur-md flex items-center justify-between px-6 z-50 shrink-0">
+    <header className="h-11 border-b wb-outline wb-surface backdrop-blur-md flex items-center justify-between px-6 z-50 shrink-0 transition-colors duration-500">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-primary/20 border border-primary/40 rounded-xs flex items-center justify-center">
@@ -56,43 +60,56 @@ export default function Header({
         
         <div className="h-8 w-px bg-outline/20" />
         
-        <div className="flex bg-black/40 border border-outline rounded-sm p-1">
+        <div className="flex wb-surface border wb-outline rounded-sm p-1 transition-colors duration-500">
           <button 
             onClick={() => setViewMode('orbital')}
-            className={`px-4 py-1.5 rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${viewMode === 'orbital' ? 'bg-primary text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]' : 'text-foreground/40 hover:text-foreground'}`}
+            className={`px-4 py-1.5 rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${viewMode === 'orbital' ? 'bg-primary text-white shadow-[0_0_15px_rgba(0,240,255,0.3)]' : 'wb-text-muted hover:wb-text'}`}
           >
             Orbital
           </button>
           <button 
             onClick={() => setViewMode('rack')}
-            className={`px-4 py-1.5 rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${viewMode === 'rack' ? 'bg-accent text-black shadow-[0_0_15px_rgba(240,0,255,0.4)]' : 'text-foreground/40 hover:text-foreground'}`}
+            className={`px-4 py-1.5 rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${viewMode === 'rack' ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,140,0,0.3)]' : 'wb-text-muted hover:wb-text'}`}
           >
             Virtual Rack
           </button>
           <button 
             onClick={() => setViewMode('source')}
-            className={`px-4 py-1.5 rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${viewMode === 'source' ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'text-foreground/40 hover:text-foreground'}`}
+            className={`px-4 py-1.5 rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${viewMode === 'source' ? 'bg-foreground text-background shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'wb-text-muted hover:wb-text'}`}
           >
             Source
           </button>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => setUiTheme(uiTheme === 'dark' ? 'light' : 'dark')}
+          className="p-2 wb-surface border wb-outline rounded-sm hover:bg-primary/10 hover:border-primary/40 transition-all wb-text-muted hover:text-primary group"
+          title={`Switch to ${uiTheme === 'dark' ? 'Light' : 'Dark'} Mode`}
+        >
+          {uiTheme === 'dark' ? (
+            <Sun className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
+          ) : (
+            <Moon className="w-3.5 h-3.5 group-hover:-rotate-12 transition-transform" />
+          )}
+        </button>
+
+        <div className="h-6 w-px wb-outline opacity-20 mx-1" />
         
         <button 
           onClick={onHelp}
           className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-sm hover:bg-primary/20 transition-all text-[8px] font-black uppercase tracking-widest text-primary group"
         >
-          <HelpCircle className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+          <HelpCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
           <span>Manual</span>
         </button>
 
         <button 
           onClick={onReset}
-          className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-outline rounded-sm hover:bg-red-500/10 hover:border-red-500/40 text-[8px] font-black uppercase tracking-widest text-foreground/40 hover:text-red-500/80 transition-all group"
+          className="flex items-center gap-2 px-3 py-1.5 wb-surface border wb-outline rounded-sm hover:bg-red-500/10 hover:border-red-500/40 text-[8px] font-black uppercase tracking-widest wb-text-muted hover:text-red-500 transition-all group"
         >
-          <RotateCcw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
+          <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
           <span>Reset</span>
         </button>
 

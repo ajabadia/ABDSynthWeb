@@ -45,7 +45,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
     <div className="space-y-6 pt-2">
       {/* CANONICAL BINDING */}
       <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
            <div className="flex items-center gap-2">
              <Settings2 className="w-3 h-3 text-primary" />
              <span>Canonical Binding</span>
@@ -59,7 +59,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
             <select 
               value={item.bind || ''} 
               onChange={(e) => onUpdate({ bind: e.target.value })}
-              className={`w-full bg-black/60 border ${availableBinds.length === 0 ? 'border-amber-500/20' : 'border-primary/20'} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10`}
+              className={`w-full bg-black/5 border ${availableBinds.length === 0 ? 'border-amber-500/20' : 'wb-outline'} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10 transition-colors duration-500`}
             >
               <option value="">-- UNBOUND (Static) --</option>
               {availableBinds.map(b => (
@@ -75,7 +75,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               ⚠ No technical contract loaded. Upload .wasm or .json to sync logic.
             </p>
           ) : (
-            <p className="text-[7px] text-foreground/20 italic ml-1">
+            <p className="text-[7px] wb-text-muted italic ml-1">
               Connects this UI entity to a technical parameter in the WASM contract.
             </p>
           )}
@@ -84,7 +84,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
 
       {/* REGISTRY ROLE ERA 7.1 */}
       <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center justify-between tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
            <div className="flex items-center gap-2">
              <Settings2 className="w-3 h-3 text-primary" />
              <span>Registry Role (SOT)</span>
@@ -106,7 +106,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               className={`p-2 border rounded-xs transition-all flex flex-col items-start gap-0.5 ${
                 (item.role || 'control') === role.id 
                   ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
-                  : 'bg-black/40 border-outline/10 text-foreground/40 hover:border-outline/30'
+                  : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
               }`}
             >
               <span className="text-[9px] font-black uppercase tracking-tighter">{role.label}</span>
@@ -118,16 +118,16 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
 
       {/* TECHNICAL PROTOCOL */}
       <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
            <Box className="w-3 h-3 text-accent" />
            <span>Technical Protocol</span>
         </div>
         <div className="space-y-1.5">
-          <label className="text-[8px] font-bold text-foreground/30 uppercase ml-1">Value Normalization</label>
+          <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Value Normalization</label>
           <select 
             value={item.type || 'float'} 
             onChange={(e) => onUpdate({ type: e.target.value })}
-            className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-2 text-[10px] font-bold text-foreground/80 outline-none appearance-none"
+            className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none appearance-none transition-colors duration-500"
           >
             <option value="float">Float (0.0 to 1.0)</option>
             <option value="int">Integer (Stepped)</option>
@@ -139,7 +139,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
 
       {/* COMPONENT TYPE SELECTION */}
       <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
            <Box className="w-3 h-3" />
            <span>Component Blueprint</span>
         </div>
@@ -150,8 +150,8 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               onClick={() => updateType(type.id)}
               className={`flex items-center gap-3 p-2 border rounded-xs transition-all ${
                 currentType === type.id 
-                  ? 'bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
-                  : 'bg-black/40 border-outline/10 text-foreground/40 hover:border-outline/30'
+                  ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
+                  : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
               }`}
             >
               <span className="text-xs">{type.icon}</span>
@@ -163,7 +163,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
 
       {/* INTERACTION FLAGS */}
       <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase text-foreground/40 flex items-center gap-2 tracking-[0.2em]">
+        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
            <Settings2 className="w-3 h-3" />
            <span>Interaction Logic</span>
         </div>
@@ -173,7 +173,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
             className={`flex items-center justify-between p-3 border rounded-xs transition-all ${
               item.presentation?.ui?.disabled 
                 ? 'bg-red-500/20 border-red-500/40 text-red-500' 
-                : 'bg-black/40 border-outline/10 text-foreground/40 hover:border-outline/30'
+                : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
             }`}
           >
             <span className="text-[8px] font-black uppercase tracking-widest">Disabled</span>
@@ -184,7 +184,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
             className={`flex items-center justify-between p-3 border rounded-xs transition-all ${
               item.presentation?.ui?.readOnly 
                 ? 'bg-amber-500/20 border-amber-500/40 text-amber-500' 
-                : 'bg-black/40 border-outline/10 text-foreground/40 hover:border-outline/30'
+                : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
             }`}
           >
             <span className="text-[8px] font-black uppercase tracking-widest">Read Only</span>

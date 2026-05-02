@@ -48,14 +48,14 @@ export default function KnobProperties({ item, onUpdate }: KnobPropertiesProps) 
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-2">
-      <p className="text-[7px] text-foreground/40 italic leading-relaxed">
+      <p className="text-[7px] wb-text-muted font-bold transition-colors duration-500">
         Knob aesthetics are derived from the theme and variant. 
         Technical parameters (step, range) are defined in the <span className="text-primary font-bold">Technical Contract</span>.
       </p>
 
       {/* SIZE / VARIANT SELECTION */}
       <div className="space-y-1">
-        <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+        <label className="text-[8px] wb-text-muted font-black transition-colors duration-500">
           <Box className="w-2.5 h-2.5" />
           <span>Industrial Size</span>
         </label>
@@ -75,7 +75,7 @@ export default function KnobProperties({ item, onUpdate }: KnobPropertiesProps) 
 
       {/* COLOR OVERLAY SELECTION */}
       <div className="space-y-1">
-        <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+        <label className="text-[8px] wb-text-muted font-black transition-colors duration-500">
           <Palette className="w-2.5 h-2.5" />
           <span>Pointer / Cap Color</span>
         </label>
@@ -91,9 +91,9 @@ export default function KnobProperties({ item, onUpdate }: KnobPropertiesProps) 
         </div>
       </div>
 
-      <div className="p-2 bg-black/40 border border-outline/10 rounded-xs">
+      <div className="bg-black/5 wb-outline transition-colors duration-500 shadow-sm">
          <div className="flex items-center justify-between">
-           <span className="text-[7px] text-foreground/40 font-bold uppercase">Active Variant:</span>
+           <span className="text-[7px] wb-text-muted font-black transition-colors duration-500">Active Variant:</span>
            <span className="text-[8px] text-primary font-mono font-black">{currentVariant}</span>
          </div>
       </div>

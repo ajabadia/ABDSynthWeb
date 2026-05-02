@@ -16,12 +16,13 @@ export default function Port({ value, variant, isMain, isSelected, onClick }: Po
   const colorId = parts[1] || 'accent';
   
   const colorMap: Record<string, string> = {
-    cyan: '#00f2ff',
+    cyan: 'var(--color-primary, #00f2ff)',
     red: '#ff4444',
-    orange: '#ff8800',
+    orange: 'var(--color-accent, #ff8800)',
     green: '#00ff88',
     white: '#ffffff',
-    accent: '#ff8c00'
+    accent: 'var(--color-accent, #ff8c00)',
+    primary: 'var(--color-primary, #00f0ff)'
   };
   
   const color = colorMap[colorId] || colorMap.accent;

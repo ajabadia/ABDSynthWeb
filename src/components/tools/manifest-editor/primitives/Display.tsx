@@ -16,14 +16,16 @@ export default function Display({ value, steps, variant, onValueChange }: Displa
   const colorId = parts[1] || 'cyan';
   
   const colorMap: Record<string, string> = {
-    cyan: '#00f2ff',
+    cyan: 'var(--color-primary, #00f2ff)',
     red: '#ff4444',
-    orange: '#ff8800',
+    orange: 'var(--color-accent, #ff8800)',
     green: '#00ff88',
-    white: '#ffffff'
+    white: '#ffffff',
+    primary: 'var(--color-primary, #00f0ff)',
+    accent: 'var(--color-accent, #ff8c00)'
   };
   
-  const color = colorMap[colorId] || '#00f0ff';
+  const color = colorMap[colorId] || colorMap.primary;
   const dims: Record<string, number> = { A: 100, B: 80, C: 60, D: 40 };
   const d = dims[size] || 80;
   const h = d / 3;

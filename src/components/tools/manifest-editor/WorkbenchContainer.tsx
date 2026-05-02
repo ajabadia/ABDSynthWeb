@@ -10,6 +10,7 @@ import PropertyPanel from './PropertyPanel';
 import SourceViewer from './SourceViewer';
 import WorkbenchFooter from './WorkbenchFooter';
 import WorkbenchLogs from './WorkbenchLogs';
+import AuditModal from './AuditModal';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
 import HelpModal from './HelpModal';
 import IngestionModal from './IngestionModal';
@@ -56,7 +57,9 @@ export default function WorkbenchContainer() {
   const [showModGrid, setShowModGrid] = useState(false);
   const [helpState, setHelpState] = useState<{ isOpen: boolean; sectionId?: string }>({ isOpen: false });
   const [mockupOpen, setMockupOpen] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(manifest.ui?.layout?.activeTab || 'MAIN');
+  const [uiTheme, setUiTheme] = useState<'dark' | 'light'>('dark');
 
   // Sync activeTab to manifest for rendering engines
   useEffect(() => {
@@ -116,7 +119,10 @@ export default function WorkbenchContainer() {
   const selectedItem = selectedItemId ? findItem(selectedItemId) : manifest;
 
   return (
-    <div className="h-screen flex flex-col bg-[#050505] text-foreground font-sans overflow-hidden relative">
+    <div 
+      className="h-screen flex flex-col wb-bg wb-text font-sans overflow-hidden relative transition-colors duration-500"
+      data-ui-theme={uiTheme}
+    >
       <HiddenFileHandlers 
         onBulkUpload={handleBulkUpload} 
         onResourceUpload={handleBulkUpload} 
@@ -135,6 +141,8 @@ export default function WorkbenchContainer() {
         viewMode={viewMode}
         setViewMode={setViewMode}
         onHelp={() => openHelp()}
+        uiTheme={uiTheme}
+        setUiTheme={setUiTheme}
       />
 
       <AnimatePresence>
@@ -152,7 +160,7 @@ export default function WorkbenchContainer() {
 
       <main className="flex-1 flex overflow-hidden">
         {/* LEFT SIDEBAR */}
-        <aside className="w-80 border-r border-outline bg-black/40 flex flex-col min-w-[320px]">
+        <aside className="w-80 border-r wb-outline wb-surface flex flex-col min-w-[320px] transition-colors duration-500">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
             <ModuleHub 
               manifest={manifest} 
@@ -164,7 +172,7 @@ export default function WorkbenchContainer() {
         </aside>
 
         {/* CENTER VIEWPORT */}
-        <section className="flex-1 relative bg-black overflow-hidden">
+        <section className="flex-1 relative wb-bg overflow-hidden transition-colors duration-500">
           {viewMode !== 'source' && (
             <ViewportControls 
               zoom={zoom}
@@ -250,9 +258,10 @@ export default function WorkbenchContainer() {
               initial={{ x: 400 }}
               animate={{ x: 0 }}
               exit={{ x: 400 }}
-              className="w-[400px] shrink-0 h-full border-l border-outline/20"
+              className="w-[400px] shrink-0 h-full border-l wb-outline transition-colors duration-500"
             >
               <PropertyPanel 
+                uiTheme={uiTheme}
                 manifest={manifest}
                 item={selectedItem!}
                 onUpdate={selectedItemId ? (updates: any) => {
@@ -309,6 +318,14 @@ export default function WorkbenchContainer() {
 
       <WorkbenchFooter 
         auditResult={auditResult} 
+        manifest={manifest} 
+        onOpenAudit={() => setIsAuditModalOpen(true)}
+      />
+
+      <AuditModal 
+        isOpen={isAuditModalOpen} 
+        onClose={() => setIsAuditModalOpen(false)} 
+        audit={auditResult} 
         manifest={manifest} 
       />
       <MockupModal 

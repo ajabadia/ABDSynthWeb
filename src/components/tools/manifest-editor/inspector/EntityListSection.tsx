@@ -59,10 +59,10 @@ export default function EntityListSection({
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="flex justify-between items-center bg-white/[0.03] p-4 rounded-xs border border-outline/10 shadow-inner">
+      <div className="flex justify-between items-center bg-black/5 p-4 rounded-xs border wb-outline shadow-inner transition-colors duration-500">
         <div className="flex items-center gap-3">
-          <Icon className="w-4 h-4 text-primary/60" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/60">{title}</span>
+          <Icon className="w-4 h-4 text-primary" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] wb-text">{title}</span>
         </div>
         <button 
           onClick={() => onAddEntity(type)}
@@ -97,27 +97,27 @@ export default function EntityListSection({
                   <div 
                     key={item.id}
                     onClick={() => onSelectItem(item.id)}
-                    className="group relative flex items-center justify-between p-3 rounded-xs border bg-black/40 border-outline/5 text-foreground/40 hover:border-outline/40 hover:bg-white/[0.05] hover:shadow-[0_0_20px_rgba(0,0,0,0.4)] transition-all cursor-pointer"
+                    className="group relative flex items-center justify-between p-3 rounded-xs border bg-black/5 wb-outline hover:border-primary/40 hover:bg-primary/5 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] transition-all cursor-pointer transition-colors duration-500"
                   >
                     <div className="flex items-center gap-4 overflow-hidden">
                       <div className={`w-1 h-5 rounded-full transition-colors ${isLegacy ? 'bg-amber-500/20 group-hover:bg-amber-500' : 'bg-outline/20 group-hover:bg-primary/40'}`} />
                       <div className="flex flex-col truncate">
-                        <span className="text-[11px] font-bold truncate tracking-tight text-foreground/80 group-hover:text-primary transition-colors">{item.label || item.id}</span>
-                        <span className="text-[8px] font-mono opacity-30 uppercase truncate tracking-wider">{item.id}</span>
+                        <span className="text-[11px] font-black truncate tracking-tight wb-text group-hover:text-primary transition-colors">{item.label || item.id}</span>
+                        <span className="text-[8px] font-mono wb-text-muted uppercase truncate tracking-wider">{item.id}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
                       <button 
                         onClick={(e) => { e.stopPropagation(); onDuplicateItem(item.id); }}
-                        className="p-1.5 hover:bg-white/10 rounded-xs text-foreground/40 hover:text-primary transition-colors"
+                        className="p-1.5 hover:wb-surface-hover rounded-xs wb-text-muted hover:wb-text transition-colors"
                         title="Duplicate"
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); onRemoveItem(item.id); }}
-                        className="p-1.5 hover:bg-red-500/10 rounded-xs text-foreground/40 hover:text-red-400 transition-colors"
+                        className="p-1.5 hover:bg-red-500/10 rounded-xs wb-text-muted hover:text-red-400 transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

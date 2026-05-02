@@ -9,9 +9,10 @@ import { OMEGA_Manifest } from '../../../types/manifest';
 interface ComplianceBadgeProps {
   audit: AuditResult;
   manifest: OMEGA_Manifest;
+  onOpenAudit?: () => void;
 }
 
-export default function ComplianceBadge({ audit, manifest }: ComplianceBadgeProps) {
+export default function ComplianceBadge({ audit, manifest, onOpenAudit }: ComplianceBadgeProps) {
   const [showDetails, setShowDetails] = React.useState(false);
 
   const handleDownloadReport = () => {
@@ -149,12 +150,19 @@ export default function ComplianceBadge({ audit, manifest }: ComplianceBadgeProp
                   </div>
                )}
 
-               <button 
-                 onClick={handleDownloadReport}
-                 className="w-full py-2 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-[8px] font-black uppercase tracking-[0.2em] transition-all rounded-xs"
-               >
-                  Download Certification Report
-               </button>
+                <button 
+                  onClick={onOpenAudit}
+                  className="w-full py-2.5 bg-[#00ff9d] text-black hover:bg-[#00ff9d]/90 text-[9px] font-black uppercase tracking-[0.2em] transition-all rounded-xs shadow-[0_0_20px_rgba(0,255,157,0.2)]"
+                >
+                   Open Industrial Inspection Sheet
+                </button>
+
+                <button 
+                  onClick={handleDownloadReport}
+                  className="w-full py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 text-[8px] font-black uppercase tracking-[0.2em] transition-all rounded-xs"
+                >
+                   Export Markdown Certificate
+                </button>
             </div>
           </motion.div>
         )}

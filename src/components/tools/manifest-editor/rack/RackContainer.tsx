@@ -46,29 +46,33 @@ const RackContainerBase = ({
   };
 
   const getVariantStyles = (variant: string, isSelected: boolean) => {
+    const baseBorder = isSelected ? 'rgba(0, 240, 255, 0.4)' : 'rgba(255, 255, 255, 0.05)';
+    const baseBg = isSelected ? 'rgba(0, 240, 255, 0.03)' : 'rgba(255, 255, 255, 0.01)';
+
     switch (variant) {
       case 'header':
         return {
-          borderColor: isSelected ? 'rgba(0, 240, 255, 0.4)' : 'rgba(0, 240, 255, 0.15)',
-          backgroundColor: isSelected ? 'rgba(0, 240, 255, 0.08)' : 'rgba(0, 240, 255, 0.04)',
-          borderWidth: '1px'
+          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.15)',
+          backgroundColor: isSelected ? 'rgba(0, 240, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+          borderWidth: '1px',
+          borderBottomWidth: '2px'
         };
       case 'section':
         return {
-          borderColor: isSelected ? 'rgba(0, 240, 255, 0.5)' : 'rgba(255, 255, 255, 0.05)',
-          backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
-          borderLeft: `2px solid ${isSelected ? 'var(--primary)' : 'rgba(0, 240, 255, 0.2)'}`
+          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: isSelected ? 'rgba(0, 240, 255, 0.02)' : 'transparent',
+          borderLeft: `2px solid ${isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.1)'}`
         };
       case 'inset':
         return {
-          borderColor: isSelected ? 'var(--primary)' : 'rgba(0, 0, 0, 0.4)',
+          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(0, 0, 0, 0.4)',
           backgroundColor: 'rgba(0, 0, 0, 0.3)',
           boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.5)'
         };
       case 'panel':
         return {
-          borderColor: isSelected ? 'var(--primary)' : 'rgba(255, 255, 255, 0.08)',
-          backgroundColor: 'rgba(255, 255, 255, 0.025)',
+          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.08)',
+          backgroundColor: 'rgba(255, 255, 255, 0.02)',
         };
       case 'minimal':
         return {
@@ -77,8 +81,8 @@ const RackContainerBase = ({
         };
       default:
         return {
-          borderColor: isSelected ? 'rgba(0, 240, 255, 0.4)' : 'rgba(255, 255, 255, 0.05)',
-          backgroundColor: isSelected ? 'rgba(0, 240, 255, 0.03)' : 'rgba(255, 255, 255, 0.015)',
+          borderColor: baseBorder,
+          backgroundColor: baseBg,
         };
     }
   };

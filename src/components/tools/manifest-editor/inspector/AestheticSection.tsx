@@ -58,9 +58,9 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
       {/* 1. COMPONENT PLANE (TAB) */}
       <div className="space-y-3 bg-white/[0.02] border border-outline/10 p-4 rounded-xs">
         <div className="flex items-center justify-between pr-1">
-          <label className="text-[8px] font-black text-foreground/40 uppercase ml-1 tracking-[0.1em]">Era 7 Plane (Tab)</label>
+          <label className="text-[8px] font-black wb-text-muted uppercase ml-1 tracking-[0.1em]">Era 7 Plane (Tab)</label>
           <button onClick={() => onHelp?.('tabs')} className="hover:text-primary transition-colors">
-            <Info className="w-2.5 h-2.5 opacity-20" />
+            <Info className="w-2.5 h-2.5 wb-text-muted opacity-60" />
           </button>
         </div>
         <div className="flex flex-wrap gap-1">
@@ -70,8 +70,8 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
               onClick={() => onUpdate({ presentation: { ...item.presentation, tab: t as any } })}
               className={`px-2 py-1 text-[7px] font-black uppercase rounded-xs border transition-all ${
                 (item.presentation?.tab || 'MAIN') === t 
-                  ? 'bg-primary/20 border-primary text-primary' 
-                  : 'bg-black/40 border-outline/10 text-foreground/20 hover:border-outline/30'
+                  ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' 
+                  : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'
               }`}
             >
               {t}
@@ -83,7 +83,7 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
       {/* 2. ARCHITECTURAL ANCHOR (CONTAINER) */}
       <div className="space-y-4 p-4 bg-accent/5 border border-accent/10 rounded-xs">
         <div className="flex items-center justify-between">
-           <div className="flex items-center gap-3 opacity-60">
+           <div className="flex items-center gap-3 wb-text-muted opacity-80">
               <Layout className="w-3.5 h-3.5 text-accent" />
               <span className="text-[9px] font-black uppercase tracking-widest italic text-accent">Architectural Anchor</span>
            </div>
@@ -105,14 +105,14 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
                   group: undefined 
                 } 
               })}
-              className="w-full bg-black/40 border border-outline/10 rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-accent/40 transition-all appearance-none cursor-pointer"
+              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-accent/40 transition-all appearance-none cursor-pointer transition-colors duration-500"
             >
               <option value="">NO CONTAINER (UNBOUND)</option>
               {containers.map(c => (
                 <option key={c.id} value={c.id}>{c.label.toUpperCase()} ({c.id})</option>
               ))}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none wb-text-muted opacity-60 group-hover:opacity-40 transition-opacity">
                <Box className="w-3 h-3" />
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
 
       {/* 3. COMPONENT SPECIALIZED PROPERTIES */}
       <div className="space-y-6">
-        <div className="flex items-center gap-3 px-1 opacity-60">
+        <div className="flex items-center gap-3 px-1 wb-text-muted opacity-80">
            <Palette className="w-3.5 h-3.5 text-primary" />
            <span className="text-[9px] font-black uppercase tracking-widest italic">Component Aesthetics</span>
         </div>
@@ -137,12 +137,12 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
       </div>
 
       {/* SYSTEM NOTES */}
-      <div className="p-4 bg-black/40 border border-outline/10 rounded-xs space-y-2 border-l-2 border-l-primary/40 mt-10">
-         <div className="flex items-center gap-2 text-[7px] font-black text-foreground/20 uppercase tracking-widest">
+      <div className="p-4 bg-black/5 wb-outline transition-colors duration-500 rounded-xs space-y-2 border-l-2 border-l-primary/40 mt-10">
+         <div className="flex items-center gap-2 text-[7px] font-black wb-text-muted uppercase tracking-widest">
             <Info className="w-2.5 h-2.5" />
             <span>Industrial Note</span>
          </div>
-         <p className="text-[6px] text-foreground/30 uppercase font-medium leading-relaxed">
+         <p className="text-[6px] wb-text-muted uppercase font-medium leading-relaxed">
            Era 7.2 enforces strict architectural framing. Use containers to define columns and sections for studio parity.
          </p>
       </div>
