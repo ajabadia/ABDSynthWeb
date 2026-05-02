@@ -10,7 +10,7 @@ interface KnobProps {
   isMain?: boolean;
   isSelected?: boolean;
   onValueChange: (val: number) => void;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export default function Knob({ value, variant, skin, isMain, isSelected, onValueChange, onClick }: KnobProps) {

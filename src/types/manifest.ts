@@ -116,6 +116,7 @@ export interface OMEGA_Manifest {
     layout?: {
       containers: LayoutContainer[];
       gridSnap?: number;
+      activeTab?: TabName | string;
     };
   };
   resources: {

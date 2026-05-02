@@ -57,11 +57,27 @@ export const useManifestEditor = () => {
     handleBulkUpload
   } = useFileOps(manifest, setManifest, setContract, setWasmBuffer, wasmBuffer, setExtraResources, extraResources, addLog, issues);
 
-  const handleDeploy = useCallback(() => {
-    addLog(`[SYSTEM] Deployment Request: Initiating direct injection into OMEGA Engine...`);
-    addLog(`[SYSTEM] Module ID: ${manifest.id}`);
-    addLog(`[SYSTEM] Status: Awaiting Antigravity confirmation.`);
-  }, [addLog, manifest.id]);
+  const handleDeploy = useCallback(async () => {
+    if (issues.length > 0) {
+      if (!confirm(`Manifest has ${issues.length} audit issues. Deploy to engine anyway?`)) return;
+    }
+
+    addLog(`[SYSTEM] HIL Bridge: Initiating direct injection...`);
+    addLog(`[SYSTEM] Target ID: ${manifest.id}`);
+    
+    try {
+      const { wasmRuntime } = require('../services/wasmRuntime');
+      const result = await wasmRuntime.deployManifest(manifest);
+      
+      if (result.success) {
+        addLog(`[SUCCESS] Hot-Swap injection complete.`);
+        addLog(`[SYSTEM] Engine Hash: 0x${result.hash}`);
+        addLog(`[SYSTEM] Simulation synchronized.`);
+      }
+    } catch (err) {
+      addLog(`[CRITICAL] Deployment failed: ${err}`);
+    }
+  }, [addLog, manifest, issues]);
 
   const reset = () => {
     if (confirm("Reset workspace?")) {

@@ -51,6 +51,22 @@ export class WasmRuntime {
     return 0;
   }
 
+  async deployManifest(manifest: any): Promise<{ success: boolean; hash: string }> {
+    console.log(`OMEGA HIL: Desplegando manifiesto '${manifest.id}' v${manifest.schemaVersion}...`);
+    
+    // Simulación de latencia de red/carga en hardware real
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // En un entorno real, aquí se enviaría el manifiesto vía RPC o SharedArrayBuffer
+    // Por ahora, simulamos la generación de un hash de integridad del firmware
+    const hash = Math.random().toString(16).slice(2, 10).toUpperCase();
+    
+    return { 
+      success: true, 
+      hash 
+    };
+  }
+
   // Activa un modo "Demo" que hace que la telemetría se mueva
   enableDemoMode() {
     this.isMock = true;

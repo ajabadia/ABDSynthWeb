@@ -62,6 +62,23 @@ export default function WorkbenchContainer() {
   const [showModGrid, setShowModGrid] = useState(false);
   const [helpState, setHelpState] = useState<{ isOpen: boolean; sectionId?: string }>({ isOpen: false });
   const [mockupOpen, setMockupOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(manifest.ui?.layout?.activeTab || 'MAIN');
+
+  // Sync activeTab to manifest for rendering engines
+  useEffect(() => {
+    if (manifest.ui?.layout?.activeTab !== activeTab) {
+      updateManifest({ 
+        ui: { 
+          ...manifest.ui, 
+          layout: { 
+            containers: manifest.ui?.layout?.containers || [],
+            ...manifest.ui?.layout, 
+            activeTab: activeTab as any 
+          } 
+        } 
+      });
+    }
+  }, [activeTab, manifest.ui, updateManifest]);
 
   // Viewport & Audit Hooks (Modularized)
   const { zoom, pan, handleZoom, handlePan, handleResetViewport, handleFitViewport } = useViewport();
@@ -159,6 +176,7 @@ export default function WorkbenchContainer() {
               manifest={manifest} 
               contract={contract} 
               triggerUpload={triggerUpload} 
+              onDeploy={handleDeploy}
             />
           </div>
         </aside>
@@ -196,6 +214,7 @@ export default function WorkbenchContainer() {
                   selectedItemId={selectedItemId}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={updateItem}
+                  audit={auditResult}
                 />
               </motion.div>
             ) : viewMode === 'rack' ? (
@@ -222,6 +241,8 @@ export default function WorkbenchContainer() {
                   isLiveMode={isLiveMode}
                   setIsLiveMode={setIsLiveMode}
                   audit={auditResult}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
                 />
               </motion.div>
             ) : (
@@ -323,7 +344,7 @@ export default function WorkbenchContainer() {
       {/* INDUSTRIAL FOOTER */}
       <footer className="h-6 border-t border-outline/20 bg-black flex items-center justify-between px-6 z-50 shrink-0">
         <div className="flex-1 flex items-center gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">
-          <span className="text-primary/40 font-black">Build v7.0.8</span>
+          <span className="text-primary/40 font-black">Build v7.2.3</span>
           <span className="opacity-50">//</span>
           <span>Aseptic Standard</span>
         </div>

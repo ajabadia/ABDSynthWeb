@@ -21,7 +21,7 @@ interface PrimitiveProps {
   isMain?: boolean;
   isSelected?: boolean;
   onValueChange: (val: number) => void;
-  onClick: () => void;
+  onClick?: () => void;
   text?: string;
   role?: string;
   options?: string[];

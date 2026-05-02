@@ -23,6 +23,8 @@ interface VirtualRackProps {
   isLiveMode: boolean;
   setIsLiveMode: (val: boolean) => void;
   audit: AuditResult;
+  activeTab: string;
+  setActiveTab: (val: string) => void;
 }
 
 /**
@@ -38,10 +40,11 @@ export default function VirtualRack({
   zoom = 1.0, 
   isLiveMode, 
   setIsLiveMode, 
-  audit 
+  audit,
+  activeTab,
+  setActiveTab
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState('MAIN');
   const [runtimeValues, setRuntimeValues] = useState<Record<string, number>>({});
   const [activeContainers, setActiveContainers] = useState<Record<string, number>>({});
   const [activeInjectorPort, setActiveInjectorPort] = useState<string | null>(null);
@@ -160,7 +163,16 @@ export default function VirtualRack({
 
         {/* ARCHITECTURAL PLANES */}
         {containers.filter(c => !c.tab || c.tab === activeTab).map((c) => (
-          <RackContainer key={c.id} container={c} isSelected={allElements.some(e => e.id === selectedItemId && (e.presentation?.container === c.id || e.presentation?.group === c.id))} activeContainers={activeContainers} audit={audit} skin={skin} rackWidthPx={width} />
+          <RackContainer 
+            key={c.id} 
+            container={c} 
+            isSelected={allElements.some(e => e.id === selectedItemId && (e.presentation?.container === c.id || e.presentation?.group === c.id))} 
+            activeContainers={activeContainers} 
+            audit={audit} 
+            skin={skin} 
+            rackWidthPx={width}
+            isLiveMode={isLiveMode}
+          />
         ))}
 
         <ModulationCables manifest={manifest} allElements={allElements} activeTab={activeTab} />

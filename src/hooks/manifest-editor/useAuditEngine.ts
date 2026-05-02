@@ -18,7 +18,15 @@ export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OmegaContract
   const issues = useMemo(() => {
     const baseIssues = ValidationService.validate(manifest);
     
-    if (contract && (manifest.schemaVersion === '7.0' || manifest.schemaVersion === '7.1' || manifest.schemaVersion === undefined)) {
+    if (contract) {
+      if (manifest.id !== contract.id) {
+        baseIssues.push({
+          path: '/id',
+          message: `ID Mismatch: Manifest '${manifest.id}' vs Contract '${contract.id}'. Binary sync will fail.`,
+          keyword: 'integrity'
+        });
+      }
+
       const contractParamIds = (contract.parameters?.map(p => p.id?.toLowerCase()) || []);
       const contractPortIds = (contract.ports?.map(p => p.id?.toLowerCase()) || []);
 

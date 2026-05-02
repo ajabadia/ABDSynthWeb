@@ -7,7 +7,7 @@ interface PortProps {
   variant: string;
   isMain?: boolean;
   isSelected?: boolean;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export default function Port({ value, variant, isMain, isSelected, onClick }: PortProps) {
@@ -32,7 +32,7 @@ export default function Port({ value, variant, isMain, isSelected, onClick }: Po
     <div 
       style={{ width: `${d}px`, height: `${d}px` }} 
       className={`rounded-full border-2 bg-[#000] flex items-center justify-center cursor-pointer ${isMain && isSelected ? 'border-accent shadow-[0_0_10px_rgba(255,140,0,0.2)]' : 'border-[#444]'}`}
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
     >
       <div className="w-[60%] h-[60%] rounded-full bg-[#111] border border-white/5 shadow-inner flex items-center justify-center">
          <div style={{ opacity: value, backgroundColor: color }} className="w-1 h-1 rounded-full animate-pulse" />

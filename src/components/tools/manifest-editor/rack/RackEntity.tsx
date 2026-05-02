@@ -65,9 +65,9 @@ export const RackEntity = ({
     ...(contract.ports?.map((p: any) => p.id) || [])
   ] : [];
 
-  const integrityIssues = audit.details.filter((d: string) => d.includes(`'${item.id}'`) && d.includes('INTEGRIDAD'));
-  const hasIntegrityError = integrityIssues.length > 0;
-  const isOrphan = (!hasRole) || (isBound && !contractIds.includes(item.bind)) || hasIntegrityError;
+  const itemIssues = audit.issues.filter(issue => issue.path.includes(item.id) || issue.message.includes(`'${item.id}'`));
+  const hasIntegrityError = itemIssues.some(i => i.keyword === 'era7_integrity');
+  const isOrphan = itemIssues.length > 0 || !hasRole;
 
   return (
     <motion.div
@@ -103,6 +103,7 @@ export const RackEntity = ({
         zIndex: isSelected ? 50 : 10, 
         cursor: isLiveMode ? 'pointer' : 'grab' 
       }}
+      onClick={handleClick}
     >
       <div className="relative w-full h-full flex items-center justify-center group">
         {/* ORPHAN WARNING AURA */}
@@ -119,9 +120,9 @@ export const RackEntity = ({
                      <AlertCircle className="w-3 h-3" />
                      <span className="text-[8px] font-black uppercase tracking-widest">Orphan Detected</span>
                   </div>
-                  <span className="text-[7px] font-bold uppercase leading-tight">
-                    {(!hasRole) ? '• Missing Registry Role' : ''}
-                    {(isBound && !contractIds.includes(item.bind)) ? '\n• Binding ID not in contract' : ''}
+                  <span className="text-[7px] font-bold uppercase leading-tight whitespace-pre-line">
+                    {itemIssues.map(i => `• ${i.message}`).join('\n')}
+                    {!hasRole && '• Missing Registry Role'}
                   </span>
                </div>
                <div className="w-2 h-2 bg-red-600 rotate-45 mx-auto -mt-1 border-r border-b border-red-400/40" />
@@ -138,7 +139,6 @@ export const RackEntity = ({
                 <PrimitiveFactory 
                   type={att.type} value={runtimeValue} steps={steps} variant={att.variant || 'B_cyan'} skin={skin} item={att} 
                   onValueChange={() => {}} 
-                  onClick={handleClick}
                   text={att.text} role={att.role}
                 />
               </div>
@@ -152,7 +152,6 @@ export const RackEntity = ({
             type={item.presentation?.component || (isJack ? 'port' : 'knob')} 
             value={runtimeValue} steps={steps} variant={item.presentation?.variant || 'B_cyan'} skin={skin} isMain={true} isSelected={isSelected} item={item}
             onValueChange={(val) => onUpdateValue(item.id, val)}
-            onClick={handleClick}
             text={item.label} role={item.role}
           />
           {isLiveMode && isJack && (

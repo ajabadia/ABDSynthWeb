@@ -10,6 +10,7 @@ interface RackContainerProps {
   audit: AuditResult;
   skin: string;
   rackWidthPx: number;
+  isLiveMode?: boolean;
 }
 
 /**
@@ -22,7 +23,8 @@ export const RackContainer = ({
   activeContainers, 
   audit, 
   skin, 
-  rackWidthPx 
+  rackWidthPx,
+  isLiveMode = false
 }: RackContainerProps) => {
   const c = container;
   
@@ -83,8 +85,8 @@ export const RackContainer = ({
   const cy = c.pos.y * 1.5;
   const styles = getVariantStyles(c.variant, isSelected);
   
-  const containerIssues = audit.details.filter((d: string) => d.includes(`'${c.id}'`));
-  const hasIntegrityError = containerIssues.length > 0;
+  const containerIssues = audit?.issues?.filter((i: any) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [];
+  const hasIntegrityError = containerIssues.some(i => i.keyword === 'era7_integrity');
 
   return (
     <motion.div
@@ -94,9 +96,11 @@ export const RackContainer = ({
         boxShadow: isSelected 
           ? '0 0 40px rgba(0,240,255,0.15)' 
           : (hasIntegrityError ? '0 0 20px rgba(255,62,62,0.1)' : '0 0 0px rgba(0,0,0,0)'),
-        ...styles
+        ...styles,
+        backgroundColor: isLiveMode ? 'transparent' : styles.backgroundColor,
+        borderColor: isLiveMode && !isSelected ? 'rgba(255,255,255,0.1)' : styles.borderColor,
       }}
-      className={`absolute rounded-xs pointer-events-none transition-all duration-500 container-${skin} ${isSelected ? 'z-20' : 'z-0'} ${hasIntegrityError ? 'border-red-500/50' : ''}`}
+      className={`absolute rounded-xs pointer-events-none transition-all duration-500 container-${skin} ${isSelected ? 'z-[5]' : 'z-0'} ${hasIntegrityError ? 'border-red-500/50' : ''}`}
       style={{ 
         left: cx, 
         top: cy, 
@@ -118,8 +122,8 @@ export const RackContainer = ({
 
       {/* LABEL */}
       {c.variant !== 'minimal' && (
-        <div className={`absolute px-1.5 py-0.5 border rounded-full text-[6px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-500
-          ${isSelected ? 'bg-primary/20 border-primary text-primary' : (hasIntegrityError ? 'bg-red-900/60 border-red-500 text-red-200' : 'bg-black/60 border-white/10 text-white/40')}
+        <div className={`absolute px-1.5 py-0.5 border rounded-full text-[6px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-500 z-[10]
+          ${isSelected ? 'bg-primary border-primary text-black' : (hasIntegrityError ? 'bg-red-600 border-red-500 text-white' : 'bg-black/80 border-white/20 text-white/60')}
           ${c.labelPosition === 'bottom' ? '-bottom-3 left-2' : 
             c.labelPosition === 'inside-top' ? 'top-2 left-2' :
             c.labelPosition === 'inside-bottom' ? 'bottom-2 left-2' :

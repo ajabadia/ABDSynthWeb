@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Zap, Database, Palette, CheckCircle, AlertTriangle, FolderOpen, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface UIElement {
   bind?: string;
@@ -32,9 +33,10 @@ interface ModuleHubProps {
     ports?: any[];
   } | null;
   triggerUpload: (type: string) => void;
+  onDeploy: () => void;
 }
 
-export default function ModuleHub({ manifest, contract, triggerUpload }: ModuleHubProps) {
+export default function ModuleHub({ manifest, contract, triggerUpload, onDeploy }: ModuleHubProps) {
   
   // INDUSTRIAL HEALTH ANALYTICS
   const metrics = useMemo(() => {
@@ -175,6 +177,27 @@ export default function ModuleHub({ manifest, contract, triggerUpload }: ModuleH
                <span className="text-[10px] font-black font-mono text-primary">ERA 7.1</span>
             </div>
          </div>
+      </div>
+      {/* ACTION HUB */}
+      <div className="space-y-2">
+         <button 
+           onClick={onDeploy}
+           className={`w-full flex items-center justify-center gap-3 p-4 rounded-sm transition-all shadow-xl group relative overflow-hidden ${sysReady ? 'bg-accent text-black hover:scale-[1.02]' : 'bg-white/5 text-foreground/40 border border-outline hover:bg-white/10'}`}
+         >
+            <Zap className={`w-4 h-4 ${sysReady ? 'fill-black' : ''} group-hover:scale-125 transition-transform`} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Deploy to Engine</span>
+            {sysReady && (
+              <motion.div 
+                animate={{ x: ['-100%', '100%'] }} 
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" 
+              />
+            )}
+         </button>
+         
+         <p className="text-[6px] text-center text-foreground/20 font-bold uppercase tracking-widest italic">
+           * Direct hot-swap injection into OMEGA runtime
+         </p>
       </div>
     </div>
   );

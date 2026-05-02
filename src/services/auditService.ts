@@ -12,6 +12,7 @@ export interface AuditResult {
     integrity: boolean;
   };
   details: string[];
+  issues: ValidationIssue[];
   fingerprint?: string; 
   isHashMatched?: boolean; // NEW: Parity with engine binary
 }
@@ -91,7 +92,8 @@ export class AuditService {
       score,
       status,
       checks: { governance, technical, aesthetic, integrity },
-      details
+      details,
+      issues
     };
   }
 
