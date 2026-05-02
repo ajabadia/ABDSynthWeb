@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { OMEGA_Manifest } from '../../../../types/manifest';
 import { AuditResult } from '@/services/auditService';
 
@@ -11,22 +12,25 @@ interface RackContainerProps {
   skin: string;
   rackWidthPx: number;
   isLiveMode?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 /**
  * RackContainer (v7.2.3)
  * Renders architectural containers (sections, panels, headers) within the rack.
  */
-export const RackContainer = ({ 
+const RackContainerBase = ({ 
   container, 
   isSelected, 
   activeContainers, 
   audit, 
   skin, 
   rackWidthPx,
-  isLiveMode = false
+  isLiveMode = false,
+  onToggleCollapse
 }: RackContainerProps) => {
   const c = container;
+  const isCollapsed = c.collapsed;
   
   const resolveWidth = (w: any): number => {
     if (typeof w === 'number') return w * 1.5;
@@ -80,12 +84,16 @@ export const RackContainer = ({
   };
 
   const cw = resolveWidth(c.size.w);
-  const ch = c.size.h * 1.5;
+  const ch = isCollapsed ? 30 : (c.size.h * 1.5);
   const cx = c.pos.x * 1.5;
   const cy = c.pos.y * 1.5;
   const styles = getVariantStyles(c.variant, isSelected);
   
-  const containerIssues = audit?.issues?.filter((i: any) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [];
+  const containerIssues = React.useMemo(() => 
+    audit?.issues?.filter((i: any) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [],
+    [audit.issues, c.id]
+  );
+  
   const hasIntegrityError = containerIssues.some(i => i.keyword === 'era7_integrity');
 
   return (
@@ -107,7 +115,8 @@ export const RackContainer = ({
         width: cw, 
         height: ch,
         borderStyle: 'solid',
-        borderWidth: styles.borderWidth || '1px'
+        borderWidth: styles.borderWidth || '1px',
+        pointerEvents: 'none'
       }}
     >
       {/* ACTIVITY HEATMAP PULSE */}
@@ -117,12 +126,12 @@ export const RackContainer = ({
           scale: 1 + (activeContainers[c.id] || 0) * 0.01
         }}
         transition={{ type: 'spring', damping: 20 }}
-        className={`absolute inset-0 rounded-xs ${hasIntegrityError ? 'bg-red-500/20' : 'bg-primary/20'}`}
+        className={`absolute inset-0 rounded-xs pointer-events-none ${hasIntegrityError ? 'bg-red-500/20' : 'bg-primary/20'}`}
       />
 
-      {/* LABEL */}
-      {c.variant !== 'minimal' && (
-        <div className={`absolute px-1.5 py-0.5 border rounded-full text-[6px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-500 z-[10]
+        <div 
+          onClick={(e) => { e.stopPropagation(); onToggleCollapse?.(); }}
+          className={`absolute px-1.5 py-0.5 border rounded-full text-[6px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-500 z-[10] flex items-center gap-1.5 cursor-pointer pointer-events-auto
           ${isSelected ? 'bg-primary border-primary text-black' : (hasIntegrityError ? 'bg-red-600 border-red-500 text-white' : 'bg-black/80 border-white/20 text-white/60')}
           ${c.labelPosition === 'bottom' ? '-bottom-3 left-2' : 
             c.labelPosition === 'inside-top' ? 'top-2 left-2' :
@@ -130,8 +139,22 @@ export const RackContainer = ({
             '-top-3 left-2'}
         `}>
           {hasIntegrityError ? '⚠️ INTEGRITY_LEAK' : c.label}
+          {!isLiveMode && (
+            <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+          )}
         </div>
-      )}
     </motion.div>
   );
 };
+
+export const RackContainer = React.memo(RackContainerBase, (prev, next) => {
+  return (
+    prev.container.id === next.container.id &&
+    prev.container.collapsed === next.container.collapsed &&
+    prev.isSelected === next.isSelected &&
+    prev.skin === next.skin &&
+    prev.isLiveMode === next.isLiveMode &&
+    prev.activeContainers[prev.container.id] === next.activeContainers[next.container.id] &&
+    prev.audit.issues.length === next.audit.issues.length
+  );
+});

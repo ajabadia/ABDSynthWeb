@@ -35,8 +35,13 @@ export const useWasmTransfer = (
       const buffer = await file.arrayBuffer();
       setWasmBuffer(buffer);
       const extractedContract = await WasmLoaderService.extractContract(file);
+      
+      // Industrial Fingerprinting: Generate hash from the contract to bind it with the manifest
+      const { IntegrityService } = await import('../../../services/integrityService');
+      extractedContract.firmwareHash = await IntegrityService.generateManifestHash(extractedContract);
+      
       setContract(extractedContract);
-      addLog(`[OK] Contract extracted from binary.`);
+      addLog(`[OK] Contract extracted and fingerprinted: ${extractedContract.firmwareHash.slice(0, 8)}`);
 
       const success = await wasmRuntime.loadWasm(buffer);
       if (success) {
@@ -73,8 +78,11 @@ export const useWasmTransfer = (
       loadedContract.parameters = (loadedContract.parameters || []).map((p: any) => ({ ...p, id: String(p.id || p.name).toLowerCase() }));
       loadedContract.ports = (loadedContract.ports || []).map((p: any) => ({ ...p, id: String(p.id || p.name).toLowerCase() }));
       
+      const { IntegrityService } = await import('../../../services/integrityService');
+      loadedContract.firmwareHash = await IntegrityService.generateManifestHash(loadedContract);
+      
       setContract(loadedContract);
-      addLog(`[AUDIT] Contract '${loadedContract.id}' validated.`);
+      addLog(`[AUDIT] Contract '${loadedContract.id}' validated and fingerprinted.`);
       syncManifestWithContract(loadedContract, 'module.wasm');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

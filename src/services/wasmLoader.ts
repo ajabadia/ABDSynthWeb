@@ -21,6 +21,7 @@ export interface OmegaContract {
     type: 'audio' | 'cv' | 'midi' | 'gate';
     direction: 'input' | 'output';
   }>;
+  firmwareHash?: string;
 }
 
 export class WasmLoaderService {

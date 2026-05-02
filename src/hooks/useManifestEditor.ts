@@ -67,11 +67,24 @@ export const useManifestEditor = () => {
     
     try {
       const { wasmRuntime } = require('../services/wasmRuntime');
+      const { IntegrityService } = await import('../services/integrityService');
+      
+      // 1. Coherence Check (Safety Lock)
+      const currentHash = await IntegrityService.generateManifestHash(manifest);
+      if (contract?.firmwareHash && currentHash !== contract.firmwareHash) {
+        addLog(`[CRITICAL] Coherence Failure: Manifest Hash (${currentHash.slice(0, 8)}) mismatch with Binary Hash (${contract.firmwareHash.slice(0, 8)}).`);
+        const proceed = confirm("FIRMWARE_MISMATCH: The manifest structure has changed and no longer matches the loaded binary. This will cause simulation errors. Proceed anyway?");
+        if (!proceed) {
+          addLog(`[ABORT] Deployment cancelled by engineer due to integrity failure.`);
+          return;
+        }
+      }
+
       const result = await wasmRuntime.deployManifest(manifest);
       
       if (result.success) {
         addLog(`[SUCCESS] Hot-Swap injection complete.`);
-        addLog(`[SYSTEM] Engine Hash: 0x${result.hash}`);
+        addLog(`[SYSTEM] Engine Fingerprint: ${currentHash.slice(0, 16)}...`);
         addLog(`[SYSTEM] Simulation synchronized.`);
       }
     } catch (err) {

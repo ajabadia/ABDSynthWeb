@@ -94,6 +94,48 @@ export const HELP_DATA: HelpSection[] = [
     ]
   },
 
+  {
+    id: 'ui_components',
+    title: 'Catálogo de Componentes',
+    icon: '🎛️',
+    category: 'user',
+    content: 'Lista de componentes industriales estándar reconocidos por el motor de la Era 7:',
+    subsections: [
+      {
+        id: 'knob_desc',
+        title: 'Knob / Slider',
+        content: 'Controles giratorios o deslizantes para mapeo continuo (0.0 a 1.0).',
+        technical_params: ['component: knob | slider-v | slider-h']
+      },
+      {
+        id: 'display_desc',
+        title: 'Display (Stepper)',
+        content: 'Pantalla digital con botones +/- integrados para ajustes de precisión.',
+        technical_params: ['component: display']
+      },
+      {
+        id: 'io_desc',
+        title: 'Port (Jack)',
+        content: 'Representación física de un punto de parcheo (Audio/CV/MIDI).',
+        technical_params: ['component: port']
+      }
+    ]
+  },
+  {
+    id: 'binary_truth',
+    title: 'Binary Truth (Descubrimiento)',
+    icon: '💎',
+    category: 'developer',
+    content: 'En la Era 7, el binario WASM es la Fuente de Verdad (SOT).',
+    subsections: [
+      {
+        id: 'discovery_flow',
+        title: 'Flujo de Descubrimiento',
+        content: '1. El Host busca el archivo .acemm.\\n2. Si no existe, invoca omega_get_contract() del .wasm.\\n3. El sistema autogenera el contrato técnico basándose en el binario.',
+        category: 'professional'
+      }
+    ]
+  },
   // --- SECCIONES DE DESARROLLADOR (SDK COMPLETO Y COPIABLE) ---
   {
     id: 'sdk_core',
@@ -103,19 +145,99 @@ export const HELP_DATA: HelpSection[] = [
     content: 'Especificaciones técnicas para el desarrollo de binarios DSP compatibles con OMEGA.',
     subsections: [
       {
-        id: 'abi_exports',
-        title: 'Funciones de Exportación',
-        content: 'Implementa estas funciones usando extern "C" para que el Host OMEGA pueda cargar tu código:',
-        technical_params: ['omega_get_contract', 'omega_process', 'omega_set_param', 'omega_on_midi']
+        id: 'abi_handshake',
+        title: 'The Handshake (Exports)',
+        content: 'El binario es la **Fuente de Verdad**. Debes exportar estas funciones para que OMEGA pueda instanciar tu código:',
+        technical_params: [
+          'omega_get_contract(): Retorna el JSON del contrato.',
+          'omega_init(float sampleRate): Inicialización de buffers.',
+          'omega_process(float* buffer, int len): Procesamiento DSP.',
+          'omega_on_param(int id, float val): Cambio de parámetro.',
+          'omega_on_midi(byte s, byte d1, byte d2): Eventos MIDI.'
+        ]
       },
       {
-        id: 'build_emcc',
-        title: 'Pipeline de Compilación',
-        content: 'Comando recomendado para compilar módulos C++ a WASM usando Emscripten:',
-        code: `emcc module.cpp -o module.wasm \\
-  -s EXPORTED_FUNCTIONS="['_omega_get_contract', '_omega_process', '_omega_set_param', '_omega_on_midi']" \\
-  -s ERROR_ON_UNDEFINED_SYMBOLS=0 \\
-  --no-entry`
+        id: 'abi_imports',
+        title: 'Host Imports (Namespace: env)',
+        content: 'Funciones que tu plugin puede importar desde el host OMEGA para interactuar con el motor:',
+        technical_params: [
+          'omega_publish_telemetry(float): Envío de datos a la UI.',
+          'omega_set_voice_freq(float): Control de pitch nativo.',
+          'omega_set_voice_gate(float): Control de envolvente ADSR.',
+          'omega_log(const char*): Depuración en consola host.'
+        ]
+      },
+      {
+        id: 'abi_specs',
+        title: 'Especificaciones Industriales',
+        content: 'Límites recomendados para garantizar la estabilidad en tiempo real:',
+        technical_params: [
+          'Stack Size: 128 KB',
+          'Heap Size: 64 KB',
+          'Standard: OMEGA-ABI-7.0-INDUSTRIAL'
+        ]
+      },
+      {
+        id: 'build_pipeline',
+        title: 'Build System (Clang/LLVM)',
+        content: 'El motor utiliza clang++ (LLVM 18.1.8) para generar binarios ultra-ligeros optimizados para DSP. El comando exacto es:',
+        code: `clang++ --target=wasm32 -O3 -nostdlib \\
+  -fno-exceptions -fno-rtti \\
+  -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined \\
+  -o plugin.wasm source.cpp`
+      },
+      {
+        id: 'build_flags',
+        title: 'Desglose de Flags',
+        content: '• -O3: Optimización máxima para audio en tiempo real.\\n• -nostdlib: Evita la librería estándar para mantener el binario ligero.\\n• -Wl,--export-all: Garantiza que omega_process y omega_on_midi sean visibles por el host.'
+      },
+      {
+        id: 'build_contract',
+        title: 'Extracción del Contrato',
+        content: 'Tras la compilación, se debe extraer el contrato técnico llamando a omega_get_contract():',
+        code: `node extract_contract.js modulo.wasm`
+      },
+      {
+        id: 'build_bat',
+        title: '🚀 Cómo lanzarlo',
+        content: 'Simplemente ejecuta el script automatizado desde la raíz de ABDOmega:',
+        code: `.\\scripts\\build_plugins.bat`
+      },
+      {
+        id: 'build_aot',
+        title: 'Optimización AOT (Pro)',
+        content: 'Si tienes wamrc instalado, el sistema generará código máquina nativo:',
+        code: `wamrc --target=x86_64 --format=aot -o module.aot module.wasm`
+      },
+      {
+        id: 'build_script_ref',
+        title: 'Referencia del Script (.bat)',
+        content: 'Contenido íntegro del script de automatización para tu entorno local:',
+        code: `@echo off
+setlocal enabledelayedexpansion
+echo [OMEGA] Building Plugins...
+
+set "SDK_DIR=%~dp0.."
+set "PLUGIN_SRC=%SDK_DIR%\\src\\WasmPlugins"
+set "PLUGIN_OUT=%SDK_DIR%\\Resources\\modules"
+
+set "CLANG_CMD=clang++"
+:: [Lógica de descubrimiento de Clang/LLVM omitida para brevedad en este ejemplo, usa el estándar del sistema]
+
+for %%f in ("%PLUGIN_SRC%\\*.c" "%PLUGIN_SRC%\\*.cpp") do (
+    set "FILENAME=%%~nf"
+    echo [OMEGA] Compiling !FILENAME!...
+    
+    clang++ --target=wasm32 -O3 -nostdlib -fno-exceptions -fno-rtti \\
+    -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined \\
+    -o "%PLUGIN_OUT%\\!FILENAME!\\!FILENAME!.wasm" "%%f"
+
+    if exist "%PLUGIN_OUT%\\!FILENAME!\\!FILENAME!.wasm" (
+        echo [SUCCESS] !FILENAME! built.
+        node "%SDK_DIR%\\scripts\\extract_contract.js" "%PLUGIN_OUT%\\!FILENAME!\\!FILENAME!.wasm"
+    )
+)
+echo [OMEGA] Build Process Finished.`
       }
     ]
   },

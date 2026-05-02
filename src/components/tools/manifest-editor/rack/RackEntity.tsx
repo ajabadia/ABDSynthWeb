@@ -26,8 +26,9 @@ interface RackEntityProps {
 /**
  * RackEntity (v7.2.3)
  * Represents an individual draggable control or jack within the rack.
+ * Memoized for high-performance industrial rendering (60 FPS).
  */
-export const RackEntity = ({ 
+const RackEntityBase = ({ 
   item, 
   contract, 
   rackRef, 
@@ -65,7 +66,11 @@ export const RackEntity = ({
     ...(contract.ports?.map((p: any) => p.id) || [])
   ] : [];
 
-  const itemIssues = audit.issues.filter(issue => issue.path.includes(item.id) || issue.message.includes(`'${item.id}'`));
+  const itemIssues = React.useMemo(() => 
+    audit.issues.filter(issue => issue.path.includes(item.id) || issue.message.includes(`'${item.id}'`)),
+    [audit.issues, item.id]
+  );
+  
   const hasIntegrityError = itemIssues.some(i => i.keyword === 'era7_integrity');
   const isOrphan = itemIssues.length > 0 || !hasRole;
 
@@ -180,3 +185,18 @@ export const RackEntity = ({
     </motion.div>
   );
 };
+
+export const RackEntity = React.memo(RackEntityBase, (prev, next) => {
+  return (
+    prev.item.id === next.item.id &&
+    prev.item.pos.x === next.item.pos.x &&
+    prev.item.pos.y === next.item.pos.y &&
+    prev.item.label === next.item.label &&
+    prev.runtimeValue === next.runtimeValue &&
+    prev.selectedItemId === next.selectedItemId &&
+    prev.isLiveMode === next.isLiveMode &&
+    prev.skin === next.skin &&
+    prev.zoom === next.zoom &&
+    prev.audit.issues.length === next.audit.issues.length
+  );
+});

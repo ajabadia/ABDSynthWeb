@@ -1,25 +1,24 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './Header';
 import ModuleHub from './ModuleHub';
 import VirtualRack from './VirtualRack';
 import NodeCanvas from './NodeCanvas';
 import PropertyPanel from './PropertyPanel';
-import LogTerminal from './LogTerminal';
 import SourceViewer from './SourceViewer';
+import WorkbenchFooter from './WorkbenchFooter';
+import WorkbenchLogs from './WorkbenchLogs';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
 import HelpModal from './HelpModal';
 import IngestionModal from './IngestionModal';
 import MockupModal from './MockupModal';
-import { AuditService } from '@/services/auditService';
-import ComplianceBadge from './ComplianceBadge';
-import ViewportControls from './ViewportControls';
-import ModulationGrid from './ModulationGrid';
-import { wasmRuntime } from '@/services/wasmRuntime';
 import { useViewport } from '@/hooks/manifest-editor/useViewport';
 import { useAudit } from '@/hooks/manifest-editor/useAudit';
+import { HiddenFileHandlers } from './HiddenFileHandlers';
+import ViewportControls from './ViewportControls';
+import ModulationGrid from './ModulationGrid';
 
 export default function WorkbenchContainer() {
   const { 
@@ -41,15 +40,10 @@ export default function WorkbenchContainer() {
     exportOmegaPack,
     exportCADBlueprint,
     handleDeploy,
-    handleManifestUpload,
-    handleWasmUpload,
-    handleContractUpload,
-    handleResourceUpload,
     handleRemoveResource,
     handleBulkUpload,
     extraResources,
     reset,
-    addLog,
     logs
   } = useManifestEditor();
 
@@ -123,23 +117,11 @@ export default function WorkbenchContainer() {
 
   return (
     <div className="h-screen flex flex-col bg-[#050505] text-foreground font-sans overflow-hidden relative">
-      {/* HIDDEN FILE INPUTS */}
-      <input 
-        id="bulk-upload" 
-        type="file" 
-        accept=".acemm,.wasm,.json" 
-        multiple 
-        className="hidden" 
-        onChange={(e) => { if (e.target.files) { setPendingFiles(Array.from(e.target.files)); e.target.value = ''; } }} 
+      <HiddenFileHandlers 
+        onBulkUpload={handleBulkUpload} 
+        onResourceUpload={handleBulkUpload} 
+        setPendingFiles={setPendingFiles} 
       />
-      <input 
-        id="folder-upload" 
-        type="file" 
-        {...({ webkitdirectory: "", directory: "" } as any)}
-        className="hidden" 
-        onChange={(e) => { if (e.target.files) { setPendingFiles(Array.from(e.target.files)); e.target.value = ''; } }} 
-      />
-      <input id="resource-upload" type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files) { handleBulkUpload(e.target.files); e.target.value = ''; } }} />
       
       <Header 
         onReset={reset}
@@ -243,6 +225,7 @@ export default function WorkbenchContainer() {
                   audit={auditResult}
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
+                  onUpdateContainer={updateContainer}
                 />
               </motion.div>
             ) : (
@@ -318,46 +301,16 @@ export default function WorkbenchContainer() {
         initialSectionId={helpState.sectionId} 
         onClose={() => setHelpState({ isOpen: false })} 
       />
+      <WorkbenchLogs 
+        showLogs={showLogs} 
+        setShowLogs={setShowLogs} 
+        logs={logs} 
+      />
 
-      {/* FLOATING LOG TERMINAL */}
-      <AnimatePresence>
-        {showLogs && (
-          <motion.div 
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute bottom-0 left-0 right-0 h-80 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
-          >
-            <div className="h-full border-t border-accent/30">
-               <LogTerminal logs={logs} />
-               <button 
-                 onClick={() => setShowLogs(false)}
-                 className="absolute top-2 right-4 p-1 text-foreground/20 hover:text-foreground/60 transition-colors"
-               >
-                 <span className="text-[9px] font-black uppercase tracking-widest">Close</span>
-               </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* INDUSTRIAL FOOTER */}
-      <footer className="h-6 border-t border-outline/20 bg-black flex items-center justify-between px-6 z-50 shrink-0">
-        <div className="flex-1 flex items-center gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">
-          <span className="text-primary/40 font-black">Build v7.2.3</span>
-          <span className="opacity-50">//</span>
-          <span>Aseptic Standard</span>
-        </div>
-
-        <div className="flex-1 flex justify-center scale-[0.7] origin-center opacity-80 hover:opacity-100 transition-opacity">
-          <ComplianceBadge audit={auditResult} manifest={manifest} />
-        </div>
-        
-        <div className="flex-1 flex items-center justify-end gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">
-          <span>Industrial Era 7 Engineering Suite</span>
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500/20 border border-green-500/40 animate-pulse" />
-        </div>
-      </footer>
+      <WorkbenchFooter 
+        auditResult={auditResult} 
+        manifest={manifest} 
+      />
       <MockupModal 
         isOpen={mockupOpen} 
         onClose={() => setMockupOpen(false)} 

@@ -46,6 +46,7 @@ export interface LayoutContainer {
   zIndex?: number;
   labelPosition?: 'top' | 'bottom' | 'inside-top' | 'inside-bottom';
   tab?: TabName | string; // Era 7.2.1 Architectural Plane
+  collapsed?: boolean;    // Era 7.2.3 Industrial Folding
 }
 
 export interface Presentation {
