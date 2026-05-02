@@ -28,7 +28,7 @@ interface NodeCanvasProps {
     ports?: { id: string }[];
   } | null;
   selectedItemId: string | null;
-  onSelectItem: (id: string) => void;
+  onSelectItem: (id: string | null) => void;
   onUpdateItem: (id: string, updates: any) => void;
 }
 
