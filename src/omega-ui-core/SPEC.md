@@ -554,7 +554,27 @@ El manifiesto (y la prop `ui.dimensions.height`) son la fuente de verdad. El edi
 
 **Resolución**: Sí a corto plazo, pero se declaran los componentes que usan PNGs como legacy. La migración a CSS puro (ej. `.switch-container`) será el estándar.
 
+## 11. Canonical ID Governance (Era 7.2.3)
+
+To ensure interoperability between the C++ Engine (WASM) and the Manifest Editor, a strict numeric registry for `ModuleTypeId` is enforced.
+
+### 11.1 Reserved Numeric Ranges
+| Range | Family | Description |
+| :--- | :--- | :--- |
+| **001 - 099** | **OSC** | Sound sources, DCOs, VCOs, Wavetables. |
+| **100 - 199** | **FLT** | Filters, VCFs, Resonators. |
+| **200 - 299** | **ENV/MOD** | Envelopes (ADSR), LFOs, Modulators. |
+| **300 - 499** | **FX** | Delays, Reverbs, Choruses, Distortions. |
+| **500 - 599** | **IO** | MIDI Input, Audio Output, System Bridges. |
+| **900 - 999** | **TEST** | **Visual Parity Tests, Debug modules, Benchmarks.** |
+
+### 11.2 Integration Rules
+- New production modules MUST be registered in `src/Core/Model/PatchIdentifiers.h` (ABDOmega).
+- Parity Test modules should use IDs starting from `999` downwards to avoid collisions with future infrastructure.
+- The `id` in the `.acemm` manifest MUST exactly match the string mapping in the C++ `mapIdToType` function.
+
 ---
 
 *Documento generado como parte del ciclo de industrialización OMEGA Era 7.2.3*
 *Estado: APPROVED v1.1*
+

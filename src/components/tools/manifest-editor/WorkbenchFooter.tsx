@@ -25,8 +25,7 @@ const WorkbenchFooter = ({ auditResult, manifest, onOpenAudit }: WorkbenchFooter
       <div className="flex-1 flex justify-center scale-[0.7] origin-center opacity-80 hover:opacity-100 transition-opacity">
         <ComplianceBadge 
           audit={auditResult} 
-          manifest={manifest} 
-          onOpenAudit={onOpenAudit}
+          onClick={onOpenAudit}
         />
       </div>
       

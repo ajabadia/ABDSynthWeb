@@ -35,18 +35,12 @@ export default function Select({ value, variant, options = [], lookup, onValueCh
 
   return (
     <div 
-      style={{ width: `${d}px`, height: `${h}px` }} 
-      className="bg-black/60 border border-outline/30 rounded-xs flex items-center px-2 gap-2 cursor-pointer hover:border-primary/40 transition-all group"
+      className={`mini-select size-${size} color-${colorId}`}
     >
-      <div className="flex-1 overflow-hidden">
-        <span 
-          style={{ color: currentIndex >= 0 ? color : 'white' }} 
-          className="text-[9px] font-black uppercase tracking-widest truncate block"
-        >
-          {currentLabel}
-        </span>
+      <div className="select-value">
+        {currentLabel}
       </div>
-      <ChevronDown className="w-3 h-3 text-white/20 group-hover:text-primary transition-colors" />
+      <div className="select-arrow">▼</div>
     </div>
   );
 }

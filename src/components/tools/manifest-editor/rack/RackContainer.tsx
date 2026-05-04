@@ -42,53 +42,11 @@ const RackContainerBase = ({
     }
   };
 
-  const getVariantStyles = (variant: string, isSelected: boolean) => {
-    const baseBorder = isSelected ? 'rgba(0, 240, 255, 0.4)' : 'rgba(255, 255, 255, 0.05)';
-    const baseBg = isSelected ? 'rgba(0, 240, 255, 0.03)' : 'rgba(255, 255, 255, 0.01)';
-
-    switch (variant) {
-      case 'header':
-        return {
-          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.15)',
-          backgroundColor: isSelected ? 'rgba(0, 240, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-          borderWidth: '1px',
-          borderBottomWidth: '2px'
-        };
-      case 'section':
-        return {
-          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.05)',
-          backgroundColor: isSelected ? 'rgba(0, 240, 255, 0.02)' : 'transparent',
-          borderLeft: `2px solid ${isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.1)'}`
-        };
-      case 'inset':
-        return {
-          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(0, 0, 0, 0.4)',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.5)'
-        };
-      case 'panel':
-        return {
-          borderColor: isSelected ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.08)',
-          backgroundColor: 'rgba(255, 255, 255, 0.02)',
-        };
-      case 'minimal':
-        return {
-          borderColor: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-          backgroundColor: 'transparent',
-        };
-      default:
-        return {
-          borderColor: baseBorder,
-          backgroundColor: baseBg,
-        };
-    }
-  };
-
   const cw = resolveWidth(c.size.w);
   const ch = isCollapsed ? 30 : (c.size.h * 1.5);
   const cx = c.pos.x * 1.5;
   const cy = c.pos.y * 1.5;
-  const styles = getVariantStyles(c.variant, isSelected);
+  const variant = c.variant || 'default';
   
   const containerIssues = React.useMemo(() => 
     audit?.issues?.filter((i: any) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [],
@@ -105,18 +63,15 @@ const RackContainerBase = ({
         boxShadow: isSelected 
           ? '0 0 40px rgba(0,240,255,0.15)' 
           : (hasIntegrityError ? '0 0 20px rgba(255,62,62,0.1)' : '0 0 0px rgba(0,0,0,0)'),
-        ...styles,
-        backgroundColor: isLiveMode ? 'transparent' : styles.backgroundColor,
-        borderColor: isLiveMode && !isSelected ? 'rgba(255,255,255,0.1)' : styles.borderColor,
       }}
-      className={`absolute rounded-xs pointer-events-none transition-all duration-500 container-${skin} ${isSelected ? 'z-[5]' : 'z-0'} ${hasIntegrityError ? 'border-red-500/50' : ''}`}
+      className={`layout-container container-${skin} variant-${variant} ${isSelected ? 'selected' : ''} ${hasIntegrityError ? 'error' : ''}`}
       style={{ 
+        position: 'absolute',
         left: cx, 
         top: cy, 
         width: cw, 
         height: ch,
-        borderStyle: 'solid',
-        borderWidth: styles.borderWidth || '1px',
+        zIndex: isSelected ? 5 : 0,
         pointerEvents: 'none'
       }}
     >
@@ -130,16 +85,10 @@ const RackContainerBase = ({
         className={`absolute inset-0 rounded-xs pointer-events-none ${hasIntegrityError ? 'bg-red-500/20' : 'bg-primary/20'}`}
       />
 
-        <div 
-          className={`absolute px-1.5 py-0.5 border rounded-full text-[6px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-500 z-[10] flex items-center gap-1.5 pointer-events-none
-          ${isSelected ? 'bg-primary border-primary text-black' : (hasIntegrityError ? 'bg-red-600 border-red-500 text-white' : 'bg-black/80 border-white/20 text-white/60')}
-          ${c.labelPosition === 'bottom' ? '-bottom-3 left-2' : 
-            c.labelPosition === 'inside-top' ? 'top-2 left-2' :
-            c.labelPosition === 'inside-bottom' ? 'bottom-2 left-2' :
-            '-top-3 left-2'}
-        `}>
+      {/* CANONICAL LABEL PILL */}
+      <div className="container-label-pill">
           {hasIntegrityError ? '⚠️ INTEGRITY_LEAK' : c.label}
-        </div>
+      </div>
     </motion.div>
   );
 };

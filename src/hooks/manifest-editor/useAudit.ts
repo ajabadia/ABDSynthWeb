@@ -10,7 +10,7 @@ export const useAudit = (manifest: OMEGA_Manifest, contract: any) => {
   const [fingerprint, setFingerprint] = useState<string>('');
 
   const auditResult = useMemo(() => {
-    const res = AuditService.performFullAudit(manifest, contract?.firmwareHash);
+    const res = AuditService.performFullAudit(manifest, contract);
     return { 
       ...res, 
       fingerprint, 

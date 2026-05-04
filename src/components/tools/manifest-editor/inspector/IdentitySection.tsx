@@ -306,7 +306,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
               <input 
                 type="number" 
                 value={rack.hp || 12} 
-                onChange={(e) => updateRack('hp', Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => updateRack({ hp: Math.max(1, parseInt(e.target.value) || 1) })}
                 className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2.5 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black wb-text-muted uppercase transition-colors duration-500">HP Units</span>

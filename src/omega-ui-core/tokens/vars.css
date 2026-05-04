@@ -15,8 +15,8 @@
     --wb-primary: #00f0ff;
     --wb-accent: #ff8c00;
 
-    /* LAYOUT CONSTANTS */
-    --rack-height: 600px;
+    /* LAYOUT CONSTANTS (Era 7.2.3 Unified Scaling) */
+    --rack-height: 680px;
     --knob-size: 42px;
     --render-scale: 1.5;
 }

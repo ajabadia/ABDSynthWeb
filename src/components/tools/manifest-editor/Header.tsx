@@ -13,6 +13,7 @@ interface HeaderProps {
   onExportManifest: () => void;
   onExportPack: () => void;
   onExportCAD: () => void;
+  onExportContract: (format: 'ts' | 'cpp') => void;
   onGenerateMockup: () => void;
   onDeploy: () => void;
   onToggleLogs: () => void;
@@ -30,6 +31,7 @@ export default function Header({
   onExportManifest, 
   onExportPack, 
   onExportCAD,
+  onExportContract,
   onGenerateMockup,
   onDeploy, 
   onToggleLogs, 
@@ -172,6 +174,28 @@ export default function Header({
                   <div className="text-left">
                     <p>Industrial CAD Blueprint</p>
                     <p className="text-[6px] font-mono opacity-40">Technical SVG Plan</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => { onExportContract('ts'); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xs text-[8px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary transition-all group"
+                >
+                  <FileCode className="w-4 h-4 text-primary/40 group-hover:text-primary" />
+                  <div className="text-left">
+                    <p>Export Tech Contract (TS)</p>
+                    <p className="text-[6px] font-mono opacity-40">Registry Schema Enums</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => { onExportContract('cpp'); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xs text-[8px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary transition-all group"
+                >
+                  <FileCode className="w-4 h-4 text-primary/40 group-hover:text-primary" />
+                  <div className="text-left">
+                    <p>Export Engine Header (C++)</p>
+                    <p className="text-[6px] font-mono opacity-40">Omega Registry Header</p>
                   </div>
                 </button>
 

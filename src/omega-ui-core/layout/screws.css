@@ -34,7 +34,7 @@
 }
 
 /* POSITIONS */
-.module-screw.top-left { top: 6px; left: 6px; transform: rotate(15deg); }
-.module-screw.top-right { top: 6px; right: 6px; transform: rotate(45deg); }
-.module-screw.bottom-left { bottom: 6px; left: 6px; transform: rotate(75deg); }
-.module-screw.bottom-right { bottom: 6px; right: 6px; transform: rotate(105deg); }
+.module-screw.top-left { top: 12px; left: 12px; transform: rotate(15deg); }
+.module-screw.top-right { top: 12px; right: 12px; transform: rotate(45deg); }
+.module-screw.bottom-left { bottom: 12px; left: 12px; transform: rotate(75deg); }
+.module-screw.bottom-right { bottom: 12px; right: 12px; transform: rotate(105deg); }

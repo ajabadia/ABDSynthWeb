@@ -1,11 +1,65 @@
 /* OMEGA INDUSTRIAL CELLS & ATTACHMENTS (Era 7.2.3) */
+/* Anchor-Center Model: Ensures component stays at exact X/Y regardless of labels */
 
 .control-cell {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.cell-main {
+    position: absolute;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: absolute; /* positioned via JS style top/left */
+    pointer-events: auto;
+    z-index: 5;
+    /* transform: translate(-50%, -50%) is applied via JS for offsets */
+}
+
+.attachment-stack {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Precise attachment offsets from center (Edge-Anchored) */
+.stack-top {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(-1 * var(--comp-radius, 12px) - 8px));
+    flex-direction: column-reverse; /* Grow upwards from the bottom edge */
+    align-items: center;
+}
+
+.stack-bottom {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(var(--comp-radius, 12px) + 8px));
+    flex-direction: column; /* Grow downwards from the top edge */
+    align-items: center;
+}
+
+.stack-left {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(-1 * var(--comp-radius, 12px) - 8px));
+    flex-direction: row-reverse; /* Grow leftwards from the right edge */
+    align-items: center;
+}
+
+.stack-right {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(var(--comp-radius, 12px) + 8px));
+    flex-direction: row; /* Grow rightwards from the left edge */
+    align-items: center;
 }
 
 .cell-row-middle {
@@ -15,32 +69,3 @@
     justify-content: center;
     gap: 4px;
 }
-
-.cell-main {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.attachment-stack {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-}
-
-.attachment-stack.stack-top,
-.attachment-stack.stack-bottom {
-    flex-direction: column;
-}
-
-.attachment-stack.stack-left,
-.attachment-stack.stack-right {
-    flex-direction: row;
-}
-
-/* Spacing to ensure labels don't collide with main control */
-.stack-top { margin-bottom: 4px; }
-.stack-bottom { margin-top: 4px; }
-.stack-left { margin-right: 4px; }
-.stack-right { margin-left: 4px; }

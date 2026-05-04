@@ -22,8 +22,9 @@ export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OmegaContract
       if (manifest.id !== contract.id) {
         baseIssues.push({
           path: '/id',
-          message: `ID Mismatch: Manifest '${manifest.id}' vs Contract '${contract.id}'. Binary sync will fail.`,
-          keyword: 'integrity'
+          message: 'Manifest ID does not match contract ID',
+          keyword: 'integrity',
+          severity: 'error'
         });
       }
 
@@ -36,7 +37,8 @@ export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OmegaContract
           baseIssues.push({
             path: `/ui/controls/${i}/bind`,
             message: `Binding error: '${ctrl.bind}' not found in contract.`,
-            keyword: 'binding'
+            keyword: 'binding',
+            severity: 'error'
           });
         }
       });
@@ -46,8 +48,9 @@ export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OmegaContract
         if (bindId && !contractPortIds.includes(bindId)) {
           baseIssues.push({
             path: `/ui/jacks/${i}/bind`,
-            message: `Binding error: '${jack.bind}' not found in contract.`,
-            keyword: 'binding'
+            message: `Jack '${jack.id}' is bound to non-existent stream/port '${jack.bind}'`,
+            keyword: 'binding',
+            severity: 'error'
           });
         }
       });

@@ -20,6 +20,7 @@ import { useAudit } from '@/hooks/manifest-editor/useAudit';
 import { HiddenFileHandlers } from './HiddenFileHandlers';
 import ViewportControls from './ViewportControls';
 import ModulationGrid from './ModulationGrid';
+import { ContractService } from '@/services/contractService';
 
 export default function WorkbenchContainer() {
   const { 
@@ -108,6 +109,20 @@ export default function WorkbenchContainer() {
     if (selectedItemId === id) setSelectedItemId(null);
   }, [removeItem, selectedItemId]);
 
+  const handleExportContract = (format: 'ts' | 'cpp') => {
+    const content = format === 'ts' 
+      ? ContractService.generateTypeScriptContract(manifest)
+      : ContractService.generateCppContract(manifest);
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = format === 'ts' ? 'schema_ids.ts' : 'OmegaRegistry.h';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Viewport Actions
   const onFitViewport = () => handleFitViewport(viewMode);
 
@@ -134,6 +149,7 @@ export default function WorkbenchContainer() {
         onExportManifest={exportManifest}
         onExportPack={exportOmegaPack}
         onExportCAD={() => exportCADBlueprint()}
+        onExportContract={handleExportContract}
         onGenerateMockup={() => setMockupOpen(true)}
         onDeploy={handleDeploy}
         onToggleLogs={() => setShowLogs(!showLogs)}

@@ -38,10 +38,10 @@
 }
 
 /* SIZES */
-.port-socket.size-A { width: 28px !important; height: 28px !important; }
-.port-socket.size-B { width: 24px !important; height: 24px !important; }
-.port-socket.size-C { width: 20px !important; height: 20px !important; }
-.port-socket.size-D { width: 16px !important; height: 16px !important; }
+.port-socket.size-A { width: 42px !important; height: 42px !important; }
+.port-socket.size-B { width: 36px !important; height: 36px !important; }
+.port-socket.size-C { width: 30px !important; height: 30px !important; }
+.port-socket.size-D { width: 24px !important; height: 24px !important; }
 
 /* SIGNAL COLORS (Handled by Renderer via style or class, but we can add basic support) */
 .port-led.active {

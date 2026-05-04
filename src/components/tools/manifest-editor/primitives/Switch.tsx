@@ -38,27 +38,10 @@ export default function Switch({ value, variant, onValueChange, onClick, isMain 
   return (
     <div 
       onClick={handleToggle}
-      style={{ width: `${d}px`, height: `${d * 1.8}px` }}
-      className="bg-black border border-outline rounded-full p-1 flex flex-col items-center justify-between cursor-pointer"
+      className={`switch-container size-${size} color-${colorId}`}
     >
-      <div 
-        className="rounded-full transition-all" 
-        style={{ 
-          width: `${d/3}px`, 
-          height: `${d/3}px`, 
-          backgroundColor: value < 0.5 ? color : '#ffffff11', 
-          boxShadow: value < 0.5 ? `0 0 8px ${color}` : 'none' 
-        }} 
-      />
-      <div 
-        className="rounded-full transition-all" 
-        style={{ 
-          width: `${d/3}px`, 
-          height: `${d/3}px`, 
-          backgroundColor: value >= 0.5 ? color : '#ffffff11', 
-          boxShadow: value >= 0.5 ? `0 0 8px ${color}` : 'none' 
-        }} 
-      />
+      <div className={`sw-led ${value < 0.5 ? 'active' : ''}`} />
+      <div className={`sw-led ${value >= 0.5 ? 'active' : ''}`} />
     </div>
   );
 }

@@ -13,6 +13,7 @@
 @import './layout/screws.css';
 @import './layout/cells.css';
 @import './layout/tabs.css';
+@import './layout/splash.css';
 
 /* PRIMITIVES */
 @import './primitives/knob.css';
@@ -24,3 +25,15 @@
 @import './primitives/switch.css';
 @import './primitives/stepper.css';
 @import './primitives/label.css';
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-primary);
+    user-select: none; /* Prevent text selection during knob dragging */
+    -webkit-user-select: none;
+}
+

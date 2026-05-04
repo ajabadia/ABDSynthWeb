@@ -15,6 +15,7 @@
     background: rgba(0, 240, 255, 0.1) !important;
     border-radius: 20px !important;
     pointer-events: none;
+    transition: width 0.1s ease-out, height 0.1s ease-out;
 }
 
 .slider-cap {
@@ -24,6 +25,7 @@
     z-index: 10;
     pointer-events: none;
     background: var(--wb-primary);
+    transition: left 0.1s ease-out, bottom 0.1s ease-out;
 }
 
 /* SIZES (Height for V, Width for H) */

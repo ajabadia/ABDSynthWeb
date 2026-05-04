@@ -5,6 +5,7 @@ import PrimitiveFactory from '../primitives/PrimitiveFactory';
 import SignalScope from '../primitives/SignalScope';
 import { OMEGA_Manifest, ManifestEntity } from '../../../../types/manifest';
 import { AuditResult } from '@/services/auditService';
+import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 
 interface RackEntityProps {
   item: ManifestEntity & { isJack?: boolean };
@@ -98,14 +99,14 @@ const RackEntityBase = ({
         position: 'absolute', 
         left: 0, 
         top: 0, 
-        width: 64, 
-        height: 64, 
+        width: 0, 
+        height: 0, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        marginLeft: -32, 
-        marginTop: -32, 
-        zIndex: isSelected ? 50 : 10, 
+        translateX: "-50%",
+        translateY: "-50%",
+        zIndex: isSelected ? 50 : 20, 
         cursor: isLiveMode ? 'pointer' : 'grab' 
       }}
       onClick={handleClick}
@@ -135,38 +136,21 @@ const RackEntityBase = ({
           </>
         )}
 
-        {/* ATTACHMENTS LAYER */}
-        <div className="absolute inset-0 pointer-events-auto">
-          {(item.presentation?.attachments || []).map((att: any, idx: number) => {
-            const posClasses: any = { top: 'bottom-full left-1/2 -translate-x-1/2 mb-1', bottom: 'top-full left-1/2 -translate-x-1/2 mt-1', left: 'right-full top-1/2 -translate-y-1/2 mr-2', right: 'left-full top-1/2 -translate-y-1/2 ml-2' };
-            return (
-              <div key={idx} className={`absolute ${posClasses[att.position] || ''}`} style={{ transform: `translate(${(att.offsetX || 0) * 1.5}px, ${(att.offsetY || 0) * 1.5}px)` }}>
-                <PrimitiveFactory 
-                  type={att.type} value={runtimeValue} steps={steps} variant={att.variant || 'B_cyan'} skin={skin} item={att} 
-                  onValueChange={() => {}} 
-                  text={att.text} role={att.role}
-                />
-              </div>
-            );
-          })}
-        </div>
+        {/* UNIFIED STATELESS RENDERER (ERA 7.2.3 — SOT) */}
+        <div 
+          dangerouslySetInnerHTML={{ 
+            __html: CellRenderer.renderCellHTML(item, {
+              skin,
+              zoom,
+              runtimeValue,
+              steps,
+              isSelected,
+              isLiveMode
+            }) 
+          }}
+        />
 
-        {/* CORE COMPONENT LAYER */}
-        <div className="pointer-events-auto" style={{ transform: `translate(${(item.presentation?.offsetX || 0) * 1.5}px, ${(item.presentation?.offsetY || 0) * 1.5}px)` }}>
-          <PrimitiveFactory 
-            type={item.presentation?.component || (isJack ? 'port' : 'knob')} 
-            value={runtimeValue} steps={steps} variant={item.presentation?.variant || 'B_cyan'} skin={skin} isMain={true} isSelected={isSelected} item={item}
-            onValueChange={(val) => onUpdateValue(item.id, val)}
-            text={item.label} role={item.role}
-          />
-          {isLiveMode && isJack && (
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2">
-              <SignalScope value={runtimeValue} color={item.role === 'stream' ? '#00ccff' : '#00ff9d'} />
-            </div>
-          )}
-        </div>
-
-        {/* SELECTION UI */}
+        {/* SELECTION UI OVERLAY */}
         {isSelected && !isLiveMode && (
           <>
             <div className="absolute -inset-4 border border-primary/20 border-dashed rounded-lg animate-pulse pointer-events-none" />
