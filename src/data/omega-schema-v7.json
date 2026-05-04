@@ -176,6 +176,18 @@
         "wasm": { "type": "string" },
         "contract": { "type": "string" }
       }
+    },
+    "modulations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "amount": { "type": "number" }
+        }
+      }
     }
   },
   "additionalProperties": false

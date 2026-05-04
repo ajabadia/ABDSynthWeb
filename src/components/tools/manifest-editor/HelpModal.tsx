@@ -15,7 +15,7 @@ interface HelpModalProps {
 const highlightCode = (code: string) => {
   if (!code) return code;
   // Keywords (C++ & YAML)
-  const keywords = /\b(extern|void|float|int|if|for|return|const|char|uint8_t|include|pragma|once|schemaVersion|id|metadata|ui|layout|controls|jacks|registry|bind|roles|type|range|pos|presentation)\b/g;
+  const keywords = /\b(extern|void|float|int|if|for|return|const|char|uint8_t|include|pragma|once|schemaVersion|id|metadata|ui|layout|controls|jacks|registry|bind|roles|type|range|pos|presentation|BEGIN_OMEGA_PARAMETERS|END_OMEGA_PARAMETERS|OMEGA_PARAM|OMEGA_FAMILY|BEGIN_OMEGA_PORTS|OMEGA_PORT|EMSCRIPTEN_KEEPALIVE)\b/g;
   // Strings
   const strings = /("[^"]*"|'[^']*')/g;
   // Macros/Headers/YAML keys

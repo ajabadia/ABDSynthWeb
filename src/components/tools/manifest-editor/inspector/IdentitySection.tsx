@@ -10,6 +10,7 @@ interface IdentitySectionProps {
   onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => void;
   onHelp?: (sectionId?: string) => void;
   rootManifest?: OMEGA_Manifest; // For authority prediction
+  highlightPath?: string | null;
 }
 
 const FAMILIES = [
@@ -30,8 +31,10 @@ const SKINS = [
   { id: 'glass', label: 'Aseptic Glass', color: 'bg-[#2a3035]' },
   { id: 'minimal', label: 'Minimalist', color: 'bg-[#000000]' },
 ];
-export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }: IdentitySectionProps) {
+
+export default function IdentitySection({ item, onUpdate, onHelp, rootManifest, highlightPath }: IdentitySectionProps) {
   const isModule = 'metadata' in item;
+  const isHighlighted = (key: string) => highlightPath?.includes(key);
 
   if (!isModule) {
     const entity = item as ManifestEntity;
@@ -74,7 +77,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
                 type="text" 
                 value={entity.id} 
                 onChange={(e) => onUpdate({ id: e.target.value })}
-                className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
+                className={`w-full bg-black/5 border ${isHighlighted('id') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all font-mono`}
               />
             </div>
             <div className="space-y-1.5">
@@ -83,7 +86,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
                 type="text" 
                 value={entity.label || ''} 
                 onChange={(e) => onUpdate({ label: e.target.value })}
-                className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
+                className={`w-full bg-black/5 border ${isHighlighted('label') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all`}
               />
             </div>
           </div>
@@ -146,7 +149,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
               type="text" 
               value={manifest.schemaVersion || '7.1'} 
               onChange={(e) => onUpdate({ schemaVersion: e.target.value } as Partial<OMEGA_Manifest>)}
-              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
+              className={`w-full bg-black/5 border ${isHighlighted('schemaVersion') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all font-mono`}
               placeholder="7.1"
             />
           </div>
@@ -156,7 +159,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
               type="text" 
               value={item.id || ''} 
               onChange={(e) => onUpdate({ id: e.target.value })}
-              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-accent outline-none focus:border-accent/40 transition-all transition-colors duration-500"
+              className={`w-full bg-black/5 border ${isHighlighted('id') && !highlightPath?.includes('controls') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-accent outline-none focus:border-accent/40 transition-all`}
               placeholder="module_id_unique"
             />
           </div>
@@ -167,7 +170,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
                   type="text" 
                   value={metadata.name || ''} 
                   onChange={(e) => updateMetadata('name', e.target.value)}
-                  className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[11px] font-black wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
+                  className={`w-full bg-black/5 border ${isHighlighted('name') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[11px] font-black wb-text outline-none focus:border-primary/40 transition-all font-mono`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -176,43 +179,11 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
                   type="text" 
                   value={metadata.version || ''} 
                   onChange={(e) => updateMetadata('version', e.target.value)}
-                  className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
+                  className={`w-full bg-black/5 border ${isHighlighted('version') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all`}
                   placeholder="1.0.0"
                 />
               </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Status</label>
-                <select 
-                  value={metadata.status || 'experimental'} 
-                  onChange={(e) => updateMetadata('status', e.target.value)}
-                  className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none uppercase appearance-none transition-colors duration-500"
-                >
-                  <option value="stable">Stable</option>
-                  <option value="beta">Beta</option>
-                  <option value="experimental">Experimental</option>
-                </select>
-              </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Industrial Tags (Comma separated)</label>
-            <input 
-              type="text" 
-              value={(metadata.tags || []).join(', ')} 
-              onChange={(e) => updateMetadata('tags', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
-              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
-              placeholder="era7, low-latency, industrial"
-            />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Technical Description</label>
-          <textarea 
-            value={metadata.description || ''} 
-            onChange={(e) => updateMetadata('description', e.target.value)}
-            className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] wb-text outline-none focus:border-primary/40 transition-all min-h-[60px] resize-none transition-colors duration-500"
-          />
         </div>
       </div>
 
@@ -228,9 +199,11 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
               key={f.id}
               onClick={() => updateMetadata('family', f.id)}
               className={`p-2 border rounded-xs transition-all flex flex-col items-center gap-1 ${
+                isHighlighted('family') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : ''
+              } ${
                 metadata.family === f.id 
                   ? 'bg-primary/20 border-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' 
-                  : 'bg-black/5 border wb-outline hover:border-outline/30 transition-colors duration-500'
+                  : 'bg-black/5 border wb-outline hover:border-outline/30'
               }`}
             >
               <span className={`text-[9px] font-black ${metadata.family === f.id ? 'wb-text' : 'wb-text-muted'}`}>
@@ -238,33 +211,6 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
               </span>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* 3. AESTHETICS (SKIN) */}
-      <div className="space-y-4">
-        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
-           <div className="flex items-center gap-2">
-             <Shield className="w-3 h-3" />
-             <span>Visual Engineering (Skin)</span>
-           </div>
-           <button onClick={() => onHelp?.('estetica')} className="hover:text-primary transition-colors">
-              <Info className="w-3 h-3" />
-           </button>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-           {SKINS.map(s => (
-             <button
-               key={s.id}
-               onClick={() => updateUI('skin', s.id)}
-               className={`p-2 border rounded-sm flex flex-col items-center gap-2 transition-all ${
-                 ui.skin === s.id ? 'border-accent bg-accent/5' : 'wb-outline bg-black/5'
-               }`}
-             >
-                <div className={`w-full h-1.5 rounded-full ${s.color} border border-white/10`} />
-                <span className={`text-[7px] font-black uppercase leading-tight text-center ${ui.skin === s.id ? 'text-accent' : 'wb-text-muted'}`}>{s.label}</span>
-             </button>
-           ))}
         </div>
       </div>
 
@@ -285,17 +231,17 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
             <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={() => updateRackFormat('main', 'full', 420)}
-                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'main' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${isHighlighted('slot') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : ''} ${rack.slot === 'main' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>Main (3U)</span>
-                <span className="text-[6px] wb-text-muted font-bold uppercase transition-colors duration-500">Primary Synthesis Rack</span>
+                <span className="text-[6px] wb-text-muted font-bold uppercase">Primary Synthesis Rack</span>
               </button>
               <button 
-                onClick={() => updateRackFormat('upper', 'compact', 140)}
-                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'upper' || rack.slot === 'top' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
+                onClick={() => updateRackFormat('top', 'compact', 140)}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${isHighlighted('slot') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : ''} ${rack.slot === 'top' || rack.slot === 'upper' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>Utility (1U)</span>
-                <span className="text-[6px] wb-text-muted font-bold uppercase transition-colors duration-500">Top Management Strip</span>
+                <span className="text-[6px] wb-text-muted font-bold uppercase">Top Management Strip</span>
               </button>
             </div>
           </div>
@@ -307,9 +253,9 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }
                 type="number" 
                 value={rack.hp || 12} 
                 onChange={(e) => updateRack({ hp: Math.max(1, parseInt(e.target.value) || 1) })}
-                className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2.5 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
+                className={`w-full bg-black/5 border ${isHighlighted('hp') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2.5 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all font-mono`}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black wb-text-muted uppercase transition-colors duration-500">HP Units</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-black wb-text-muted uppercase">HP Units</span>
             </div>
           </div>
         </div>

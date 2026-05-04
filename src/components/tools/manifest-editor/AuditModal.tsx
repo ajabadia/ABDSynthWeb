@@ -13,6 +13,7 @@ import { OMEGA_Manifest } from '../../../types/manifest';
 interface AuditModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigate: (path: string) => void;
   audit: AuditResult;
   manifest: OMEGA_Manifest;
 }
@@ -21,7 +22,7 @@ interface AuditModalProps {
  * AuditModal (v7.2.3)
  * Detailed Industrial Compliance Report for OMEGA Era 7 modules.
  */
-const AuditModal = ({ isOpen, onClose, audit, manifest }: AuditModalProps) => {
+const AuditModal = ({ isOpen, onClose, onNavigate, audit, manifest }: AuditModalProps) => {
   if (!isOpen) return null;
 
   const handleDownload = () => {
@@ -169,9 +170,16 @@ const AuditModal = ({ isOpen, onClose, audit, manifest }: AuditModalProps) => {
                 ) : (
                   <div className="space-y-2">
                     {audit.issues.map((issue, idx) => {
-                      const isCritical = issue.keyword === 'era7_governance' || issue.keyword === 'era7_integrity';
+                      const isCritical = issue.severity === 'error' || issue.keyword === 'era7_governance' || issue.keyword === 'era7_integrity';
                       return (
-                        <div key={idx} className={`p-4 border rounded-sm flex gap-4 group transition-all hover:bg-white/[0.02] ${isCritical ? 'border-red-500/20 bg-red-500/2' : 'border-white/5 bg-black/40'}`}>
+                        <button 
+                          key={idx} 
+                          onClick={() => {
+                            onNavigate(issue.path);
+                            onClose();
+                          }}
+                          className={`w-full text-left p-4 border rounded-sm flex gap-4 group transition-all hover:bg-white/[0.05] active:scale-[0.99] ${isCritical ? 'border-red-500/20 bg-red-500/2' : 'border-white/5 bg-black/40'}`}
+                        >
                           <div className={`mt-1 shrink-0 ${isCritical ? 'text-red-500' : 'text-amber-500'}`}>
                              {isCritical ? <ShieldX className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                           </div>
@@ -184,7 +192,7 @@ const AuditModal = ({ isOpen, onClose, audit, manifest }: AuditModalProps) => {
                             </div>
                             <p className="text-xs text-white/80 font-medium leading-relaxed">{issue.message}</p>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

@@ -208,9 +208,9 @@ export const HELP_DATA: HelpSection[] = [
         technical_params: [
           'omega_get_contract(): Retorna el JSON del contrato.',
           'omega_init(float sampleRate): Inicialización de buffers.',
-          'omega_process(float* buffer, int len): Procesamiento DSP.',
-          'omega_on_param(int id, float val): Cambio de parámetro.',
-          'omega_on_midi(byte s, byte d1, byte d2): Eventos MIDI.'
+          'omega_process(const float* buffer, int len): Procesamiento DSP.',
+          'omega_on_param(int paramId, float value): Cambio de parámetro.',
+          'omega_on_midi(uint8_t status, uint8_t d1, uint8_t d2): Eventos MIDI.'
         ]
       },
       {
@@ -231,7 +231,7 @@ export const HELP_DATA: HelpSection[] = [
         technical_params: [
           'Stack Size: 128 KB',
           'Heap Size: 64 KB',
-          'Standard: OMEGA-ABI-7.0-INDUSTRIAL'
+          'Standard: OMEGA-ABI-7.2.3-INDUSTRIAL'
         ]
       },
       {
@@ -255,9 +255,9 @@ export const HELP_DATA: HelpSection[] = [
       {
         id: 'build_pipeline',
         title: 'Build System (Clang/LLVM)',
-        content: 'El motor utiliza clang++ (LLVM 18.1.8) para generar binarios ultra-ligeros optimizados para DSP. El comando exacto es:',
+        content: 'El motor utiliza clang++ (LLVM 22.1.4) para generar binarios ultra-ligeros optimizados para DSP. El comando exacto es:',
         code: `clang++ --target=wasm32 -O3 -nostdlib \\
-  -fno-exceptions -fno-rtti \\
+  -I../include -fno-exceptions -fno-rtti \\
   -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined \\
   -o plugin.wasm source.cpp`
       },
@@ -275,7 +275,7 @@ export const HELP_DATA: HelpSection[] = [
       {
         id: 'build_bat',
         title: '🚀 Cómo lanzarlo',
-        content: 'Simplemente ejecuta el script automatizado desde la raíz de ABDOmega:',
+        content: 'Simplemente ejecuta el script automatizado desde la carpeta de herramientas:',
         code: `.\\scripts\\build_plugins.bat`
       },
       {
@@ -287,29 +287,29 @@ export const HELP_DATA: HelpSection[] = [
       {
         id: 'build_script_ref',
         title: 'Referencia del Script (.bat)',
-        content: 'Contenido íntegro del script de automatización para tu entorno local:',
+        content: 'Contenido del script de automatización optimizado para la estructura Era 7:',
         code: `@echo off
 setlocal enabledelayedexpansion
 echo [OMEGA] Building Plugins...
 
-set "SDK_DIR=%~dp0.."
-set "PLUGIN_SRC=%SDK_DIR%\\src\\WasmPlugins"
-set "PLUGIN_OUT=%SDK_DIR%\\Resources\\modules"
+set "BASE_DIR=%~dp0"
+set "PROJECT_ROOT=%BASE_DIR%..\\"
+set "MODULE_DIR=%PROJECT_ROOT%modules"
+set "CLANG_PATH=%PROJECT_ROOT%toolchain\\clang+llvm-22.1.4-x86_64-pc-windows-msvc\\bin"
 
-set "CLANG_CMD=clang++"
-:: [Lógica de descubrimiento de Clang/LLVM omitida para brevedad en este ejemplo, usa el estándar del sistema]
-
-for %%f in ("%PLUGIN_SRC%\\*.c" "%PLUGIN_SRC%\\*.cpp") do (
+for /r "%MODULE_DIR%" %%f in (*.cpp) do (
+    set "TARGET_DIR=%%~dpf"
     set "FILENAME=%%~nf"
     echo [OMEGA] Compiling !FILENAME!...
     
-    clang++ --target=wasm32 -O3 -nostdlib -fno-exceptions -fno-rtti \\
+    "%CLANG_PATH%\\clang++.exe" --target=wasm32 -O3 -nostdlib \\
+    -I"%PROJECT_ROOT%include" -fno-exceptions -fno-rtti \\
     -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined \\
-    -o "%PLUGIN_OUT%\\!FILENAME!\\!FILENAME!.wasm" "%%f"
+    -o "!TARGET_DIR!!FILENAME!.wasm" "%%f"
 
-    if exist "%PLUGIN_OUT%\\!FILENAME!\\!FILENAME!.wasm" (
+    if exist "!TARGET_DIR!!FILENAME!.wasm" (
         echo [SUCCESS] !FILENAME! built.
-        node "%SDK_DIR%\\scripts\\extract_contract.js" "%PLUGIN_OUT%\\!FILENAME!\\!FILENAME!.wasm"
+        node "%BASE_DIR%extract_contract.js" "!TARGET_DIR!!FILENAME!.wasm"
     )
 )
 echo [OMEGA] Build Process Finished.`
@@ -325,46 +325,49 @@ echo [OMEGA] Build Process Finished.`
     subsections: [
       {
         id: 'sdk_header',
-        title: 'omega_sdk.h (Header)',
-        content: 'Define este archivo en tu proyecto para acceder a las funciones del host:',
-        code: `#pragma once
-extern "C" {
-    extern float omega_get_sample_rate();
-    extern int omega_get_block_size();
-    extern void omega_publish_telemetry(float val);
-    extern void omega_log(const char* msg);
-    
-    // Exports obligatorios
-    const char* omega_get_contract();
-    void omega_process(float* buffer, int length);
-    void omega_set_param(int paramId, float value);
-}`
+        title: 'Core Headers (SDK)',
+        content: 'Usa las cabeceras estándar de OMEGA para definir el contrato y acceder a constantes:',
+        code: `#include <Core/Ace/OmegaContract.h>
+#include <Core/Ace/OmegaConstants.h>
+
+// Macros disponibles:
+// BEGIN_OMEGA_PARAMETERS(id, name)
+// OMEGA_PARAM(id, label, min, max, default, unit)
+// BEGIN_OMEGA_PORTS / OMEGA_PORT(id, label, dir, type)
+// END_OMEGA_PARAMETERS`
       },
       {
         id: 'sdk_cpp',
         title: 'minimal_osc.cpp (Código)',
-        content: 'Implementación de un oscilador Sawtooth básico con telemetría:',
-        code: `#include "omega_sdk.h"
+        content: 'Implementación industrial de un oscilador con el sistema de macros de la Era 7:',
+        code: `#include <Core/Ace/OmegaContract.h>
+#include <Core/Ace/OmegaConstants.h>
 #include <math.h>
 
+using namespace Omega::Constants;
+
+// 1. Definición del Contrato Técnico
+BEGIN_OMEGA_PARAMETERS("min_osc", "Minimal Oscillator")
+    OMEGA_FAMILY("oscillator")
+    OMEGA_PARAM(freq, "Frequency", 20, 20000, 440, "Hz")
+    OMEGA_PARAM(gain, "Gain", 0, 1, 0.5, "amp")
+END_OMEGA_PARAMETERS
+
+// 2. Lógica del Plugin
 float phase = 0.0f;
 float frequency = 440.0f;
 float gain = 0.5f;
 
 extern "C" {
-    const char* omega_get_contract() {
-        return "{\\"id\\":\\"min_osc\\",\\"parameters\\":[{\\"id\\":\\"freq\\",\\"role\\":\\"control\\"},{\\"id\\":\\"gain\\",\\"role\\":\\"control\\"}]}";
-    }
-    void omega_set_param(int id, float val) {
-        if (id == 0) frequency = 20.0f + (val * 1000.0f);
+    EMSCRIPTEN_KEEPALIVE void omega_on_param(int id, float val) {
+        if (id == 0) frequency = val;
         if (id == 1) gain = val;
     }
-    void omega_process(float* buffer, int len) {
-        float phaseDelta = frequency / omega_get_sample_rate();
+
+    EMSCRIPTEN_KEEPALIVE void omega_process(const float* buffer, int len) {
+        float phaseDelta = frequency / DEFAULT_SAMPLE_RATE;
         for (int i=0; i<len; ++i) {
-            buffer[i] = (phase * 2.0f - 1.0f) * gain;
-            phase += phaseDelta;
-            if (phase >= 1.0f) phase -= 1.0f;
+            // Lógica DSP aquí...
         }
     }
 }`

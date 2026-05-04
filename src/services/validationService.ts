@@ -30,12 +30,33 @@ export class ValidationService {
     const validator = isV7 ? validateV7 : validateV6;
     
     validator(manifest);
-    const issues: ValidationIssue[] = (validator.errors || []).map(err => ({
-      path: err.instancePath || '',
-      message: err.message || 'Invalid value',
-      keyword: err.keyword || 'schema',
-      severity: 'error'
-    }));
+    const issues: ValidationIssue[] = (validator.errors || []).map((err: any) => {
+      let message = err.message || 'Invalid value';
+      
+      // 1. Humanize 'additionalProperties'
+      if (err.keyword === 'additionalProperties') {
+        const prop = err.params?.additionalProperty;
+        message = `Unrecognized property found: '${prop}'. Remove it to satisfy OMEGA compliance.`;
+      }
+      
+      // 2. Humanize 'enum'
+      if (err.keyword === 'enum') {
+        const allowed = err.params?.allowedValues?.join(', ');
+        message = `Invalid choice. Expected one of: [${allowed}]`;
+      }
+
+      // 3. Humanize 'type'
+      if (err.keyword === 'type') {
+        message = `Data type mismatch. Expected ${err.params?.type} but found something else.`;
+      }
+
+      return {
+        path: err.instancePath || '',
+        message: message,
+        keyword: err.keyword || 'schema',
+        severity: 'error'
+      };
+    });
 
     if (manifest.schemaVersion?.startsWith('7')) {
       const hp = manifest.metadata?.rack?.hp || 12;
@@ -93,9 +114,11 @@ export class ValidationService {
           }
         }
 
-        // Pro-Master: Missing Units
-        if (!entity.unit && entity.role !== 'output') {
-          issues.push({ path: `${path}/unit`, message: `PRO-MASTER: Falta unidad (Hz, dB, ms, semi, %).`, keyword: 'era7_ux', severity: 'audit' });
+        // Pro-Master: Missing Units (Exempting Telemetry/Indicators/MIDI)
+        const isIndicator = entity.role === 'telemetry' || entity.presentation?.component === 'led' || entity.presentation?.component === 'display';
+        const isMidiOrString = entity.type === 'string' || manifest.metadata.family === 'midi';
+        if (!entity.unit && entity.role !== 'output' && !isIndicator && !isMidiOrString) {
+          issues.push({ path: `${path}/unit`, message: `PRO-MASTER: Falta unidad (Hz, dB, ms, semi, %). Requerido para parámetros de control.`, keyword: 'era7_ux', severity: 'audit' });
         }
 
         // Advanced: Out of Bounds

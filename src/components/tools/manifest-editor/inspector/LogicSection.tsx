@@ -9,6 +9,7 @@ interface LogicSectionProps {
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   availableBinds?: string[];
   onHelp?: (sectionId?: string) => void;
+  highlightPath?: string | null;
 }
 
 const COMPONENT_TYPES = [
@@ -24,8 +25,9 @@ const COMPONENT_TYPES = [
   { id: 'hidden', label: 'Hidden Entity', icon: '👻' },
 ];
 
-export default function LogicSection({ item, onUpdate, availableBinds = [], onHelp }: LogicSectionProps) {
+export default function LogicSection({ item, onUpdate, availableBinds = [], onHelp, highlightPath }: LogicSectionProps) {
   const currentType = item.presentation?.component || 'knob';
+  const isHighlighted = (key: string) => highlightPath?.includes(key);
 
   const updateType = (type: string) => {
     onUpdate({ presentation: { ...item.presentation, component: type } });
@@ -59,7 +61,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
             <select 
               value={item.bind || ''} 
               onChange={(e) => onUpdate({ bind: e.target.value })}
-              className={`w-full bg-black/5 border ${availableBinds.length === 0 ? 'border-amber-500/20' : 'wb-outline'} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10 transition-colors duration-500`}
+              className={`w-full bg-black/5 border ${isHighlighted('bind') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : (availableBinds.length === 0 ? 'border-amber-500/20' : 'wb-outline')} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10 transition-colors duration-500`}
             >
               <option value="">-- UNBOUND (Static) --</option>
               {availableBinds.map(b => (
@@ -70,13 +72,9 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
                <span className="text-[8px] text-primary">▼</span>
             </div>
           </div>
-          {availableBinds.length === 0 ? (
+          {availableBinds.length === 0 && (
             <p className="text-[7px] text-amber-500/60 font-bold uppercase tracking-tighter ml-1 animate-pulse">
               ⚠ No technical contract loaded. Upload .wasm or .json to sync logic.
-            </p>
-          ) : (
-            <p className="text-[7px] wb-text-muted italic ml-1">
-              Connects this UI entity to a technical parameter in the WASM contract.
             </p>
           )}
         </div>
@@ -104,6 +102,8 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               key={role.id}
               onClick={() => onUpdate({ role: role.id })}
               className={`p-2 border rounded-xs transition-all flex flex-col items-start gap-0.5 ${
+                isHighlighted('role') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : ''
+              } ${
                 (item.role || 'control') === role.id 
                   ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
                   : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
@@ -127,7 +127,7 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
           <select 
             value={item.type || 'float'} 
             onChange={(e) => onUpdate({ type: e.target.value })}
-            className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none appearance-none transition-colors duration-500"
+            className={`w-full bg-black/5 border ${isHighlighted('type') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none appearance-none transition-colors duration-500`}
           >
             <option value="float">Float (0.0 to 1.0)</option>
             <option value="int">Integer (Stepped)</option>
@@ -149,6 +149,8 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               key={type.id}
               onClick={() => updateType(type.id)}
               className={`flex items-center gap-3 p-2 border rounded-xs transition-all ${
+                isHighlighted('component') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : ''
+              } ${
                 currentType === type.id 
                   ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
                   : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
@@ -158,38 +160,6 @@ export default function LogicSection({ item, onUpdate, availableBinds = [], onHe
               <span className="text-[9px] font-bold uppercase tracking-tighter">{type.label}</span>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* INTERACTION FLAGS */}
-      <div className="space-y-3">
-        <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
-           <Settings2 className="w-3 h-3" />
-           <span>Interaction Logic</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => toggleFlag('disabled')}
-            className={`flex items-center justify-between p-3 border rounded-xs transition-all ${
-              item.presentation?.ui?.disabled 
-                ? 'bg-red-500/20 border-red-500/40 text-red-500' 
-                : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
-            }`}
-          >
-            <span className="text-[8px] font-black uppercase tracking-widest">Disabled</span>
-            <Lock className="w-3 h-3" />
-          </button>
-          <button
-            onClick={() => toggleFlag('readOnly')}
-            className={`flex items-center justify-between p-3 border rounded-xs transition-all ${
-              item.presentation?.ui?.readOnly 
-                ? 'bg-amber-500/20 border-amber-500/40 text-amber-500' 
-                : 'bg-black/5 wb-outline wb-text-muted hover:wb-text transition-colors duration-500'
-            }`}
-          >
-            <span className="text-[8px] font-black uppercase tracking-widest">Read Only</span>
-            <EyeOff className="w-3 h-3" />
-          </button>
         </div>
       </div>
     </div>

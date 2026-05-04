@@ -17,9 +17,10 @@ interface AestheticSectionProps {
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   onHelp?: (sectionId?: string) => void;
   containers?: LayoutContainer[];
+  highlightPath?: string | null;
 }
 
-export default function AestheticSection({ item, onUpdate, onHelp, containers = [] }: AestheticSectionProps) {
+export default function AestheticSection({ item, onUpdate, onHelp, containers = [], highlightPath }: AestheticSectionProps) {
   const componentType = item.presentation?.component || 'knob';
 
   const renderSpecializedEditor = () => {
@@ -29,7 +30,7 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
       case 'led':
         return <LedProperties item={item} onUpdate={onUpdate} />;
       case 'port':
-        return <PortProperties item={item} onUpdate={onUpdate} />;
+        return <PortProperties item={item} onUpdate={onUpdate} highlightPath={highlightPath} />;
       case 'slider-v':
       case 'slider-h':
         return <SliderProperties item={item} onUpdate={onUpdate} />;
@@ -105,7 +106,7 @@ export default function AestheticSection({ item, onUpdate, onHelp, containers = 
                   group: undefined 
                 } 
               })}
-              className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-accent/40 transition-all appearance-none cursor-pointer transition-colors duration-500"
+              className={`w-full bg-black/5 border ${highlightPath?.includes('container') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-accent/40 transition-all appearance-none cursor-pointer`}
             >
               <option value="">NO CONTAINER (UNBOUND)</option>
               {containers.map(c => (

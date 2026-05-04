@@ -59,7 +59,8 @@ export const useManifestEditor = () => {
 
   const handleDeploy = useCallback(async () => {
     if (issues.length > 0) {
-      if (!confirm(`Manifest has ${issues.length} audit issues. Deploy to engine anyway?`)) return;
+      addLog(`[WARNING] Deployment blocked by ${issues.length} audit violations.`);
+      return 'AUDIT_FAIL';
     }
 
     addLog(`[SYSTEM] HIL Bridge: Initiating direct injection...`);

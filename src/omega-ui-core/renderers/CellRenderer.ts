@@ -20,7 +20,7 @@ export interface Attachment {
   type: string;
   variant: string;
   text?: string;
-  position: 'top' | 'bottom' | 'left' | 'right';
+  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
   offsetX?: number;
   offsetY?: number;
 }
@@ -158,7 +158,7 @@ export class CellRenderer {
 
     // 2. Render Attachment Stacks
     const attachments = item.presentation?.attachments || [];
-    const renderStack = (pos: 'top' | 'bottom' | 'left' | 'right') => {
+    const renderStack = (pos: 'top' | 'bottom' | 'left' | 'right' | 'center') => {
       const stackItems = attachments.filter((a: Attachment) => a.position === pos);
 
       if (stackItems.length === 0) return '';
@@ -189,6 +189,7 @@ export class CellRenderer {
         ${renderStack('bottom')}
         ${renderStack('left')}
         ${renderStack('right')}
+        ${renderStack('center')}
         <div class="cell-main" style="width: ${compRadius * 2 * 1.5}px; height: ${compRadius * 2 * 1.5}px; transform: translate(calc(-50% + ${cellOffsetX}px), calc(-50% + ${cellOffsetY}px))">
           ${mainHTML}
         </div>

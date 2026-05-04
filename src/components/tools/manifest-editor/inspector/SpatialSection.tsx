@@ -7,11 +7,13 @@ interface SpatialSectionProps {
   item: any;
   onUpdate: (updates: any) => void;
   onHelp?: (sectionId?: string) => void;
+  highlightPath?: string | null;
 }
 
-export default function SpatialSection({ item, onUpdate, onHelp }: SpatialSectionProps) {
+export default function SpatialSection({ item, onUpdate, onHelp, highlightPath }: SpatialSectionProps) {
   const pos = item.pos || { x: 0, y: 0 };
   const pres = item.presentation || {};
+  const isHighlighted = (key: string) => highlightPath?.includes(key);
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-2">
@@ -19,7 +21,7 @@ export default function SpatialSection({ item, onUpdate, onHelp }: SpatialSectio
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+            <label className={`text-[8px] uppercase font-bold tracking-tighter flex items-center gap-1 transition-colors ${isHighlighted('pos') ? 'text-amber-500' : 'text-foreground/60'}`}>
               <Move className="w-2.5 h-2.5" />
               <span>Absolute X</span>
             </label>
@@ -31,11 +33,11 @@ export default function SpatialSection({ item, onUpdate, onHelp }: SpatialSectio
             type="number" 
             value={pos.x || 0} 
             onChange={(e) => onUpdate({ pos: { ...pos, x: parseFloat(e.target.value) } })}
-            className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-colors"
+            className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter flex items-center gap-1">
+          <label className={`text-[8px] uppercase font-bold tracking-tighter flex items-center gap-1 transition-colors ${isHighlighted('pos') ? 'text-amber-500' : 'text-foreground/60'}`}>
             <Move className="w-2.5 h-2.5" />
             <span>Absolute Y</span>
           </label>
@@ -43,7 +45,7 @@ export default function SpatialSection({ item, onUpdate, onHelp }: SpatialSectio
             type="number" 
             value={pos.y || 0} 
             onChange={(e) => onUpdate({ pos: { ...pos, y: parseFloat(e.target.value) } })}
-            className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-colors"
+            className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
           />
         </div>
       </div>
@@ -62,7 +64,7 @@ export default function SpatialSection({ item, onUpdate, onHelp }: SpatialSectio
         <select 
           value={pres.colSpan || 1} 
           onChange={(e) => onUpdate({ presentation: { ...pres, colSpan: parseInt(e.target.value) } })}
-          className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none"
+          className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none transition-colors duration-500"
         >
           <option value={1}>1 Column (Standard)</option>
           <option value={2}>2 Columns (Wide)</option>

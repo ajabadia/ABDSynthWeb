@@ -102,7 +102,11 @@ export const useManifestTransfer = (
       if (!confirm(`Manifest has ${issues.length} issues. Export anyway?`)) return;
     }
 
-    const yamlContent = yaml.dump(manifest, { indent: 2, lineWidth: -1 });
+    const yamlContent = yaml.dump(manifest, { 
+      indent: 2, 
+      lineWidth: -1,
+      schema: yaml.JSON_SCHEMA 
+    });
     const blob = new Blob([yamlContent], { type: 'text/yaml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

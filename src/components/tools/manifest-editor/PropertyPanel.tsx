@@ -21,6 +21,7 @@ interface PropertyPanelProps {
   item: ManifestEntity | OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity> | Partial<OMEGA_Manifest>) => void;
   onClose: () => void;
+  highlightPath?: string | null;
   availableBinds?: string[];
   scale?: number;
   onSelectItem?: (id: string) => void;
@@ -46,6 +47,7 @@ export default function PropertyPanel({
   item, 
   onUpdate, 
   onClose, 
+  highlightPath,
   availableBinds = [], 
   scale = 1,
   onSelectItem,
@@ -89,6 +91,23 @@ export default function PropertyPanel({
     ]
   ), [isModule]);
 
+  // AUDIT GPS: Auto-switch section based on highlightPath
+  React.useEffect(() => {
+    if (!highlightPath) return;
+
+    if (isModule) {
+       if (highlightPath.includes('layout')) setActiveSection('layout');
+       if (highlightPath.includes('resources')) setActiveSection('assets');
+    } else {
+       if (highlightPath.includes('bind')) setActiveSection('logic');
+       if (highlightPath.includes('unit') || highlightPath.includes('role') || highlightPath.includes('type')) setActiveSection('engineering');
+       if (highlightPath.includes('pos') || highlightPath.includes('size')) setActiveSection('spatial');
+       if (highlightPath.includes('variant') || highlightPath.includes('container') || highlightPath.includes('color')) setActiveSection('aesthetic');
+       if (highlightPath.includes('attachments')) setActiveSection('attachments');
+       if (highlightPath.includes('label') || highlightPath.includes('id')) setActiveSection('identity');
+    }
+  }, [highlightPath, isModule]);
+
   // Auto-reset tab if current one disappears
   React.useEffect(() => {
     if (!sections.find(s => s.id === activeSection)) {
@@ -104,7 +123,6 @@ export default function PropertyPanel({
 
   return (
     <div className="h-full wb-surface border-l wb-outline flex flex-col shadow-2xl overflow-hidden transition-colors duration-500">
-      {/* HEADER */}
       <header className="p-4 border-b wb-outline bg-black/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xs bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -127,10 +145,8 @@ export default function PropertyPanel({
         )}
       </header>
 
-      {/* CELL PREVIEW (Only for items) */}
       {!isModule && <CellPreview item={item} />}
 
-      {/* NAVIGATION TABS */}
       <nav className="flex border-b wb-outline bg-black/5 p-1 shrink-0">
         {sections.map((section) => (
           <button
@@ -148,7 +164,6 @@ export default function PropertyPanel({
         ))}
       </nav>
 
-      {/* CONTENT AREA */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -159,7 +174,7 @@ export default function PropertyPanel({
             transition={{ duration: 0.15 }}
           >
             {activeSection === 'identity' && (
-              <IdentitySection item={item} onUpdate={handleFieldUpdate} onHelp={onHelp} rootManifest={manifest} />
+              <IdentitySection item={item} onUpdate={handleFieldUpdate} onHelp={onHelp} rootManifest={manifest} highlightPath={highlightPath} />
             )}
 
             {isModule ? (
@@ -170,10 +185,11 @@ export default function PropertyPanel({
                      onAdd={addContainer}
                      onUpdate={updateContainer}
                      onRemove={removeContainer}
+                     highlightPath={highlightPath}
                    />
                 )}
                 {activeSection === 'controls' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
-                  <EntityListSection 
+                   <EntityListSection 
                     items={(item as OMEGA_Manifest).ui?.controls || []}
                     title="Interactive Controls"
                     type="control"
@@ -185,7 +201,7 @@ export default function PropertyPanel({
                   />
                 )}
                 {activeSection === 'signals' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
-                  <EntityListSection 
+                   <EntityListSection 
                     items={(item as OMEGA_Manifest).ui?.jacks || []}
                     title="Signal Ports / Jacks"
                     type="jack"
@@ -197,7 +213,7 @@ export default function PropertyPanel({
                   />
                 )}
                 {activeSection === 'modulations' && onAddModulation && onRemoveModulation && onUpdateModulation && (
-                  <ModulationSection 
+                   <ModulationSection 
                     manifest={item as OMEGA_Manifest}
                     onAdd={onAddModulation}
                     onRemove={onRemoveModulation}
@@ -206,7 +222,7 @@ export default function PropertyPanel({
                   />
                 )}
                 {activeSection === 'assets' && extraResources && onTriggerUpload && (
-                  <ResourceSection 
+                   <ResourceSection 
                     resources={extraResources} 
                     onTriggerUpload={() => onTriggerUpload('resource-upload')} 
                     onRemove={onRemoveResource}
@@ -216,15 +232,15 @@ export default function PropertyPanel({
             ) : (
               <>
                 {activeSection === 'engineering' && (
-                  <EngineeringSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} />
+                  <EngineeringSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} highlightPath={highlightPath} />
                 )}
 
                 {activeSection === 'logic' && (
-                  <LogicSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} availableBinds={availableBinds} onHelp={onHelp} />
+                  <LogicSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} availableBinds={availableBinds} onHelp={onHelp} highlightPath={highlightPath} />
                 )}
 
                 {activeSection === 'spatial' && (
-                  <SpatialSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} />
+                  <SpatialSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} highlightPath={highlightPath} />
                 )}
 
                 {activeSection === 'aesthetic' && (
@@ -233,6 +249,7 @@ export default function PropertyPanel({
                     onUpdate={handleFieldUpdate} 
                     onHelp={onHelp} 
                     containers={manifest?.ui?.layout?.containers || []}
+                    highlightPath={highlightPath}
                   />
                 )}
 
@@ -242,6 +259,7 @@ export default function PropertyPanel({
                     onUpdate={handleFieldUpdate} 
                     availableBinds={availableBinds}
                     onHelp={onHelp}
+                    highlightPath={highlightPath}
                   />
                 )}
               </>
@@ -249,7 +267,6 @@ export default function PropertyPanel({
           </motion.div>
         </AnimatePresence>
       </div>
-
     </div>
   );
 }
