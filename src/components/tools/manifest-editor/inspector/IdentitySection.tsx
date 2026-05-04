@@ -9,6 +9,7 @@ interface IdentitySectionProps {
   item: OMEGA_Manifest | ManifestEntity;
   onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => void;
   onHelp?: (sectionId?: string) => void;
+  rootManifest?: OMEGA_Manifest; // For authority prediction
 }
 
 const FAMILIES = [
@@ -29,11 +30,23 @@ const SKINS = [
   { id: 'glass', label: 'Aseptic Glass', color: 'bg-[#2a3035]' },
   { id: 'minimal', label: 'Minimalist', color: 'bg-[#000000]' },
 ];
-
-export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySectionProps) {
+export default function IdentitySection({ item, onUpdate, onHelp, rootManifest }: IdentitySectionProps) {
   const isModule = 'metadata' in item;
 
   if (!isModule) {
+    const entity = item as ManifestEntity;
+    
+    // Numeric Authority Linter (Era 7.2.3)
+    const getAuthority = () => {
+      if (!rootManifest) return null;
+      const cIdx = (rootManifest.ui?.controls || []).findIndex(c => c.id === entity.id);
+      if (cIdx !== -1) return { type: 'ParamId', value: cIdx };
+      const jIdx = (rootManifest.ui?.jacks || []).findIndex(j => j.id === entity.id);
+      if (jIdx !== -1) return { type: 'PortId', value: jIdx };
+      return null;
+    };
+    const auth = getAuthority();
+
     return (
       <div className="space-y-6 pt-2">
         <div className="space-y-3">
@@ -42,16 +55,24 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
                 <Fingerprint className="w-3 h-3" />
                 <span>Entity Identification</span>
              </div>
-             <button onClick={() => onHelp?.('cells')} className="hover:text-primary transition-colors">
-                <Info className="w-3 h-3" />
-             </button>
+             <div className="flex items-center gap-2">
+                {auth && (
+                  <div className="flex items-center gap-1 bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-full">
+                    <span className="text-[6px] text-primary font-black">{auth.type}:</span>
+                    <span className="text-[6px] text-primary font-mono font-bold">#{auth.value}</span>
+                  </div>
+                )}
+                <button onClick={() => onHelp?.('cells')} className="hover:text-primary transition-colors">
+                   <Info className="w-3 h-3" />
+                </button>
+             </div>
           </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Canonical ID</label>
               <input 
                 type="text" 
-                value={item.id} 
+                value={entity.id} 
                 onChange={(e) => onUpdate({ id: e.target.value })}
                 className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500 font-mono"
               />
@@ -60,7 +81,7 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
               <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Display Label</label>
               <input 
                 type="text" 
-                value={item.label || ''} 
+                value={entity.label || ''} 
                 onChange={(e) => onUpdate({ label: e.target.value })}
                 className="w-full bg-black/5 border wb-outline rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all transition-colors duration-500"
               />
@@ -81,8 +102,24 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
     onUpdate({ metadata: { ...metadata, [field]: value } } as Partial<OMEGA_Manifest>);
   };
 
-  const updateRack = (field: string, value: unknown) => {
-    onUpdate({ metadata: { ...metadata, rack: { ...rack, [field]: value } } } as Partial<OMEGA_Manifest>);
+  const updateRack = (updates: Partial<typeof rack>) => {
+    onUpdate({ metadata: { ...metadata, rack: { ...rack, ...updates } } } as Partial<OMEGA_Manifest>);
+  };
+
+  const updateRackFormat = (slot: string, mode: string, height: number) => {
+    onUpdate({ 
+      metadata: { 
+        ...metadata, 
+        rack: { ...rack, slot, height_mode: mode } 
+      },
+      ui: {
+        ...ui,
+        dimensions: {
+          ...(ui.dimensions || {}),
+          height: height
+        }
+      }
+    } as Partial<OMEGA_Manifest>);
   };
 
   const updateUI = (field: string, value: unknown) => {
@@ -247,21 +284,15 @@ export default function IdentitySection({ item, onUpdate, onHelp }: IdentitySect
             <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Industrial Format (Slot & Height)</label>
             <div className="grid grid-cols-2 gap-2">
               <button 
-                onClick={() => {
-                  updateRack('slot', 'main');
-                  updateRack('height_mode', 'full');
-                }}
-                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot !== 'top' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
+                onClick={() => updateRackFormat('main', 'full', 420)}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'main' ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>Main (3U)</span>
                 <span className="text-[6px] wb-text-muted font-bold uppercase transition-colors duration-500">Primary Synthesis Rack</span>
               </button>
               <button 
-                onClick={() => {
-                  updateRack('slot', 'top');
-                  updateRack('height_mode', 'compact');
-                }}
-                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'top' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
+                onClick={() => updateRackFormat('upper', 'compact', 140)}
+                className={`py-2 px-3 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${rack.slot === 'upper' || rack.slot === 'top' ? 'bg-accent/20 border-accent text-accent shadow-[0_0_15px_rgba(255,140,0,0.1)]' : 'bg-black/5 wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>Utility (1U)</span>
                 <span className="text-[6px] wb-text-muted font-bold uppercase transition-colors duration-500">Top Management Strip</span>

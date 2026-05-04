@@ -36,7 +36,7 @@ export default function PrimitiveFactory(props: PrimitiveProps) {
     case 'knob':
       return <Knob {...rest} />;
     case 'port':
-      return <Port {...rest} />;
+      return <Port {...rest} item={item} />;
     case 'display':
       return <Display {...rest} />;
     case 'select':

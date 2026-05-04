@@ -143,6 +143,7 @@ export default function WorkbenchContainer() {
         onHelp={() => openHelp()}
         uiTheme={uiTheme}
         setUiTheme={setUiTheme}
+        audit={auditResult}
       />
 
       <AnimatePresence>

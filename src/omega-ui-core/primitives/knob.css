@@ -1,0 +1,65 @@
+/* OMEGA INDUSTRIAL KNOBS (Era 7.2.3 — High Fidelity) */
+/* Aligned with ABDSynthsWeb Standards */
+
+.knob-container {
+    background: #111 !important;
+    border: 2px solid #333 !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s;
+    border-radius: 50% !important;
+}
+
+.knob-container:hover {
+    border-color: #444 !important;
+}
+
+.knob-cap {
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%) !important;
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+}
+
+/* VARIANT A: MASTER KNOB (32px) */
+.knob-container.size-A {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* VARIANT B: STANDARD KNOB (24px) */
+.knob-container.size-B {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* VARIANT C: SMALL KNOB (16px) */
+.knob-container.size-C {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* VARIANT D: MINI KNOB (12px) */
+.knob-container.size-D {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+/* POINTER / MARKER SYSTEM */
+.knob-marker {
+    width: 2px !important;
+    height: 40% !important;
+    border-radius: 1px !important;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.4) !important;
+    position: absolute;
+    transform-origin: bottom;
+}
+
+/* COLOR VARIANTS */
+.knob-container.color-cyan .knob-marker { background: var(--wb-primary) !important; box-shadow: 0 0 8px var(--wb-primary) !important; }
+.knob-container.color-red .knob-marker { background: #ff4444 !important; box-shadow: 0 0 8px #ff4444 !important; }
+.knob-container.color-orange .knob-marker { background: var(--wb-accent) !important; box-shadow: 0 0 8px var(--wb-accent) !important; }
+.knob-container.color-green .knob-marker { background: #00ff88 !important; box-shadow: 0 0 8px #00ff88 !important; }
+.knob-container.color-white .knob-marker { background: #ffffff !important; box-shadow: 0 0 8px #ffffff !important; }

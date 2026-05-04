@@ -169,6 +169,12 @@
   --wb-bloom: rgba(0, 240, 255, 0.3);
   --wb-primary: #00f0ff;
   --wb-accent: #ff8c00;
+
+  /* SIGNAL COLOR TOKENS (ERA 7.2.3) */
+  --signal-audio: #00f0ff;
+  --signal-cv: #ffaa00;
+  --signal-gate: #ffffff;
+  --signal-midi: #ff5500;
 }
 
 [data-ui-theme="light"] {
@@ -182,6 +188,13 @@
   --wb-bloom: rgba(100, 116, 139, 0.1);
   --wb-primary: #5c7089; 
   --wb-accent: #f59e0b;
+
+  /* SIGNAL COLOR TOKENS (LIGHT ADAPTATION) */
+  --signal-audio: #3b82f6;
+  --signal-cv: #d97706;
+  --signal-gate: #475569;
+  --signal-midi: #ea580c;
+
   /* Tailwind Variable Overrides */
   --color-primary: #5c7089;
   --color-accent: #f59e0b;

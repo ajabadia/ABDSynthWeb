@@ -14,61 +14,49 @@ addFormats(ajv);
 const validateV6 = ajv.compile(era6Schema);
 const validateV7 = ajv.compile(era7Schema);
 
-import { OMEGA_Manifest } from '../types/manifest';
+import { OMEGA_Manifest, ManifestEntity } from '../types/manifest';
+import { OmegaContract } from './wasmLoader';
 
 export interface ValidationIssue {
   path: string;
   message: string;
   keyword: string;
+  severity: 'error' | 'warning' | 'audit'; 
 }
 
 export class ValidationService {
-  static validate(manifest: OMEGA_Manifest): ValidationIssue[] {
+  static validate(manifest: OMEGA_Manifest, contract: OmegaContract | null = null): ValidationIssue[] {
     const isV7 = manifest.schemaVersion?.startsWith('7') || manifest.schemaVersion === '7.0';
     const validator = isV7 ? validateV7 : validateV6;
     
-    const isValid = validator(manifest);
-    const issues = (validator.errors || []).map(err => ({
+    validator(manifest);
+    const issues: ValidationIssue[] = (validator.errors || []).map(err => ({
       path: err.instancePath || '',
       message: err.message || 'Invalid value',
-      keyword: err.keyword || 'schema'
+      keyword: err.keyword || 'schema',
+      severity: 'error'
     }));
 
-    // GOBERNANZA ERA 7.2.3: Integridad Estructural
     if (manifest.schemaVersion?.startsWith('7')) {
       const hp = manifest.metadata?.rack?.hp || 12;
       const rackWidth = hp * 15;
       const rackHeight = manifest.ui.dimensions?.height || 420;
       
       const containers = manifest.ui.layout?.containers || [];
-      const containerIds = new Set<string>();
-      const containerMap = new Map<string, any>();
+      const containerIds = new Set(containers.map(c => c.id));
+      const tabs = new Set(containers.map(c => c.tab).filter(Boolean));
 
-      containers.forEach((container, idx) => {
-        containerIds.add(container.id);
-        containerMap.set(container.id, container);
+      const usedIds = new Set<string>();
+      const telemetryIndices = new Set<number>();
 
-        // 1. Contenedor vs Rack
-        const cw = typeof container.size.w === 'number' ? container.size.w : rackWidth; // Simplificado para validación
-        if (container.pos.x < 0 || container.pos.y < 0 || 
-            container.pos.x + (typeof container.size.w === 'number' ? container.size.w : 0) > rackWidth || 
-            container.pos.y + container.size.h > rackHeight) {
-          issues.push({
-            path: `/ui/layout/containers/${idx}`,
-            message: `INTEGRIDAD: El contenedor '${container.id}' excede los límites físicos del Rack.`,
-            keyword: 'era7_integrity'
-          });
-        }
-
-        // ID Unico
-        if (containerIds.has(container.id) && Array.from(containerIds).filter(id => id === container.id).length > 1) {
-          issues.push({
-            path: `/ui/layout/containers/${idx}`,
-            message: `ARQUITECTURA: ID de contenedor duplicado '${container.id}'.`,
-            keyword: 'era7_layout'
-          });
-        }
-      });
+      if (hp % 2 !== 0) {
+        issues.push({
+          path: '/metadata/rack/hp',
+          message: `PRO-MASTER: HP impar (${hp}). Se recomienda HP par para estética Eurorack.`,
+          keyword: 'era7_style',
+          severity: 'audit'
+        });
+      }
 
       const allEntities = [
         ...(manifest.ui?.controls || []).map(e => ({ ...e, isJack: false })),
@@ -78,57 +66,54 @@ export class ValidationService {
       allEntities.forEach((entity, idx) => {
         const path = `/ui/${entity.isJack ? 'jacks' : 'controls'}/${idx}`;
 
-        // 4. Validación de Roles Obligatorios
-        if (!entity.role) {
-          issues.push({
-            path: path,
-            message: 'ERROR DE GOBERNANZA: Falta el Registry Role obligatorio.',
-            keyword: 'era7_governance'
-          });
+        // Golden Rule 1: Identity
+        if (usedIds.has(entity.id)) {
+          issues.push({ path: `${path}/id`, message: `DOUBLE IDENTITY: ID '${entity.id}' duplicado.`, keyword: 'era7_identity', severity: 'error' });
         }
+        usedIds.add(entity.id);
 
-        // 2. Cell vs Rack
-        if (entity.pos.x < 0 || entity.pos.x > rackWidth || entity.pos.y < 0 || entity.pos.y > rackHeight) {
+        // Pro-Master: Rule of 5px
+        if (entity.pos.x % 5 !== 0 || entity.pos.y % 5 !== 0) {
           issues.push({
             path: `${path}/pos`,
-            message: `INTEGRIDAD: La Cell '${entity.id}' está fuera del Rack.`,
-            keyword: 'era7_integrity'
+            message: `PRO-MASTER: Desalineado. La posición (${entity.pos.x}, ${entity.pos.y}) debe ser múltiplo de 5 (Regla de los 5px).`,
+            keyword: 'era7_alignment',
+            severity: 'audit'
           });
         }
 
-        // 3. Cell vs Contenedor
-        if (entity.presentation?.container) {
-          const container = containerMap.get(entity.presentation.container);
-          if (container) {
-            const cw = typeof container.size.w === 'number' ? container.size.w : rackWidth;
-            const margin = 5; // Margen de seguridad para el centro del componente
-            
-            if (entity.pos.x < container.pos.x || 
-                entity.pos.x > (container.pos.x + cw) || 
-                entity.pos.y < container.pos.y || 
-                entity.pos.y > (container.pos.y + container.size.h)) {
-              issues.push({
-                path: `${path}/presentation/container`,
-                message: `INTEGRIDAD: La Cell '${entity.id}' se encuentra fuera de los límites de su contenedor '${container.id}'.`,
-                keyword: 'era7_integrity'
-              });
-            }
-          } else {
+        // Pro-Master: Port Normalization
+        if (entity.isJack) {
+          const color = entity.presentation?.color;
+          if (!color) {
             issues.push({
-              path: `${path}/presentation/container`,
-              message: `ARQUITECTURA: El contenedor referenciado '${entity.presentation.container}' no existe.`,
-              keyword: 'era7_layout'
+              path: `${path}/presentation/color`,
+              message: `PRO-MASTER: Puerto sin color. Usa B_cyan (Audio/CV), neon_amber (Mod), white (Gate) u orange (MIDI).`,
+              keyword: 'era7_port_norm',
+              severity: 'audit'
             });
           }
         }
 
-        // Warning de grupos legacy
-        if (entity.presentation?.group && !entity.presentation?.container) {
-          issues.push({
-            path: `/ui/${(entity as any).isJack ? 'jacks' : 'controls'}/${idx}/presentation/group`,
-            message: `LEGACY: Se recomienda migrar el grupo '${entity.presentation.group}' al sistema de contenedores 7.2.`,
-            keyword: 'era7_legacy'
-          });
+        // Pro-Master: Missing Units
+        if (!entity.unit && entity.role !== 'output') {
+          issues.push({ path: `${path}/unit`, message: `PRO-MASTER: Falta unidad (Hz, dB, ms, semi, %).`, keyword: 'era7_ux', severity: 'audit' });
+        }
+
+        // Advanced: Out of Bounds
+        if (entity.pos.x < 0 || entity.pos.x > rackWidth || entity.pos.y < 0 || entity.pos.y > rackHeight) {
+          issues.push({ path: `${path}/pos`, message: `OUT OF BOUNDS: '${entity.id}' fuera del metal.`, keyword: 'era7_integrity', severity: 'error' });
+        }
+
+        // Advanced: Orphan Binds
+        if (contract && entity.bind) {
+          const allBinds = [
+            ...(contract.parameters?.map(p => p.id?.toLowerCase()) || []),
+            ...(contract.ports?.map(p => p.id?.toLowerCase()) || [])
+          ];
+          if (!allBinds.includes(entity.bind.toLowerCase())) {
+            issues.push({ path: `${path}/bind`, message: `ORPHAN BIND: '${entity.bind}' no existe en el contrato WASM.`, keyword: 'era7_binding', severity: 'error' });
+          }
         }
       });
     }

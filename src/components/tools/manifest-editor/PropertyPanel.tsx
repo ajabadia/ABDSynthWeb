@@ -159,7 +159,7 @@ export default function PropertyPanel({
             transition={{ duration: 0.15 }}
           >
             {activeSection === 'identity' && (
-              <IdentitySection item={item} onUpdate={handleFieldUpdate} onHelp={onHelp} />
+              <IdentitySection item={item} onUpdate={handleFieldUpdate} onHelp={onHelp} rootManifest={manifest} />
             )}
 
             {isModule ? (

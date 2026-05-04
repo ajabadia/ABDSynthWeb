@@ -6,6 +6,7 @@ import { Download, Shield, RotateCcw, Terminal, HelpCircle, Zap, ChevronDown, Fi
 
 import { AuditResult } from '../../../services/auditService';
 import { OMEGA_Manifest } from '../../../types/manifest';
+import { ComplianceBadge } from './ComplianceBadge';
 
 interface HeaderProps {
   onReset: () => void;
@@ -21,6 +22,7 @@ interface HeaderProps {
   onHelp: () => void;
   uiTheme: 'dark' | 'light';
   setUiTheme: (theme: 'dark' | 'light') => void;
+  audit: AuditResult;
 }
 
 export default function Header({ 
@@ -36,7 +38,8 @@ export default function Header({
   setViewMode, 
   onHelp,
   uiTheme,
-  setUiTheme
+  setUiTheme,
+  audit
 }: HeaderProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -57,6 +60,10 @@ export default function Header({
             <Shield className="w-3 h-3 text-primary" />
           </div>
         </div>
+        
+        <div className="h-8 w-px bg-outline/20" />
+
+        <ComplianceBadge audit={audit} onClick={onToggleLogs} />
         
         <div className="h-8 w-px bg-outline/20" />
         

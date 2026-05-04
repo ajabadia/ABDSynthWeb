@@ -14,12 +14,12 @@ interface HelpModalProps {
 // HELPER: Simple Syntax Highlighter for C++/YAML
 const highlightCode = (code: string) => {
   if (!code) return code;
-  // Keywords (C++)
-  const keywords = /\b(extern|void|float|int|if|for|return|const|char|uint8_t|include|pragma|once)\b/g;
+  // Keywords (C++ & YAML)
+  const keywords = /\b(extern|void|float|int|if|for|return|const|char|uint8_t|include|pragma|once|schemaVersion|id|metadata|ui|layout|controls|jacks|registry|bind|roles|type|range|pos|presentation)\b/g;
   // Strings
-  const strings = /("[^"]*")/g;
-  // Macros/Headers
-  const macros = /(#\w+|omega_\w+)/g;
+  const strings = /("[^"]*"|'[^']*')/g;
+  // Macros/Headers/YAML keys
+  const macros = /(#\w+|omega_\w+|^\s*[\w-]+:)/gm;
 
   return code
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") // Escape HTML

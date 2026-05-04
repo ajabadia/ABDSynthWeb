@@ -25,7 +25,7 @@ interface VirtualRackProps {
   audit: AuditResult;
   activeTab: string;
   setActiveTab: (val: string) => void;
-  onUpdateContainer: (id: string, updates: any) => void;
+  onUpdateContainer?: (id: string, updates: any) => void;
 }
 
 /**
@@ -87,7 +87,7 @@ export default function VirtualRack({
   const hp = manifest?.metadata?.rack?.hp || 12;
   const isCompact = manifest?.metadata?.rack?.height_mode === 'compact';
   const width = hp * 15 * 1.5;
-  const height = (isCompact ? 210 : 420) * 1.5;
+  const height = (manifest.ui?.dimensions?.height || (isCompact ? 140 : 420)) * 1.5;
 
   const containers = manifest.ui.layout?.containers || [];
   const visibleElements = allElements.filter(entity => {
@@ -130,7 +130,6 @@ export default function VirtualRack({
             skin={skin} 
             rackWidthPx={width}
             isLiveMode={isLiveMode}
-            onToggleCollapse={() => onUpdateContainer(c.id, { collapsed: !c.collapsed })}
           />
         ))}
 

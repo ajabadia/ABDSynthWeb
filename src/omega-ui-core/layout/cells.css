@@ -1,0 +1,46 @@
+/* OMEGA INDUSTRIAL CELLS & ATTACHMENTS (Era 7.2.3) */
+
+.control-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute; /* positioned via JS style top/left */
+}
+
+.cell-row-middle {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.cell-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attachment-stack {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.attachment-stack.stack-top,
+.attachment-stack.stack-bottom {
+    flex-direction: column;
+}
+
+.attachment-stack.stack-left,
+.attachment-stack.stack-right {
+    flex-direction: row;
+}
+
+/* Spacing to ensure labels don't collide with main control */
+.stack-top { margin-bottom: 4px; }
+.stack-bottom { margin-top: 4px; }
+.stack-left { margin-right: 4px; }
+.stack-right { margin-left: 4px; }

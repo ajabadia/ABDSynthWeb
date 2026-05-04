@@ -1,0 +1,11 @@
+/* OMEGA INDUSTRIAL LABELS (Era 7.2.3) */
+
+.cell-label {
+    font-size: 9px;
+    font-weight: 900;
+    color: var(--wb-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    pointer-events: none;
+    white-space: nowrap;
+}

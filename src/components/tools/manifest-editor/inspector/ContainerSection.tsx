@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Layout, Trash2, Move, Box, Maximize2, Type, Layers, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Layout, Trash2, Move, Box, Maximize2, Type, Layers, ChevronDown, ChevronRight, Minimize2, Maximize } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutContainer, ContainerVariant, ContainerSizeUnit } from '@/types/manifest';
 
@@ -67,12 +67,21 @@ export default function ContainerSection({
                     <span className="text-[7px] font-mono opacity-20 uppercase tracking-tighter">{container.id}</span>
                   </div>
                 </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onRemove(container.id); }}
-                  className="p-1.5 text-foreground/20 hover:text-red-400 hover:bg-red-500/5 rounded-xs transition-all"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onUpdate(container.id, { collapsed: !container.collapsed }); }}
+                    className={`p-1.5 rounded-xs transition-all ${container.collapsed ? 'text-accent bg-accent/10' : 'text-foreground/20 hover:text-accent hover:bg-white/5'}`}
+                    title={container.collapsed ? "Unfold in Rack" : "Fold in Rack"}
+                  >
+                    {container.collapsed ? <Maximize className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onRemove(container.id); }}
+                    className="p-1.5 text-foreground/20 hover:text-red-400 hover:bg-red-500/5 rounded-xs transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* COLLAPSIBLE BODY */}

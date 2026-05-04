@@ -189,8 +189,7 @@ const RackEntityBase = ({
 export const RackEntity = React.memo(RackEntityBase, (prev, next) => {
   return (
     prev.item.id === next.item.id &&
-    prev.item.pos.x === next.item.pos.x &&
-    prev.item.pos.y === next.item.pos.y &&
+    JSON.stringify(prev.item.pos) === JSON.stringify(next.item.pos) &&
     prev.item.label === next.item.label &&
     prev.runtimeValue === next.runtimeValue &&
     prev.selectedItemId === next.selectedItemId &&

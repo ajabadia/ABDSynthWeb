@@ -40,8 +40,8 @@ export const HELP_DATA: HelpSection[] = [
       {
         id: 'dimensiones',
         title: 'Dimensiones y HP',
-        content: 'El ancho se mide en HP (Horizontal Pitch). En OMEGA, 1 HP equivale exactamente a 15 píxeles reales. El alto estándar es 3U (420px) o 1U (compacto).',
-        technical_params: ['hp', 'dimensions.width', 'dimensions.height']
+        content: 'El ancho se mide en HP (1 HP = 15px). La altura depende del slot:\\n• **Main Rack (3U)**: Altura fija de 420px (slot: `main` o `lower`).\\n• **Aux Rack (1U)**: Altura fija de 140px (slot: `upper` o `top`, height_mode: `compact`).',
+        technical_params: ['hp', 'metadata.rack.slot', 'metadata.rack.height_mode']
       }
     ]
   },
@@ -136,6 +136,63 @@ export const HELP_DATA: HelpSection[] = [
       }
     ]
   },
+  {
+    id: 'governance',
+    title: 'Gobernanza Industrial',
+    icon: '🛡️',
+    category: 'developer',
+    content: 'Reglas críticas para garantizar la estabilidad. **ESTADO: SYS_READY**. El motor OMEGA ya implementa estas reglas de forma nativa.',
+    subsections: [
+      {
+        id: 'golden_rules',
+        title: 'Las 6 Reglas de Oro',
+        content: '1. **Identidad Unívoca**: Usa sufijos (_knob, _cv) para evitar el error de "Double Identity".\\n2. **Separación Registry-UI**: El Registry define la señal, la UI el aspecto.\\n3. **Triángulo del Patchbay**: Sin role ni label, el puerto no aparecerá en la Matrix.\\n4. **Coherencia de Tipos**: No mezcles Audio (48kHz), CV y MIDI.\\n5. **Escala 1.5x**: Respeta los límites físicos y deja aire para los cables.\\n6. **Compliance Primero**: No ignores los avisos del motor de auditoría.',
+        technical_params: ['snake_case', 'unit', 'bind_sync']
+      },
+      {
+        id: 'advanced_audit',
+        title: 'Auditoría Avanzada',
+        content: '• **Orphan Binds**: Vinculaciones a IDs que no existen en el contrato.\\n• **Telemetry Collision**: Duplicidad de telemetryIndex.\\n• **Out of Bounds**: Elementos fuera de las dimensiones HP/3U.\\n• **Tab Chaos**: Referencias a pestañas no definidas en el layout.\\n• **Incoherencia Rol-Dirección**: Marcar como output algo que tiene rol input.',
+        technical_params: ['telemetryIndex', 'hp_multiples', 'role_coherence']
+      },
+      {
+        id: 'port_normalization',
+        title: 'Normalización de Puertos',
+        content: 'OMEGA utiliza un código de colores universal para facilitar el parcheado:\\n• **Audio (Cyan)**: Señales de alta frecuencia.\\n• **CV (Ámbar)**: Modulaciones y control.\\n• **Gate/Trigger (Blanco)**: Eventos binarios.\\n• **MIDI (Naranja)**: Datos de protocolo.',
+        technical_params: ['color: B_cyan | neon_amber | white | orange']
+      },
+      {
+        id: 'rule_5px',
+        title: 'Regla de los 5px',
+        content: 'La perfección industrial requiere alineación. El motor de renderizado OMEGA ahora aplica automáticamente este redondeo para garantizar un acabado profesional.\\n• **X**: Centrado en el HP.\\n• **Y**: Alineado a la cuadrícula de montaje.',
+        technical_params: ['RENDER_SCALE: 1.5', 'Snap: 5px']
+      },
+      {
+        id: 'theme_contrast',
+        title: 'Zen del Contraste',
+        content: 'Nunca uses colores fijos (#000). Los módulos deben ser "Theme-Aware".\\n• Usa **wb-text** para etiquetas.\\n• Usa **wb-surface** para fondos.\\n• Usa **wb-accent** para detalles de marca.',
+        technical_params: ['uiTheme: dark | light', 'tokens']
+      },
+      {
+        id: 'pro_master',
+        title: 'Nivel Pro-Master',
+        content: '• **Unidades Obligatorias**: Define Hz, dB, ms en cada parámetro.\\n• **Attachments**: Evita colisiones de etiquetas entre módulos vecinos.\\n• **Tokens de Tema**: Prohibido usar Hex (#FF0000). Usa tokens como red_3mm o neon_amber.\\n• **Gobernanza de Versión**: Si cambias un ID en el Registry, sube la versión del manifiesto (7.0 -> 7.1).\\n• **Ancho Estándar**: Usa siempre anchos pares (4, 6, 8, 12 HP) para una rack limpia.',
+        technical_params: ['version_bump', 'theme_tokens', 'even_hp']
+      },
+      {
+        id: 'port_normalization',
+        title: 'Normalización de Puertos',
+        content: 'OMEGA usa un código de colores universal para los cables virtuales:\\n• **Audio**: Cyan / Blanco (Señales de alta fidelidad).\\n• **CV (Modulación)**: Ámbar / Neón (Señales de control).\\n• **Gate/Trigger**: Rojo / Magenta (Señales de disparo).\\n• **MIDI**: Verde (Streams de datos).',
+        technical_params: ['type: audio | cv | gate | midi']
+      },
+      {
+        id: 'theme_contrast',
+        title: 'Contraste y Temas',
+        content: 'Los tokens de tema (ej: `outline`, `surface`) se adaptan automáticamente al modo Light/Dark. Nunca uses colores fijos para las etiquetas si quieres que tu módulo sea legible bajo cualquier condición de iluminación de la rack.',
+        technical_params: ['uiTheme: light | dark']
+      }
+    ]
+  },
   // --- SECCIONES DE DESARROLLADOR (SDK COMPLETO Y COPIABLE) ---
   {
     id: 'sdk_core',
@@ -176,6 +233,24 @@ export const HELP_DATA: HelpSection[] = [
           'Heap Size: 64 KB',
           'Standard: OMEGA-ABI-7.0-INDUSTRIAL'
         ]
+      },
+      {
+        id: 'abi_lifecycle',
+        title: 'Ciclo de Vida (Lifecycle)',
+        content: '1. **omega_get_contract**: Llamada única al cargar para definir parámetros.\\n2. **omega_init**: Llamada única para reservar memoria fija.\\n3. **omega_process**: Llamada de alta prioridad (Audio Thread) en bloques de 32/64 samples.\\n4. **omega_on_param / on_midi**: Llamadas asíncronas (UI Thread) que interrumpen el proceso de forma segura.',
+        technical_params: ['thread_safety', 'atomic_updates']
+      },
+      {
+        id: 'abi_constraints',
+        title: 'Límites WASM (Nostdlib)',
+        content: 'Para mantener el rendimiento, no uses la librería estándar completa. Evita: `std::vector` dinámico (usa arrays fijos), `std::cout` (usa `omega_log`) y cualquier operación de archivo (I/O). El binario debe ser puramente determinista.',
+        technical_params: ['determinism', 'fixed_memory']
+      },
+      {
+        id: 'abi_debugging',
+        title: 'Depuración y Logs',
+        content: 'Usa `omega_log("Mensaje")` para enviar texto al host. Estos mensajes aparecerán en la Consola de Depuración de OMEGA (Botón "C" o "LOG" en el panel superior). Es vital para depurar estados del DSP sin pausar el hilo de audio.',
+        technical_params: ['omega_log', 'debug_console']
       },
       {
         id: 'build_pipeline',

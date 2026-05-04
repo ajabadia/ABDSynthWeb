@@ -1,5 +1,6 @@
 import { OMEGA_Manifest } from '../types/manifest';
 import { ValidationService, ValidationIssue } from './validationService';
+import { OmegaContract } from './wasmLoader';
 
 export interface AuditResult {
   isCompliant: boolean;
@@ -14,12 +15,12 @@ export interface AuditResult {
   details: string[];
   issues: ValidationIssue[];
   fingerprint?: string; 
-  isHashMatched?: boolean; // NEW: Parity with engine binary
+  isHashMatched?: boolean;
 }
 
 export class AuditService {
-  static performFullAudit(manifest: OMEGA_Manifest, contractHash?: string): AuditResult {
-    const issues = ValidationService.validate(manifest);
+  static performFullAudit(manifest: OMEGA_Manifest, contract: OmegaContract | null = null): AuditResult {
+    const issues = ValidationService.validate(manifest, contract);
     const details: string[] = [];
     
     let governance = true;
@@ -27,71 +28,58 @@ export class AuditService {
     let aesthetic = true;
     let integrity = true;
 
-    // 1. CHEQUEO DE GOBERNANZA (BLOQUEANTE)
-    const criticalIssues = issues.filter(i => i.keyword === 'era7_governance' || i.message.includes('ERROR'));
+    // 1. CHEQUEO DE GOBERNANZA Y REGLAS DE ORO
+    const criticalIssues = issues.filter(i => i.severity === 'error');
     if (criticalIssues.length > 0) {
       governance = false;
-      details.push(`CRITICAL: ${criticalIssues.length} violaciones de gobernanza detectadas.`);
+      details.push(`CRITICAL: ${criticalIssues.length} fallos críticos de gobernanza detectados.`);
     }
 
-    // 2. CHEQUEO DE INTEGRIDAD ESTRUCTURAL (ERA 7.2.3)
+    // 2. CHEQUEO DE INTEGRIDAD ESPACIAL
     const integrityIssues = issues.filter(i => i.keyword === 'era7_integrity');
     if (integrityIssues.length > 0) {
       integrity = false;
-      details.push(`INTEGRITY: ${integrityIssues.length} fallos de integridad espacial (fuera de límites).`);
-      integrityIssues.forEach(i => details.push(`> ${i.message}`));
+      details.push(`INTEGRITY: ${integrityIssues.length} violaciones de límites físicos.`);
     }
 
-    // 3. CHEQUEO TÉCNICO (BINDINGS Y RACKS)
-    const allElements = [
-      ...(manifest.ui?.controls || []).map(e => ({ ...e, isJack: false })),
-      ...(manifest.ui?.jacks || []).map(e => ({ ...e, isJack: true }))
-    ];
+    // 3. CHEQUEO DE AUDITORÍA PRO-MASTER
+    const auditIssues = issues.filter(i => i.severity === 'audit');
+    if (auditIssues.length > 0) {
+      aesthetic = false;
+      details.push(`PRO-MASTER: ${auditIssues.length} detalles de refinamiento pendientes.`);
+    }
 
-    const techIssues = issues.filter(i => i.keyword === 'era7_layout' || i.keyword === 'schema');
+    // 4. CHEQUEO TÉCNICO GENERAL
+    const techIssues = issues.filter(i => i.severity === 'warning');
     if (techIssues.length > 0) {
       technical = false;
-      details.push(`TECHNICAL: ${techIssues.length} inconsistencias de configuración detectadas.`);
+      details.push(`TECHNICAL: ${techIssues.length} advertencias de configuración.`);
     }
 
-    if (allElements.length === 0) {
-      technical = false;
-      details.push('ADVERTENCIA: El módulo no contiene elementos interactivos.');
-    }
-
-    // 4. CHEQUEO ESTÉTICO (IDENTIDAD VISUAL)
-    if (!manifest.ui?.skin || manifest.ui.skin === 'industrial') {
-      // Industrial is fine, but we suggest variants
-    }
-
-    const hasLabels = allElements.some(el => 
-      el.presentation?.attachments?.some((att: any) => att.type === 'label')
-    );
-    if (!hasLabels) {
-      aesthetic = false;
-      details.push('ADVERTENCIA: No se detectan etiquetas (labels) en los componentes.');
-    }
-
-    // CALCULO FINAL
-    const isCompliant = governance && integrity && technical && issues.length === 0;
+    // CALCULO FINAL DE SCORE
+    const isCompliant = issues.every(i => i.severity !== 'error');
     let score = 100;
     
-    if (!governance) score -= 50;
-    if (!integrity) score -= 30;
-    if (!technical) score -= 15;
-    if (!aesthetic) score -= 5;
+    score -= issues.filter(i => i.severity === 'error').length * 15;
+    score -= issues.filter(i => i.severity === 'warning').length * 5;
+    score -= issues.filter(i => i.severity === 'audit').length * 2;
     
-    score = Math.max(0, score - (issues.filter(i => i.keyword !== 'era7_integrity' && i.keyword !== 'era7_governance').length * 2));
+    score = Math.max(0, score);
 
     let status: AuditResult['status'] = 'CERTIFIED';
-    if (!governance || !integrity) status = 'CRITICAL_FAIL';
-    else if (!isCompliant || score < 80) status = 'DRAFT';
+    if (!isCompliant) status = 'CRITICAL_FAIL';
+    else if (score < 90) status = 'DRAFT';
 
     return {
       isCompliant,
       score,
       status,
-      checks: { governance, technical, aesthetic, integrity },
+      checks: { 
+        governance, 
+        technical, 
+        aesthetic: aesthetic && auditIssues.length === 0, 
+        integrity 
+      },
       details,
       issues
     };
@@ -112,17 +100,13 @@ export class AuditService {
 - **Industrial Score**: ${audit.score}/100
 
 ## [ ARCHITECTURAL AUDIT ]
-- **Governance (ERA 4)**: ${audit.checks.governance ? 'PASSED ✅' : 'FAILED ❌'}
+- **Governance (Golden Rules)**: ${audit.checks.governance ? 'PASSED ✅' : 'CRITICAL ❌'}
 - **Structural Integrity**: ${audit.checks.integrity ? 'PASSED ✅' : 'VIOLATION ❌'}
-- **Technical Schema**: ${audit.checks.technical ? 'Standard Compliant' : 'Warning'}
-- **Aesthetic Skin**: ${audit.checks.aesthetic ? 'Certified' : 'Draft'}
-
-## [ COMPONENT DENSITY ]
-- **Interactive Elements**: ${(manifest.ui?.controls?.length || 0) + (manifest.ui?.jacks?.length || 0)} 
-- **Layout Containers**: ${manifest.ui.layout?.containers?.length || 0}
+- **Technical Standards**: ${audit.checks.technical ? 'PASSED ✅' : 'WARNING ⚠️'}
+- **Pro-Master Refinement**: ${audit.checks.aesthetic ? 'CERTIFIED ✨' : 'PENDING 🛠️'}
 
 ## [ DETAILED INSPECTION LOG ]
-${audit.details.map(d => `> ${d}`).join('\n') || '> No critical issues detected during the engineering sweep.'}
+${audit.issues.map(i => `> [${i.severity.toUpperCase()}] ${i.message}`).join('\n') || '> No critical issues detected.'}
 
 ---
 *Generated by OMEGA Compliance Engine v7.2.3 — Aseptic Industrial Standard*
