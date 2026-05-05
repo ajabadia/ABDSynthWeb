@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
-import { inputSignalService, SignalType } from '../../../../services/inputSignalService';
+import { inputSignalService, SignalType, VirtualSignal } from '@/services/inputSignalService';
 
 interface SignalInjectorProps {
   portId: string;
@@ -14,9 +14,9 @@ interface SignalInjectorProps {
  */
 export const SignalInjector = ({ portId, onClose }: SignalInjectorProps) => {
   const current = inputSignalService.getActiveSignal(portId);
-  const [sig, setSig] = useState(current || { type: 'sine' as SignalType, frequency: 440, amplitude: 0.5, offset: 0 });
+  const [sig, setSig] = useState<VirtualSignal>(current || { type: 'sine', frequency: 440, amplitude: 0.5, offset: 0 });
 
-  const update = (updates: any) => {
+  const update = (updates: Partial<VirtualSignal>) => {
     const next = { ...sig, ...updates };
     setSig(next);
     inputSignalService.setSignal(portId, next);

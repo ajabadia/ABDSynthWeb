@@ -3,9 +3,11 @@
 import React from 'react';
 import { Target, Maximize, Circle } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface LedPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function LedProperties({ item, onUpdate }: LedPropertiesProps) {

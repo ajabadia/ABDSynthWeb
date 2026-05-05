@@ -3,22 +3,24 @@
 import React from 'react';
 import { Monitor, Hash } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface DisplayPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function DisplayProperties({ item, onUpdate }: DisplayPropertiesProps) {
   const pres = item.presentation || {};
   const currentVariant = pres.variant || 'A';
-  const precision = pres.ui_precision ?? 2;
+  const precision = pres.precision ?? 2;
 
   const updateVariant = (v: string) => {
     onUpdate({ presentation: { ...pres, variant: v } });
   };
 
   const updatePrecision = (p: number) => {
-    onUpdate({ presentation: { ...pres, ui_precision: p } });
+    onUpdate({ presentation: { ...pres, precision: p } });
   };
 
   const tech = [

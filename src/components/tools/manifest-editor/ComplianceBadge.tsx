@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, ShieldAlert, ShieldCheck, Award } from 'lucide-react';
-import { AuditResult } from '../../../services/auditService';
+import { Shield, ShieldAlert, Award } from 'lucide-react';
+import { AuditResult } from '@/services/auditService';
 
 interface ComplianceBadgeProps {
   audit: AuditResult;
@@ -11,7 +11,7 @@ interface ComplianceBadgeProps {
 }
 
 export function ComplianceBadge({ audit, onClick }: ComplianceBadgeProps) {
-  const { score, status, isCompliant } = audit;
+  const { score, status } = audit;
   
   const getStatusConfig = () => {
     if (status === 'CRITICAL_FAIL') return {

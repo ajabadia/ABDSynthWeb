@@ -1,21 +1,17 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 // UI Components
 import Header from './Header';
-import ModuleHub from './ModuleHub';
-import VirtualRack from './VirtualRack';
-import NodeCanvas from './NodeCanvas';
-import PropertyPanel from './PropertyPanel';
-import SourceViewer from './SourceViewer';
 import WorkbenchFooter from './WorkbenchFooter';
 import WorkbenchLogs from './WorkbenchLogs';
 import EditorModals from './EditorModals';
-import ViewportControls from './ViewportControls';
 import ModulationGrid from './ModulationGrid';
 import { HiddenFileHandlers } from './HiddenFileHandlers';
+import { WorkbenchSidebar } from './WorkbenchSidebar';
+import { WorkbenchViewport } from './WorkbenchViewport';
+import { WorkbenchInspector } from './WorkbenchInspector';
 
 // Hooks
 import { useManifestEditor } from '@/hooks/useManifestEditor';
@@ -23,6 +19,7 @@ import { useViewport } from '@/hooks/manifest-editor/useViewport';
 import { useAudit } from '@/hooks/manifest-editor/useAudit';
 import { useWorkbenchState } from '@/hooks/manifest-editor/useWorkbenchState';
 import { useAuditNavigator } from '@/hooks/manifest-editor/useAuditNavigator';
+import { useWatchdog } from '@/hooks/manifest-editor/useWatchdog';
 
 // Services
 import { ContractService } from '@/services/contractService';
@@ -37,8 +34,13 @@ export default function WorkbenchContainer() {
   const { zoom, pan, handleZoom, handlePan, handleResetViewport, handleFitViewport } = useViewport();
   const { auditResult } = useAudit(manifest, contract);
   const gps = useAuditNavigator(manifest, ui.setSelectedItemId, ui.setActiveTab);
+  
+  // 3. Watchdog Integration (Hot-Reload)
+  const watchdog = useWatchdog((content) => {
+    editor.handleBulkUpload([new File([content], 'auto-reload.acemm')]);
+  });
 
-  // 3. Effects & Synchronization
+  // 4. Effects & Synchronization
   useEffect(() => {
     if (manifest.ui?.layout?.activeTab !== ui.activeTab) {
       updateManifest({ 
@@ -47,7 +49,7 @@ export default function WorkbenchContainer() {
           layout: { 
             containers: manifest.ui?.layout?.containers || [],
             ...manifest.ui?.layout, 
-            activeTab: ui.activeTab as any 
+            activeTab: ui.activeTab
           } 
         } 
       });
@@ -91,15 +93,15 @@ export default function WorkbenchContainer() {
   };
 
   const availableBinds = contract ? [
-    ...(contract.parameters?.map((p: any) => p.id) || []),
-    ...(contract.ports?.map((p: any) => p.id) || [])
+    ...(contract.parameters?.map((p) => p.id) || []),
+    ...(contract.ports?.map((p) => p.id) || [])
   ] : [];
 
-  const selectedItem = ui.selectedItemId ? editor.findItem(ui.selectedItemId) : manifest;
+  const selectedItem = (ui.selectedItemId ? editor.findItem(ui.selectedItemId) : manifest) || null;
 
   return (
-    <div className="h-screen flex flex-col wb-bg wb-text font-sans overflow-hidden relative transition-colors duration-500" data-ui-theme={ui.uiTheme}>
-      <HiddenFileHandlers onBulkUpload={editor.handleBulkUpload} setPendingFiles={ui.setPendingFiles} />
+    <div className="h-screen flex flex-col wb-bg wb-text font-sans overflow-hidden select-none relative transition-colors duration-500" data-ui-theme={ui.uiTheme}>
+      <HiddenFileHandlers onResourceUpload={editor.handleResourceUpload} setPendingFiles={ui.setPendingFiles} />
       
       <Header 
         onReset={editor.reset} onExportManifest={editor.exportManifest} onExportPack={editor.exportOmegaPack}
@@ -108,67 +110,66 @@ export default function WorkbenchContainer() {
         onToggleLogs={() => ui.setShowLogs(!ui.showLogs)} showLogs={ui.showLogs}
         viewMode={ui.viewMode} setViewMode={ui.setViewMode} onHelp={() => ui.openHelp()}
         uiTheme={ui.uiTheme} setUiTheme={ui.setUiTheme} audit={auditResult}
+        onOpenAudit={() => ui.setIsAuditModalOpen(true)}
       />
 
       <main className="flex-1 flex overflow-hidden">
-        <aside className="w-80 border-r wb-outline wb-surface flex flex-col min-w-[320px] transition-colors duration-500">
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-            <ModuleHub manifest={manifest} contract={contract} triggerUpload={(id) => document.getElementById(id)?.click()} onDeploy={onDeploy} />
-          </div>
-        </aside>
+        <WorkbenchSidebar 
+          manifest={manifest} 
+          contract={contract} 
+          onDeploy={onDeploy} 
+        />
 
-        <section className="flex-1 relative wb-bg overflow-hidden transition-colors duration-500">
-          {ui.viewMode !== 'source' && (
-            <ViewportControls zoom={zoom} onZoom={handleZoom} onPan={handlePan} onReset={handleResetViewport} onFit={() => handleFitViewport(ui.viewMode)} />
-          )}
+        <WorkbenchViewport 
+          viewMode={ui.viewMode} manifest={manifest} contract={contract}
+          selectedItemId={ui.selectedItemId} onSelectItem={handleSelectItem}
+          updateItem={editor.updateItem} updateManifest={updateManifest}
+          updateContainer={editor.updateContainer} auditResult={auditResult}
+          zoom={zoom} pan={pan} handleZoom={handleZoom} handlePan={handlePan}
+          handleResetViewport={handleResetViewport} handleFitViewport={handleFitViewport}
+          isLiveMode={ui.isLiveMode} setIsLiveMode={ui.setIsLiveMode}
+          activeTab={ui.activeTab} setActiveTab={ui.setActiveTab}
+        />
 
-          <AnimatePresence mode="wait">
-            {ui.viewMode === 'orbital' ? (
-              <motion.div key="orbital" initial={{ opacity: 0 }} animate={{ opacity: 1, scale: zoom, x: pan.x, y: pan.y }} exit={{ opacity: 0 }} className="h-full origin-center">
-                <NodeCanvas manifest={manifest} contract={contract} selectedItemId={ui.selectedItemId} onSelectItem={handleSelectItem} onUpdateItem={editor.updateItem} audit={auditResult} />
-              </motion.div>
-            ) : ui.viewMode === 'rack' ? (
-              <motion.div key="rack" initial={{ opacity: 0 }} animate={{ opacity: 1, scale: zoom, x: pan.x, y: pan.y }} exit={{ opacity: 0 }} className="h-full origin-center">
-                <VirtualRack manifest={manifest} contract={contract} onSelectItem={handleSelectItem} selectedItemId={ui.selectedItemId} onUpdateItem={editor.updateItem} zoom={zoom} isLiveMode={ui.isLiveMode} setIsLiveMode={ui.setIsLiveMode} audit={auditResult} activeTab={ui.activeTab} setActiveTab={ui.setActiveTab} onUpdateContainer={editor.updateContainer} />
-              </motion.div>
-            ) : (
-              <motion.div key="source" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-                <SourceViewer manifest={manifest} selectedItemId={ui.selectedItemId} onUpdate={updateManifest} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
+        <WorkbenchInspector 
+          isVisible={!!(ui.selectedItemId || !ui.isLiveMode)}
+          isLiveMode={ui.isLiveMode} uiTheme={ui.uiTheme}
+          manifest={manifest} selectedItem={selectedItem}
+          selectedItemId={ui.selectedItemId} highlightPath={gps.highlightPath}
+          availableBinds={availableBinds} extraResources={editor.extraResources}
+          audit={auditResult}
+          onUpdateItem={editor.updateItem} onUpdateManifest={updateManifest}
+          onSelectItem={handleSelectItem} onAddEntity={handleAddEntity}
+          onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
+          onAddModulation={editor.addModulation} onRemoveModulation={editor.removeModulation}
+          onUpdateModulation={editor.updateModulation} onOpenModGrid={() => ui.setShowModGrid(true)}
+          addContainer={editor.addContainer} updateContainer={editor.updateContainer}
+          removeContainer={editor.removeContainer} onHelp={ui.openHelp}
+          onRemoveResource={editor.handleRemoveResource}
+        />
 
-        <AnimatePresence>
-          {(ui.selectedItemId || !ui.isLiveMode) && !ui.isLiveMode && (
-            <motion.aside key="inspector" initial={{ x: 400 }} animate={{ x: 0 }} exit={{ x: 400 }} className="w-[400px] shrink-0 h-full border-l wb-outline transition-colors duration-500">
-              <PropertyPanel 
-                uiTheme={ui.uiTheme} manifest={manifest} item={selectedItem!} highlightPath={gps.highlightPath}
-                onUpdate={ui.selectedItemId ? (updates: any) => {
-                  editor.updateItem(ui.selectedItemId!, updates);
-                  if (updates.id && updates.id !== ui.selectedItemId) ui.setSelectedItemId(updates.id);
-                } : updateManifest}
-                onClose={() => ui.setSelectedItemId(null)} availableBinds={availableBinds}
-                onSelectItem={handleSelectItem} onAddEntity={handleAddEntity} onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
-                onAddModulation={editor.addModulation} onRemoveModulation={editor.removeModulation} onUpdateModulation={editor.updateModulation} onOpenGrid={() => ui.setShowModGrid(true)}
-                addContainer={editor.addContainer} updateContainer={editor.updateContainer} removeContainer={editor.removeContainer}
-                onHelp={ui.openHelp} extraResources={editor.extraResources} onTriggerUpload={(id) => document.getElementById(id)?.click()} onRemoveResource={editor.handleRemoveResource}
-              />
-            </motion.aside>
-          )}
-        </AnimatePresence>
-
-        {ui.showModGrid && <ModulationGrid manifest={manifest} onAdd={editor.addModulation} onRemove={editor.removeModulation} onUpdate={editor.updateModulation} onClose={() => ui.setShowModGrid(false)} />}
+        {ui.showModGrid && (
+          <ModulationGrid 
+            manifest={manifest} onAdd={editor.addModulation} 
+            onRemove={editor.removeModulation} onUpdate={editor.updateModulation} 
+            onClose={() => ui.setShowModGrid(false)} 
+          />
+        )}
       </main>
 
       <EditorModals 
         manifest={manifest} pendingFiles={ui.pendingFiles} setPendingFiles={ui.setPendingFiles} handleBulkUpload={editor.handleBulkUpload}
         helpState={ui.helpState} closeHelp={ui.closeHelp} isAuditModalOpen={ui.isAuditModalOpen} setIsAuditModalOpen={ui.setIsAuditModalOpen}
-        handleNavigateToIssue={gps.handleNavigateToIssue} auditResult={auditResult} mockupOpen={ui.mockupOpen} setMockOpen={ui.setMockupOpen}
+        handleNavigateToIssue={gps.handleNavigateToIssue} auditResult={auditResult} mockupOpen={ui.mockupOpen} setMockupOpen={ui.setMockupOpen}
       />
 
       <WorkbenchLogs showLogs={ui.showLogs} setShowLogs={ui.setShowLogs} logs={editor.logs} />
-      <WorkbenchFooter auditResult={auditResult} manifest={manifest} onOpenAudit={() => ui.setIsAuditModalOpen(true)} />
+      <WorkbenchFooter 
+        auditResult={auditResult} 
+        onOpenAudit={() => ui.setIsAuditModalOpen(true)} 
+        watchdogStatus={watchdog.status}
+        watchdogTime={watchdog.lastUpdate}
+      />
     </div>
   );
 }

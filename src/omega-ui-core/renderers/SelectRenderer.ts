@@ -3,11 +3,16 @@
  * Single Source of Truth for Industrial Dropdown Menus.
  */
 
+export interface SelectOption {
+  label: string;
+  value: string | number;
+}
+
 export interface SelectProps {
   size: string;      // A, B, C, D
   colorId: string;   // cyan, orange, etc.
   value: number;     // Normalized index (0.0 to 1.0)
-  options?: string[]; // List of available labels
+  options?: (string | SelectOption)[]; // List of available options or labels
   id?: string;       // Canonical ID
 }
 
@@ -15,7 +20,10 @@ export const renderSelectHTML = (props: SelectProps): string => {
   const { size, colorId, value, options = [], id } = props;
   
   // Resolve current label based on normalized value
-  const labels = options.length > 0 ? options : ['NO OPTIONS'];
+  const labels = options.length > 0 
+    ? options.map(opt => typeof opt === 'string' ? opt : opt.label) 
+    : ['NO OPTIONS'];
+  
   const currentIndex = Math.min(labels.length - 1, Math.floor(value * labels.length));
   const currentLabel = labels[currentIndex];
 

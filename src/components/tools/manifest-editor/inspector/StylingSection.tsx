@@ -3,9 +3,11 @@
 import React from 'react';
 import { Palette, Activity, Hash } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface StylingSectionProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function StylingSection({ item, onUpdate }: StylingSectionProps) {

@@ -3,6 +3,7 @@
  * Interface for real-time DSP simulation within the Manifest Editor.
  */
 
+import { OMEGA_Manifest } from '../types/manifest';
 import { inputSignalService } from './inputSignalService';
 
 export interface WasmInterface {
@@ -17,6 +18,7 @@ export class WasmRuntime {
   private isMock: boolean = true;
   private mockValues: Record<string, number> = {};
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loadWasm(buffer: ArrayBuffer): Promise<boolean> {
     try {
       // En un entorno real, aquí instanciaríamos el WASM con los imports de OMEGA
@@ -37,6 +39,9 @@ export class WasmRuntime {
       return;
     }
     // Lógica para escribir en la memoria lineal del WASM
+    if (this.instance) {
+       // logic here
+    }
   }
 
   getTelemetry(id: string): number {
@@ -51,7 +56,7 @@ export class WasmRuntime {
     return 0;
   }
 
-  async deployManifest(manifest: any): Promise<{ success: boolean; hash: string }> {
+  async deployManifest(manifest: OMEGA_Manifest): Promise<{ success: boolean; hash: string }> {
     console.log(`OMEGA HIL: Desplegando manifiesto '${manifest.id}' v${manifest.schemaVersion}...`);
     
     // Simulación de latencia de red/carga en hardware real

@@ -2,26 +2,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface NodeCanvasItem {
-  id: string;
-  label?: string;
-  bind?: string;
-  type?: string;
-  presentation?: {
-    attachments?: any[];
-  };
-}
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { AuditResult } from '@/services/auditService';
 
 interface NodeCanvasProps {
-  manifest: {
-    id?: string;
-    schemaVersion?: string;
-    ui?: {
-      controls?: NodeCanvasItem[];
-      jacks?: NodeCanvasItem[];
-    };
-    registry?: NodeCanvasItem[];
-  };
+  manifest: OMEGA_Manifest;
   contract: {
     omega_version?: string;
     parameters?: { id: string }[];
@@ -29,11 +14,10 @@ interface NodeCanvasProps {
   } | null;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
-  onUpdateItem: (id: string, updates: any) => void;
-  audit: any;
+  audit: AuditResult;
 }
 
-export default function NodeCanvas({ manifest, contract, selectedItemId, onSelectItem, onUpdateItem, audit }: NodeCanvasProps) {
+export default function NodeCanvas({ manifest, contract, selectedItemId, onSelectItem, audit }: NodeCanvasProps) {
   const isV7 = manifest?.schemaVersion?.startsWith('7') || manifest?.schemaVersion === '7.0';
   
   // Combine all items for visualization
@@ -79,7 +63,7 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
 
         {/* PARAMETERS NODES (ORBITAL) */}
         <AnimatePresence>
-          {items.map((item: NodeCanvasItem, index: number) => {
+          {items.map((item: ManifestEntity, index: number) => {
             const angle = (index / items.length) * (2 * Math.PI);
             const radius = 180;
             const x = Math.cos(angle) * radius;
@@ -87,13 +71,13 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
 
             // Mapping Check (Case-Insensitive)
             const bindId = (isV7 ? item.bind : item.id)?.toLowerCase();
-            const isJack = isV7 && manifest?.ui?.jacks?.some((j: NodeCanvasItem) => j.id === item.id);
+            const isJack = isV7 && manifest?.ui?.jacks?.some((j: ManifestEntity) => j.id === item.id);
             
             const inContract = isJack
               ? contract?.ports?.some((p: { id: string }) => p.id.toLowerCase() === bindId)
               : contract?.parameters?.some((p: { id: string }) => p.id.toLowerCase() === bindId);
 
-            const itemIssues = audit?.issues?.filter((i: any) => i.path.includes(item.id) || i.message.includes(`'${item.id}'`)) || [];
+            const itemIssues = audit?.issues?.filter((i) => i.path.includes(item.id) || i.message.includes(`'${item.id}'`)) || [];
             const hasError = itemIssues.length > 0;
 
             return (
@@ -132,9 +116,14 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
                      <div className="text-[7px] text-foreground/40 uppercase">
                        {isV7 ? `Bind: ${item.bind || 'UNBOUND'}` : `Type: ${item.type}`}
                      </div>
+                     {isV7 && (
+                        <div className={`text-[6px] font-bold mt-1 ${inContract ? 'text-green-400' : 'text-red-400'}`}>
+                          {inContract ? 'MAPPED TO WASM' : 'ORPHAN BINDING'}
+                        </div>
+                      )}
                      {hasError && (
                        <div className="mt-2 flex flex-col gap-1">
-                         {itemIssues.map((issue: any, i: number) => (
+                         {itemIssues.map((issue, i: number) => (
                            <div key={i} className="text-[7px] text-red-400 font-bold leading-tight flex items-start gap-1">
                              <span>•</span>
                              <span>{issue.message}</span>

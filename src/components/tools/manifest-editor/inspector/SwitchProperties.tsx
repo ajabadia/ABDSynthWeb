@@ -3,9 +3,11 @@
 import React from 'react';
 import { ToggleLeft, Palette } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface SwitchPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function SwitchProperties({ item, onUpdate }: SwitchPropertiesProps) {

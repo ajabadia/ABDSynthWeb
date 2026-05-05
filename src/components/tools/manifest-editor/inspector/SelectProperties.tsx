@@ -4,21 +4,23 @@ import React from 'react';
 import { List, Plus, Trash2, Hash, Type, Zap } from 'lucide-react';
 import { INDUSTRIAL_PRESETS } from './presets';
 
+import { ManifestEntity, SelectOption } from '@/types/manifest';
+
 interface SelectPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function SelectProperties({ item, onUpdate }: SelectPropertiesProps) {
   const pres = item.presentation || {};
   const options = pres.options || [];
 
-  const updateOptions = (newOptions: any[]) => {
+  const updateOptions = (newOptions: SelectOption[]) => {
     onUpdate({ presentation: { ...pres, options: newOptions } });
   };
 
   const addOption = () => {
-    const nextValue = options.length > 0 ? Math.max(...options.map((o: any) => o.value || 0)) + 1 : 0;
+    const nextValue = options.length > 0 ? Math.max(...options.map((o: SelectOption) => typeof o.value === 'number' ? o.value : 0)) + 1 : 0;
     updateOptions([...options, { label: `Option ${options.length + 1}`, value: nextValue }]);
   };
 
@@ -72,7 +74,7 @@ export default function SelectProperties({ item, onUpdate }: SelectPropertiesPro
         </div>
 
         <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-          {options.map((opt: any, idx: number) => (
+          {options.map((opt: SelectOption, idx: number) => (
             <div key={idx} className="flex gap-2 items-center group">
               <div className="flex-1 flex gap-px bg-black/40 border border-outline/10 rounded-xs overflow-hidden focus-within:border-primary/40 transition-colors">
                 <div className="flex items-center gap-1.5 px-2 bg-white/5 border-r border-outline/5 flex-1">
@@ -103,7 +105,7 @@ export default function SelectProperties({ item, onUpdate }: SelectPropertiesPro
                 </div>
               </div>
               <button 
-                onClick={() => updateOptions(options.filter((_: any, i: number) => i !== idx))}
+                onClick={() => updateOptions(options.filter((_: SelectOption, i: number) => i !== idx))}
                 className="p-2 text-foreground/20 hover:text-red-400 hover:bg-red-500/5 rounded-xs transition-all opacity-0 group-hover:opacity-100"
               >
                 <Trash2 className="w-3 h-3" />

@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
 import { renderPortHTML } from '@/omega-ui-core/renderers/PortRenderer';
+import { ManifestEntity } from '@/types/manifest';
 
 interface PortProps {
   value: number;
@@ -10,7 +9,7 @@ interface PortProps {
   isSelected?: boolean;
   onClick?: () => void;
   color?: string; // Explicit color token from manifest
-  item?: any;    // For inference logic
+  item?: ManifestEntity;    // For inference logic
 }
 
 export default function Port({ value, variant, isMain, isSelected, onClick, color, item }: PortProps) {

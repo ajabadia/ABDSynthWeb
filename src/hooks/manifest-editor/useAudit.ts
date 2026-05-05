@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { OMEGA_Manifest } from '../../types/manifest';
 import { AuditService } from '../../services/auditService';
+import { OmegaContract } from '../../services/wasmLoader';
 
 /**
  * useAudit (v7.2.3)
  * Manages real-time manifest auditing and cryptographic fingerprinting.
  */
-export const useAudit = (manifest: OMEGA_Manifest, contract: any) => {
+export const useAudit = (manifest: OMEGA_Manifest, contract: OmegaContract | null) => {
   const [fingerprint, setFingerprint] = useState<string>('');
 
   const auditResult = useMemo(() => {

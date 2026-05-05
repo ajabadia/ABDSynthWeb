@@ -2,21 +2,24 @@
 
 import React from 'react';
 import { Move, Grid3X3, Info } from 'lucide-react';
+import { ManifestEntity, LayoutContainer } from '@/types/manifest';
+import ContainerSelector from './ContainerSelector';
 
 interface SpatialSectionProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
   onHelp?: (sectionId?: string) => void;
   highlightPath?: string | null;
+  containers?: LayoutContainer[];
 }
 
-export default function SpatialSection({ item, onUpdate, onHelp, highlightPath }: SpatialSectionProps) {
+export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, containers = [] }: SpatialSectionProps) {
   const pos = item.pos || { x: 0, y: 0 };
   const pres = item.presentation || {};
   const isHighlighted = (key: string) => highlightPath?.includes(key);
 
   return (
-    <div className="grid grid-cols-1 gap-4 pt-2">
+    <div className="grid grid-cols-1 gap-6 pt-2">
       {/* COORDINATES */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
@@ -64,12 +67,32 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath }
         <select 
           value={pres.colSpan || 1} 
           onChange={(e) => onUpdate({ presentation: { ...pres, colSpan: parseInt(e.target.value) } })}
-          className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none transition-colors duration-500"
+          className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none transition-colors duration-500 [color-scheme:dark]"
         >
           <option value={1}>1 Column (Standard)</option>
           <option value={2}>2 Columns (Wide)</option>
           <option value={3}>3 Columns (Full Width)</option>
         </select>
+      </div>
+
+      <div className="h-px bg-white/5" />
+
+      <ContainerSelector 
+        item={item} 
+        onUpdate={onUpdate} 
+        containers={containers} 
+        onHelp={onHelp} 
+        highlightPath={highlightPath} 
+      />
+
+      <div className="p-4 bg-primary/5 border wb-outline rounded-xs space-y-2 border-l-4 border-l-primary/60 mt-8 mb-10 transition-colors duration-500">
+         <div className="flex items-center gap-2 text-[8px] font-black text-primary uppercase tracking-widest">
+            <Info className="w-3 h-3" />
+            <span>Industrial Note</span>
+         </div>
+         <p className="text-[9px] wb-text font-bold uppercase leading-relaxed tracking-tight">
+           Era 7.2 enforces strict architectural framing. Use containers to define columns and sections for studio parity.
+         </p>
       </div>
     </div>
   );

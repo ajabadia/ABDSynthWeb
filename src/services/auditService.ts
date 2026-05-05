@@ -1,5 +1,6 @@
 import { OMEGA_Manifest } from '../types/manifest';
-import { ValidationService, ValidationIssue } from './validationService';
+import { ValidationService } from './validationService';
+import { ValidationIssue } from '../types/validation';
 import { OmegaContract } from './wasmLoader';
 
 export interface AuditResult {

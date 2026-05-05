@@ -7,6 +7,7 @@ import HelpModal from './HelpModal';
 import AuditModal from './AuditModal';
 import MockupModal from './MockupModal';
 import { OMEGA_Manifest } from '@/types/manifest';
+import { AuditResult } from '@/services/auditService';
 
 interface EditorModalsProps {
   manifest: OMEGA_Manifest;
@@ -18,7 +19,7 @@ interface EditorModalsProps {
   isAuditModalOpen: boolean;
   setIsAuditModalOpen: (open: boolean) => void;
   handleNavigateToIssue: (path: string) => void;
-  auditResult: any;
+  auditResult: AuditResult;
   mockupOpen: boolean;
   setMockupOpen: (open: boolean) => void;
 }

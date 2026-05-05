@@ -2,16 +2,19 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Image, Plus, Trash2, FileImage, Globe, ShieldCheck } from 'lucide-react';
+import { Image as ImageIcon, Plus, Trash2, FileImage, Globe, ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
+
+import { ExtraResource } from '@/types/manifest';
 
 interface ResourceSectionProps {
-  resources: { name: string, data: ArrayBuffer, type: string }[];
+  resources: ExtraResource[];
   onTriggerUpload: () => void;
   onRemove?: (name: string) => void;
 }
 
 interface ResourceItemProps {
-  res: { name: string, data: ArrayBuffer, type: string };
+  res: ExtraResource;
   idx: number;
   onRemove?: (name: string) => void;
 }
@@ -24,9 +27,10 @@ const ResourceItem = React.memo(({ res, idx, onRemove }: ResourceItemProps) => {
     
     const blob = new Blob([res.data], { type: res.type });
     const url = URL.createObjectURL(blob);
-    setPreviewUrl(url);
+    const timer = setTimeout(() => setPreviewUrl(url), 0);
 
     return () => {
+      clearTimeout(timer);
       URL.revokeObjectURL(url);
     };
   }, [res.data, res.type]);
@@ -41,10 +45,12 @@ const ResourceItem = React.memo(({ res, idx, onRemove }: ResourceItemProps) => {
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-black/40 border border-outline/20 rounded-xs flex items-center justify-center overflow-hidden">
           {previewUrl ? (
-            <img 
+            <Image 
               src={previewUrl} 
               className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
               alt={res.name}
+              fill
+              unoptimized
             />
           ) : (
             <FileImage className="w-4 h-4 text-foreground/20" />
@@ -77,6 +83,7 @@ const ResourceItem = React.memo(({ res, idx, onRemove }: ResourceItemProps) => {
     </motion.div>
   );
 });
+ResourceItem.displayName = 'ResourceItem';
 
 export default function ResourceSection({ resources, onTriggerUpload, onRemove }: ResourceSectionProps) {
   return (
@@ -84,7 +91,7 @@ export default function ResourceSection({ resources, onTriggerUpload, onRemove }
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-            <Image className="w-3.5 h-3.5" />
+            <ImageIcon className="w-3.5 h-3.5" />
             Module Assets
           </h3>
           <p className="text-[8px] font-mono text-foreground/30 mt-1">Skins, Images, and Binary Resources</p>
@@ -124,7 +131,7 @@ export default function ResourceSection({ resources, onTriggerUpload, onRemove }
             <p className="text-[8px] font-black uppercase tracking-widest text-foreground/60 mb-1">Engine Tunnel Access</p>
             <p className="text-[7px] font-mono text-foreground/30 leading-relaxed">
               These assets are automatically served via <span className="text-primary/40">AceCatalog::getResourceStream</span>. 
-              Refer to them in your manifest using the path <span className="text-accent/60">"resources/[filename]"</span>.
+              Refer to them in your manifest using the path <span className="text-accent/60">&quot;resources/[filename]&quot;</span>.
             </p>
           </div>
         </div>

@@ -1,24 +1,20 @@
 import React from 'react';
 import { motion, useDragControls } from 'framer-motion';
 import { Move, AlertCircle } from 'lucide-react';
-import PrimitiveFactory from '../primitives/PrimitiveFactory';
-import SignalScope from '../primitives/SignalScope';
-import { OMEGA_Manifest, ManifestEntity } from '../../../../types/manifest';
+import { ManifestEntity } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 
 interface RackEntityProps {
   item: ManifestEntity & { isJack?: boolean };
-  contract: any;
   rackRef: React.RefObject<HTMLDivElement | null>;
   zoom: number;
   isLiveMode: boolean;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
-  onUpdateItem: (id: string, updates: any) => void;
+  onUpdateItem: (id: string, updates: Partial<ManifestEntity>) => void;
   runtimeValue: number;
   steps: number;
-  onUpdateValue: (id: string, val: number) => void;
   onPortClick: (id: string) => void;
   audit: AuditResult;
   skin: string;
@@ -31,7 +27,6 @@ interface RackEntityProps {
  */
 const RackEntityBase = ({ 
   item, 
-  contract, 
   rackRef, 
   zoom, 
   isLiveMode, 
@@ -40,7 +35,6 @@ const RackEntityBase = ({
   onUpdateItem, 
   runtimeValue, 
   steps, 
-  onUpdateValue, 
   onPortClick, 
   audit,
   skin
@@ -60,19 +54,12 @@ const RackEntityBase = ({
 
   // ORPHAN DETECTION (ERA 4 GOVERNANCE)
   const hasRole = !!item.role;
-  const isBound = !!item.bind;
-  
-  const contractIds = contract ? [
-    ...(contract.parameters?.map((p: any) => p.id) || []),
-    ...(contract.ports?.map((p: any) => p.id) || [])
-  ] : [];
 
   const itemIssues = React.useMemo(() => 
     audit.issues.filter(issue => issue.path.includes(item.id) || issue.message.includes(`'${item.id}'`)),
     [audit.issues, item.id]
   );
   
-  const hasIntegrityError = itemIssues.some(i => i.keyword === 'era7_integrity');
   const isOrphan = itemIssues.length > 0 || !hasRole;
 
   return (
@@ -139,7 +126,7 @@ const RackEntityBase = ({
         {/* UNIFIED STATELESS RENDERER (ERA 7.2.3 — SOT) */}
         <div 
           dangerouslySetInnerHTML={{ 
-            __html: CellRenderer.renderCellHTML(item, {
+            __html: CellRenderer.renderCellHTML(item as ManifestEntity, {
               skin,
               zoom,
               runtimeValue,

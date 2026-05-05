@@ -38,7 +38,7 @@ export const useWasmTransfer = (
       
       // Industrial Fingerprinting: Generate hash from the contract to bind it with the manifest
       const { IntegrityService } = await import('../../../services/integrityService');
-      extractedContract.firmwareHash = await IntegrityService.generateManifestHash(extractedContract);
+      extractedContract.firmwareHash = await IntegrityService.generateHash(extractedContract as unknown as Record<string, unknown>);
       
       setContract(extractedContract);
       addLog(`[OK] Contract extracted and fingerprinted: ${extractedContract.firmwareHash.slice(0, 8)}`);
@@ -75,11 +75,24 @@ export const useWasmTransfer = (
         ports: data.ports || []
       };
       
-      loadedContract.parameters = (loadedContract.parameters || []).map((p: any) => ({ ...p, id: String(p.id || p.name).toLowerCase() }));
-      loadedContract.ports = (loadedContract.ports || []).map((p: any) => ({ ...p, id: String(p.id || p.name).toLowerCase() }));
+      interface RawParam { id?: string; name?: string; min?: number; max?: number; default?: number; }
+      interface RawPort { id?: string; name?: string; type?: string; direction?: string; }
+
+      loadedContract.parameters = (loadedContract.parameters || []).map((p: RawParam) => ({ 
+        min: 0, max: 1, default: 0, 
+        ...p, 
+        id: String(p.id || p.name).toLowerCase(),
+        name: String(p.name || p.id)
+      } as OmegaContract['parameters'][0]));
+
+      loadedContract.ports = (loadedContract.ports || []).map((p: RawPort) => ({ 
+        type: 'audio', direction: 'input', 
+        ...p, 
+        id: String(p.id || p.name).toLowerCase() 
+      } as OmegaContract['ports'][0]));
       
       const { IntegrityService } = await import('../../../services/integrityService');
-      loadedContract.firmwareHash = await IntegrityService.generateManifestHash(loadedContract);
+      loadedContract.firmwareHash = await IntegrityService.generateHash(loadedContract as unknown as Record<string, unknown>);
       
       setContract(loadedContract);
       addLog(`[AUDIT] Contract '${loadedContract.id}' validated and fingerprinted.`);

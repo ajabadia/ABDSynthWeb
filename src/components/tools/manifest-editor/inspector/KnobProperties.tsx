@@ -3,9 +3,11 @@
 import React from 'react';
 import { Box } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface KnobPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function KnobProperties({ item, onUpdate }: KnobPropertiesProps) {

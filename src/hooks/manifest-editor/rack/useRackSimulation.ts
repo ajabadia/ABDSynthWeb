@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { ManifestEntity } from '../../../types/manifest';
 import { wasmRuntime } from '../../../services/wasmRuntime';
 
 /**
  * useRackSimulation (v7.2.3)
  * Handles the real-time simulation loop and container activity (heatmap) logic.
  */
-export const useRackSimulation = (allElements: any[], isLiveMode: boolean) => {
+export const useRackSimulation = (allElements: ManifestEntity[], isLiveMode: boolean) => {
   const [runtimeValues, setRuntimeValues] = useState<Record<string, number>>({});
   const [activeContainers, setActiveContainers] = useState<Record<string, number>>({});
   const [activeInjectorPort, setActiveInjectorPort] = useState<string | null>(null);

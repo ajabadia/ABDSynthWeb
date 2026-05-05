@@ -205,14 +205,14 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
               </p>
             </div>
  
-            <div className="flex gap-4">
-              <Link href="/downloads">
-                <Button size="lg" className="px-12">{tc('nav.download')}</Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/downloads" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full px-12">{tc('nav.download')}</Button>
               </Link>
-              <Button size="lg" variant="outline">{tc('buttons.manual')}</Button>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">{tc('buttons.manual')}</Button>
               {instrument.id === 'abd-omega' && (
-                <Link href="/tools/manifest-editor">
-                  <Button size="lg" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
+                <Link href="/tools/manifest-editor" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full border-primary/40 text-primary hover:bg-primary/10">
                     {tc('buttons.manifestEditor')}
                   </Button>
                 </Link>

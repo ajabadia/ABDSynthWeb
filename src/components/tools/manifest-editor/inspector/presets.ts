@@ -2,7 +2,7 @@ import { Globe, Activity, Zap, List } from 'lucide-react';
 
 export interface OptionPreset {
   label: string;
-  icon: any;
+  icon: React.ElementType;
   options: { label: string; value: number }[];
 }
 

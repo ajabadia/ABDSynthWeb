@@ -180,14 +180,14 @@ export const HELP_DATA: HelpSection[] = [
         technical_params: ['version_bump', 'theme_tokens', 'even_hp']
       },
       {
-        id: 'port_normalization',
-        title: 'Normalización de Puertos',
+        id: 'port_colors_pro',
+        title: 'Código de Colores Pro',
         content: 'OMEGA usa un código de colores universal para los cables virtuales:\\n• **Audio**: Cyan / Blanco (Señales de alta fidelidad).\\n• **CV (Modulación)**: Ámbar / Neón (Señales de control).\\n• **Gate/Trigger**: Rojo / Magenta (Señales de disparo).\\n• **MIDI**: Verde (Streams de datos).',
         technical_params: ['type: audio | cv | gate | midi']
       },
       {
-        id: 'theme_contrast',
-        title: 'Contraste y Temas',
+        id: 'theme_zen_advanced',
+        title: 'Zen del Contraste (Avanzado)',
         content: 'Los tokens de tema (ej: `outline`, `surface`) se adaptan automáticamente al modo Light/Dark. Nunca uses colores fijos para las etiquetas si quieres que tu módulo sea legible bajo cualquier condición de iluminación de la rack.',
         technical_params: ['uiTheme: light | dark']
       }

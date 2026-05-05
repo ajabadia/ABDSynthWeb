@@ -147,16 +147,16 @@
 }
 
 [data-ui-theme="light"] {
-  --wb-bg: #f8fafc;
+  --wb-bg: #fcfcfd;
   --wb-surface: #ffffff;
-  --wb-surface-hover: #f1f5f9;
-  --wb-surface-inset: #e2e8f0; 
+  --wb-surface-hover: #f8fafc;
+  --wb-surface-inset: #f1f5f9; 
   --wb-outline: #cbd5e1;
-  --wb-text: #020617;
-  --wb-text-muted: #475569; 
-  --wb-bloom: rgba(100, 116, 139, 0.1);
-  --wb-primary: #5c7089; 
-  --wb-accent: #f59e0b;
+  --wb-text: #000000;
+  --wb-text-muted: #1e293b; 
+  --wb-bloom: rgba(0, 0, 0, 0.05);
+  --wb-primary: #334155; 
+  --wb-accent: #d97706;
 
   /* SIGNAL COLOR TOKENS (LIGHT ADAPTATION) */
   --signal-audio: #3b82f6;

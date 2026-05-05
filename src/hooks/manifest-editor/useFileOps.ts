@@ -5,6 +5,7 @@ import { useWasmTransfer } from './io/useWasmTransfer';
 import { useBundleTransfer } from './io/useBundleTransfer';
 import { OMEGA_Manifest } from '../../types/manifest';
 import { OmegaContract } from '../../services/wasmLoader';
+import { ValidationIssue } from '../../types/validation';
 
 /**
  * OMEGA File Operations (v7.2.3)
@@ -19,7 +20,7 @@ export const useFileOps = (
   setExtraResources: React.Dispatch<React.SetStateAction<{ name: string, data: ArrayBuffer, type: string }[]>>,
   extraResources: { name: string, data: ArrayBuffer, type: string }[],
   addLog: (msg: string) => void,
-  issues: any[]
+  issues: ValidationIssue[]
 ) => {
 
   // 1. Manifest Operations (Import/Export/CAD)

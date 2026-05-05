@@ -10,24 +10,11 @@ interface SwitchProps {
   isMain?: boolean;
 }
 
-export default function Switch({ value, variant, onValueChange, onClick, isMain }: SwitchProps) {
+export default function Switch({ value, variant, onValueChange, onClick }: SwitchProps) {
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';
   
-  const colorMap: Record<string, string> = {
-    cyan: 'var(--color-primary, #00f2ff)',
-    red: '#ff4444',
-    orange: 'var(--color-accent, #ff8800)',
-    green: '#00ff88',
-    white: '#ffffff',
-    primary: 'var(--color-primary, #00f0ff)',
-    accent: 'var(--color-accent, #ff8c00)'
-  };
-  
-  const color = colorMap[colorId] || colorMap.primary;
-  const dims: Record<string, number> = { A: 16, B: 12, C: 10, D: 8 };
-  const d = dims[size] || 12;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();

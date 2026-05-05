@@ -13,9 +13,6 @@ import { renderStepperHTML } from './StepperRenderer';
 import { renderSelectHTML } from './SelectRenderer';
 import { AttachmentRenderer } from './AttachmentRenderer';
 
-
-
-
 export interface Attachment {
   type: string;
   variant: string;
@@ -35,7 +32,7 @@ export interface ManifestEntity {
     offsetX?: number;
     offsetY?: number;
     attachments?: Attachment[];
-    options?: string[];
+    options?: (string | { label: string; value: string | number })[];
     lookup?: string;
   };
 }
@@ -79,14 +76,11 @@ export class CellRenderer {
     const radius = sizeMap ? sizeMap[size] : 12;
     return radius || 12;
   }
-
-
-
   /**
    * Renders the complete HTML for a cell, including its main component and all orbitant attachments.
    */
   static renderCellHTML(item: ManifestEntity, options: CellOptions): string {
-    const { skin, runtimeValue, steps, isSelected, isLiveMode } = options;
+    const { runtimeValue, steps, isSelected } = options;
     const compType = item.presentation?.component || 'knob';
     const variant = item.presentation?.variant || 'B_cyan';
     
@@ -167,7 +161,9 @@ export class CellRenderer {
         const html = AttachmentRenderer.renderAttachmentHTML({
           type: a.type,
           variant: a.variant,
-          text: a.text || ''
+          text: a.text || '',
+          value: runtimeValue,
+          steps: steps
         });
 
         // Apply manual offsets from manifest if present
@@ -195,7 +191,5 @@ export class CellRenderer {
         </div>
       </div>
     `.trim();
-
-
   }
 }

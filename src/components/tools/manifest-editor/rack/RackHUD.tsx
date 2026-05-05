@@ -3,12 +3,14 @@
 import React from 'react';
 import { Settings2, PlayCircle } from 'lucide-react';
 
+import { ManifestEntity, TabName } from '@/types/manifest';
+
 interface RackHUDProps {
   isLiveMode: boolean;
   setIsLiveMode: (val: boolean) => void;
-  activeTab: string;
-  setActiveTab: (val: string) => void;
-  allElements: any[];
+  activeTab: TabName;
+  setActiveTab: (val: TabName) => void;
+  allElements: ManifestEntity[];
 }
 
 /**

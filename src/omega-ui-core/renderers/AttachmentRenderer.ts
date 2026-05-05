@@ -1,35 +1,47 @@
-/**
- * OMEGA Attachment Renderer (Era 7.2.3)
- * Stateless HTML generator for orbitant labels and technical markers.
- */
+import { renderLedHTML } from './LedRenderer';
+import { renderDisplayHTML } from './DisplayRenderer';
+import { renderStepperHTML } from './StepperRenderer';
 
 export interface AttachmentProps {
   type: string;
   variant: string;
   text?: string;
-  offsetX?: number;
-  offsetY?: number;
+  value?: number;
+  steps?: number;
 }
 
 export class AttachmentRenderer {
   static renderAttachmentHTML(props: AttachmentProps): string {
-    const { type, variant, text = '' } = props;
+    const { type, variant, text = '', value = 0, steps = 100 } = props;
 
-    if (type === 'label') {
-      const parts = (variant || 'B_cyan').split('_');
-      const sizeClass = parts[0] || 'B';
-      const colorVariant = variant || 'B_cyan';
-      
-      const sizes: Record<string, number> = { A: 12, B: 9, C: 7, D: 6 };
-      const fontSize = sizes[sizeClass] || 9;
+    // Parse variant for shared logic (Size_Color)
+    const parts = (variant || 'B_cyan').split('_');
+    const size = parts[0] || 'B';
+    const colorId = parts.length > 1 ? parts.filter(p => p !== size).join('_') : 'cyan';
 
-      return `
-        <div class="attachment-label variant-${colorVariant}" style="font-size: ${fontSize}px;">
-          ${text.toUpperCase()}
-        </div>
-      `;
+    switch (type) {
+      case 'label':
+        const sizes: Record<string, number> = { A: 12, B: 9, C: 7, D: 6 };
+        const fontSize = sizes[size] || 9;
+        return `
+          <div class="attachment-label variant-${variant}" style="font-size: ${fontSize}px;">
+            ${text.toUpperCase()}
+          </div>
+        `;
+
+      case 'led':
+        return renderLedHTML({ size, colorId, value });
+
+      case 'display':
+        const mode = parts.includes('lcd') ? 'lcd' : (parts.includes('led') ? 'led' : 'oled');
+        return renderDisplayHTML({ size, colorId, value, mode, steps });
+
+      case 'stepper':
+      case 'button':
+        return renderStepperHTML({ size, colorId, value, type: 'push', text });
+
+      default:
+        return `<!-- Unknown Attachment Type: ${type} -->`;
     }
-
-    return `<!-- Unknown Attachment Type: ${type} -->`;
   }
 }

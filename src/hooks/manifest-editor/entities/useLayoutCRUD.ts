@@ -29,7 +29,7 @@ export const useLayoutCRUD = (
     return id;
   }, [manifest, updateManifest, addLog]);
 
-  const updateContainer = useCallback((id: string, updates: any) => {
+  const updateContainer = useCallback((id: string, updates: Partial<LayoutContainer>) => {
     const nextContainers = manifest.ui.layout?.containers.map(c => c.id === id ? { ...c, ...updates } : c) || [];
     const nextLayout = {
       ...(manifest.ui.layout || { containers: [], gridSnap: 5 }),

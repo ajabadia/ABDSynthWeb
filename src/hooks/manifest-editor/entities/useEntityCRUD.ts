@@ -33,7 +33,7 @@ export const useEntityCRUD = (
     const key = type === 'control' ? 'controls' : 'jacks';
     const newItem: ManifestEntity = JSON.parse(JSON.stringify(item));
     
-    let baseId = `${item.id}_copy`;
+    const baseId = `${item.id}_copy`;
     let counter = 1;
     let newId = baseId;
     while ([...(manifest.ui?.controls || []), ...(manifest.ui?.jacks || [])].some((i: ManifestEntity) => i.id === newId)) {

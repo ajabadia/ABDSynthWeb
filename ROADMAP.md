@@ -20,9 +20,17 @@ Este documento detalla el estado actual de industrialización y los próximos pa
 - [ ] **Technical Labeling Engine**: Mejora del posicionamiento inteligente de etiquetas sobreimpresas.
 
 ---
+## 🏗️ Fase 12: OMEGA 8.0 Evolution (Self-Contained Architecture)
+- [ ] **Integrated Theme Editor**: Herramienta secundaria para la creación, previsualización y exportación de variantes visuales (Skins) sin salir del entorno.
+- [ ] **Embedded Asset Protocol**: 
+    - Integración de **Ilustraciones SVG** directamente en el manifiesto para eliminar la dependencia de rutas fijas (`/ui/assets/modules/...`).
+    - Soporte para **Base64 Resources** (Manuales .md, PDF, Assets binarios).
+    - Refactorización hacia un modelo de "Single File Deployment" (Omega 8.0 Core).
+
+---
 ## 🔮 Futuro: Integración Nativa
 - [ ] **WebView2 Embedding**: Integración directa en el binario de OMEGA.
 - [ ] **Live RPC Bridge**: Comunicación directa con el motor de C++ mediante `OmegaRPC`.
 
 ---
-*OMEGA — Engineering Standard V7.2.3 — Industrial Governance ERA 4 — Roadmap Updated 2026-05-02*
+*OMEGA — Engineering Standard V8.1-WIP — Industrial Governance ERA 4 — Roadmap Updated 2026-05-05*

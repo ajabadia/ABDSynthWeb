@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { OMEGA_Manifest } from '../../../../types/manifest';
+import { LayoutContainer } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
+import { ValidationIssue } from '@/types/validation';
 
 interface RackContainerProps {
-  container: any;
+  container: LayoutContainer;
   isSelected: boolean;
   activeContainers: Record<string, number>;
   audit: AuditResult;
@@ -23,13 +24,12 @@ const RackContainerBase = ({
   activeContainers, 
   audit, 
   skin, 
-  rackWidthPx,
-  isLiveMode = false
+  rackWidthPx
 }: RackContainerProps) => {
   const c = container;
   const isCollapsed = c.collapsed;
   
-  const resolveWidth = (w: any): number => {
+  const resolveWidth = (w: string | number): number => {
     if (typeof w === 'number') return w * 1.5;
     switch (w) {
       case 'full': return rackWidthPx;
@@ -49,7 +49,7 @@ const RackContainerBase = ({
   const variant = c.variant || 'default';
   
   const containerIssues = React.useMemo(() => 
-    audit?.issues?.filter((i: any) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [],
+    audit?.issues?.filter((i: ValidationIssue) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [],
     [audit.issues, c.id]
   );
   

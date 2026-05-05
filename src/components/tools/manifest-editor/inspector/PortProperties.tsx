@@ -3,9 +3,11 @@
 import React from 'react';
 import { HardDrive, Palette } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface PortPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
   highlightPath?: string | null;
 }
 
@@ -46,12 +48,12 @@ export default function PortProperties({ item, onUpdate, highlightPath }: PortPr
           <Palette className="w-3 h-3 text-primary" />
           <span>Industrial Color Coding</span>
         </label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
            {PORT_COLORS.map(c => (
              <button
                key={c.id}
                onClick={() => updateColor(c.id)}
-               className={`p-2 border rounded-xs transition-all flex items-center gap-3 ${
+               className={`p-1.5 border rounded-xs transition-all flex flex-col items-center gap-1 ${
                  isHighlighted('color') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : ''
                } ${
                  currentColor === c.id 
@@ -59,10 +61,10 @@ export default function PortProperties({ item, onUpdate, highlightPath }: PortPr
                   : 'bg-black/40 border-outline/10 hover:border-outline/30'
                }`}
              >
-                <div className={`w-2.5 h-2.5 rounded-full ${c.color} border border-white/20`} />
-                <div className="text-left">
-                  <p className="text-[8px] font-black uppercase tracking-tighter">{c.label}</p>
-                  <p className="text-[6px] opacity-40 font-bold uppercase">{c.desc}</p>
+                <div className={`w-2 h-2 rounded-full ${c.color} border border-white/20`} />
+                <div className="text-center">
+                  <p className="text-[7px] font-black uppercase tracking-tighter leading-tight">{c.label}</p>
+                  <p className="text-[5px] opacity-30 font-bold uppercase leading-none">{c.desc.split(' / ')[0]}</p>
                 </div>
              </button>
            ))}
@@ -75,25 +77,24 @@ export default function PortProperties({ item, onUpdate, highlightPath }: PortPr
           <HardDrive className="w-3 h-3 text-primary" />
           <span>Socket Mechanical Material</span>
         </label>
-        <div className="space-y-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {materials.map((m) => (
             <button
               key={m.id}
               onClick={() => updateVariant(m.id)}
-              className={`w-full p-3 border rounded-xs transition-all flex flex-col items-start gap-1 group relative overflow-hidden ${
+              className={`p-2 border rounded-xs transition-all flex flex-col items-center gap-0.5 group relative overflow-hidden ${
                 currentVariant === m.id 
-                  ? 'bg-primary/10 border-primary shadow-[0_0_15px_rgba(0,240,255,0.1)]' 
+                  ? 'bg-primary/20 border-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' 
                   : 'bg-black/40 border-outline/10 hover:border-outline/30'
               }`}
             >
-              <div className="flex items-center justify-between w-full">
-                <span className={`text-[9px] font-black uppercase tracking-widest ${currentVariant === m.id ? 'text-primary' : 'text-foreground/60'}`}>
-                  {m.label}
-                </span>
-                <span className="text-[8px] font-mono opacity-20 group-hover:opacity-100 transition-opacity">.{m.id}</span>
-              </div>
-              <p className="text-[7px] text-foreground/30 italic uppercase">{m.desc}</p>
-              {currentVariant === m.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
+              <span className={`text-[7px] font-black uppercase tracking-tighter text-center ${currentVariant === m.id ? 'text-primary' : 'text-foreground/60'}`}>
+                {m.label.split(' ')[0]}
+                <br/>
+                {m.label.split(' ')[1]}
+              </span>
+              <p className="text-[5px] text-foreground/20 italic uppercase font-bold">{m.id}</p>
+              {currentVariant === m.id && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />}
             </button>
           ))}
         </div>

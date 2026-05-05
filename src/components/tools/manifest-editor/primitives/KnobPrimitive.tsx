@@ -2,8 +2,19 @@
 
 import React from 'react';
 import { renderKnobHTML } from '@/omega-ui-core/renderers/KnobRenderer';
+import { ManifestEntity } from '@/types/manifest';
 
-export default function KnobPrimitive({ value, variant, isMain, isSelected, onValueChange, onClick, item }: any) {
+interface KnobPrimitiveProps {
+  value: number;
+  variant: string;
+  isMain?: boolean;
+  isSelected?: boolean;
+  onValueChange?: (val: number) => void;
+  onClick?: () => void;
+  item?: ManifestEntity;
+}
+
+export default function KnobPrimitive({ value, variant, isMain, isSelected, onValueChange, onClick, item }: KnobPrimitiveProps) {
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';

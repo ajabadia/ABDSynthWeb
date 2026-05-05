@@ -12,6 +12,9 @@ import Label from './Label';
 
 import Select from './Select';
 
+import { ManifestEntity } from '@/types/manifest';
+
+
 interface PrimitiveProps {
   type: string;
   value: number;
@@ -26,7 +29,7 @@ interface PrimitiveProps {
   role?: string;
   options?: string[];
   lookup?: string;
-  item?: any;
+  item?: ManifestEntity;
 }
 
 export default function PrimitiveFactory(props: PrimitiveProps) {

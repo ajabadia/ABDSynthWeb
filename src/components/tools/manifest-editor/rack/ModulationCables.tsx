@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { OMEGA_Manifest, ManifestEntity } from '../../../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity, TabName } from '@/types/manifest';
 
 interface ModulationCablesProps {
   manifest: OMEGA_Manifest;
-  allElements: any[];
-  activeTab: string;
+  allElements: ManifestEntity[];
+  activeTab: TabName;
 }
 
 /**

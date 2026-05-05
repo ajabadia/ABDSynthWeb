@@ -3,6 +3,7 @@
 import { useCallback, Dispatch, SetStateAction } from 'react';
 import yaml from 'js-yaml';
 import { OMEGA_Manifest } from '../../../types/manifest';
+import { ValidationIssue } from '../../../types/validation';
 
 export const useBundleTransfer = (
   manifest: OMEGA_Manifest,
@@ -10,24 +11,28 @@ export const useBundleTransfer = (
   extraResources: { name: string, data: ArrayBuffer, type: string }[],
   setExtraResources: Dispatch<SetStateAction<{ name: string, data: ArrayBuffer, type: string }[]>>,
   addLog: (msg: string) => void,
-  issues: any[],
+  issues: ValidationIssue[],
   handleWasmUpload: (file: File) => Promise<void>,
   handleContractUpload: (file: File) => Promise<void>,
   handleManifestUpload: (file: File) => Promise<void>
 ) => {
 
-  const handleResourceUpload = useCallback(async (file: File) => {
-    addLog(`Ingesting Resource: ${file.name}...`);
-    try {
-      const buffer = await file.arrayBuffer();
-      setExtraResources(prev => [
-        ...prev.filter(r => r.name !== file.name),
-        { name: file.name, data: buffer, type: file.type }
-      ]);
-      addLog(`[OK] Resource '${file.name}' stored in workspace.`);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      addLog(`[CRITICAL] Resource Ingestion Failed: ${message}`);
+  const handleResourceUpload = useCallback(async (files: FileList | File) => {
+    const fileList = files instanceof FileList ? Array.from(files) : [files];
+    
+    for (const file of fileList) {
+      addLog(`Ingesting Resource: ${file.name}...`);
+      try {
+        const buffer = await file.arrayBuffer();
+        setExtraResources(prev => [
+          ...prev.filter(r => r.name !== file.name),
+          { name: file.name, data: buffer, type: file.type }
+        ]);
+        addLog(`[OK] Resource '${file.name}' stored in workspace.`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        addLog(`[CRITICAL] Resource Ingestion Failed: ${message}`);
+      }
     }
   }, [addLog, setExtraResources]);
 
@@ -35,7 +40,7 @@ export const useBundleTransfer = (
     try {
       addLog(`[SYSTEM] Preparing OmegaPack (.zip)...`);
       
-      if (!(window as any).JSZip) {
+      if (!(window as unknown as { JSZip: unknown }).JSZip) {
         addLog(`[SYSTEM] Loading JSZip dependency...`);
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
@@ -46,7 +51,12 @@ export const useBundleTransfer = (
         });
       }
 
-      const JSZip = (window as any).JSZip;
+      interface JSZipInstance {
+        file: (name: string, data: string | ArrayBuffer | Uint8Array | Blob) => JSZipInstance;
+        folder: (name: string) => JSZipInstance;
+        generateAsync: (options: { type: 'blob' }) => Promise<Blob>;
+      }
+      const JSZip = (window as unknown as { JSZip: new () => JSZipInstance }).JSZip;
       const zip = new JSZip();
       
       const yamlContent = yaml.dump(manifest, { indent: 2, lineWidth: -1 });

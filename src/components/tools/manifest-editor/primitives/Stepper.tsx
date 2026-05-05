@@ -12,7 +12,7 @@ interface StepperProps {
   isMain?: boolean;
 }
 
-export default function Stepper({ type, value, variant, onValueChange, onClick, text, isMain }: StepperProps) {
+export default function Stepper({ type, value, variant, onValueChange, onClick, text }: StepperProps) {
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';

@@ -2,32 +2,53 @@
 
 import { useCallback, Dispatch, SetStateAction } from 'react';
 import yaml from 'js-yaml';
-import { OMEGA_Manifest, ManifestEntity } from '../../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity, ComponentType, AttachmentType, Attachment } from '../../../types/manifest';
+import { ValidationIssue } from '../../../types/validation';
 
 export const useManifestTransfer = (
   manifest: OMEGA_Manifest,
   setManifest: Dispatch<SetStateAction<OMEGA_Manifest>>,
   addLog: (msg: string) => void,
-  issues: any[]
+  issues: ValidationIssue[]
 ) => {
 
   const handleManifestUpload = useCallback(async (file: File) => {
     addLog(`Ingesting Manifest: ${file.name}...`);
     try {
       const content = await file.text();
-      const parsed = yaml.load(content) as any;
+      const parsed = yaml.load(content) as Partial<OMEGA_Manifest> & { name?: string };
       
       if (!parsed || typeof parsed !== 'object') throw new Error("Invalid manifest format.");
 
       if (!parsed.ui) parsed.ui = { dimensions: { width: 120, height: 420 }, controls: [], jacks: [] };
       if (!parsed.metadata) parsed.metadata = { name: parsed.name || "Unnamed Module", family: "utility" };
       
-      const getNum = (v: any) => {
+      const getNum = (v: unknown) => {
         const n = parseFloat(String(v));
         return isNaN(n) ? 0 : n;
       };
 
-      const normalize = (list: any[], defaultTab: string): ManifestEntity[] => (list || []).map((c: any, idx: number) => {
+      const normalize = (list: unknown[], defaultTab: string): ManifestEntity[] => (list || []).map((cRaw: unknown, idx) => {
+        const c = cRaw as { 
+          id?: string; 
+          type?: string; 
+          role?: string; 
+          bind?: string; 
+          label?: string; 
+          pos?: { x?: number; y?: number };
+          presentation?: {
+            tab?: string;
+            variant?: string;
+            component?: string;
+            offsetX?: number;
+            offsetY?: number;
+            container?: string;
+            group?: string;
+            attachments?: unknown[];
+            precision?: number;
+            ui_precision?: number;
+          };
+        };
         const rawPos = c.pos || {};
         const x = getNum(rawPos.x);
         const y = getNum(rawPos.y);
@@ -43,19 +64,29 @@ export const useManifestTransfer = (
           presentation: {
             tab: String(c.presentation?.tab || (defaultTab === 'PATCHING' ? 'MAIN' : defaultTab)),
             variant: String(c.presentation?.variant || 'B_cyan'),
-            component: String(c.presentation?.component || c.type || (defaultTab === 'PATCHING' ? 'port' : 'knob')).toLowerCase(),
+            component: String(c.presentation?.component || c.type || (defaultTab === 'PATCHING' ? 'port' : 'knob')).toLowerCase() as ComponentType,
             offsetX: getNum(c.presentation?.offsetX),
             offsetY: getNum(c.presentation?.offsetY),
             container: c.presentation?.container || c.presentation?.group,
             group: c.presentation?.group,
-            attachments: (c.presentation?.attachments || []).map((att: any) => ({
-              type: String(att.type || 'label'),
-              position: String(att.position || 'bottom') as any,
-              offsetX: getNum(att.offsetX),
-              offsetY: getNum(att.offsetY),
-              variant: String(att.variant || 'B_cyan'),
-              text: att.text
-            })),
+            attachments: (c.presentation?.attachments || []).map((attRaw: unknown) => {
+              const att = attRaw as { 
+                type?: string; 
+                position?: string; 
+                offsetX?: unknown; 
+                offsetY?: unknown; 
+                variant?: string; 
+                text?: string; 
+              };
+              return {
+                type: String(att.type || 'label') as AttachmentType,
+                position: String(att.position || 'bottom') as Attachment['position'],
+                offsetX: getNum(att.offsetX),
+                offsetY: getNum(att.offsetY),
+                variant: String(att.variant || 'B_cyan'),
+                text: att.text
+              };
+            }),
             precision: getNum(c.presentation?.precision) || 6,
             ui_precision: getNum(c.presentation?.ui_precision) || 2,
           }
@@ -117,8 +148,8 @@ export const useManifestTransfer = (
     addLog(`[OK] Exported manifest: ${manifest.id}.acemm`);
   }, [manifest, issues, addLog]);
 
-  const exportCADBlueprint = useCallback(() => {
-    const { CADExportService } = require('../../../services/cadExportService');
+  const exportCADBlueprint = useCallback(async () => {
+    const { CADExportService } = await import('../../../services/cadExportService');
     const svg = CADExportService.generateSVGBlueprint(manifest);
     const blob = new Blob([svg], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);

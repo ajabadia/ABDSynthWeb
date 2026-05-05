@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useMemo } from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '../../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 
 // Modular Components & Hooks
@@ -15,7 +15,6 @@ import { useRackSimulation } from '@/hooks/manifest-editor/rack/useRackSimulatio
 
 interface VirtualRackProps {
   manifest: OMEGA_Manifest;
-  contract: any;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
   onUpdateItem: (id: string, updates: Partial<ManifestEntity>) => void;
@@ -25,7 +24,6 @@ interface VirtualRackProps {
   audit: AuditResult;
   activeTab: string;
   setActiveTab: (val: string) => void;
-  onUpdateContainer?: (id: string, updates: any) => void;
 }
 
 /**
@@ -34,7 +32,6 @@ interface VirtualRackProps {
  */
 export default function VirtualRack({ 
   manifest, 
-  contract, 
   selectedItemId, 
   onSelectItem, 
   onUpdateItem, 
@@ -43,8 +40,7 @@ export default function VirtualRack({
   setIsLiveMode, 
   audit,
   activeTab,
-  setActiveTab,
-  onUpdateContainer
+  setActiveTab
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
   
@@ -54,11 +50,9 @@ export default function VirtualRack({
     ...(manifest.ui?.jacks || []).map(j => ({ ...j, isJack: true }))
   ], [manifest.ui]);
 
-  // Modular Simulation & Interaction Hook
   const { 
     runtimeValues, 
     activeContainers, 
-    updateValue, 
     activeInjectorPort, 
     setActiveInjectorPort 
   } = useRackSimulation(allElements, isLiveMode);
@@ -101,7 +95,7 @@ export default function VirtualRack({
         style={{ ...skinConfig.style, width: `${width}px`, height: `${height}px` }}
         onClick={(e) => { e.stopPropagation(); onSelectItem(null); }}
       >
-        <RackScrews skin={skin} />
+        <RackScrews />
 
         {/* ARCHITECTURAL PLANES */}
         {containers.filter(c => !c.tab || c.tab === activeTab).map((c) => (
@@ -113,7 +107,6 @@ export default function VirtualRack({
             audit={audit} 
             skin={skin} 
             rackWidthPx={width}
-            isLiveMode={isLiveMode}
           />
         ))}
 
@@ -122,10 +115,10 @@ export default function VirtualRack({
         {/* ENTITIES LAYER */}
         {visibleElements.map((item) => (
           <RackEntity 
-            key={item.id} item={item} contract={contract} rackRef={rackRef} zoom={zoom} isLiveMode={isLiveMode} 
+            key={item.id} item={item} rackRef={rackRef} zoom={zoom} isLiveMode={isLiveMode} 
             selectedItemId={selectedItemId} onSelectItem={onSelectItem} onUpdateItem={onUpdateItem} 
             runtimeValue={runtimeValues[item.id] || 0} steps={item.presentation?.component === 'select' ? 16 : 100} 
-            onUpdateValue={updateValue} onPortClick={setActiveInjectorPort} audit={audit} skin={skin} 
+            onPortClick={setActiveInjectorPort} audit={audit} skin={skin} 
           />
         ))}
 

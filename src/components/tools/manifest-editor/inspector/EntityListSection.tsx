@@ -2,20 +2,10 @@
 
 import React from 'react';
 import { Plus, Settings2, Zap, Layout, Copy, Trash2 } from 'lucide-react';
-import { OMEGA_Manifest, LayoutContainer } from '@/types/manifest';
-
-interface ManifestItem {
-  id: string;
-  label?: string;
-  bind?: string;
-  presentation?: {
-    tab?: string;
-    [key: string]: any;
-  };
-}
+import { OMEGA_Manifest, LayoutContainer, ManifestEntity } from '@/types/manifest';
 
 interface EntityListSectionProps {
-  items: ManifestItem[];
+  items: ManifestEntity[];
   title: string;
   type: 'control' | 'jack';
   onSelectItem: (id: string) => void;
@@ -42,7 +32,7 @@ export default function EntityListSection({
   const Icon = type === 'control' ? Settings2 : Zap;
 
   // GROUPING LOGIC (Era 7.2 Container Support)
-  const groups = items.reduce((acc: Record<string, ManifestItem[]>, item) => {
+  const groups = items.reduce((acc: Record<string, ManifestEntity[]>, item) => {
     const gid = item.presentation?.container || item.presentation?.group || 'UNBOUND';
     if (!acc[gid]) acc[gid] = [];
     acc[gid].push(item);

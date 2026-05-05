@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, Download, Share2, Sparkles, Loader2, ShieldCheck } from 'lucide-react';
-import { OMEGA_Manifest } from '../../../types/manifest';
+import { X, Camera, Download, Sparkles, Loader2, ShieldCheck } from 'lucide-react';
+import { OMEGA_Manifest } from '@/types/manifest';
+import { AuditResult } from '@/services/auditService';
 
 // Reusing Real Components for 100% Parity
 import { RackContainer } from './rack/RackContainer';
@@ -14,14 +15,29 @@ interface MockupModalProps {
   manifest: OMEGA_Manifest;
 }
 
+const MOCK_AUDIT: AuditResult = { 
+  issues: [], 
+  details: [], 
+  isCompliant: true, 
+  score: 100, 
+  status: 'CERTIFIED',
+  checks: { governance: true, technical: true, aesthetic: true, integrity: true }
+};
+
 export default function MockupModal({ isOpen, onClose, manifest }: MockupModalProps) {
   const [status, setStatus] = React.useState<'idle' | 'rendering' | 'complete'>('idle');
 
+  const hasRendered = React.useRef(false);
+
   React.useEffect(() => {
-    if (isOpen) {
-      setStatus('rendering');
+    if (isOpen && !hasRendered.current) {
+      setTimeout(() => setStatus('rendering'), 0);
       const timer = setTimeout(() => setStatus('complete'), 1500);
+      hasRendered.current = true;
       return () => clearTimeout(timer);
+    } else if (!isOpen) {
+      hasRendered.current = false;
+      setTimeout(() => setStatus('idle'), 0);
     }
   }, [isOpen]);
 
@@ -123,26 +139,25 @@ export default function MockupModal({ isOpen, onClose, manifest }: MockupModalPr
                     backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.1) 100%)`
                   }}
                 >
-                  <RackScrews skin={skin} />
+                  <RackScrews />
 
                   {/* ARCHITECTURAL LAYERS */}
                     {visibleContainers.map((c) => (
                       <RackContainer 
                         key={c.id} container={c} isSelected={false} 
-                        activeContainers={{}} audit={{ issues: [], details: [] } as any} 
+                        activeContainers={{}} audit={MOCK_AUDIT} 
                         skin={skin} rackWidthPx={width} 
-                        isLiveMode={true}
                       />
                     ))}
 
                   {/* ENTITIES LAYER */}
                   {visibleElements.map((item) => (
                     <RackEntity 
-                      key={item.id} item={item} contract={null} rackRef={{ current: null }} 
+                      key={item.id} item={item} rackRef={{ current: null }} 
                       zoom={1.0} isLiveMode={true} selectedItemId={null} 
                       onSelectItem={() => {}} onUpdateItem={() => {}} 
-                      runtimeValue={0.5} steps={100} onUpdateValue={() => {}} 
-                      onPortClick={() => {}} audit={{ issues: [], details: [] } as any} skin={skin} 
+                      runtimeValue={0.5} steps={100} 
+                      onPortClick={() => {}} audit={MOCK_AUDIT} skin={skin} 
                     />
                   ))}
 

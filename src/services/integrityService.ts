@@ -2,26 +2,31 @@
  * OMEGA Integrity Service (v7.2.3)
  * Provides cryptographic hashing for manifest firmware integrity checks.
  */
+import { OMEGA_Manifest } from '../types/manifest';
+
 export class IntegrityService {
   /**
-   * Generates a SHA-256 hash of the manifest object.
+   * Generates a SHA-256 hash of any object.
    * Uses canonical normalization (alphabetical key sorting and minification).
    */
-  static async generateManifestHash(manifest: any): Promise<string> {
-    const { hash, ...cleanManifest } = manifest;
+  static async generateHash(obj: Record<string, unknown>): Promise<string> {
+    // 1. Remove hash/firmwareHash property if present to calculate clean hash
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { hash, firmwareHash, ...cleanObj } = obj;
     
     // Canonical Normalization: Recursive Key Sorting
-    const sortObject = (obj: any): any => {
-      if (obj === null || typeof obj !== 'object') return obj;
-      if (Array.isArray(obj)) return obj.map(sortObject);
+    const sortObject = (o: unknown): unknown => {
+      if (o === null || typeof o !== 'object') return o;
+      if (Array.isArray(o)) return o.map(sortObject);
       
-      return Object.keys(obj).sort().reduce((acc: any, key: string) => {
-        acc[key] = sortObject(obj[key]);
+      const record = o as Record<string, unknown>;
+      return Object.keys(record).sort().reduce((acc: Record<string, unknown>, key: string) => {
+        acc[key] = sortObject(record[key]);
         return acc;
       }, {});
     };
 
-    const canonicalJson = JSON.stringify(sortObject(cleanManifest));
+    const canonicalJson = JSON.stringify(sortObject(cleanObj));
     const encoder = new TextEncoder();
     const data = encoder.encode(canonicalJson);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -30,10 +35,17 @@ export class IntegrityService {
   }
 
   /**
-   * Verifies if a manifest matches a given hash.
+   * Generates a SHA-256 hash of the manifest object (alias for backward compatibility).
    */
-  static async verifyIntegrity(manifest: any, expectedHash: string): Promise<boolean> {
-    const currentHash = await this.generateManifestHash(manifest);
+  static async generateManifestHash(manifest: OMEGA_Manifest): Promise<string> {
+    return this.generateHash(manifest as unknown as Record<string, unknown>);
+  }
+
+  /**
+   * Verifies if an object matches a given hash.
+   */
+  static async verifyIntegrity(obj: Record<string, unknown>, expectedHash: string): Promise<boolean> {
+    const currentHash = await this.generateHash(obj);
     return currentHash === expectedHash;
   }
 }

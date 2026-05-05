@@ -57,7 +57,10 @@ export class WasmLoaderService {
 
     try {
       const { instance } = await WebAssembly.instantiate(arrayBuffer, importObject);
-      const exports = instance.exports as any;
+      const exports = instance.exports as { 
+        omega_get_contract?: () => number;
+        memory?: WebAssembly.Memory;
+      };
 
       if (!exports.omega_get_contract) {
         throw new Error("WASM module is not OMEGA-compliant (missing 'omega_get_contract' export).");
@@ -78,13 +81,18 @@ export class WasmLoaderService {
         id: String(data.id || 'unknown'),
         name: data.name || data.id,
         family: (data.family || "utility").toLowerCase(),
-        parameters: (data.parameters || []).map((p: any) => ({
-          ...p,
-          id: String(p.id || p.name || '').toLowerCase()
+        parameters: (data.parameters || []).map((p: { id?: string; name?: string; min?: number; max?: number; default?: number; unit?: string }) => ({
+          id: String(p.id || p.name || '').toLowerCase(),
+          name: p.name || p.id || 'unknown',
+          min: p.min ?? 0,
+          max: p.max ?? 1,
+          default: p.default ?? 0,
+          unit: p.unit
         })),
-        ports: (data.ports || []).map((p: any) => ({
-          ...p,
-          id: String(p.id || p.name || '').toLowerCase()
+        ports: (data.ports || []).map((p: { id?: string; name?: string; type?: string; direction?: string }) => ({
+          id: String(p.id || p.name || '').toLowerCase(),
+          type: (p.type || 'audio') as 'audio' | 'cv' | 'midi' | 'gate',
+          direction: (p.direction || 'input') as 'input' | 'output'
         }))
       };
 

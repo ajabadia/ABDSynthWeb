@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Fingerprint, Settings, Palette, Paperclip, Shield, Package, Settings2, Zap, Move, Layout } from 'lucide-react';
+
+// Specialized Sections
 import IdentitySection from './inspector/IdentitySection';
 import LogicSection from './inspector/LogicSection';
 import AestheticSection from './inspector/AestheticSection';
@@ -15,253 +16,88 @@ import ModulationSection from './inspector/ModulationSection';
 import ResourceSection from './inspector/ResourceSection';
 import ContainerSection from './inspector/ContainerSection';
 
-import { ManifestEntity, OMEGA_Manifest } from '../../../types/manifest';
+// Layout Components & Hooks
+import InspectorHeader from './inspector/layout/InspectorHeader';
+import InspectorNav from './inspector/layout/InspectorNav';
+import { usePropertyPanel } from '@/hooks/manifest-editor/usePropertyPanel';
 
-interface PropertyPanelProps {
-  item: ManifestEntity | OMEGA_Manifest;
-  onUpdate: (updates: Partial<ManifestEntity> | Partial<OMEGA_Manifest>) => void;
-  onClose: () => void;
+import { ManifestEntity, OMEGA_Manifest, OMEGA_Modulation, LayoutContainer, ExtraResource } from '@/types/manifest';
+
+export interface PropertyPanelProps {
+  item: ManifestEntity | OMEGA_Manifest | null;
+  onClose?: () => void;
+  onUpdateItem?: (id: string, updates: Partial<ManifestEntity>) => void;
+  onUpdate?: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => void;
   highlightPath?: string | null;
   availableBinds?: string[];
-  scale?: number;
-  onSelectItem?: (id: string) => void;
+  onSelectItem?: (id: string | null) => void;
   onAddEntity?: (type: 'control' | 'jack') => void;
   onDuplicateItem?: (id: string) => void;
   onRemoveItem?: (id: string) => void;
   onHelp?: (sectionId?: string) => void;
-  onAddModulation?: (mod: any) => void;
+  onAddModulation?: (mod: OMEGA_Modulation) => void;
   onRemoveModulation?: (id: string) => void;
-  onUpdateModulation?: (id: string, updates: any) => void;
-  onOpenGrid?: () => void;
-  addContainer?: () => void;
-  updateContainer?: (id: string, updates: any) => void;
+  onUpdateModulation?: (id: string, updates: Partial<OMEGA_Modulation>) => void;
+  onOpenModGrid?: () => void;
+  addContainer?: (c?: Partial<LayoutContainer>) => void;
+  updateContainer?: (id: string, updates: Partial<LayoutContainer>) => void;
   removeContainer?: (id: string) => void;
-  extraResources?: { name: string, data: ArrayBuffer, type: string }[];
+  extraResources?: ExtraResource[];
   onTriggerUpload?: (id: string) => void;
   onRemoveResource?: (name: string) => void;
   manifest: OMEGA_Manifest;
-  uiTheme: 'dark' | 'light';
+  uiTheme?: 'dark' | 'light';
 }
 
-export default function PropertyPanel({ 
-  item, 
-  onUpdate, 
-  onClose, 
-  highlightPath,
-  availableBinds = [], 
-  scale = 1,
-  onSelectItem,
-  onAddEntity,
-  onDuplicateItem,
-  onRemoveItem,
-  onHelp,
-  onAddModulation,
-  onRemoveModulation,
-  onUpdateModulation,
-  onOpenGrid,
-  extraResources = [],
-  onTriggerUpload,
-  onRemoveResource,
-  addContainer,
-  updateContainer,
-  removeContainer,
-  manifest,
-  uiTheme
-}: PropertyPanelProps) {
-  const [activeSection, setActiveSection] = React.useState<string>('identity');
+export default function PropertyPanel(props: PropertyPanelProps) {
+  const { activeSection, setActiveSection, isModule, sections } = usePropertyPanel(props.item as ManifestEntity | OMEGA_Manifest, props.highlightPath);
 
-  // Detect if we are editing the module itself or a specific control/jack
-  const isModule = 'metadata' in item;
-
-  const sections = React.useMemo(() => (
-    isModule ? [
-      { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
-      { id: 'layout', label: 'Layout', icon: Layout, color: 'text-accent' },
-      { id: 'controls', label: 'Controls', icon: Settings2, color: 'text-blue-400' },
-      { id: 'signals', label: 'Signals', icon: Zap, color: 'text-yellow-400' },
-      { id: 'assets', label: 'Assets', icon: Palette, color: 'text-purple-400' },
-      { id: 'modulations', label: 'Modulations', icon: Move, color: 'text-cyan-400' },
-    ] : [
-      { id: 'identity', label: 'Identity', icon: Fingerprint, color: 'text-primary' },
-      { id: 'engineering', label: 'Engineering', icon: Shield, color: 'text-accent' },
-      { id: 'logic', label: 'Logic', icon: Settings, color: 'text-blue-400' },
-      { id: 'spatial', label: 'Spatial', icon: Move, color: 'text-amber-400' },
-      { id: 'aesthetic', label: 'Aesthetic', icon: Palette, color: 'text-purple-400' },
-      { id: 'attachments', label: 'Attachments', icon: Paperclip, color: 'text-green-400' },
-    ]
-  ), [isModule]);
-
-  // AUDIT GPS: Auto-switch section based on highlightPath
-  React.useEffect(() => {
-    if (!highlightPath) return;
-
-    if (isModule) {
-       if (highlightPath.includes('layout')) setActiveSection('layout');
-       if (highlightPath.includes('resources')) setActiveSection('assets');
-    } else {
-       if (highlightPath.includes('bind')) setActiveSection('logic');
-       if (highlightPath.includes('unit') || highlightPath.includes('role') || highlightPath.includes('type')) setActiveSection('engineering');
-       if (highlightPath.includes('pos') || highlightPath.includes('size')) setActiveSection('spatial');
-       if (highlightPath.includes('variant') || highlightPath.includes('container') || highlightPath.includes('color')) setActiveSection('aesthetic');
-       if (highlightPath.includes('attachments')) setActiveSection('attachments');
-       if (highlightPath.includes('label') || highlightPath.includes('id')) setActiveSection('identity');
-    }
-  }, [highlightPath, isModule]);
-
-  // Auto-reset tab if current one disappears
-  React.useEffect(() => {
-    if (!sections.find(s => s.id === activeSection)) {
-      setActiveSection('identity');
-    }
-  }, [isModule, sections, activeSection]);
-
-  const handleFieldUpdate = (fieldUpdates: any) => {
-    onUpdate({ ...item, ...fieldUpdates });
-  };
-
-  if (!item) return null;
+  if (!props.item) return null;
 
   return (
     <div className="h-full wb-surface border-l wb-outline flex flex-col shadow-2xl overflow-hidden transition-colors duration-500">
-      <header className="p-4 border-b wb-outline bg-black/5 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xs bg-primary/10 border border-primary/20 flex items-center justify-center">
-             {isModule ? <Package className="w-4 h-4 text-primary" /> : <Settings className="w-4 h-4 text-primary" />}
-          </div>
-          <div>
-            <h2 className="text-[10px] font-black uppercase tracking-widest wb-text">
-              {isModule ? 'Module Configuration' : 'Entity Inspector'}
-            </h2>
-            <p className="text-[8px] font-mono wb-text-muted truncate max-w-[200px]">{item.id}</p>
-          </div>
-        </div>
-        {!isModule && (
-          <button 
-            onClick={onClose}
-            className="p-1.5 hover:wb-surface-hover rounded-xs wb-text-muted hover:wb-text transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </header>
-
-      {!isModule && <CellPreview item={item} />}
-
-      <nav className="flex border-b wb-outline bg-black/5 p-1 shrink-0">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => setActiveSection(section.id)}
-            className={`flex-1 py-2 flex flex-col items-center gap-1 rounded-xs transition-all ${
-              activeSection === section.id 
-                ? 'wb-surface-hover wb-text' 
-                : 'wb-text-muted hover:wb-text hover:wb-surface-hover/50'
-            }`}
-          >
-            <section.icon className={`w-3.5 h-3.5 ${activeSection === section.id ? section.color : ''}`} />
-            <span className="text-[7px] font-black uppercase tracking-tighter">{section.label}</span>
-          </button>
-        ))}
-      </nav>
+      <InspectorHeader id={props.item.id} isModule={isModule} onClose={props.onClose || (() => {})} />
+      {!isModule && <CellPreview item={props.item as ManifestEntity} />}
+      <InspectorNav sections={sections} activeSection={activeSection} setActiveSection={setActiveSection} />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.15 }}
-          >
+          <motion.div key={activeSection} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
             {activeSection === 'identity' && (
-              <IdentitySection item={item} onUpdate={handleFieldUpdate} onHelp={onHelp} rootManifest={manifest} highlightPath={highlightPath} />
+              <IdentitySection 
+                item={props.item} 
+                onUpdate={(u) => props.onUpdate?.(u)} 
+                onHelp={props.onHelp} 
+                rootManifest={props.manifest} 
+                highlightPath={props.highlightPath}
+              />
             )}
 
             {isModule ? (
               <>
-                {activeSection === 'layout' && addContainer && updateContainer && removeContainer && (
-                   <ContainerSection 
-                     containers={(item as OMEGA_Manifest).ui.layout?.containers || []}
-                     onAdd={addContainer}
-                     onUpdate={updateContainer}
-                     onRemove={removeContainer}
-                     highlightPath={highlightPath}
-                   />
+                {activeSection === 'layout' && props.addContainer && (
+                  <ContainerSection containers={(props.item as OMEGA_Manifest).ui.layout?.containers || []} onAdd={props.addContainer} onUpdate={props.updateContainer!} onRemove={props.removeContainer!} highlightPath={props.highlightPath} />
                 )}
-                {activeSection === 'controls' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
-                   <EntityListSection 
-                    items={(item as OMEGA_Manifest).ui?.controls || []}
-                    title="Interactive Controls"
-                    type="control"
-                    onSelectItem={onSelectItem}
-                    onAddEntity={onAddEntity}
-                    onDuplicateItem={onDuplicateItem}
-                    onRemoveItem={onRemoveItem}
-                    manifest={manifest}
-                  />
+                {activeSection === 'controls' && props.onSelectItem && (
+                  <EntityListSection items={(props.item as OMEGA_Manifest).ui?.controls || []} title="Interactive Controls" type="control" onSelectItem={props.onSelectItem} onAddEntity={props.onAddEntity!} onDuplicateItem={props.onDuplicateItem!} onRemoveItem={props.onRemoveItem!} manifest={props.manifest} />
                 )}
-                {activeSection === 'signals' && onSelectItem && onAddEntity && onDuplicateItem && onRemoveItem && (
-                   <EntityListSection 
-                    items={(item as OMEGA_Manifest).ui?.jacks || []}
-                    title="Signal Ports / Jacks"
-                    type="jack"
-                    onSelectItem={onSelectItem}
-                    onAddEntity={onAddEntity}
-                    onDuplicateItem={onDuplicateItem}
-                    onRemoveItem={onRemoveItem}
-                    manifest={manifest}
-                  />
+                {activeSection === 'signals' && props.onSelectItem && (
+                  <EntityListSection items={(props.item as OMEGA_Manifest).ui?.jacks || []} title="Signal Ports / Jacks" type="jack" onSelectItem={props.onSelectItem} onAddEntity={props.onAddEntity!} onDuplicateItem={props.onDuplicateItem!} onRemoveItem={props.onRemoveItem!} manifest={props.manifest} />
                 )}
-                {activeSection === 'modulations' && onAddModulation && onRemoveModulation && onUpdateModulation && (
-                   <ModulationSection 
-                    manifest={item as OMEGA_Manifest}
-                    onAdd={onAddModulation}
-                    onRemove={onRemoveModulation}
-                    onUpdate={onUpdateModulation}
-                    onOpenGrid={onOpenGrid}
-                  />
+                {activeSection === 'modulations' && props.onAddModulation && (
+                  <ModulationSection manifest={props.item as OMEGA_Manifest} onAdd={props.onAddModulation} onRemove={props.onRemoveModulation!} onUpdate={props.onUpdateModulation!} onOpenModGrid={props.onOpenModGrid} />
                 )}
-                {activeSection === 'assets' && extraResources && onTriggerUpload && (
-                   <ResourceSection 
-                    resources={extraResources} 
-                    onTriggerUpload={() => onTriggerUpload('resource-upload')} 
-                    onRemove={onRemoveResource}
-                  />
+                {activeSection === 'assets' && props.extraResources && (
+                  <ResourceSection resources={props.extraResources} onTriggerUpload={() => props.onTriggerUpload?.('resource-upload')} onRemove={props.onRemoveResource} />
                 )}
               </>
             ) : (
               <>
-                {activeSection === 'engineering' && (
-                  <EngineeringSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} highlightPath={highlightPath} />
-                )}
-
-                {activeSection === 'logic' && (
-                  <LogicSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} availableBinds={availableBinds} onHelp={onHelp} highlightPath={highlightPath} />
-                )}
-
-                {activeSection === 'spatial' && (
-                  <SpatialSection item={item as ManifestEntity} onUpdate={handleFieldUpdate} onHelp={onHelp} highlightPath={highlightPath} />
-                )}
-
-                {activeSection === 'aesthetic' && (
-                  <AestheticSection 
-                    item={item as ManifestEntity} 
-                    onUpdate={handleFieldUpdate} 
-                    onHelp={onHelp} 
-                    containers={manifest?.ui?.layout?.containers || []}
-                    highlightPath={highlightPath}
-                  />
-                )}
-
-                {activeSection === 'attachments' && (
-                  <AttachmentsSection 
-                    item={item as ManifestEntity} 
-                    onUpdate={handleFieldUpdate} 
-                    availableBinds={availableBinds}
-                    onHelp={onHelp}
-                    highlightPath={highlightPath}
-                  />
-                )}
+                {activeSection === 'engineering' && <EngineeringSection item={props.item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u)} onHelp={props.onHelp} highlightPath={props.highlightPath} />}
+                {activeSection === 'logic' && <LogicSection item={props.item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u)} availableBinds={props.availableBinds || []} onHelp={props.onHelp} highlightPath={props.highlightPath} />}
+                {activeSection === 'spatial' && <SpatialSection item={props.item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u)} onHelp={props.onHelp} highlightPath={props.highlightPath} containers={props.manifest?.ui?.layout?.containers || []} />}
+                {activeSection === 'aesthetic' && <AestheticSection item={props.item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u)} onHelp={props.onHelp} containers={props.manifest?.ui?.layout?.containers || []} highlightPath={props.highlightPath} />}
+                {activeSection === 'attachments' && <AttachmentsSection item={props.item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u)} availableBinds={props.availableBinds || []} onHelp={props.onHelp} />}
               </>
             )}
           </motion.div>

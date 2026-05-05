@@ -3,9 +3,11 @@
 import React from 'react';
 import { Box, Palette } from 'lucide-react';
 
+import { ManifestEntity } from '@/types/manifest';
+
 interface SliderPropertiesProps {
-  item: any;
-  onUpdate: (updates: any) => void;
+  item: ManifestEntity;
+  onUpdate: (updates: Partial<ManifestEntity>) => void;
 }
 
 export default function SliderProperties({ item, onUpdate }: SliderPropertiesProps) {

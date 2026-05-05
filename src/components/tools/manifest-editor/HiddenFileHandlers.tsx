@@ -3,7 +3,6 @@
 import React from 'react';
 
 interface HiddenFileHandlersProps {
-  onBulkUpload: (files: File[]) => void;
   onResourceUpload: (files: FileList) => void;
   setPendingFiles: (files: File[]) => void;
 }
@@ -13,7 +12,6 @@ interface HiddenFileHandlersProps {
  * Isolates invisible file input infrastructure to keep the main workbench clean.
  */
 export const HiddenFileHandlers = ({ 
-  onBulkUpload, 
   onResourceUpload, 
   setPendingFiles 
 }: HiddenFileHandlersProps) => {
@@ -35,7 +33,7 @@ export const HiddenFileHandlers = ({
       <input 
         id="folder-upload" 
         type="file" 
-        {...({ webkitdirectory: "", directory: "" } as any)}
+        {...({ webkitdirectory: "", directory: "" } as React.InputHTMLAttributes<HTMLInputElement> & { webkitdirectory: string; directory: string })}
         className="hidden" 
         onChange={(e) => { 
           if (e.target.files) { 
