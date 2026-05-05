@@ -67,22 +67,43 @@ export default function AuditSummary({ audit, manifest, statusConfig }: AuditSum
       </div>
 
       {/* METRICS */}
-      <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xs space-y-4">
-         <div className="space-y-1">
-            <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Metadata Density</span>
-            <div className="flex justify-between text-[10px] font-mono font-black wb-text">
-              <span>{manifest.metadata?.name || 'NOT_SET'}</span>
-              <span className="text-primary">{manifest.metadata?.rack?.hp || 12}HP</span>
-            </div>
+      <div className="p-5 bg-black/60 border border-white/5 rounded-sm space-y-6 relative overflow-hidden group">
+         <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
+            <ShieldCheck className="w-24 h-24 text-[#00ff9d]" />
          </div>
-         <div className="h-px bg-white/5" />
-         <div className="space-y-1">
-            <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">WASM Runtime Sync</span>
-            <div className="flex justify-between text-[10px] font-mono font-black wb-text">
-              <span>{audit.isHashMatched ? 'COHERENT' : 'DEGRADED'}</span>
-              <span className={audit.isHashMatched ? 'text-[#00ff9d]' : 'text-red-500'}>
-                {audit.fingerprint?.slice(0, 8) || 'NONE'}
-              </span>
+
+         <div className="space-y-4 relative z-10">
+           <div className="space-y-1">
+              <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Metadata Density</span>
+              <div className="flex justify-between text-[10px] font-mono font-black wb-text">
+                <span>{manifest.metadata?.name || 'NOT_SET'}</span>
+                <span className="text-primary">{manifest.metadata?.rack?.hp || 12}HP</span>
+              </div>
+           </div>
+           
+           <div className="h-px bg-white/5" />
+
+           <div className="space-y-1">
+              <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">WASM Runtime Sync</span>
+              <div className="flex justify-between text-[10px] font-mono font-black wb-text">
+                <span>{audit.isHashMatched ? 'COHERENT' : 'DEGRADED'}</span>
+                <span className={audit.isHashMatched ? 'text-[#00ff9d]' : 'text-red-500'}>
+                  {audit.fingerprint?.slice(0, 8) || 'NONE'}
+                </span>
+              </div>
+           </div>
+         </div>
+
+         {/* CERTIFICATION SEAL */}
+         <div className="pt-4 border-t border-white/5">
+            <div className={`p-3 rounded-xs border flex items-center justify-center gap-3 transition-all ${audit.isCompliant ? 'border-[#00ff9d]/30 bg-[#00ff9d]/5' : 'border-red-500/30 bg-red-500/5'}`}>
+               <ShieldCheck className={`w-4 h-4 ${audit.isCompliant ? 'text-[#00ff9d]' : 'text-red-500'}`} />
+               <div className="flex flex-col">
+                  <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${audit.isCompliant ? 'text-[#00ff9d]' : 'text-red-500'}`}>
+                    {audit.isCompliant ? 'OMEGA_CERTIFIED' : 'CERTIFICATION_DENIED'}
+                  </span>
+                  <span className="text-[6px] font-mono text-white/30 uppercase tracking-widest">Aseptic Standard V7.2.3</span>
+               </div>
             </div>
          </div>
       </div>

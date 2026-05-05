@@ -2,9 +2,13 @@
 
 import React from 'react';
 import { 
-  FileText, ShieldX, AlertCircle, CheckCircle2 
+  FileText, CheckCircle2 
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { AuditResult } from '@/services/auditService';
+
+// Modular Sub-components
+import InspectionCard from './InspectionCard';
 
 interface AuditIssuesListProps {
   audit: AuditResult;
@@ -13,53 +17,90 @@ interface AuditIssuesListProps {
 }
 
 export default function AuditIssuesList({ audit, onNavigate, onClose }: AuditIssuesListProps) {
+  // Grouping logic for categorization
+  const categories = [
+    { label: 'Technical Integrity', key: 'technical', keywords: ['era7_identity', 'era7_binding'] },
+    { label: 'Spatial Architecture', key: 'spatial', keywords: ['era7_integrity', 'era7_collision', 'era7_alignment'] },
+    { label: 'Governance & UX', key: 'governance', keywords: ['era7_style', 'era7_port_norm', 'era7_ux', 'era7_ux_context'] }
+  ];
+
   return (
-    <div className="flex-1 space-y-8">
+    <div className="flex-1 space-y-10">
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <div className="flex items-center gap-3">
           <FileText className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-black uppercase tracking-[0.2em] text-foreground/80">Diagnostic Inspection Log</h3>
         </div>
-        <span className="text-[10px] font-mono wb-text-muted">{audit.issues.length} Issues Detected</span>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono wb-text-muted">{audit.issues.length} Issues Detected</span>
+          <div className="h-4 w-px bg-white/10" />
+          <span className="text-[10px] font-mono text-primary/60">Spec v7.2.3</span>
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-12 pb-12">
         {audit.issues.length === 0 ? (
-          <div className="p-12 border border-[#00ff9d]/10 bg-[#00ff9d]/2 rounded-sm flex flex-col items-center gap-4">
-            <CheckCircle2 className="w-12 h-12 text-[#00ff9d] opacity-40" />
-            <div className="text-center">
-              <p className="text-[#00ff9d] text-sm font-black uppercase tracking-widest">System Certified</p>
-              <p className="text-white/30 text-[10px] uppercase font-bold mt-1">All engineering checks passed with Aseptic Standard V7.2.</p>
+          <div className="p-16 border border-[#00ff9d]/10 bg-[#00ff9d]/2 rounded-sm flex flex-col items-center gap-6">
+            <div className="relative">
+              <CheckCircle2 className="w-16 h-16 text-[#00ff9d] opacity-40" />
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.5, 0.2] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 bg-[#00ff9d] rounded-full blur-2xl"
+              />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-[#00ff9d] text-lg font-black uppercase tracking-[0.4em]">System Certified</p>
+              <p className="text-white/20 text-[10px] uppercase font-black tracking-widest max-w-xs mx-auto leading-relaxed">
+                Hardware logic and architectural compliance verified under Aseptic Industrial Standard V7.2.3.
+              </p>
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            {audit.issues.map((issue, idx) => {
-              const isCritical = issue.severity === 'error' || issue.keyword === 'era7_governance' || issue.keyword === 'era7_integrity';
+          <div className="space-y-12">
+            {categories.map(cat => {
+              const catIssues = audit.issues.filter(i => cat.keywords.includes(i.keyword));
+              if (catIssues.length === 0) return null;
+
               return (
-                <button 
-                  key={idx} 
-                  onClick={() => {
-                    onNavigate(issue.path);
-                    onClose();
-                  }}
-                  className={`w-full text-left p-4 border rounded-sm flex gap-4 group transition-all hover:bg-white/[0.05] active:scale-[0.99] ${isCritical ? 'border-red-500/20 bg-red-500/2' : 'border-white/5 bg-black/40'}`}
-                >
-                  <div className={`mt-1 shrink-0 ${isCritical ? 'text-red-500' : 'text-amber-500'}`}>
-                     {isCritical ? <ShieldX className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                <div key={cat.key} className="space-y-4">
+                  <div className="flex items-center gap-4 px-1">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 shrink-0">{cat.label}</h4>
+                    <div className="h-px bg-white/5 flex-1" />
+                    <span className="text-[9px] font-mono text-white/10">{catIssues.length}</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-[9px] font-black uppercase tracking-widest ${isCritical ? 'text-red-500' : 'text-amber-500'}`}>
-                        {issue.keyword.replace('era7_', '').toUpperCase()}
-                      </span>
-                      <span className="text-[8px] font-mono wb-text-muted bg-white/5 px-2 py-0.5 rounded-full">{issue.path}</span>
-                    </div>
-                    <p className="text-xs text-white/80 font-medium leading-relaxed">{issue.message}</p>
+                  <div className="grid grid-cols-1 gap-4">
+                    {catIssues.map((issue, idx) => (
+                      <InspectionCard 
+                        key={idx} 
+                        issue={issue} 
+                        onNavigate={onNavigate} 
+                        onClose={onClose} 
+                      />
+                    ))}
                   </div>
-                </button>
+                </div>
               );
             })}
+
+            {/* UNKNOWN OR OTHER ISSUES */}
+            {(() => {
+              const otherIssues = audit.issues.filter(i => !categories.some(c => c.keywords.includes(i.keyword)));
+              if (otherIssues.length === 0) return null;
+              return (
+                <div className="space-y-4 opacity-60">
+                   <div className="flex items-center gap-4 px-1">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 shrink-0">General Compliance</h4>
+                    <div className="h-px bg-white/5 flex-1" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {otherIssues.map((issue, idx) => (
+                      <InspectionCard key={idx} issue={issue} onNavigate={onNavigate} onClose={onClose} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
