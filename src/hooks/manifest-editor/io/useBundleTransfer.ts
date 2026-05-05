@@ -7,6 +7,7 @@ import { ValidationIssue } from '../../../types/validation';
 
 export const useBundleTransfer = (
   manifest: OMEGA_Manifest,
+  setManifest: Dispatch<SetStateAction<OMEGA_Manifest>>,
   wasmBuffer: ArrayBuffer | null,
   extraResources: { name: string, data: ArrayBuffer, type: string }[],
   setExtraResources: Dispatch<SetStateAction<{ name: string, data: ArrayBuffer, type: string }[]>>,
@@ -17,24 +18,68 @@ export const useBundleTransfer = (
   handleManifestUpload: (file: File) => Promise<void>
 ) => {
 
-  const handleResourceUpload = useCallback(async (files: FileList | File) => {
-    const fileList = files instanceof FileList ? Array.from(files) : [files];
+  const sanitizeSVG = (content: string): string => {
+    // Saneamiento básico industrial Era 7.2.3
+    return content
+      .replace(/<metadata>[\s\S]*?<\/metadata>/gi, '') // Eliminar metadatos de editores
+      .replace(/<!--[\s\S]*?-->/g, '')               // Eliminar comentarios
+      .replace(/sodipodi:[\w-]+="[^"]*"/g, '')        // Eliminar basura de Inkscape
+      .replace(/inkscape:[\w-]+="[^"]*"/g, '');
+  };
+
+  const handleResourceUpload = useCallback(async (files: FileList | File[]) => {
+    let lastAssetId = '';
+    const fileArray = Array.from(files);
     
-    for (const file of fileList) {
-      addLog(`Ingesting Resource: ${file.name}...`);
+    for (const file of fileArray) {
       try {
-        const buffer = await file.arrayBuffer();
+        let buffer: ArrayBuffer;
+        
+        // Industrial Renaming & Sanitization (Era 7.2.3)
+        const isLogo = file.name.toLowerCase().includes('logo') || file.name.toLowerCase().includes('icon');
+        const finalName = isLogo ? 'module_logo.svg' : file.name;
+        const assetId = `resources/${finalName}`;
+        lastAssetId = assetId;
+
+        if (file.type === 'image/svg+xml' || file.name.endsWith('.svg')) {
+          const text = await file.text();
+          const sanitized = sanitizeSVG(text);
+          buffer = new TextEncoder().encode(sanitized).buffer;
+        } else {
+          buffer = await file.arrayBuffer();
+        }
+
+        addLog(`[SYSTEM] Processing Resource: ${file.name} -> ${finalName}`);
+
         setExtraResources(prev => [
-          ...prev.filter(r => r.name !== file.name),
-          { name: file.name, data: buffer, type: file.type }
+          ...prev.filter(r => r.name !== finalName),
+          { name: finalName, data: buffer, type: file.type }
         ]);
-        addLog(`[OK] Resource '${file.name}' stored in workspace.`);
+
+        // Auto-Register in manifest for immediate selector visibility
+        setManifest((prev: OMEGA_Manifest) => ({
+          ...prev,
+          resources: {
+            ...prev.resources,
+            assets: [
+              ...(prev.resources?.assets?.filter((a: { id: string }) => a.id !== assetId) || []),
+              { 
+                id: assetId, 
+                url: assetId, 
+                type: (file.type.includes('svg') ? 'svg' : 'image') as 'svg' | 'image' 
+              }
+            ]
+          }
+        }));
+        
+        addLog(`[OK] Resource '${finalName}' stored and registered in manifest.`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         addLog(`[CRITICAL] Resource Ingestion Failed: ${message}`);
       }
     }
-  }, [addLog, setExtraResources]);
+    return lastAssetId;
+  }, [addLog, setExtraResources, setManifest]);
 
   const exportOmegaPack = useCallback(async () => {
     try {
@@ -78,7 +123,12 @@ export const useBundleTransfer = (
       if (extraResources.length > 0) {
         const resFolder = zip.folder("resources");
         for (const res of extraResources) {
-          resFolder.file(res.name, res.data);
+          if (res.name === 'module_logo.svg') {
+            zip.file(res.name, res.data); // Root for discovery
+            addLog(`[SYSTEM] Identity Logo placed in package root.`);
+          } else {
+            resFolder.file(res.name, res.data);
+          }
         }
       }
 
@@ -123,7 +173,7 @@ export const useBundleTransfer = (
 
       for (const res of others) {
         addLog(`[TRACE] Ingesting resource: ${res.name}`);
-        await handleResourceUpload(res);
+        await handleResourceUpload([res]);
       }
 
       addLog(`[SUCCESS] Industrial Batch Ingestion finalized.`);

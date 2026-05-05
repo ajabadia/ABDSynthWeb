@@ -3,7 +3,7 @@ import addFormats from 'ajv-formats';
 import era6Schema from '../../data/omega-schema.json';
 import era7Schema from '../../data/omega-schema-v7.json';
 import { ValidationIssue } from '../../types/validation';
-import { OMEGA_Manifest } from '../../types/manifest';
+import { OMEGA_Manifest } from '../../omega-ui-core/types/manifest';
 
 const ajv = new AJV({ 
   allErrors: true,

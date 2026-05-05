@@ -1,19 +1,29 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
+import { clsx } from 'clsx';
 
-interface SignalScopeProps {
+interface ScopeProps {
   value: number;
-  color?: string;
+  variant?: 'phosphor' | 'amber' | 'cyan' | 'oled';
   width?: number;
   height?: number;
+  className?: string;
+  color?: string;
 }
 
 /**
- * SignalScope
- * Tiny industrial oscilloscope for real-time signal visualization.
+ * Scope
+ * OMEGA Canonical Oscilloscope Primitive (Era 7.2.3)
  */
-export default function SignalScope({ value, color = '#00ff9d', width = 40, height = 20 }: SignalScopeProps) {
+export default function Scope({ 
+  value, 
+  variant = 'phosphor', 
+  width = 120, 
+  height = 60,
+  className,
+  color: customColor
+}: ScopeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const points = useRef<number[]>([]);
 
@@ -34,26 +44,27 @@ export default function SignalScope({ value, color = '#00ff9d', width = 40, heig
 
       ctx.clearRect(0, 0, width, height);
       
-      // Draw Grid
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-      ctx.lineWidth = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(0, height / 2);
-      ctx.lineTo(width, height / 2);
-      ctx.stroke();
+      // The grid is handled by CSS (.scope-grid), 
+      // but we could also draw it here if preferred.
+
+      // Signal Color based on variant
+      const colorMap = {
+        phosphor: '#00ff88',
+        amber: '#ffaa00',
+        cyan: '#00f0ff',
+        oled: '#fff'
+      };
+      
+      const color = customColor || colorMap[variant] || colorMap.phosphor;
 
       // Draw Signal
       ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
-      ctx.shadowBlur = 4;
-      ctx.shadowColor = color;
       ctx.beginPath();
       
       for (let i = 0; i < points.current.length; i++) {
         const x = i;
-        // Map value (-1 to 1 or 0 to 1) to canvas height
-        // Assuming unipolar 0 to 1 for simplicity, or bipolar -1 to 1
-        const normalized = (points.current[i] + 1) / 2; // Bipolar map
+        const normalized = (points.current[i] + 1) / 2; // Bipolar map (-1 to 1)
         const y = height - (normalized * height);
         
         if (i === 0) ctx.moveTo(x, y);
@@ -66,14 +77,23 @@ export default function SignalScope({ value, color = '#00ff9d', width = 40, heig
 
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
-  }, [value, color, width, height]);
+  }, [value, variant, width, height, customColor]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={width} 
-      height={height} 
-      className="bg-black/40 border border-white/5 rounded-xs"
-    />
+    <div 
+      className={clsx('scope-display', `variant-${variant}`, className)}
+      style={{ 
+        '--scope-width': `${width}px`, 
+        '--scope-height': `${height}px` 
+      } as React.CSSProperties}
+    >
+      <canvas 
+        ref={canvasRef} 
+        width={width} 
+        height={height} 
+        className="scope-canvas"
+      />
+      <div className="scope-grid" />
+    </div>
   );
 }

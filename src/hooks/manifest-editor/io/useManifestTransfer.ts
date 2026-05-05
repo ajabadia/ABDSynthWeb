@@ -150,7 +150,12 @@ export const useManifestTransfer = (
 
   const exportCADBlueprint = useCallback(async () => {
     const { CADExportService } = await import('../../../services/cadExportService');
-    const svg = CADExportService.generateSVGBlueprint(manifest);
+    const svg = CADExportService.generateSVGBlueprint(manifest, {
+      skin: manifest.ui.skin || 'industrial',
+      drillLayer: false,
+      silkscreenLayer: true,
+      dimensions: true
+    });
     const blob = new Blob([svg], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

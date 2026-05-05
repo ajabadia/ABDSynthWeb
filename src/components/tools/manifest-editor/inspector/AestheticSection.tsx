@@ -9,19 +9,22 @@ import SliderProperties from './SliderProperties';
 import DisplayProperties from './DisplayProperties';
 import SwitchProperties from './SwitchProperties';
 import SelectProperties from './SelectProperties';
+import IllustrationProperties from './IllustrationProperties';
 
-import { ManifestEntity, LayoutContainer } from '@/types/manifest';
+import { ManifestEntity, LayoutContainer, OMEGA_Manifest } from '@/types/manifest';
 import ArchPlaneSelector from './aesthetic/ArchPlaneSelector';
 
 interface AestheticSectionProps {
   item: ManifestEntity;
+  manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   onHelp?: (sectionId?: string) => void;
   containers?: LayoutContainer[];
   highlightPath?: string | null;
+  resolveAsset: (id: string | undefined) => string | undefined;
 }
 
-export default function AestheticSection({ item, onUpdate, onHelp, highlightPath }: AestheticSectionProps) {
+export default function AestheticSection({ item, manifest, onUpdate, onHelp, highlightPath, resolveAsset }: AestheticSectionProps) {
   const componentType = item.presentation?.component || 'knob';
 
   const renderSpecializedEditor = () => {
@@ -35,6 +38,7 @@ export default function AestheticSection({ item, onUpdate, onHelp, highlightPath
       case 'select': return <SelectProperties item={item} onUpdate={onUpdate} />;
       case 'switch':
       case 'button': return <SwitchProperties item={item} onUpdate={onUpdate} />;
+      case 'illustration': return <IllustrationProperties item={item} manifest={manifest} onUpdate={onUpdate} resolveAsset={resolveAsset} />;
       default: return (
         <div className="p-8 border border-dashed border-outline/10 rounded-xs flex flex-col items-center justify-center gap-3 opacity-30">
           <Box className="w-8 h-8" />

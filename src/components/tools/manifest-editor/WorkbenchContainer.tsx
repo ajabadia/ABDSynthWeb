@@ -1,17 +1,17 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 // UI Components
-import Header from './Header';
-import WorkbenchFooter from './WorkbenchFooter';
-import WorkbenchLogs from './WorkbenchLogs';
-import EditorModals from './EditorModals';
-import ModulationGrid from './ModulationGrid';
-import { HiddenFileHandlers } from './HiddenFileHandlers';
-import { WorkbenchSidebar } from './WorkbenchSidebar';
-import { WorkbenchViewport } from './WorkbenchViewport';
-import { WorkbenchInspector } from './WorkbenchInspector';
+import Header from './layout/Header';
+import WorkbenchFooter from './layout/WorkbenchFooter';
+import WorkbenchLogs from './layout/WorkbenchLogs';
+import EditorModals from './modals/EditorModals';
+import ModulationGrid from './modulation/ModulationGrid';
+import { HiddenFileHandlers } from './shared/HiddenFileHandlers';
+import { WorkbenchSidebar } from './layout/WorkbenchSidebar';
+import { WorkbenchViewport } from './viewport/WorkbenchViewport';
+import { WorkbenchInspector } from './inspector/WorkbenchInspector';
 
 // Hooks
 import { useManifestEditor } from '@/hooks/useManifestEditor';
@@ -39,10 +39,11 @@ export default function WorkbenchContainer() {
   const watchdog = useWatchdog((content) => {
     editor.handleBulkUpload([new File([content], 'auto-reload.acemm')]);
   });
-
-  // 4. Effects & Synchronization
+ 
+  // 4. Effects & Synchronization (Aseptic Sync)
   useEffect(() => {
-    if (manifest.ui?.layout?.activeTab !== ui.activeTab) {
+    const manifestTab = manifest.ui?.layout?.activeTab;
+    if (manifestTab !== ui.activeTab) {
       updateManifest({ 
         ui: { 
           ...manifest.ui, 
@@ -55,49 +56,44 @@ export default function WorkbenchContainer() {
       });
     }
   }, [ui.activeTab, manifest.ui, updateManifest]);
-
-  // 4. Handlers (Lightweight Orchestration)
+ 
+  // 5. Handlers (Lightweight Orchestration)
   const handleSelectItem = useCallback((id: string | null) => ui.setSelectedItemId(id), [ui]);
-
+ 
   const handleAddEntity = useCallback((type: 'control' | 'jack') => {
     const id = editor.addEntity(type);
     if (id) handleSelectItem(id);
   }, [editor, handleSelectItem]);
-
+ 
   const handleDuplicateItem = useCallback((id: string) => {
     const newId = editor.duplicateItem(id);
     if (newId) handleSelectItem(newId);
   }, [editor, handleSelectItem]);
-
+ 
   const handleRemoveItem = useCallback((id: string) => {
     editor.removeItem(id);
     if (ui.selectedItemId === id) ui.setSelectedItemId(null);
   }, [editor, ui]);
-
+ 
   const onDeploy = useCallback(async () => {
     if (await editor.handleDeploy() === 'AUDIT_FAIL') ui.setIsAuditModalOpen(true);
   }, [editor, ui]);
-
+ 
   const handleExportContract = (format: 'ts' | 'cpp') => {
-    const content = format === 'ts' 
-      ? ContractService.generateTypeScriptContract(manifest)
-      : ContractService.generateCppContract(manifest);
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = format === 'ts' ? 'schema_ids.ts' : 'OmegaRegistry.h';
-    a.click();
-    URL.revokeObjectURL(url);
+    ContractService.downloadContract(manifest, format);
   };
-
-  const availableBinds = contract ? [
-    ...(contract.parameters?.map((p) => p.id) || []),
-    ...(contract.ports?.map((p) => p.id) || [])
-  ] : [];
-
-  const selectedItem = (ui.selectedItemId ? editor.findItem(ui.selectedItemId) : manifest) || null;
+ 
+  const availableBinds = useMemo(() => {
+    if (!contract) return [];
+    return [
+      ...(contract.parameters?.map((p) => p.id) || []),
+      ...(contract.ports?.map((p) => p.id) || [])
+    ];
+  }, [contract]);
+ 
+  const selectedItem = useMemo(() => 
+    (ui.selectedItemId ? editor.findItem(ui.selectedItemId) : manifest) || null
+  , [ui.selectedItemId, editor, manifest]);
 
   return (
     <div className="h-screen flex flex-col wb-bg wb-text font-sans overflow-hidden select-none relative transition-colors duration-500" data-ui-theme={ui.uiTheme}>
@@ -129,6 +125,7 @@ export default function WorkbenchContainer() {
           handleResetViewport={handleResetViewport} handleFitViewport={handleFitViewport}
           isLiveMode={ui.isLiveMode} setIsLiveMode={ui.setIsLiveMode}
           activeTab={ui.activeTab} setActiveTab={ui.setActiveTab}
+          resolveAsset={editor.resolveAsset}
         />
 
         <WorkbenchInspector 
@@ -146,6 +143,7 @@ export default function WorkbenchContainer() {
           addContainer={editor.addContainer} updateContainer={editor.updateContainer}
           removeContainer={editor.removeContainer} onHelp={ui.openHelp}
           onRemoveResource={editor.handleRemoveResource}
+          resolveAsset={editor.resolveAsset}
         />
 
         {ui.showModGrid && (
@@ -161,6 +159,7 @@ export default function WorkbenchContainer() {
         manifest={manifest} pendingFiles={ui.pendingFiles} setPendingFiles={ui.setPendingFiles} handleBulkUpload={editor.handleBulkUpload}
         helpState={ui.helpState} closeHelp={ui.closeHelp} isAuditModalOpen={ui.isAuditModalOpen} setIsAuditModalOpen={ui.setIsAuditModalOpen}
         handleNavigateToIssue={gps.handleNavigateToIssue} auditResult={auditResult} mockupOpen={ui.mockupOpen} setMockupOpen={ui.setMockupOpen}
+        resolveAsset={editor.resolveAsset}
       />
 
       <WorkbenchLogs showLogs={ui.showLogs} setShowLogs={ui.setShowLogs} logs={editor.logs} />

@@ -344,6 +344,53 @@ Ejemplos: B_cyan, A_orange, C_red, D_green
 
 ---
 
+### 3.11 Scope (Oscilloscope Visualizer) [NEW]
+
+**Canonical CSS Class**: `.scope-display.variant-{phosphor|cyan|oled}.size-{S}`
+
+```css
+<div class="scope-display variant-phosphor size-B">
+    <canvas class="scope-canvas"></canvas>
+    <div class="scope-grid"></div>
+</div>
+```
+
+| Propiedad | Valor Canónico |
+|-----------|---------------|
+| Background | `#050505` (Inlaid) |
+| Border | `1px solid var(--wb-outline)` |
+| Screen Blur | `2px` (Bloom effect) |
+| Grid Color | `rgba(0, 240, 255, 0.05)` |
+| Refresh Rate | 60 FPS (RequestAnimationFrame) |
+| Data Source | Buffer circular de 512-1024 puntos |
+| Wave Color | Definible vía `presentation.color` o `variant` |
+
+---
+
+### 3.12 Terminal (Log/MIDI Monitor) [NEW]
+
+**Canonical CSS Class**: `.terminal-display.size-{S}`
+
+```css
+<div class="terminal-display size-B">
+    <div class="terminal-container">
+        <div class="terminal-line">...</div>
+    </div>
+</div>
+```
+
+| Propiedad | Valor Canónico |
+|-----------|---------------|
+| Background | `#000` |
+| Font | `'Fragment Mono'`, definible vía `presentation.font` |
+| Font Size | `8px` |
+| Line Spacing | `1.2` |
+| Text Color | Definible vía `presentation.color` o `variant` |
+| Max Lines | 50 (Circular buffer en UI) |
+| Scroll | Auto-bottom on new message |
+
+---
+
 ## 4. Layout Containers
 
 ### 4.1 Container Variants

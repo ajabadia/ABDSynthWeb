@@ -19,6 +19,9 @@ export const renderDisplayHTML = (props: DisplayProps): string => {
 
   return `
     <div class="mini-display variant-${mode} size-${size} color-${colorId}" ${id ? `data-source="${id}"` : ''}>
+      <div class="display-glass-overlay"></div>
+      <div class="display-internal-glow"></div>
+      <div class="display-scanlines"></div>
       <button class="display-btn minus" data-action="step-down">−</button>
       <div class="display-value">${displayValue}</div>
       <button class="display-btn plus" data-action="step-up">+</button>

@@ -5,8 +5,35 @@
     border-radius: 50% !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     transition: all 0.1s ease-out !important;
-    background-color: #331111; /* Default state */
+    background-color: #111; /* Default state darker */
     opacity: 0.3;
+    position: relative;
+    overflow: hidden;
+}
+
+.led-glass-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 60%);
+    z-index: 10;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
+.led-internal-glow {
+    position: absolute;
+    inset: 15%;
+    border-radius: 50%;
+    background: var(--glow-color, transparent);
+    opacity: 0.1;
+    z-index: 1;
+    transition: all 0.1s ease-out;
+}
+
+.led.active .led-internal-glow {
+    opacity: 0.8;
+    filter: blur(2px);
 }
 
 /* SIZES */
@@ -16,11 +43,11 @@
 .led.size-D { width: 3px !important; height: 3px !important; }
 
 /* COLOR STATES & GLOW */
-.led.color-cyan { background-color: var(--wb-primary); }
-.led.color-red { background-color: #ff4444; }
-.led.color-orange { background-color: var(--wb-accent); }
-.led.color-green { background-color: #00ff88; }
-.led.color-white { background-color: #ffffff; }
+.led.color-cyan { --glow-color: var(--wb-primary); background-color: var(--wb-primary); }
+.led.color-red { --glow-color: #ff4444; background-color: #ff4444; }
+.led.color-orange { --glow-color: var(--wb-accent); background-color: var(--wb-accent); }
+.led.color-green { --glow-color: #00ff88; background-color: #00ff88; }
+.led.color-white { --glow-color: #ffffff; background-color: #ffffff; }
 
 /* Dynamic Glow Logic */
 .led.active {

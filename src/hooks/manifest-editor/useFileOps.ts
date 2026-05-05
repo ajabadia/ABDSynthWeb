@@ -27,11 +27,12 @@ export const useFileOps = (
   const manifestIO = useManifestTransfer(manifest, setManifest, addLog, issues);
 
   // 2. WASM Operations (Binary/Contract)
-  const wasmIO = useWasmTransfer(setManifest, setContract, setWasmBuffer, addLog);
+  const wasmIO = useWasmTransfer(manifest, setManifest, setContract, setWasmBuffer, addLog);
 
   // 3. Bundle Operations (OmegaPack/Bulk/Resources)
   const bundleIO = useBundleTransfer(
     manifest, 
+    setManifest,
     wasmBuffer, 
     extraResources, 
     setExtraResources, 
@@ -45,6 +46,7 @@ export const useFileOps = (
   return {
     ...manifestIO,
     ...wasmIO,
-    ...bundleIO
+    ...bundleIO,
+    exportContract: wasmIO.exportContract
   };
 };

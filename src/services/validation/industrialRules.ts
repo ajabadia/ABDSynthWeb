@@ -1,4 +1,4 @@
-import { OMEGA_Manifest, ManifestEntity } from '../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity } from '../../omega-ui-core/types/manifest';
 import { ValidationIssue } from '../../types/validation';
 import { OmegaContract } from '../wasmLoader';
 
@@ -24,9 +24,44 @@ export class IndustrialRules {
     }
 
     const containerTabMap = new Map(containers.map(c => [c.id, c.tab || 'MAIN']));
+    const availableAssets = new Set(manifest.resources?.assets?.map(a => a.id) || []);
+
+    // CHEQUEO DE ACTIVOS (Fase 13 — AGGRESSIVE)
+    if (manifest.metadata?.icon && !availableAssets.has(manifest.metadata.icon)) {
+        issues.push({
+            path: '/metadata/icon',
+            message: `CRITICAL: El icono '${manifest.metadata.icon}' no existe en el catálogo de recursos.`,
+            keyword: 'era7_asset_critical',
+            severity: 'critical'
+        });
+    }
+
+    containers.forEach((c, idx) => {
+        if (c.asset && !availableAssets.has(c.asset)) {
+            issues.push({
+                path: `/ui/layout/containers/${idx}/asset`,
+                message: `CRITICAL: El fondo '${c.asset}' para '${c.id}' no existe.`,
+                keyword: 'era7_asset_critical',
+                severity: 'critical'
+            });
+        }
+    });
 
     const validateEntity = (entity: ManifestEntity, path: string) => {
       const entityTab = containerTabMap.get(entity.presentation?.container || '') || 'MAIN';
+
+      // Asset Validation (Fase 13 — AGGRESSIVE)
+      const assetId = entity.presentation.asset;
+      const isLogo = entity.bind === 'module_logo' || entity.id === 'logo';
+
+      if ((assetId || isLogo) && !availableAssets.has(assetId || '')) {
+          issues.push({
+              path: `${path}/presentation/asset`,
+              message: `CRITICAL ASSET: El recurso '${assetId || 'module_logo'}' referenciado por '${entity.id}' no existe en el manifiesto.`,
+              keyword: 'era7_asset_critical',
+              severity: 'critical'
+          });
+      }
 
       // Golden Rule 1: Identity
       if (usedIds.has(entity.id)) {

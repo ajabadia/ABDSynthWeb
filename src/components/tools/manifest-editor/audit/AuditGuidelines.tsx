@@ -12,13 +12,27 @@ export default function AuditGuidelines() {
       </div>
       <div className="grid grid-cols-2 gap-6">
          <div className="space-y-2">
+            <h4 className="text-[8px] font-black text-primary/60 uppercase tracking-widest">WASM Binding</h4>
             <p className="text-[9px] font-bold wb-text leading-relaxed italic">
               &quot;La gobernanza ERA 4 exige que cada componente tenga un Registry Role explícito vinculado a una dirección de memoria del contrato WASM.&quot;
             </p>
          </div>
          <div className="space-y-2">
+            <h4 className="text-[8px] font-black text-primary/60 uppercase tracking-widest">Spatial Integrity</h4>
             <p className="text-[9px] font-bold wb-text leading-relaxed italic">
               &quot;La integridad espacial requiere que todos los elementos interactivos residan al menos a 12px de los bordes del rack para garantizar la paridad física.&quot;
+            </p>
+         </div>
+         <div className="space-y-2">
+            <h4 className="text-[8px] font-black text-primary/60 uppercase tracking-widest">Identity Branding</h4>
+            <p className="text-[9px] font-bold wb-text leading-relaxed italic">
+              &quot;La REGLA DE ORO (saturación 0.8) garantiza que la identidad visual se integre con el chasis industrial sin distraer de la funcionalidad técnica.&quot;
+            </p>
+         </div>
+         <div className="space-y-2">
+            <h4 className="text-[8px] font-black text-primary/60 uppercase tracking-widest">Asset Governance</h4>
+            <p className="text-[9px] font-bold wb-text leading-relaxed italic">
+              &quot;Cualquier activo faltante bloquea la exportación crítica. El HAZARD PATTERN es el único indicador aceptado para violaciones de integridad de recursos.&quot;
             </p>
          </div>
       </div>

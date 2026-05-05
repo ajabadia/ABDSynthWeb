@@ -4,13 +4,31 @@ import { useCallback, Dispatch, SetStateAction } from 'react';
 import { OMEGA_Manifest } from '../../../types/manifest';
 import { WasmLoaderService, OmegaContract } from '../../../services/wasmLoader';
 import { wasmRuntime } from '../../../services/wasmRuntime';
+import { ContractService } from '../../../services/contractService';
 
 export const useWasmTransfer = (
+  manifest: OMEGA_Manifest,
   setManifest: Dispatch<SetStateAction<OMEGA_Manifest>>,
   setContract: Dispatch<SetStateAction<OmegaContract | null>>,
   setWasmBuffer: Dispatch<SetStateAction<ArrayBuffer | null>>,
   addLog: (msg: string) => void
 ) => {
+
+  const exportContract = useCallback((format: 'ts' | 'cpp') => {
+    addLog(`[SYSTEM] Exporting Technical Contract (${format.toUpperCase()})...`);
+    const content = format === 'ts' 
+      ? ContractService.generateTypeScriptContract(manifest)
+      : ContractService.generateCppContract(manifest);
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = format === 'ts' ? 'schema_ids.ts' : 'OmegaRegistry.h';
+    a.click();
+    URL.revokeObjectURL(url);
+    addLog(`[OK] Contract exported as ${a.download}`);
+  }, [manifest, addLog]);
 
   const syncManifestWithContract = useCallback((newContract: OmegaContract, filename: string) => {
     setManifest((prev: OMEGA_Manifest) => ({
@@ -105,6 +123,7 @@ export const useWasmTransfer = (
 
   return {
     handleWasmUpload,
-    handleContractUpload
+    handleContractUpload,
+    exportContract
   };
 };

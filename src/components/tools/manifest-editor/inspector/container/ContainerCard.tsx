@@ -3,7 +3,7 @@
 import React from 'react';
 import { ChevronDown, ChevronRight, Maximize, Minimize2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutContainer } from '@/types/manifest';
+import { LayoutContainer, OMEGA_Manifest } from '@/types/manifest';
 import ContainerForm from './ContainerForm';
 
 interface ContainerCardProps {
@@ -12,10 +12,12 @@ interface ContainerCardProps {
   onToggleExpand: () => void;
   onUpdate: (id: string, updates: Partial<LayoutContainer>) => void;
   onRemove: (id: string) => void;
+  manifest: OMEGA_Manifest;
+  resolveAsset: (id: string | undefined) => string | undefined;
 }
 
 export default function ContainerCard({
-  container, isExpanded, onToggleExpand, onUpdate, onRemove
+  container, isExpanded, onToggleExpand, onUpdate, onRemove, manifest, resolveAsset
 }: ContainerCardProps) {
   return (
     <div className="bg-black/40 border border-outline/5 rounded-xs overflow-hidden group hover:border-outline/20 transition-all">
@@ -58,7 +60,7 @@ export default function ContainerCard({
       <AnimatePresence>
         {isExpanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
-            <ContainerForm container={container} onUpdate={onUpdate} />
+            <ContainerForm container={container} onUpdate={onUpdate} manifest={manifest} resolveAsset={resolveAsset} />
           </motion.div>
         )}
       </AnimatePresence>

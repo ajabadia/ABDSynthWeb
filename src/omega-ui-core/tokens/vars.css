@@ -19,6 +19,18 @@
     --rack-height: 680px;
     --knob-size: 42px;
     --render-scale: 1.5;
+
+    /* COMPONENT TOKENS (Base Industrial) */
+    --primitive-bg: #111;
+    --primitive-bg-dark: #000;
+    --primitive-border-color: #333;
+    --primitive-border: 2px solid var(--primitive-border-color);
+    --primitive-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
+    --primitive-radius-round: 50%;
+    --primitive-radius-pill: 20px;
+    --primitive-radius-flat: 2px;
+    --primitive-marker-glow: 0 0 8px rgba(0, 240, 255, 0.6);
+    --primitive-accent: var(--wb-primary);
 }
 
 /* ═══════════════════════════════════════════════

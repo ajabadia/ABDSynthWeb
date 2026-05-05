@@ -6,5 +6,5 @@ export interface ValidationIssue {
   path: string;
   message: string;
   keyword: string;
-  severity: 'error' | 'warning' | 'audit'; 
+  severity: 'critical' | 'error' | 'warning' | 'audit'; 
 }

@@ -12,6 +12,7 @@ interface RackContainerProps {
   skin: string;
   rackWidthPx: number;
   isLiveMode?: boolean;
+  resolveAsset?: (ref: string | undefined) => string | undefined;
 }
 
 /**
@@ -24,7 +25,8 @@ const RackContainerBase = ({
   activeContainers, 
   audit, 
   skin, 
-  rackWidthPx
+  rackWidthPx,
+  resolveAsset
 }: RackContainerProps) => {
   const c = container;
   const isCollapsed = c.collapsed;
@@ -54,6 +56,7 @@ const RackContainerBase = ({
   );
   
   const hasIntegrityError = containerIssues.some(i => i.keyword === 'era7_integrity');
+  const bgUrl = resolveAsset ? resolveAsset(c.asset) : undefined;
 
   return (
     <motion.div
@@ -72,7 +75,11 @@ const RackContainerBase = ({
         width: cw, 
         height: ch,
         zIndex: isSelected ? 5 : 0,
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: c.color || undefined
       }}
     >
       {/* ACTIVITY HEATMAP PULSE */}
@@ -102,6 +109,8 @@ export const RackContainer = React.memo(RackContainerBase, (prev, next) => {
     prev.isSelected === next.isSelected &&
     prev.skin === next.skin &&
     prev.isLiveMode === next.isLiveMode &&
+    prev.container.asset === next.container.asset &&
+    prev.container.color === next.container.color &&
     prev.activeContainers[prev.container.id] === next.activeContainers[next.container.id] &&
     prev.audit.issues.length === next.audit.issues.length
   );

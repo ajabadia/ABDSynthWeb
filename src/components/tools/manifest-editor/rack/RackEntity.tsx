@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, useDragControls } from 'framer-motion';
 import { Move, AlertCircle } from 'lucide-react';
-import { ManifestEntity } from '@/types/manifest';
+import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 
@@ -18,6 +18,8 @@ interface RackEntityProps {
   onPortClick: (id: string) => void;
   audit: AuditResult;
   skin: string;
+  resolveAsset?: (ref: string | undefined) => string | undefined;
+  manifest: OMEGA_Manifest;
 }
 
 /**
@@ -37,7 +39,9 @@ const RackEntityBase = ({
   steps, 
   onPortClick, 
   audit,
-  skin
+  skin,
+  resolveAsset,
+  manifest
 }: RackEntityProps) => {
   const dragControls = useDragControls();
   const isSelected = selectedItemId === item.id && !isLiveMode;
@@ -126,13 +130,15 @@ const RackEntityBase = ({
         {/* UNIFIED STATELESS RENDERER (ERA 7.2.3 — SOT) */}
         <div 
           dangerouslySetInnerHTML={{ 
-            __html: CellRenderer.renderCellHTML(item as ManifestEntity, {
+            __html: CellRenderer.renderCellHTML(item, {
               skin,
               zoom,
               runtimeValue,
               steps,
               isSelected,
-              isLiveMode
+              isLiveMode,
+              resolveAsset,
+              manifest
             }) 
           }}
         />
@@ -167,6 +173,8 @@ export const RackEntity = React.memo(RackEntityBase, (prev, next) => {
     prev.isLiveMode === next.isLiveMode &&
     prev.skin === next.skin &&
     prev.zoom === next.zoom &&
-    prev.audit.issues.length === next.audit.issues.length
+    prev.audit.issues.length === next.audit.issues.length &&
+    JSON.stringify(prev.manifest.resources?.assets) === JSON.stringify(next.manifest.resources?.assets) &&
+    prev.item.presentation?.asset === next.item.presentation?.asset
   );
 });

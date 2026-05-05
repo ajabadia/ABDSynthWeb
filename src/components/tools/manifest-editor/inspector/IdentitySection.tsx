@@ -15,9 +15,17 @@ interface IdentitySectionProps {
   onHelp?: (sectionId?: string) => void;
   rootManifest?: OMEGA_Manifest;
   highlightPath?: string | null;
+  resolveAsset: (id: string | undefined) => string | undefined;
 }
 
-export default function IdentitySection({ item, onUpdate, onHelp, rootManifest, highlightPath }: IdentitySectionProps) {
+export default function IdentitySection({ 
+  item, 
+  onUpdate, 
+  onHelp, 
+  rootManifest, 
+  highlightPath,
+  resolveAsset
+}: IdentitySectionProps) {
   const isModule = 'metadata' in item;
   const isHighlighted = (key: string) => highlightPath?.includes(key);
 
@@ -42,6 +50,7 @@ export default function IdentitySection({ item, onUpdate, onHelp, rootManifest, 
         onUpdate={onUpdate} 
         onHelp={onHelp} 
         isHighlighted={isHighlighted} 
+        resolveAsset={resolveAsset}
       />
       
       <ModuleTaxonomy 

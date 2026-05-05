@@ -13,32 +13,15 @@ interface KnobProps {
   onClick?: () => void;
 }
 
-export default function Knob({ value, variant, skin, isMain, isSelected, onValueChange, onClick }: KnobProps) {
+export default function Knob({ value, variant, isSelected, onValueChange, onClick }: KnobProps) {
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';
-  
-  const colorMap: Record<string, string> = {
-    cyan: 'var(--color-primary, #00f2ff)',
-    red: '#ff4444',
-    orange: 'var(--color-accent, #ff8800)',
-    green: '#00ff88',
-    white: '#ffffff',
-    primary: 'var(--color-primary, #00f0ff)',
-    accent: 'var(--color-accent, #ff8c00)'
-  };
-  
-  const color = colorMap[colorId] || colorMap.primary;
-  
-  const dims: Record<string, number> = { A: 32, B: 24, C: 16, D: 12 };
-  const d = dims[size] || 24;
   
   const rotation = -135 + (value * 270);
 
   return (
     <div 
-      style={{ width: `${d}px`, height: `${d}px` }} 
-      className={`rounded-full border-2 border-[#333] bg-[#111] flex items-center justify-center relative cursor-ns-resize ${isMain && isSelected ? 'border-primary shadow-[0_0_15px_rgba(0,240,255,0.2)]' : ''}`}
       onPointerDown={(e) => { 
         e.stopPropagation(); 
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); 
@@ -51,16 +34,19 @@ export default function Knob({ value, variant, skin, isMain, isSelected, onValue
           onValueChange(value - (e.movementY * 0.012)); 
         } 
       }}
+      className={`knob-container size-${size} color-${colorId} ${isSelected ? 'selected' : ''}`}
+      style={{ 
+        '--knob-rotation': `${rotation}deg`,
+        position: 'relative',
+        cursor: 'ns-resize'
+      } as React.CSSProperties}
     >
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-visible">
-         <motion.div 
-           animate={{ rotate: rotation }} 
-           transition={{ type: 'spring', stiffness: 350, damping: 25 }} 
-           className="w-[2px] h-[35%] rounded-full origin-bottom" 
-           style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}66`, position: 'relative', top: '-17.5%' }} 
-         />
-      </div>
-      {skin === 'industrial' && <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />}
+      <div className="knob-cap" />
+      <motion.div 
+        animate={{ rotate: rotation }} 
+        transition={{ type: 'spring', stiffness: 350, damping: 25 }} 
+        className="knob-marker" 
+      />
     </div>
   );
 }

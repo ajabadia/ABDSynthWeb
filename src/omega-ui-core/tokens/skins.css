@@ -12,31 +12,63 @@
     --industrial-border: var(--wb-outline);
 }
 
-/* SKIN: CARBON */
+/* SKIN: CARBON (Dark, High Contrast, Technical) */
 .skin-carbon {
-    background-color: var(--carbon-bg, #0a0a0a) !important;
-    background-image: var(--carbon-texture) !important;
-    background-size: 4px 4px !important;
-    background-position: 0 0, 2px 2px !important;
-    border-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: #050505 !important;
+    background-image: 
+        linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.01) 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+    border-color: #000 !important;
+    
+    /* Component Overrides */
+    --primitive-bg: #000;
+    --primitive-border: 1px solid #222;
+    --primitive-shadow: 0 10px 30px rgba(0,0,0,1), inset 0 1px 0 rgba(255,255,255,0.02);
+    --primitive-marker-glow: 0 0 15px var(--primitive-accent);
 }
 
-/* SKIN: GLASS */
+/* SKIN: GLASS (Translucent, Modern, iOS-style) */
 .skin-glass {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(var(--glass-blur)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(15, 20, 25, 0.3) !important;
+    backdrop-filter: blur(25px) saturate(150%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+
+    /* Component Overrides */
+    --primitive-bg: rgba(255, 255, 255, 0.03);
+    --primitive-border: 1px solid rgba(255, 255, 255, 0.25);
+    --primitive-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --primitive-radius-flat: 6px;
+    --wb-text: #fff;
 }
 
-/* SKIN: MINIMAL */
+/* SKIN: MINIMAL (Clean, Technical Gray, Laboratory Style) */
 .skin-minimal {
-    background: transparent !important;
-    border: 1px dashed rgba(255, 255, 255, 0.1) !important;
+    background: #4a4d50 !important;
+    border: 1px solid #222 !important;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.1) !important;
+
+    /* Component Overrides */
+    --primitive-bg: #3a3d40;
+    --primitive-border: 1px solid #111;
+    --primitive-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    --primitive-marker-glow: none;
+    --wb-text: #111;
+    --wb-text-muted: #333;
+    --wb-outline: #222;
+    --primitive-accent: #000;
 }
 
-/* SKIN: INDUSTRIAL */
+/* SKIN: INDUSTRIAL (The Standard Look) */
 .skin-industrial {
     background-color: #1a1c1e !important;
     background-image: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    
+    /* Explicitly use base industrial tokens */
+    --primitive-bg: #111;
+    --primitive-bg-dark: #000;
+    --primitive-border: 2px solid #333;
+    --primitive-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
 }

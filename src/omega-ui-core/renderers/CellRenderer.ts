@@ -11,31 +11,14 @@ import { renderDisplayHTML } from './DisplayRenderer';
 import { renderSwitchHTML } from './SwitchRenderer';
 import { renderStepperHTML } from './StepperRenderer';
 import { renderSelectHTML } from './SelectRenderer';
-import { AttachmentRenderer } from './AttachmentRenderer';
+import { renderScopeHTML } from './ScopeRenderer';
+import { renderTerminalHTML } from './TerminalRenderer';
+import { renderIllustrationHTML } from './IllustrationRenderer';
 
-export interface Attachment {
-  type: string;
-  variant: string;
-  text?: string;
-  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
-  offsetX?: number;
-  offsetY?: number;
-}
-
-export interface ManifestEntity {
-  id: string;
-  label?: string;
-  type?: string;
-  presentation?: {
-    component?: string;
-    variant?: string;
-    offsetX?: number;
-    offsetY?: number;
-    attachments?: Attachment[];
-    options?: (string | { label: string; value: string | number })[];
-    lookup?: string;
-  };
-}
+import type { ManifestEntity, OMEGA_Manifest } from '../types/manifest';
+import { parseVariant } from './utils/VariantParser';
+import { getComponentRadius } from './utils/CellMetrics';
+import { renderAttachmentStackHTML } from './utils/AttachmentStack';
 
 export interface CellOptions {
   skin: string;
@@ -44,55 +27,26 @@ export interface CellOptions {
   steps: number;
   isSelected?: boolean;
   isLiveMode?: boolean;
+  resolveAsset?: (ref: string | undefined) => string | undefined;
+  manifest?: OMEGA_Manifest;
 }
 
-const RADIUS_MAP: Record<string, Record<string, number>> = {
-  knob: { A: 24, B: 18, C: 12, D: 9 },
-  port: { A: 21, B: 18, C: 15, D: 12 },
-  display: { A: 16.5, B: 13, C: 10, D: 7 },
-  led: { A: 6, B: 4, C: 2.5, D: 1.5 },
-  slider: { A: 6, B: 6, C: 6, D: 6 },
-  switch: { A: 16, B: 12, C: 10, D: 8 },
-  stepper: { A: 12, B: 9, C: 7, D: 6 },
-  select: { A: 12, B: 12, C: 12, D: 12 }
-};
-
 export class CellRenderer {
-  /**
-   * Calculates the physical radius of a component based on its metadata.
-   */
-  static getComponentRadius(item: ManifestEntity): number {
-    const variant = item.presentation?.variant || 'B_cyan';
-    const parts = variant.split('_');
-    let size = parts[0] || 'B';
-    
-    // Industrial Mapping for special sizes
-    if (variant.includes('_3mm')) size = 'D';
-    if (variant.includes('_5mm')) size = 'C';
-
-    const comp = item.presentation?.component || 'knob';
-    const typeKey = comp.includes('slider') ? 'slider' : comp;
-    const sizeMap = RADIUS_MAP[typeKey] || RADIUS_MAP.knob;
-    const radius = sizeMap ? sizeMap[size] : 12;
-    return radius || 12;
-  }
   /**
    * Renders the complete HTML for a cell, including its main component and all orbitant attachments.
    */
   static renderCellHTML(item: ManifestEntity, options: CellOptions): string {
-    const { runtimeValue, steps, isSelected } = options;
+    const { runtimeValue, steps, isSelected, resolveAsset, manifest } = options;
     const compType = item.presentation?.component || 'knob';
     const variant = item.presentation?.variant || 'B_cyan';
     
-    // Precise variant parsing
-    const parts = variant.split('_');
-    let size = parts[0] || 'B';
-    if (variant.includes('_3mm')) size = 'D';
-    if (variant.includes('_5mm')) size = 'C';
+    const { size, colorId } = parseVariant(variant);
+    const compRadius = getComponentRadius(item);
     
-    const colorId = parts.length > 1 ? parts.filter((p: string) => p !== size && p !== '3mm' && p !== '5mm').join('_') : 'cyan';
-    
-    const compRadius = this.getComponentRadius(item);
+    // Asset Resolution
+    const assetId = item.presentation.asset;
+    const assetDef = manifest?.resources?.assets?.find((a: { id: string, frames?: number, orientation?: string }) => a.id === assetId);
+    const assetUrl = resolveAsset ? resolveAsset(assetId) : assetId;
     
     // 1. Render Main Primitive
     let mainHTML = '';
@@ -107,7 +61,12 @@ export class CellRenderer {
 
     switch (compType) {
       case 'knob':
-        mainHTML = renderKnobHTML({ ...commonProps });
+        mainHTML = renderKnobHTML({ 
+            ...commonProps,
+            assetUrl,
+            frames: assetDef?.frames,
+            orientation: assetDef?.orientation
+        });
         break;
       case 'port':
         mainHTML = renderPortHTML({ 
@@ -120,7 +79,7 @@ export class CellRenderer {
         mainHTML = renderLedHTML({ ...commonProps });
         break;
       case 'display':
-        const mode = parts.includes('lcd') ? 'lcd' : (parts.includes('led') ? 'led' : 'oled');
+        const mode = variant.includes('lcd') ? 'lcd' : (variant.includes('led') ? 'led' : 'oled');
         mainHTML = renderDisplayHTML({ ...commonProps, mode, steps });
         break;
       case 'slider-v':
@@ -145,35 +104,38 @@ export class CellRenderer {
           options: item.presentation?.options || [item.presentation?.lookup || ''] 
         });
         break;
-
+      case 'scope':
+        mainHTML = renderScopeHTML({
+          variant,
+          bind: item.bind || item.id || '',
+          size: item.presentation.size || { w: 100, h: 60 },
+          color: item.presentation.color || ''
+        });
+        break;
+      case 'terminal':
+        mainHTML = renderTerminalHTML({
+          variant,
+          bind: item.bind || item.id || '',
+          size: item.presentation.size || { w: 100, h: 60 },
+          color: item.presentation.color || '',
+          font: item.presentation.font || ''
+        });
+        break;
+      case 'illustration':
+        mainHTML = renderIllustrationHTML({
+          assetUrl,
+          size: item.presentation.size || { w: 40, h: 40 },
+          variant: item.presentation.variant || 'contain',
+          id: item.id
+        });
+        break;
       default:
         mainHTML = `<!-- Unsupported Component: ${compType} -->`;
     }
 
     // 2. Render Attachment Stacks
     const attachments = item.presentation?.attachments || [];
-    const renderStack = (pos: 'top' | 'bottom' | 'left' | 'right' | 'center') => {
-      const stackItems = attachments.filter((a: Attachment) => a.position === pos);
-
-      if (stackItems.length === 0) return '';
-      
-      const itemsHTML = stackItems.map((a: Attachment) => {
-        const html = AttachmentRenderer.renderAttachmentHTML({
-          type: a.type,
-          variant: a.variant,
-          text: a.text || '',
-          value: runtimeValue,
-          steps: steps
-        });
-
-        // Apply manual offsets from manifest if present
-        const offX = (a.offsetX || 0) * 1.5;
-        const offY = (a.offsetY || 0) * 1.5;
-        return `<div style="transform: translate(${offX}px, ${offY}px)">${html}</div>`;
-      }).join('');
-
-      return `<div class="attachment-stack stack-${pos}">${itemsHTML}</div>`;
-    };
+    const stackOptions = { runtimeValue, steps };
 
     // 3. Assemble Final Cell
     const cellOffsetX = (item.presentation?.offsetX || 0) * 1.5;
@@ -181,11 +143,11 @@ export class CellRenderer {
 
     return `
       <div class="control-cell variant-${variant}" style="--comp-radius: ${compRadius}px;">
-        ${renderStack('top')}
-        ${renderStack('bottom')}
-        ${renderStack('left')}
-        ${renderStack('right')}
-        ${renderStack('center')}
+        ${renderAttachmentStackHTML('top', attachments, stackOptions)}
+        ${renderAttachmentStackHTML('bottom', attachments, stackOptions)}
+        ${renderAttachmentStackHTML('left', attachments, stackOptions)}
+        ${renderAttachmentStackHTML('right', attachments, stackOptions)}
+        ${renderAttachmentStackHTML('center', attachments, stackOptions)}
         <div class="cell-main" style="width: ${compRadius * 2 * 1.5}px; height: ${compRadius * 2 * 1.5}px; transform: translate(calc(-50% + ${cellOffsetX}px), calc(-50% + ${cellOffsetY}px))">
           ${mainHTML}
         </div>

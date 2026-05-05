@@ -43,7 +43,7 @@ const ResourceItem = React.memo(({ res, idx, onRemove }: ResourceItemProps) => {
       className="group p-3 bg-white/2 border border-outline/10 rounded-sm hover:border-primary/20 transition-all flex items-center justify-between"
     >
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-black/40 border border-outline/20 rounded-xs flex items-center justify-center overflow-hidden">
+        <div className="relative w-10 h-10 bg-black/40 border border-outline/20 rounded-xs flex items-center justify-center overflow-hidden">
           {previewUrl ? (
             <Image 
               src={previewUrl} 

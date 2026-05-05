@@ -31,5 +31,8 @@ export const renderLedHTML = (props: LedProps): string => {
     transform || ''
   ].filter(Boolean).join('; ');
 
-  return `<div class="${classes}" ${id ? `data-source="${id}"` : ''} style="${style}"></div>`;
+  return `<div class="${classes}" ${id ? `data-source="${id}"` : ''} style="${style}">
+    <div class="led-glass-overlay"></div>
+    <div class="led-internal-glow"></div>
+  </div>`;
 };

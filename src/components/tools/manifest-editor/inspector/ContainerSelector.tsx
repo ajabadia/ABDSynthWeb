@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Layout, Info, Box, AlertCircle } from 'lucide-react';
+import { Layout, Info, Box } from 'lucide-react';
 import { ManifestEntity, LayoutContainer } from '@/types/manifest';
 
 interface ContainerSelectorProps {
@@ -38,8 +38,7 @@ export default function ContainerSelector({ item, onUpdate, containers, onHelp, 
             onChange={(e) => onUpdate({ 
               presentation: { 
                 ...item.presentation, 
-                container: e.target.value || undefined,
-                group: undefined 
+                container: e.target.value || undefined
               } 
             })}
             className={`w-full bg-black/20 border ${highlightPath?.includes('container') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-primary/40 transition-all appearance-none cursor-pointer [color-scheme:dark]`}
@@ -54,12 +53,6 @@ export default function ContainerSelector({ item, onUpdate, containers, onHelp, 
           </div>
         </div>
 
-        {item.presentation?.group && !item.presentation?.container && (
-          <div className="mt-2 p-2 bg-amber-500/5 border border-amber-500/20 rounded-xs flex items-center gap-2">
-             <AlertCircle className="w-3 h-3 text-amber-500" />
-             <span className="text-[7px] font-bold text-amber-500/80 uppercase">Detected Legacy Group: {item.presentation.group}</span>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -2,9 +2,9 @@
 /* CSS-only switch replacing legacy .sw-peg PNGs */
 
 .switch-container {
-    background: #000;
-    border: 1px solid var(--wb-outline);
-    border-radius: 9999px;
+    background: var(--primitive-bg-dark);
+    border: var(--primitive-border);
+    border-radius: var(--primitive-radius-pill);
     padding: 2px;
     display: flex;
     flex-direction: column;

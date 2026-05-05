@@ -2,9 +2,9 @@
 /* Aligned with ABDSynthsWeb Standards */
 
 .slider-wrapper {
-    background: rgba(0, 0, 0, 0.4) !important;
-    border: 1px solid var(--wb-outline) !important;
-    border-radius: 20px !important;
+    background: var(--primitive-bg) !important;
+    border: var(--primitive-border) !important;
+    border-radius: var(--primitive-radius-pill) !important;
     padding: 2px !important;
     position: relative;
     cursor: crosshair;
@@ -12,19 +12,20 @@
 
 .slider-rail-active {
     position: absolute;
-    background: rgba(0, 240, 255, 0.1) !important;
-    border-radius: 20px !important;
+    background: var(--primitive-accent);
+    opacity: 0.1;
+    border-radius: var(--primitive-radius-pill) !important;
     pointer-events: none;
     transition: width 0.1s ease-out, height 0.1s ease-out;
 }
 
 .slider-cap {
     position: absolute;
-    border-radius: 1px !important;
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4) !important;
+    border-radius: var(--primitive-radius-flat) !important;
+    box-shadow: var(--primitive-marker-glow) !important;
     z-index: 10;
     pointer-events: none;
-    background: var(--wb-primary);
+    background: var(--primitive-accent);
     transition: left 0.1s ease-out, bottom 0.1s ease-out;
 }
 

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import { HelpSection } from '../helpData';
+import { HelpSection } from '../modals/helpData';
 import { HelpCodeBlock } from './HelpCodeBlock';
 
 interface HelpSectionItemProps {
@@ -41,7 +41,7 @@ export function HelpSectionItem({ section, isExpanded, onToggle }: HelpSectionIt
             <div className="p-8 pt-2 space-y-8 border-x border-b border-white/5 bg-black/40 rounded-b-xs">
               <p className="text-[11px] text-white/40 leading-relaxed font-medium italic">{section.content}</p>
 
-              {section.subsections?.map(sub => (
+              {section.subsections?.map((sub) => (
                 <div key={sub.id} id={`help-anchor-${sub.id}`} className="space-y-4 pl-6 border-l-2 border-white/5 hover:border-primary/40 transition-colors">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-3">
                     <div className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_rgba(0,240,255,0.6)]" />
@@ -50,10 +50,10 @@ export function HelpSectionItem({ section, isExpanded, onToggle }: HelpSectionIt
                   <p className="text-[11px] text-white/70 leading-relaxed max-w-2xl">{sub.content}</p>
                   
                   {sub.code && <HelpCodeBlock code={sub.code} />}
-
+ 
                   {sub.technical_params && (
                     <div className="flex flex-wrap gap-2 pt-2">
-                      {sub.technical_params.map(p => (
+                      {sub.technical_params.map((p) => (
                         <code key={p} className="px-3 py-1 bg-black border border-white/10 rounded-full text-[9px] font-mono text-accent/80">{p}</code>
                       ))}
                     </div>

@@ -20,10 +20,15 @@ graph TD
     
     %% Rendering Engine (Aseptic)
     CR[CellRenderer.ts] --> AR[AttachmentRenderer.ts]
+    CR --> UTILS[utils/]
+    AR --> UTILS
     CR --> KR[KnobRenderer.ts]
     CR --> PR[PortRenderer.ts]
-    CR --> SR[SliderRenderer.ts]
-    CR --> DR[DisplayRenderer.ts]
+    
+    %% Utilities Layer
+    UTILS --> VP[VariantParser.ts]
+    UTILS --> CM[CellMetrics.ts]
+    UTILS --> AS[AttachmentStack.ts]
     
     %% Styles Integration
     KR -.-> PK[knob.css]
@@ -39,10 +44,14 @@ graph TD
 ## 2. Directory Structure
 
 ### 2.1 `renderers/` (TypeScript)
-Stateless functions that generate HTML strings. 
-- **CellRenderer**: The main orchestrator. Handles coordinate scaling (1.5x) and attachment stacking.
-- **AttachmentRenderer**: Handles orbital labels, LEDs, and steppers.
-- **Primitve Renderers**: Specialized logic for each industrial control type.
+Funciones puras (stateless) que generan cadenas HTML de alta fidelidad.
+- **CellRenderer**: Orquestador principal. Delega el parseo y métricas a `utils/` para mantener una lógica de despacho limpia.
+- **AttachmentRenderer**: Gestiona etiquetas orbitales, LEDs y steppers.
+- **utils/**: Capa de lógica compartida.
+    - **VariantParser**: Extrae tamaño y color de las variantes industriales.
+    - **CellMetrics**: Mapa de radios y dimensiones físicas.
+    - **AttachmentStack**: Orquestación de posicionamiento para accesorios orbitales.
+- **Primitive Renderers**: Lógica especializada para cada tipo de control industrial.
 
 ### 2.2 `tokens/` (CSS)
 The Single Source of Truth for visual constants.

@@ -4,13 +4,23 @@
  */
 import { OMEGA_Manifest } from '../types/manifest';
 
+export interface CADOptions {
+  skin: string;
+  drillLayer: boolean;
+  silkscreenLayer: boolean;
+  dimensions: boolean;
+  resolveAsset?: (id: string) => string | undefined; // Base64 or URL
+}
+
+const PIXELS_TO_MM = 0.33866; // 1 HP = 5.08mm = 15px
+
 export class CADExportService {
-  static generateSVGBlueprint(manifest: OMEGA_Manifest): string {
+  static generateSVGBlueprint(manifest: OMEGA_Manifest, options: CADOptions): string {
+    const { skin, drillLayer, silkscreenLayer, dimensions, resolveAsset } = options;
     const hp = manifest.metadata?.rack?.hp || 12;
     const rackWidthPx = hp * 15 * 1.5;
     const rackHeightPx = (manifest.ui?.dimensions?.height || (manifest.metadata?.rack?.height_mode === 'compact' ? 140 : 420)) * 1.5;
-    const margin = 60;
-    const skin = manifest.ui?.skin || 'industrial';
+    const margin = 100; // Larger margin for annotations
 
     const containers = manifest.ui?.layout?.containers || [];
     const elements = [
@@ -22,68 +32,56 @@ export class CADExportService {
     const accentColor = skin === 'minimal' ? '#000000' : '#00f0ff';
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${rackWidthPx + margin * 2}" height="${rackHeightPx + margin * 2}" viewBox="0 0 ${rackWidthPx + margin * 2} ${rackHeightPx + margin * 2}">
-      <rect width="100%" height="100%" fill="#050505" />
+      <rect width="100%" height="100%" fill="${silkscreenLayer && !drillLayer ? skinColor : '#000'}" />
       
       <g transform="translate(${margin}, ${margin})">
         <!-- RACK CHASSIS -->
-        <rect width="${rackWidthPx}" height="${rackHeightPx}" fill="${skinColor}" stroke="${accentColor}" stroke-width="2" rx="2" />
+        <rect width="${rackWidthPx}" height="${rackHeightPx}" fill="${skinColor}" stroke="${accentColor}" stroke-width="1" rx="2" opacity="${silkscreenLayer ? 1 : 0.2}" />
         
-        <!-- SCREWS (Era 7 Standard) -->
-        <g fill="#333" stroke="#555" stroke-width="0.5">
-          <circle cx="12" cy="12" r="4" />
-          <circle cx="${rackWidthPx - 12}" cy="12" r="4" />
-          <circle cx="12" cy="${rackHeightPx - 12}" r="4" />
-          <circle cx="${rackWidthPx - 12}" cy="${rackHeightPx - 12}" r="4" />
-        </g>
-        
-        <!-- LABELS -->
-        <text x="0" y="-15" fill="${accentColor}" font-family="monospace" font-size="10" font-weight="900">RACK CHASSIS [ ${hp} HP / ${Math.round(rackWidthPx)} px ]</text>
-        <text x="0" y="-30" fill="rgba(255,255,255,0.2)" font-family="monospace" font-size="8">OMEGA ERA 7.2.3 | INDUSTRIAL BLUEPRINT</text>
+        <!-- TECHNICAL HEADER -->
+        <text x="0" y="-40" fill="${accentColor}" font-family="monospace" font-size="12" font-weight="900">OMEGA CAD [ ${manifest.id.toUpperCase()} ]</text>
+        <text x="0" y="-25" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="8">FORMAT: Era 7.2.3 Industrial | CALIBRATION: 1px = ${PIXELS_TO_MM}mm</text>
 
-        <!-- CONTAINERS -->
-        ${containers.map(c => `
+        ${silkscreenLayer ? `
+        <!-- CONTAINERS & BRANDING -->
+        ${containers.map(c => {
+          const bgUrl = resolveAsset && c.asset ? resolveAsset(c.asset) : null;
+          return `
           <g>
-            <rect 
-              x="${c.pos.x * 1.5}" 
-              y="${c.pos.y * 1.5}" 
-              width="${typeof c.size.w === 'number' ? c.size.w * 1.5 : rackWidthPx - (c.pos.x * 1.5)}" 
-              height="${c.size.h * 1.5}" 
-              fill="rgba(255, 255, 255, 0.02)" 
-              stroke="rgba(255, 255, 255, 0.1)" 
-              stroke-width="0.5" 
-              stroke-dasharray="2 2"
-            />
-            <text x="${c.pos.x * 1.5 + 4}" y="${c.pos.y * 1.5 + 8}" fill="rgba(255, 255, 255, 0.2)" font-family="monospace" font-size="6" font-weight="900">${c.label.toUpperCase()}</text>
-          </g>
-        `).join('')}
+            <rect x="${c.pos.x * 1.5}" y="${c.pos.y * 1.5}" width="${(typeof c.size.w === 'number' ? c.size.w : 100) * 1.5}" height="${c.size.h * 1.5}" fill="${c.color || 'rgba(255,255,255,0.02)'}" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" />
+            ${bgUrl ? `<image x="${c.pos.x * 1.5}" y="${c.pos.y * 1.5}" width="${(typeof c.size.w === 'number' ? c.size.w : 100) * 1.5}" height="${c.size.h * 1.5}" href="${bgUrl}" />` : ''}
+            <text x="${c.pos.x * 1.5 + 5}" y="${c.pos.y * 1.5 + 10}" fill="rgba(255,255,255,0.3)" font-family="monospace" font-size="7" font-weight="900">${c.label.toUpperCase()}</text>
+          </g>`;
+        }).join('')}
+        ` : ''}
 
         <!-- ELEMENTS -->
         ${elements.map(e => {
           const ex = e.pos.x * 1.5;
           const ey = e.pos.y * 1.5;
-          const color = e.presentation?.variant === 'B_cyan' ? '#00f0ff' : 
-                        e.presentation?.variant === 'neon_amber' ? '#ff8c00' : 
-                        e.presentation?.variant === 'white' ? '#ffffff' : 
-                        e.presentation?.variant === 'orange' ? '#ffa500' : accentColor;
+          const assetId = e.presentation.asset;
+          const assetUrl = resolveAsset && assetId ? resolveAsset(assetId) : null;
           
           return `
-            <g transform="translate(${ex}, ${ey})">
-              ${e.isJack ? `
-                <circle r="12" fill="#222" stroke="${color}" stroke-width="0.5" opacity="0.3" />
-                <circle r="9" fill="#000" stroke="${color}" stroke-width="2" />
-              ` : `
-                <circle r="16" fill="#222" stroke="${color}" stroke-width="0.5" opacity="0.3" />
-                <circle r="14" fill="#151515" stroke="${color}" stroke-width="1.5" />
-                <line y1="-14" y2="-8" stroke="${color}" stroke-width="2" stroke-linecap="round" transform="rotate(45)" />
+          <g transform="translate(${ex}, ${ey})">
+            ${drillLayer ? `
+              <!-- DRILL CENTER MARK -->
+              <line x1="-10" x2="10" y1="0" y2="0" stroke="#ff0000" stroke-width="0.5" />
+              <line x1="0" x2="0" y1="-10" y2="10" stroke="#ff0000" stroke-width="0.5" />
+              <circle r="${e.isJack ? 6 * 1.5 : 4 * 1.5}" fill="none" stroke="#ff0000" stroke-width="0.2" />
+            ` : ''}
+
+            ${silkscreenLayer ? `
+              <!-- VISUAL PRIMITIVE -->
+              ${assetUrl ? `<image x="-20" y="-20" width="40" height="40" href="${assetUrl}" />` : `
+                <circle r="${e.isJack ? 10 : 15}" fill="none" stroke="${accentColor}" stroke-width="1" />
               `}
-              <text y="28" fill="${color}" font-family="monospace" font-size="7" font-weight="900" text-anchor="middle">${e.id.toUpperCase()}</text>
-              <text y="36" fill="rgba(255,255,255,0.2)" font-family="monospace" font-size="5" text-anchor="middle">X:${e.pos.x} Y:${e.pos.y}</text>
-            </g>
-          `;
+              <text y="30" fill="${accentColor}" font-family="monospace" font-size="8" font-weight="900" text-anchor="middle">${e.label?.toUpperCase() || e.id.toUpperCase()}</text>
+              ${dimensions ? `<text y="40" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="5" text-anchor="middle">${Math.round(ex * PIXELS_TO_MM)}mm , ${Math.round(ey * PIXELS_TO_MM)}mm</text>` : ''}
+            ` : ''}
+          </g>`;
         }).join('')}
       </g>
-
-      <text x="${margin}" y="${rackHeightPx + margin + 30}" fill="rgba(255, 255, 255, 0.2)" font-family="monospace" font-size="8">MODULE: ${manifest.id.toUpperCase()} | SKU: ${manifest.metadata.family.toUpperCase()} | DESIGN INTEGRITY: 100%</text>
     </svg>`;
 
     return svg;

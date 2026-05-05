@@ -33,7 +33,7 @@ export default function EntityListSection({
 
   // GROUPING LOGIC (Era 7.2 Container Support)
   const groups = items.reduce((acc: Record<string, ManifestEntity[]>, item) => {
-    const gid = item.presentation?.container || item.presentation?.group || 'UNBOUND';
+    const gid = item.presentation?.container || 'UNBOUND';
     if (!acc[gid]) acc[gid] = [];
     acc[gid].push(item);
     return acc;

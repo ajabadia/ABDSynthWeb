@@ -2,6 +2,8 @@ import { renderLedHTML } from './LedRenderer';
 import { renderDisplayHTML } from './DisplayRenderer';
 import { renderStepperHTML } from './StepperRenderer';
 
+import { parseVariant } from './utils/VariantParser';
+ 
 export interface AttachmentProps {
   type: string;
   variant: string;
@@ -9,15 +11,12 @@ export interface AttachmentProps {
   value?: number;
   steps?: number;
 }
-
+ 
 export class AttachmentRenderer {
   static renderAttachmentHTML(props: AttachmentProps): string {
     const { type, variant, text = '', value = 0, steps = 100 } = props;
-
-    // Parse variant for shared logic (Size_Color)
-    const parts = (variant || 'B_cyan').split('_');
-    const size = parts[0] || 'B';
-    const colorId = parts.length > 1 ? parts.filter(p => p !== size).join('_') : 'cyan';
+ 
+    const { size, colorId } = parseVariant(variant);
 
     switch (type) {
       case 'label':
@@ -33,7 +32,7 @@ export class AttachmentRenderer {
         return renderLedHTML({ size, colorId, value });
 
       case 'display':
-        const mode = parts.includes('lcd') ? 'lcd' : (parts.includes('led') ? 'led' : 'oled');
+        const mode = variant.includes('lcd') ? 'lcd' : (variant.includes('led') ? 'led' : 'oled');
         return renderDisplayHTML({ size, colorId, value, mode, steps });
 
       case 'stepper':

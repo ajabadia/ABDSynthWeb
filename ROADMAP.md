@@ -12,20 +12,24 @@ Este documento detalla el estado actual de industrialización y los próximos pa
 - [x] **Firmware Coherence Lock**: Bloqueo estricto de seguridad ante incoherencias de Hash.
 - [x] **UI Performance Hardening**: Memoización de `RackEntity` (60 FPS garantizados).
 
-## [/] Fase 11: Ecosistema y Estética (En curso)
-- [ ] **Unified Skin System**: Normalización de tokens estéticos (Carbon, Industrial, Glass, Minimal).
-- [ ] **Detailed Compliance Report**: Interfaz de "Cartilla de Inspección" detallando fallos técnicos, espaciales y de gobernanza. (Heredado de Fase 10).
-- [ ] **Internacionalización (i18n)**: Traducción completa del manual y la interfaz. (Heredado de Fase 5).
-- [ ] **Hot-Reloading Simulator**: Mejora del motor de simulación local para cambios de layout sin interrupción de audio.
-- [ ] **Technical Labeling Engine**: Mejora del posicionamiento inteligente de etiquetas sobreimpresas.
+## ✅ Fase 11: Unified Skin System & Governance (Completado)
+- [x] **Unified Skin System**: Normalización de tokens estéticos (`vars.css`, `skins.css`) para Carbon, Industrial, Glass y Minimal. Control coordinado de bordes, sombras y texturas en todas las primitivas.
+- [x] **Detailed Compliance Report**: Interfaz de "Cartilla de Inspección" detallando fallos técnicos, espaciales y de gobernanza.
+- [x] **Visual Parity Contract (VPC)**: Sincronización estricta de componentes entre ABDSynthsWeb y ABDOmega via omega-ui-core.
+
+## ✅ Fase 12: Visualizadores & Primitivas de Streaming (Completado)
+- [x] **Scope Primitive**: Osciloscopio con efecto fósforo.
+- [x] **Terminal Primitive**: Monitor de logs MIDI/System.
+- [x] **Diagnostics Suite**: Implementación de `midi_trigger`, `midi_in` y `omega_lab_monitor`.
+- [x] **Documentation Sync**: Actualización del Manual de Ingeniería con ADR 001.
 
 ---
-## 🏗️ Fase 12: OMEGA 8.0 Evolution (Self-Contained Architecture)
-- [ ] **Integrated Theme Editor**: Herramienta secundaria para la creación, previsualización y exportación de variantes visuales (Skins) sin salir del entorno.
+## 🏗️ Fase 13: Asset Bridge & Packaging
 - [ ] **Embedded Asset Protocol**: 
-    - Integración de **Ilustraciones SVG** directamente en el manifiesto para eliminar la dependencia de rutas fijas (`/ui/assets/modules/...`).
-    - Soporte para **Base64 Resources** (Manuales .md, PDF, Assets binarios).
-    - Refactorización hacia un modelo de "Single File Deployment" (Omega 8.0 Core).
+    - Integración de **Ilustraciones SVG** y **PNG Strips** (filmstrips de 64+ posiciones) directamente en el ecosistema.
+    - Soporte para **Base64 Resources** y referencias `asset://resources/`.
+    - Refactorización hacia un modelo de "Single File Deployment" mediante la extensión **.acepack**.
+    - **Asset Bridge**: Futura implementación en C++/JUCE para servir la carpeta `/resources` al WebView.
 
 ---
 ## 🔮 Futuro: Integración Nativa

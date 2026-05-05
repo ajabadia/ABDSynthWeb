@@ -77,4 +77,23 @@ export class ContractService {
 
     return content;
   }
+ 
+  /**
+   * Triggers a browser download for the generated contract.
+   * Keeps components aseptic by handling DOM effects here.
+   */
+  static downloadContract(manifest: OMEGA_Manifest, format: 'ts' | 'cpp') {
+    const content = format === 'ts' 
+      ? this.generateTypeScriptContract(manifest)
+      : this.generateCppContract(manifest);
+    
+    const filename = format === 'ts' ? 'schema_ids.ts' : 'OmegaRegistry.h';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 }

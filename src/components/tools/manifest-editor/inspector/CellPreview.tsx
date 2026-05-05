@@ -10,9 +10,10 @@ import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 interface CellPreviewProps {
   item: ManifestEntity;
   skin?: string;
+  resolveAsset?: (id: string | undefined) => string | undefined;
 }
 
-export default function CellPreview({ item, skin = 'industrial' }: CellPreviewProps) {
+export default function CellPreview({ item, skin = 'industrial', resolveAsset }: CellPreviewProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   return (
@@ -48,7 +49,8 @@ export default function CellPreview({ item, skin = 'industrial' }: CellPreviewPr
                       runtimeValue: 0.5, // Visual reference state
                       steps: 100,
                       isSelected: false,
-                      isLiveMode: false
+                      isLiveMode: false,
+                      resolveAsset
                     }) 
                   }}
                />

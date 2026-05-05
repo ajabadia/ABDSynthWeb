@@ -6,6 +6,8 @@ import { useAuditEngine } from './useAuditEngine';
 import { useEntityManager } from './useEntityManager';
 import { useFileOps } from './useFileOps';
 
+import { useAssetManager } from './useAssetManager';
+
 /**
  * OMEGA ERA 7.2.3 - MANIFEST EDITOR HOOK (ORCHESTRATOR)
  * This hook composes specialized sub-hooks for state, I/O, entities, and auditing.
@@ -52,10 +54,14 @@ export const useManifestEditor = () => {
     exportManifest,
     exportOmegaPack,
     exportCADBlueprint,
+    exportContract,
     handleResourceUpload,
     handleRemoveResource,
     handleBulkUpload
   } = useFileOps(manifest, setManifest, setContract, setWasmBuffer, wasmBuffer, setExtraResources, extraResources, addLog, issues);
+
+  // 5. Asset Management (Fase 13)
+  const { assetUrls, resolveAsset } = useAssetManager(extraResources);
 
   const handleDeploy = useCallback(async () => {
     if (issues.length > 0) {
@@ -127,8 +133,11 @@ export const useManifestEditor = () => {
     exportManifest,
     exportOmegaPack,
     exportCADBlueprint,
+    exportContract,
     handleRemoveResource,
     handleDeploy,
+    assetUrls,
+    resolveAsset,
     addLog,
     reset
   };
