@@ -1,23 +1,69 @@
 'use client';
 
 import React from 'react';
-import { Move, Maximize2, Box, Type, Layers } from 'lucide-react';
-import { LayoutContainer, ContainerVariant, ContainerSizeUnit, OMEGA_Manifest } from '@/types/manifest';
-import AssetSelector from '../shared/AssetSelector';
+import { Move, Maximize2, Type, Layers } from 'lucide-react';
+import { LayoutContainer, ContainerSizeUnit, OMEGA_Manifest } from '@/types/manifest';
+import TabSelector from '../shared/TabSelector';
+import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface ContainerFormProps {
   container: LayoutContainer;
   onUpdate: (id: string, updates: Partial<LayoutContainer>) => void;
   manifest: OMEGA_Manifest;
   resolveAsset: (id: string | undefined) => string | undefined;
+  setActiveSection?: (sectionId: string) => void;
 }
 
-export default function ContainerForm({ container, onUpdate, manifest, resolveAsset }: ContainerFormProps) {
-  const variants: ContainerVariant[] = ['default', 'header', 'section', 'panel', 'inset', 'minimal'];
+export default function ContainerForm({ container, onUpdate, manifest, setActiveSection }: Omit<ContainerFormProps, 'resolveAsset'>) {
+  const containerStyles = manifest.ui.styles?.['container'] || [];
+  const currentStyleId = container.variant || 'default';
+  const currentStyle = containerStyles.find(s => s.id === currentStyleId) || { id: 'default', label: 'Default Style' };
   const widthUnits: ContainerSizeUnit[] = ['full', '3/4', '2/3', '1/2', '1/3', '1/4'];
 
   return (
     <div className="p-4 pt-0 space-y-4">
+      {/* 1. STYLE LIBRARY SELECTOR */}
+      <div className="pt-4 border-t border-outline/5 space-y-3">
+        <label className="text-[8px] text-primary font-black flex items-center gap-1.5 uppercase tracking-wider">
+          <Layers className="w-3 h-3" />
+          <span>Container Style Library</span>
+        </label>
+        
+        {containerStyles.length > 0 ? (
+          <div className="grid grid-cols-2 gap-1.5">
+            {containerStyles.map(s => (
+              <button
+                key={s.id}
+                onClick={() => onUpdate(container.id, { 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  variant: s.id as any,
+                  // Purge local overrides to force style library inheritance
+                  color: undefined,
+                  indicatorColor: undefined,
+                  asset: undefined,
+                  rounding: undefined,
+                  borderWidth: undefined,
+                  opacity: undefined,
+                  fontSize: undefined,
+                  fontColor: undefined,
+                  font: undefined
+                })}
+                className={`py-2 px-3 rounded-xs border text-[9px] font-black uppercase transition-all text-left flex items-center justify-between ${currentStyleId === s.id ? 'border-primary bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' : 'wb-surface-subtle wb-outline wb-text-muted hover:wb-text'}`}
+              >
+                <span>{s.label}</span>
+                {currentStyleId === s.id && <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 bg-black/20 border border-dashed border-outline/20 rounded-xs text-center">
+            <p className="text-[7px] wb-text-muted font-bold uppercase italic">
+              No container styles defined.
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline/5">
         {/* POSITION */}
         <div className="space-y-2">
@@ -78,21 +124,7 @@ export default function ContainerForm({ container, onUpdate, manifest, resolveAs
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-         <div className="space-y-2">
-            <div className="flex items-center gap-2 opacity-40">
-              <Box className="w-2.5 h-2.5" />
-              <span className="text-[7px] font-black uppercase tracking-widest">Visual Variant</span>
-            </div>
-            <select 
-              value={container.variant} 
-              onChange={(e) => onUpdate(container.id, { variant: e.target.value as ContainerVariant })}
-              className="w-full bg-black/40 border border-outline/10 rounded-xs px-2 py-1 text-[9px] font-bold text-primary outline-none"
-            >
-              {variants.map(v => <option key={v} value={v}>{v.toUpperCase()}</option>)}
-            </select>
-         </div>
-
+      <div className="grid grid-cols-1 gap-4">
          <div className="space-y-2">
             <div className="flex items-center gap-2 opacity-40">
               <Type className="w-2.5 h-2.5" />
@@ -113,56 +145,21 @@ export default function ContainerForm({ container, onUpdate, manifest, resolveAs
            <Layers className="w-2.5 h-2.5 text-accent" />
            <span className="text-[7px] font-black uppercase tracking-widest text-accent">Architectural Plane (Tab)</span>
          </div>
-         <div className="flex flex-wrap gap-1">
-           {['GLOBAL', 'MAIN', 'FX', 'EDIT', 'MIDI', 'MOD', 'PATCHING'].map(t => (
-             <button
-               key={t}
-               onClick={() => onUpdate(container.id, { tab: t === 'GLOBAL' ? undefined : t })}
-               className={`px-2 py-1 text-[7px] font-black uppercase rounded-xs border transition-all ${
-                 (container.tab || 'GLOBAL') === t 
-                   ? 'bg-accent/20 border-accent text-accent' 
-                   : 'bg-black/40 border-outline/10 text-foreground/20 hover:border-outline/30'
-               }`}
-             >
-               {t}
-             </button>
-           ))}
-         </div>
+          <TabSelector 
+            value={(container.tab as unknown as string) || 'MAIN'} 
+            onChange={(val) => onUpdate(container.id, { tab: val })}
+            availableTabs={manifest.ui.layout?.planes || ['MAIN']}
+          />
       </div>
       
-      {/* ASSET & COLOR BACKGROUND (Fase 13) */}
-      <div className="pt-4 border-t border-outline/5 space-y-4">
-          <div className="flex items-center gap-2 opacity-40">
-            <Box className="w-2.5 h-2.5 text-primary" />
-            <span className="text-[7px] font-black uppercase tracking-widest text-primary">Surface Properties</span>
-          </div>
-          
-          <div className="space-y-4">
-            <AssetSelector 
-              label="Faceplate Background"
-              manifest={manifest}
-              selectedAssetId={container.asset}
-              onSelect={(id) => onUpdate(container.id, { asset: id })}
-              resolveAsset={resolveAsset}
-            />
-
-            <div className="space-y-1">
-              <span className="text-[7px] font-bold opacity-30 uppercase">Custom Color (CSS)</span>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  placeholder="#000000, rgba(0,0,0,0.5), transparent"
-                  value={container.color || ''} 
-                  onChange={(e) => onUpdate(container.id, { color: e.target.value })}
-                  className="flex-1 bg-black/40 border border-outline/10 rounded-xs px-2 py-1.5 text-[9px] font-mono text-primary outline-none" 
-                />
-                <div 
-                  className="w-8 h-8 rounded-xs border border-outline/20" 
-                  style={{ backgroundColor: container.color || 'transparent' }} 
-                />
-              </div>
-            </div>
-          </div>
+      {/* STYLE GOVERNANCE LINK */}
+      <div className="pt-4 border-t border-outline/5">
+        <StyleLibraryLink 
+          type="container"
+          styleId={currentStyleId}
+          styleLabel={currentStyle.label}
+          setActiveSection={setActiveSection}
+        />
       </div>
     </div>
   );

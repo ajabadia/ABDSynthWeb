@@ -2,6 +2,8 @@
  * OMEGA UI CORE — Stateless Knob Renderer (Era 7.2.3)
  * Single Source of Truth for Knob HTML Structure.
  */
+ 
+import { OmegaStyleNode } from '../types/manifest';
 
 export interface KnobProps {
   size: string;          // A, B, C, D
@@ -15,6 +17,11 @@ export interface KnobProps {
   assetUrl?: string | undefined;       // URL del recurso (blob o external)
   frames?: number | undefined;         // Número de frames en el filmstrip
   orientation?: 'v' | 'h' | undefined; // Orientación del strip
+  inheritedFont?: string | undefined;
+  inheritedSize?: number | undefined;
+  inheritedColor?: string | undefined;
+  explicitMarkerColor?: string; // Era 7.2.3 Custom Mode
+  style?: OmegaStyleNode; // [NEW] Era 7.2.3 Granular Style Node
 }
 
 export const renderKnobHTML = (props: KnobProps): string => {
@@ -29,7 +36,8 @@ export const renderKnobHTML = (props: KnobProps): string => {
     rotationRange = 270,
     assetUrl,
     frames,
-    orientation = 'v'
+    orientation = 'v',
+    style: customStyle
   } = props;
   
   // Canonical rotation formula
@@ -44,6 +52,18 @@ export const renderKnobHTML = (props: KnobProps): string => {
     selectedClass,
     hasAssetClass
   ].filter(Boolean).join(' ');
+  
+  // ERA 7.2.3 - CSS VARIABLE INJECTION
+  const markerColor = props.explicitMarkerColor || customStyle?.indicatorColor || customStyle?.color;
+  
+  const inlineStyles = [
+    customStyle?.color ? `--omega-color-override: ${customStyle.color}` : '',
+    markerColor ? `--omega-indicator-color: ${markerColor}` : '',
+    customStyle?.shadow ? `--omega-shadow: ${customStyle.shadow}` : '',
+    customStyle?.opacity !== undefined ? `opacity: ${customStyle.opacity}` : ''
+  ].filter(Boolean).join('; ');
+
+  const capStyle = customStyle?.color ? `background-color: ${customStyle.color} !important;` : '';
 
   let assetHTML = '';
   if (assetUrl) {
@@ -59,14 +79,16 @@ export const renderKnobHTML = (props: KnobProps): string => {
     assetHTML = `<div class="knob-asset filmstrip-${orientation}" style="${backgroundStyle}"></div>`;
   }
 
+  const markerStyle = `--knob-rotation: ${rotation}deg; ${markerColor ? `background-color: ${markerColor} !important;` : ''}`;
+
   return `
-    <div class="${classes}" ${id ? `data-source="${id}"` : ''}>
+    <div class="${classes}" ${id ? `data-source="${id}"` : ''} style="${inlineStyles}">
       <div class="knob-shadow-ring"></div>
       ${assetHTML}
-      <div class="knob-cap">
+      <div class="knob-cap" style="${capStyle}">
         <div class="knob-specular"></div>
       </div>
-      <div class="knob-marker" style="transform: rotate(${rotation}deg)"></div>
+      <div class="knob-marker" style="${markerStyle}"></div>
     </div>
   `.trim();
 };

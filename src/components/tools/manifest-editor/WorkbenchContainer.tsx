@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 // UI Components
 import Header from './layout/Header';
@@ -9,22 +9,47 @@ import WorkbenchLogs from './layout/WorkbenchLogs';
 import EditorModals from './modals/EditorModals';
 import ModulationGrid from './modulation/ModulationGrid';
 import { HiddenFileHandlers } from './shared/HiddenFileHandlers';
-import { WorkbenchSidebar } from './layout/WorkbenchSidebar';
 import { WorkbenchViewport } from './viewport/WorkbenchViewport';
 import { WorkbenchInspector } from './inspector/WorkbenchInspector';
 
-// Hooks
+// Types
+import { ManifestEntity } from '@/omega-ui-core/types/manifest';
 import { useManifestEditor } from '@/hooks/useManifestEditor';
 import { useViewport } from '@/hooks/manifest-editor/useViewport';
 import { useAudit } from '@/hooks/manifest-editor/useAudit';
 import { useWorkbenchState } from '@/hooks/manifest-editor/useWorkbenchState';
 import { useAuditNavigator } from '@/hooks/manifest-editor/useAuditNavigator';
 import { useWatchdog } from '@/hooks/manifest-editor/useWatchdog';
+import { useDynamicFonts } from '@/hooks/manifest-editor/useDynamicFonts';
 
 // Services
 import { ContractService } from '@/services/contractService';
 
-export default function WorkbenchContainer() {
+interface WorkbenchContainerProps {
+  onOpenCellEditor?: () => void;
+  onOpenAudit?: () => void;
+  onOpenGovernance?: () => void;
+  
+  // External state overrides
+  isAuditOpen?: boolean;
+  setIsAuditOpen?: (open: boolean) => void;
+  isGovernanceOpen?: boolean;
+  setIsGovernanceOpen?: (open: boolean) => void;
+  isCellEditorOpen?: boolean;
+  setIsCellEditorOpen?: (open: boolean) => void;
+}
+
+export default function WorkbenchContainer({ 
+  onOpenCellEditor, 
+  onOpenAudit, 
+  onOpenGovernance,
+  isAuditOpen,
+  setIsAuditOpen,
+  isGovernanceOpen,
+  setIsGovernanceOpen,
+  isCellEditorOpen,
+  setIsCellEditorOpen
+}: WorkbenchContainerProps) {
   // 1. Core Data & Operations
   const editor = useManifestEditor();
   const { manifest, contract, updateManifest } = editor;
@@ -40,7 +65,10 @@ export default function WorkbenchContainer() {
     editor.handleBulkUpload([new File([content], 'auto-reload.acemm')]);
   });
  
-  // 4. Effects & Synchronization (Aseptic Sync)
+  // 4. Dynamic Typography Integration
+  useDynamicFonts(manifest, editor.resolveAsset);
+ 
+  // 5. Effects & Synchronization (Aseptic Sync)
   useEffect(() => {
     const manifestTab = manifest.ui?.layout?.activeTab;
     if (manifestTab !== ui.activeTab) {
@@ -83,6 +111,8 @@ export default function WorkbenchContainer() {
     ContractService.downloadContract(manifest, format);
   };
  
+  const triggerUpload = (id: string) => document.getElementById(id)?.click();
+
   const availableBinds = useMemo(() => {
     if (!contract) return [];
     return [
@@ -91,6 +121,14 @@ export default function WorkbenchContainer() {
     ];
   }, [contract]);
  
+  const [isCellLibraryOpen, setIsCellLibraryOpen] = useState(false);
+
+  const handleAddFromLibrary = useCallback((dna: Record<string, unknown>) => {
+    // Detect type based on dna
+    const type: 'control' | 'jack' = dna.type === 'port' ? 'jack' : 'control';
+    editor.addEntity(type, dna as unknown as Partial<ManifestEntity>);
+  }, [editor]);
+
   const selectedItem = useMemo(() => 
     (ui.selectedItemId ? editor.findItem(ui.selectedItemId) : manifest) || null
   , [ui.selectedItemId, editor, manifest]);
@@ -106,16 +144,14 @@ export default function WorkbenchContainer() {
         onToggleLogs={() => ui.setShowLogs(!ui.showLogs)} showLogs={ui.showLogs}
         viewMode={ui.viewMode} setViewMode={ui.setViewMode} onHelp={() => ui.openHelp()}
         uiTheme={ui.uiTheme} setUiTheme={ui.setUiTheme} audit={auditResult}
-        onOpenAudit={() => ui.setIsAuditModalOpen(true)}
+        onOpenAudit={onOpenAudit || (() => ui.setIsAuditModalOpen(true))}
+        onTriggerUpload={triggerUpload}
+        onOpenAbout={() => ui.setIsAboutModalOpen(true)}
+        onOpenConfig={onOpenGovernance || (() => ui.setIsConfigModalOpen(true))}
+        onOpenCellEditor={onOpenCellEditor}
       />
 
       <main className="flex-1 flex overflow-hidden">
-        <WorkbenchSidebar 
-          manifest={manifest} 
-          contract={contract} 
-          onDeploy={onDeploy} 
-        />
-
         <WorkbenchViewport 
           viewMode={ui.viewMode} manifest={manifest} contract={contract}
           selectedItemId={ui.selectedItemId} onSelectItem={handleSelectItem}
@@ -144,6 +180,10 @@ export default function WorkbenchContainer() {
           removeContainer={editor.removeContainer} onHelp={ui.openHelp}
           onRemoveResource={editor.handleRemoveResource}
           resolveAsset={editor.resolveAsset}
+          onTriggerUpload={triggerUpload}
+          activeTab={ui.activeTab}
+          onOpenConfig={onOpenGovernance || (() => ui.setIsConfigModalOpen(true))}
+          onOpenLibrary={() => setIsCellLibraryOpen(true)}
         />
 
         {ui.showModGrid && (
@@ -157,15 +197,27 @@ export default function WorkbenchContainer() {
 
       <EditorModals 
         manifest={manifest} pendingFiles={ui.pendingFiles} setPendingFiles={ui.setPendingFiles} handleBulkUpload={editor.handleBulkUpload}
-        helpState={ui.helpState} closeHelp={ui.closeHelp} isAuditModalOpen={ui.isAuditModalOpen} setIsAuditModalOpen={ui.setIsAuditModalOpen}
-        handleNavigateToIssue={gps.handleNavigateToIssue} auditResult={auditResult} mockupOpen={ui.mockupOpen} setMockupOpen={ui.setMockupOpen}
+        helpState={ui.helpState} closeHelp={ui.closeHelp} 
+        isAuditModalOpen={isAuditOpen !== undefined ? isAuditOpen : ui.isAuditModalOpen} 
+        setIsAuditModalOpen={setIsAuditOpen || ui.setIsAuditModalOpen}
+        isAboutModalOpen={ui.isAboutModalOpen} setIsAboutModalOpen={ui.setIsAboutModalOpen}
+        handleNavigateToIssue={gps.handleNavigateToIssue}
+        auditResult={auditResult}
+        mockupOpen={ui.mockupOpen} setMockupOpen={ui.setMockupOpen}
         resolveAsset={editor.resolveAsset}
+        onDeploy={() => editor.exportOmegaPack()}
+        isConfigModalOpen={isGovernanceOpen !== undefined ? isGovernanceOpen : ui.isConfigModalOpen}
+        setIsConfigModalOpen={setIsGovernanceOpen || ui.setIsConfigModalOpen}
+        onUpdateManifest={updateManifest}
+        isCellEditorOpen={isCellEditorOpen !== undefined ? isCellEditorOpen : ui.isCellEditorOpen}
+        setIsCellEditorOpen={setIsCellEditorOpen || ui.setIsCellEditorOpen}
+        isCellLibraryOpen={isCellLibraryOpen}
+        setIsCellLibraryOpen={setIsCellLibraryOpen}
+        onAddEntityFromLibrary={handleAddFromLibrary}
       />
 
       <WorkbenchLogs showLogs={ui.showLogs} setShowLogs={ui.setShowLogs} logs={editor.logs} />
       <WorkbenchFooter 
-        auditResult={auditResult} 
-        onOpenAudit={() => ui.setIsAuditModalOpen(true)} 
         watchdogStatus={watchdog.status}
         watchdogTime={watchdog.lastUpdate}
       />

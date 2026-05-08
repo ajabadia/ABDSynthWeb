@@ -26,13 +26,13 @@ const STATUS_CONFIG = {
 };
  
 export default function AuditModal({ isOpen, onClose, onNavigate, audit, manifest }: AuditModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen || !audit) return null;
  
   const handleDownload = () => {
     AuditService.downloadCertificationReport(manifest, audit);
   };
  
-  const statusConfig = STATUS_CONFIG[audit.status];
+  const statusConfig = STATUS_CONFIG[audit.status] || STATUS_CONFIG.DRAFT;
 
   return (
     <AnimatePresence>

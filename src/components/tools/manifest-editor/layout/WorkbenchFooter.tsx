@@ -1,13 +1,8 @@
 'use client';
 
 import React from 'react';
-import ComplianceBadge from '../shared/ComplianceBadge';
-
-import { AuditResult } from '@/services/auditService';
 
 interface WorkbenchFooterProps {
-  auditResult: AuditResult;
-  onOpenAudit?: () => void;
   watchdogStatus?: 'idle' | 'connected' | 'error';
   watchdogTime?: string | null;
 }
@@ -16,7 +11,7 @@ interface WorkbenchFooterProps {
  * WorkbenchFooter (v7.2.3)
  * Industrial status bar for the OMEGA Manifest Editor.
  */
-const WorkbenchFooter = ({ auditResult, onOpenAudit, watchdogStatus, watchdogTime }: WorkbenchFooterProps) => {
+const WorkbenchFooter = ({ watchdogStatus, watchdogTime }: WorkbenchFooterProps) => {
   return (
     <footer className="h-6 border-t wb-outline wb-surface flex items-center justify-between px-6 z-50 shrink-0 transition-colors duration-500">
       <div className="flex-1 flex items-center gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">
@@ -34,7 +29,7 @@ const WorkbenchFooter = ({ auditResult, onOpenAudit, watchdogStatus, watchdogTim
       </div>
 
       <div className="flex-1 flex items-center justify-center">
-        <ComplianceBadge audit={auditResult} onClick={onOpenAudit} />
+        {/* Governance monitoring handled in header */}
       </div>
       
       <div className="flex-1 flex items-center justify-end gap-4 text-[7px] font-mono uppercase tracking-[0.2em] text-foreground/20">

@@ -1,5 +1,12 @@
 # OMEGA UI Core — Architecture Map (Era 7.2.3)
 
+> [!IMPORTANT]
+> **SOURCE OF TRUTH & GOVERNANCE**
+> This directory (`abd-ia_synths/src/omega-ui-core`) is the **Absolute Source of Truth** for the OMEGA UI Ecosystem. 
+> All changes to renderers, tokens, layout logic, and typography MUST be performed here. 
+> The `ABDOmega/ui/omega-ui-core` directory is a **read-only replica** synchronized via:
+> `robocopy "d:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\omega-ui-core" "d:\desarrollos\ABDOmega\ui\omega-ui-core" /MIR /FFT /Z /XA:H /W:5 /R:5`
+
 > **Status**: INDUSTRIALIZED (SYS_READY)
 > **Role**: Stateless Rendering Engine & Design System
 > **Standard**: OMEGA-VPC-1.1 (Visual Parity Contract)
@@ -12,11 +19,16 @@ graph TD
     INDEX[index.css] --> TOKENS[tokens/]
     INDEX --> PRIMS[primitives/]
     INDEX --> LAYOUT[layout/]
+    INDEX --> TYPO[typography/]
     
     %% Design Tokens
     TOKENS --> VARS[vars.css - Colores/Fuentes]
     TOKENS --> SIGS[signals.css - I/O Colors]
     TOKENS --> SKINS[skins.css - Panel Textures]
+
+    %% Typography System
+    TYPO --> T_REG[registry.ts - Master Registry]
+    TYPO --> T_CSS[fonts.css - @font-face Definitions]
     
     %% Rendering Engine (Aseptic)
     CR[CellRenderer.ts] --> AR[AttachmentRenderer.ts]
@@ -62,7 +74,12 @@ The Single Source of Truth for visual constants.
 Component-specific styles. Pure CSS, no Tailwind.
 - Uses the `{SIZE}_{COLOR}` naming convention (e.g., `.knob-container.size-B.color-cyan`).
 
-### 2.4 `layout/` (CSS)
+### 2.4 `typography/` (Registry & CSS)
+The Single Source of Truth for the typographic identity of the system.
+- **registry.ts**: Definitions of official fonts, categories, and theme defaults.
+- **fonts.css**: Global font injections for offline-first operation.
+
+### 2.5 `layout/` (CSS)
 Architectural frame styles.
 - **cells.css**: Grid positioning and attachment stack containers.
 - **screws.css**: High-fidelity industrial screws.

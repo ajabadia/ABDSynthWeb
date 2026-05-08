@@ -32,6 +32,10 @@ interface WorkbenchInspectorProps {
   onHelp: (sectionId?: string) => void;
   onRemoveResource: (name: string) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
+  onTriggerUpload: (id: string) => void;
+  activeTab: string;
+  onOpenConfig?: () => void;
+  onOpenLibrary?: () => void;
 }
 
 export function WorkbenchInspector({
@@ -59,12 +63,14 @@ export function WorkbenchInspector({
   removeContainer,
   onHelp,
   onRemoveResource,
-  resolveAsset
+  resolveAsset,
+  activeTab,
+  onTriggerUpload,
+  onOpenConfig,
+  onOpenLibrary
 }: WorkbenchInspectorProps) {
   
   // ASEPTIC HANDLERS
-  const triggerUpload = (id: string) => document.getElementById(id)?.click();
-
   const handleUpdate = (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => {
     if (selectedItemId) {
       onUpdateItem(selectedItemId, updates);
@@ -107,9 +113,12 @@ export function WorkbenchInspector({
             removeContainer={removeContainer}
             onHelp={onHelp} 
             extraResources={extraResources} 
-            onTriggerUpload={triggerUpload} 
             onRemoveResource={onRemoveResource}
             resolveAsset={resolveAsset}
+            activeTab={activeTab}
+            onTriggerUpload={onTriggerUpload}
+            onOpenConfig={onOpenConfig}
+            onOpenLibrary={onOpenLibrary}
           />
         </motion.aside>
       )}

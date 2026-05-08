@@ -18,14 +18,18 @@ const server = http.createServer((req, res) => {
   if (req.url === '/events') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
+      'X-Accel-Buffering': 'no'
     });
 
     const clientId = Date.now();
     const newClient = { id: clientId, res };
     clients.push(newClient);
+
+    // Industrial Keep-alive Heartbeat
+    res.write(': connection established\n\n');
 
     console.log(`[WATCHDOG] Client connected: ${clientId} (Total: ${clients.length})`);
 
@@ -39,6 +43,13 @@ const server = http.createServer((req, res) => {
   res.writeHead(404);
   res.end();
 });
+
+// Periodic Heartbeat
+setInterval(() => {
+  clients.forEach(client => {
+    client.res.write(': ping\n\n');
+  });
+}, 15000);
 
 server.listen(PORT);
 

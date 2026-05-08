@@ -8,6 +8,9 @@ export interface SwitchProps {
   colorId: string;   // cyan, red, orange, etc.
   value: number;     // 0 (off) or 1 (on)
   id?: string;       // Canonical ID
+  inheritedFont?: string | undefined;
+  inheritedSize?: number | undefined;
+  inheritedColor?: string | undefined;
 }
 
 export const renderSwitchHTML = (props: SwitchProps): string => {

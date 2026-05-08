@@ -3,7 +3,7 @@ import { motion, useDragControls } from 'framer-motion';
 import { Move, AlertCircle } from 'lucide-react';
 import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
-import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
+import PrimitiveFactory from '../primitives/PrimitiveFactory';
 
 interface RackEntityProps {
   item: ManifestEntity & { isJack?: boolean };
@@ -127,21 +127,23 @@ const RackEntityBase = ({
           </>
         )}
 
-        {/* UNIFIED STATELESS RENDERER (ERA 7.2.3 — SOT) */}
-        <div 
-          dangerouslySetInnerHTML={{ 
-            __html: CellRenderer.renderCellHTML(item, {
-              skin,
-              zoom,
-              runtimeValue,
-              steps,
-              isSelected,
-              isLiveMode,
-              resolveAsset,
-              manifest
-            }) 
-          }}
-        />
+        {/* HIGH-FIDELITY REACT RENDERER (ERA 7.2.3 — REPLACES CellRenderer FOR EDITOR PARITY) */}
+        <div className="relative pointer-events-auto">
+          <PrimitiveFactory 
+            type={item.presentation?.component || 'knob'}
+            variant={item.presentation?.variant || 'B_cyan'}
+            value={runtimeValue}
+            steps={steps}
+            manifest={manifest}
+            item={item}
+            isSelected={isSelected}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onValueChange={(val) => onUpdateItem(item.id, { value: val } as any)}
+            onClick={handleClick}
+            resolveAsset={resolveAsset}
+            skin={skin}
+          />
+        </div>
 
         {/* SELECTION UI OVERLAY */}
         {isSelected && !isLiveMode && (
@@ -174,6 +176,8 @@ export const RackEntity = React.memo(RackEntityBase, (prev, next) => {
     prev.skin === next.skin &&
     prev.zoom === next.zoom &&
     prev.audit.issues.length === next.audit.issues.length &&
+    JSON.stringify(prev.manifest.ui?.styles) === JSON.stringify(next.manifest.ui?.styles) &&
+    prev.manifest.ui?.skinMode === next.manifest.ui?.skinMode &&
     JSON.stringify(prev.manifest.resources?.assets) === JSON.stringify(next.manifest.resources?.assets) &&
     prev.item.presentation?.asset === next.item.presentation?.asset
   );

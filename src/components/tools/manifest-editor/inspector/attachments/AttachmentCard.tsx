@@ -5,10 +5,12 @@ import { ShieldCheck, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AttachmentItem from '../AttachmentItem';
 
-import { Attachment } from '@/types/manifest';
+import { Attachment, OMEGA_Manifest } from '@/types/manifest';
 
 interface AttachmentCardProps {
   att: Attachment;
+  manifest: OMEGA_Manifest;
+  hostType: string;
   idx: number | string;
   isCore?: boolean;
   isExpanded: boolean;
@@ -16,10 +18,11 @@ interface AttachmentCardProps {
   onRemove: (idx: number) => void;
   onUpdate: (idx: number | string, updates: Partial<Attachment>) => void;
   availableBinds: string[];
+  onOpenConfig?: () => void;
 }
 
 export default function AttachmentCard({
-  att, idx, isCore = false, isExpanded, onToggle, onRemove, onUpdate, availableBinds
+  att, manifest, hostType, idx, isCore = false, isExpanded, onToggle, onRemove, onUpdate, availableBinds, onOpenConfig
 }: AttachmentCardProps) {
   return (
     <div className={`border wb-outline rounded-sm overflow-hidden transition-all duration-300 ${isExpanded ? 'wb-surface-inset shadow-xl' : 'wb-surface hover:wb-surface-hover'}`}>
@@ -70,8 +73,11 @@ export default function AttachmentCard({
             <div className="p-4">
               <AttachmentItem 
                 att={att}
+                manifest={manifest}
+                hostType={hostType}
                 availableBinds={availableBinds}
                 onUpdate={(updates) => onUpdate(idx, updates)}
+                onOpenConfig={onOpenConfig}
               />
             </div>
           </motion.div>

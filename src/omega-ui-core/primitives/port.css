@@ -5,6 +5,7 @@
     border-radius: var(--primitive-radius-round) !important;
     border: var(--primitive-border) !important;
     background: var(--primitive-bg-dark) !important;
+    filter: var(--primitive-shadow) !important;
     display: flex;
     align-items: center;
     justify-content: center;

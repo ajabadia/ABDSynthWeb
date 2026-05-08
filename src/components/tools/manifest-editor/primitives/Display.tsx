@@ -1,24 +1,28 @@
-'use client';
-
-import React from 'react';
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
 import { renderDisplayHTML } from '@/omega-ui-core/renderers/DisplayRenderer';
 
 interface DisplayProps {
   value: number;
   steps: number;
   variant: string;
+  manifest: OMEGA_Manifest;
+  item?: ManifestEntity;
   onValueChange?: (val: number) => void;
   id?: string;
+  resolveAsset?: (id: string | undefined) => string | undefined;
 }
 
-export default function Display({ value, steps, variant, onValueChange, id }: DisplayProps) {
+export default function Display({ value, steps, variant, onValueChange, id, manifest, item }: DisplayProps) {
+  const { physics, allVars, resolveFont } = useDesignTokens(manifest, item);
+  
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';
-  
-
   const mode = parts[2] || 'oled';
-  
+
+  const font = resolveFont('displays');
+
   const handleStep = (dir: number) => {
     if (!onValueChange) return;
     const stepSize = 1 / Math.max(1, steps);
@@ -38,6 +42,13 @@ export default function Display({ value, steps, variant, onValueChange, id }: Di
     <div 
       dangerouslySetInnerHTML={{ __html: html }}
       className="contents"
+      style={{
+        ...allVars,
+        '--omega-display-font': font,
+        cursor: 'ns-resize',
+        filter: physics.filter
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any}
       onClick={(e) => {
         e.stopPropagation();
         const target = e.target as HTMLElement;

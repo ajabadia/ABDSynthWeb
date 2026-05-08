@@ -3,6 +3,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
+
 interface TerminalProps {
   text?: string;
   variant?: 'phosphor' | 'amber' | 'cyan';
@@ -12,6 +15,8 @@ interface TerminalProps {
   maxLines?: number;
   color?: string;
   fontFamily?: string;
+  manifest: OMEGA_Manifest;
+  item?: ManifestEntity;
 }
 
 /**
@@ -26,8 +31,11 @@ export default function Terminal({
   className,
   maxLines = 50,
   color,
-  fontFamily
+  fontFamily,
+  manifest,
+  item
 }: TerminalProps) {
+  const { physics, allVars } = useDesignTokens(manifest, item);
   const [lines, setLines] = useState<string[]>([]);
   const [prevText, setPrevText] = useState<string | undefined>(text);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -54,11 +62,14 @@ export default function Terminal({
     <div 
       className={clsx('terminal-display', `variant-${variant}`, className)}
       style={{ 
+        ...allVars,
         '--terminal-width': `${width}px`, 
         '--terminal-height': `${height}px`,
         color: color,
-        fontFamily: fontFamily
-      } as React.CSSProperties}
+        fontFamily: fontFamily,
+        filter: physics.filter
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any}
     >
       <div ref={containerRef} className="terminal-container">
         {lines.length === 0 && (

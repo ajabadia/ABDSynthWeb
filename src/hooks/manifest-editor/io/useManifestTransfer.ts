@@ -4,6 +4,7 @@ import { useCallback, Dispatch, SetStateAction } from 'react';
 import yaml from 'js-yaml';
 import { OMEGA_Manifest, ManifestEntity, ComponentType, AttachmentType, Attachment } from '../../../types/manifest';
 import { ValidationIssue } from '../../../types/validation';
+import { purgeUnusedStyles } from '../../../utils/manifest-editor/governanceUtils';
 
 export const useManifestTransfer = (
   manifest: OMEGA_Manifest,
@@ -79,6 +80,7 @@ export const useManifestTransfer = (
                 text?: string; 
               };
               return {
+                id: `att_${idx}_${Math.random().toString(36).substr(2, 4)}`,
                 type: String(att.type || 'label') as AttachmentType,
                 position: String(att.position || 'bottom') as Attachment['position'],
                 offsetX: getNum(att.offsetX),
@@ -133,7 +135,8 @@ export const useManifestTransfer = (
       if (!confirm(`Manifest has ${issues.length} issues. Export anyway?`)) return;
     }
 
-    const yamlContent = yaml.dump(manifest, { 
+    const asepticManifest = purgeUnusedStyles(manifest);
+    const yamlContent = yaml.dump(asepticManifest, { 
       indent: 2, 
       lineWidth: -1,
       schema: yaml.JSON_SCHEMA 

@@ -1,20 +1,7 @@
 'use client';
 
 import React from 'react';
-import Knob from './Knob';
-import Port from './Port';
-import Display from './Display';
-import Led from './Led';
-import Switch from './Switch';
-import Slider from './Slider';
-import Stepper from './Stepper';
-import Label from './Label';
-
-import Select from './Select';
-import Scope from './SignalScope';
-import Terminal from './Terminal';
-
-import { ManifestEntity } from '@/types/manifest';
+import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
 
 
 interface PrimitiveProps {
@@ -31,59 +18,37 @@ interface PrimitiveProps {
   role?: string;
   options?: string[];
   lookup?: string;
+  manifest: OMEGA_Manifest;
   item?: ManifestEntity;
+  resolveAsset?: (id: string | undefined) => string | undefined;
 }
 
-export default function PrimitiveFactory(props: PrimitiveProps) {
-  const { type, item, ...rest } = props;
+import { CellRenderer, CellOptions } from '@/omega-ui-core/renderers/CellRenderer';
 
-  switch (type) {
-    case 'knob':
-      return <Knob {...rest} />;
-    case 'port':
-      return <Port {...rest} item={item} />;
-    case 'display':
-      return <Display {...rest} />;
-    case 'select':
-      return <Select {...rest} />;
-    case 'led':
-      return <Led {...rest} />;
-    case 'switch':
-      return <Switch {...rest} />;
-    case 'slider-v':
-    case 'slider-h':
-      return <Slider {...rest} type={type} />;
-    case 'stepper':
-    case 'button':
-    case 'push':
-      return <Stepper {...rest} type={type} />;
-    case 'label':
-      return <Label {...rest} text={props.text || 'LABEL'} />;
-    case 'scope':
-      return (
-        <Scope 
-          {...rest} 
-          width={item?.presentation?.size?.w || 120} 
-          height={item?.presentation?.size?.h || 60} 
-          variant={props.variant as 'phosphor' | 'amber' | 'cyan' | 'oled'}
-          color={item?.presentation?.color}
-        />
-      );
-    case 'terminal':
-    case 'monitor':
-    case 'console':
-      return (
-        <Terminal 
-          {...rest} 
-          width={item?.presentation?.size?.w || 140} 
-          height={item?.presentation?.size?.h || 90} 
-          variant={props.variant as 'phosphor' | 'amber' | 'cyan'}
-          text={props.text}
-          color={item?.presentation?.color}
-          fontFamily={item?.presentation?.font}
-        />
-      );
-    default:
-      return <Label {...rest} text={props.text || 'UNKNOWN'} />;
-  }
+export default function PrimitiveFactory(props: PrimitiveProps) {
+  const { item, manifest, resolveAsset, value, steps, isSelected, skin } = props;
+
+  if (!item) return null;
+
+  // Prepare Master Engine Options
+  const options: CellOptions = {
+    skin,
+    zoom: 1.0,
+    runtimeValue: value,
+    steps,
+    isSelected,
+    manifest,
+    resolveAsset
+  };
+
+  // GENERATE MASTER HTML (The Single Engine)
+  const masterHTML = CellRenderer.renderCellHTML(item, options);
+
+  return (
+    <div 
+      className="primitive-master-proxy w-full h-full flex items-center justify-center pointer-events-auto"
+      dangerouslySetInnerHTML={{ __html: masterHTML }}
+      onClick={props.onClick}
+    />
+  );
 }

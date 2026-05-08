@@ -88,7 +88,7 @@ Las Cells son las entidades registradas en el motor.
 ### Roles del Registry (Era 4)
 - `control`: Input de usuario (Knobs, Sliders, Switches).
 - `telemetry`: Feedback visual (LEDs, Displays pasivos).
-- `stream`: Datos de audio o CV de alta velocidad (Ports).
+- `stream`: Datos de audio o CV de alta velocidad (Ports). Soporta hasta 8 puertos de entrada externos (`system.audio.in.0-7`).
 - `mod_target`: Destino de modulación explícito.
 
 ### Mapping Estético (Era 7.2)
@@ -113,7 +113,34 @@ Los Attachments son accesorios visuales con **Precisión Dual (X/Y)**.
 
 ---
 
-## 6. Governance ERA 4 (Hardening)
+## 6. Universal Cell Architecture (UCA) - Direction of Travel
+La arquitectura objetivo de OMEGA es un arbol visual recursivo donde Rack, Face, Container, Cell y Layer comparten una misma base conceptual.
+
+### 6.1 Jerarquia Objetivo
+```text
+Rack
+  Face / Plane
+    Container / Group
+      Cell
+        Cell / Layer / Asset
+```
+
+### 6.2 Frontera con el SDK
+UCA organiza la interfaz visual, pero no sustituye el contrato tecnico del plugin.
+- **`.wasm`**: Autoridad logica. Expone parametros, puertos y telemetria mediante `omega_get_contract()`.
+- **`.acemm`**: Autoridad visual. Describe caras, grupos, Cells, estilo, layout y bindings.
+- **`bind`**: Puente estricto entre una Cell interactiva y un ID exportado por el contrato WASM.
+- **`.acepack`**: Paquete autocontenido con `.wasm`, `.acemm`, assets, fuentes, estilos y templates usados.
+
+### 6.3 Templates vs Instancias
+- **CellTemplate**: Definicion reutilizable de catalogo, por ejemplo un knob tipo Roland con filmstrip y label.
+- **OmegaNode / Cell instance**: Uso concreto dentro de un Rack, con posicion, overrides visuales y `bind`.
+
+Durante la migracion, los arrays actuales `ui.layout.containers`, `ui.controls`, `ui.jacks` y `presentation.attachments` pueden seguir existiendo como formato plano de interoperabilidad, pero deben poder proyectarse a un arbol UCA sin perdida semantica.
+
+---
+
+## 7. Governance ERA 4 (Hardening)
 - **Strictly Typed**: No se permiten campos "ad-hoc" fuera de la especificación.
 - **Architectural Integrity**: Todo componente debe preferiblemente estar anclado a un contenedor para obtener el scoring de "Industrial Compliance".
 - **Registry Validated**: Todo componente sin un `role` válido será marcado como `orphan`.

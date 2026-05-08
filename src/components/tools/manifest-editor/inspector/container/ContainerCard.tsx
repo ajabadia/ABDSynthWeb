@@ -13,20 +13,20 @@ interface ContainerCardProps {
   onUpdate: (id: string, updates: Partial<LayoutContainer>) => void;
   onRemove: (id: string) => void;
   manifest: OMEGA_Manifest;
-  resolveAsset: (id: string | undefined) => string | undefined;
+  setActiveSection?: (s: string) => void;
 }
 
 export default function ContainerCard({
-  container, isExpanded, onToggleExpand, onUpdate, onRemove, manifest, resolveAsset
+  container, isExpanded, onToggleExpand, onUpdate, onRemove, manifest, setActiveSection
 }: ContainerCardProps) {
   return (
-    <div className="bg-black/40 border border-outline/5 rounded-xs overflow-hidden group hover:border-outline/20 transition-all">
+    <div className="wb-surface-strong border wb-outline rounded-xs overflow-hidden group hover:border-primary/20 transition-all">
       <div 
-        className="p-4 flex justify-between items-center cursor-pointer hover:bg-white/[0.02] transition-colors"
+        className="p-4 flex justify-between items-center cursor-pointer hover:wb-surface-subtle transition-colors"
         onClick={onToggleExpand}
       >
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-xs transition-colors ${isExpanded ? 'bg-primary/10 text-primary' : 'bg-white/5 text-foreground/20'}`}>
+          <div className={`p-2 rounded-xs border wb-outline transition-colors ${isExpanded ? 'bg-primary/10 text-primary border-primary/20' : 'wb-surface-subtle text-foreground/20'}`}>
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </div>
           <div className="flex flex-col">
@@ -60,7 +60,12 @@ export default function ContainerCard({
       <AnimatePresence>
         {isExpanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
-            <ContainerForm container={container} onUpdate={onUpdate} manifest={manifest} resolveAsset={resolveAsset} />
+            <ContainerForm 
+              container={container} 
+              onUpdate={onUpdate} 
+              manifest={manifest} 
+              setActiveSection={setActiveSection}
+            />
           </motion.div>
         )}
       </AnimatePresence>

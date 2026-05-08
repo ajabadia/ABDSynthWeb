@@ -12,7 +12,7 @@ export interface IllustrationProps {
 }
 
 export const renderIllustrationHTML = (props: IllustrationProps): string => {
-  const { assetUrl, size, opacity = 1, id, variant = 'contain' } = props;
+  const { assetUrl, size, id, variant = 'contain' } = props;
   
   const w = size?.w || 40;
   const h = size?.h || 40;
@@ -24,12 +24,12 @@ export const renderIllustrationHTML = (props: IllustrationProps): string => {
   return `
     <div 
         class="illustration-container variant-${variant}" 
-        style="width: ${w * 1.5}px; height: ${h * 1.5}px; opacity: ${opacity};"
+        style="width: ${w * 1.5}px; height: ${h * 1.5}px;"
         ${id ? `data-source="${id}"` : ''}
     >
         <img 
           src="${assetUrl}" 
-          style="width: 100%; height: 100%; object-fit: ${variant}; filter: saturate(0.8) drop-shadow(0 2px 4px rgba(0,0,0,0.2));" 
+          style="width: 100%; height: 100%;" 
         />
     </div>
   `.trim();

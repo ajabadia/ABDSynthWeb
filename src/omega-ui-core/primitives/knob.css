@@ -2,15 +2,16 @@
 /* Aligned with ABDSynthsWeb Standards */
 
 .knob-container {
-    background: var(--primitive-bg) !important;
-    border: var(--primitive-border) !important;
-    box-shadow: var(--primitive-shadow) !important;
+    background: var(--omega-color-override, var(--primitive-bg)) !important;
+    border: var(--omega-border-width, 1px) solid var(--omega-weak, var(--primitive-border)) !important;
+    filter: brightness(var(--omega-intensity, 1.0)) var(--primitive-shadow) !important;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    border-radius: var(--primitive-radius-round) !important;
+    border-radius: var(--omega-rounding, var(--primitive-radius-round)) !important;
     position: relative;
+    opacity: var(--omega-opacity, 1);
 }
 
 .knob-shadow-ring {
@@ -31,7 +32,7 @@
     background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%) !important;
     position: absolute;
     inset: 0;
-    border-radius: 50%;
+    border-radius: inherit;
     overflow: hidden;
 }
 
@@ -85,27 +86,27 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 2px !important;
+    width: var(--omega-thickness, 2px) !important;
     height: 42% !important;
     border-radius: 1px !important;
-    box-shadow: var(--primitive-marker-glow) !important;
+    background: var(--omega-indicator-color, var(--wb-primary)) !important;
+    box-shadow: 0 0 calc(8px * var(--omega-intensity, 1.0)) var(--omega-indicator-color, var(--wb-primary)) !important;
     transform-origin: 50% 100%;
     transform: translate(-50%, -100%) rotate(var(--knob-rotation, 0deg));
     pointer-events: none;
     z-index: 10;
 }
 
-/* COLOR VARIANTS */
-.knob-container.color-cyan .knob-marker { background: var(--wb-primary) !important; box-shadow: 0 0 8px var(--wb-primary) !important; }
-.knob-container.color-red .knob-marker { background: #ff4444 !important; box-shadow: 0 0 8px #ff4444 !important; }
-.knob-container.color-orange .knob-marker { background: var(--wb-accent) !important; box-shadow: 0 0 8px var(--wb-accent) !important; }
-.knob-container.color-green .knob-marker { background: #00ff88 !important; box-shadow: 0 0 8px #00ff88 !important; }
-.knob-container.color-white .knob-marker { background: #ffffff !important; box-shadow: 0 0 8px #ffffff !important; }
+/* COLOR VARIANTS (Legacy compat) */
+.knob-container.color-cyan:not([style*="--omega-indicator-color"]) .knob-marker { background: var(--wb-primary) !important; box-shadow: 0 0 8px var(--wb-primary) !important; }
+.knob-container.color-red:not([style*="--omega-indicator-color"]) .knob-marker { background: #ff4444 !important; box-shadow: 0 0 8px #ff4444 !important; }
+.knob-container.color-orange:not([style*="--omega-indicator-color"]) .knob-marker { background: var(--wb-accent) !important; box-shadow: 0 0 8px var(--wb-accent) !important; }
+.knob-container.color-green:not([style*="--omega-indicator-color"]) .knob-marker { background: #00ff88 !important; box-shadow: 0 0 8px #00ff88 !important; }
+.knob-container.color-white:not([style*="--omega-indicator-color"]) .knob-marker { background: #ffffff !important; box-shadow: 0 0 8px #ffffff !important; }
 
 /* ASSET BRIDGE (Fase 13) */
-.knob-container.has-asset .knob-cap,
-.knob-container.has-asset .knob-marker {
-    display: none !important;
+.knob-container.has-asset .knob-cap {
+    background: transparent !important; /* Let the asset define the surface */
 }
 
 .knob-asset {

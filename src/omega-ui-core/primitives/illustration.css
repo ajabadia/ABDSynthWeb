@@ -8,12 +8,18 @@
     overflow: hidden;
     pointer-events: none; /* No interfieren con el drag del rack */
     user-select: none;
+    border-radius: var(--omega-rounding, 0);
+    opacity: var(--omega-opacity, 1);
+    background-color: var(--omega-color-override, transparent);
+    filter: brightness(var(--omega-intensity, 1.0));
+    transition: all 0.3s ease-in-out;
 }
 
 .illustration-container img {
     display: block;
     image-rendering: auto;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(var(--omega-shadow-x, 0) var(--omega-shadow-y, 2px) var(--omega-shadow-blur, 4px) var(--omega-shadow-color, rgba(0,0,0,0.2)));
+    border-radius: inherit;
 }
 
 /* VARIANTS */
@@ -42,6 +48,6 @@
 }
 
 /* SPECIAL CASE: Identity Branding (Logo) */
-.illustration-container[data-source="module_logo"] {
-    filter: saturate(0.8) contrast(1.1);
+.illustration-container[data-source="module_logo"] img {
+    filter: saturate(calc(var(--omega-intensity, 1.0) * 0.8)) contrast(1.1);
 }

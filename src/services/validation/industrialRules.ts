@@ -12,7 +12,18 @@ export class IndustrialRules {
     const rackHeight = manifest.ui.dimensions?.height || 420;
     
     const containers = manifest.ui.layout?.containers || [];
+    const activePlanes = manifest.ui.layout?.planes || ['MAIN'];
     const usedIds = new Set<string>();
+
+    // ERA 7.2.3 - MANDATORY INFRASTRUCTURE
+    if (containers.length === 0) {
+      issues.push({
+        path: '/ui/layout/containers',
+        message: `CRITICAL FAIL: No existen contenedores. Todo módulo OMEGA requiere al menos una placa base (Container).`,
+        keyword: 'era7_infrastructure',
+        severity: 'critical'
+      });
+    }
 
     if (hp % 2 !== 0) {
       issues.push({
@@ -48,7 +59,36 @@ export class IndustrialRules {
     });
 
     const validateEntity = (entity: ManifestEntity, path: string) => {
-      const entityTab = containerTabMap.get(entity.presentation?.container || '') || 'MAIN';
+      const containerId = entity.presentation?.container;
+      const container = containers.find(c => c.id === containerId);
+      const entityTab = container?.tab || 'MAIN';
+
+      // ERA 7.2.3 - MANDATORY ASSOCIATION
+      if (!containerId) {
+        issues.push({
+          path: `${path}/presentation/container`,
+          message: `CRITICAL: El elemento '${entity.id}' no tiene contenedor asociado. Todas las cells deben pertenecer a una placa base.`,
+          keyword: 'era7_orphan_cell',
+          severity: 'error'
+        });
+      } else if (!container) {
+        issues.push({
+          path: `${path}/presentation/container`,
+          message: `CRITICAL: El contenedor '${containerId}' referenciado por '${entity.id}' no existe.`,
+          keyword: 'era7_broken_link',
+          severity: 'error'
+        });
+      }
+
+      // ERA 7.2.3 - PLANE INTEGRITY
+      if (container && !activePlanes.includes(entityTab as string)) {
+        issues.push({
+          path: `${path}/presentation/container`,
+          message: `CRITICAL: '${entity.id}' está en un contenedor asignado al plano '${entityTab}', pero este plano no está activo en el módulo.`,
+          keyword: 'era7_plane_leak',
+          severity: 'error'
+        });
+      }
 
       // Asset Validation (Fase 13 — AGGRESSIVE)
       const assetId = entity.presentation.asset;

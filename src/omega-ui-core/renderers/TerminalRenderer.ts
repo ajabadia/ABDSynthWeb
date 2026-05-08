@@ -7,8 +7,8 @@ export interface TerminalProps {
   variant: string;
   bind: string;
   size: { w: number; h: number };
-  color?: string;
-  font?: string;
+  color?: string | undefined;
+  font?: string | undefined;
 }
 
 export function renderTerminalHTML(props: TerminalProps): string {

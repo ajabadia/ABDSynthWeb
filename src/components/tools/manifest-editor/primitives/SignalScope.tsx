@@ -2,6 +2,8 @@
 
 import React, { useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
 
 interface ScopeProps {
   value: number;
@@ -10,6 +12,8 @@ interface ScopeProps {
   height?: number;
   className?: string;
   color?: string;
+  manifest: OMEGA_Manifest;
+  item?: ManifestEntity;
 }
 
 /**
@@ -22,8 +26,11 @@ export default function Scope({
   width = 120, 
   height = 60,
   className,
-  color: customColor
+  color: customColor,
+  manifest,
+  item
 }: ScopeProps) {
+  const { colors, physics, allVars } = useDesignTokens(manifest, item);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const points = useRef<number[]>([]);
 
@@ -44,22 +51,13 @@ export default function Scope({
 
       ctx.clearRect(0, 0, width, height);
       
-      // The grid is handled by CSS (.scope-grid), 
-      // but we could also draw it here if preferred.
-
-      // Signal Color based on variant
-      const colorMap = {
-        phosphor: '#00ff88',
-        amber: '#ffaa00',
-        cyan: '#00f0ff',
-        oled: '#fff'
-      };
-      
-      const color = customColor || colorMap[variant] || colorMap.phosphor;
+      const signalColor = customColor || colors.accent;
 
       // Draw Signal
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = signalColor;
       ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = signalColor;
       ctx.beginPath();
       
       for (let i = 0; i < points.current.length; i++) {
@@ -77,23 +75,33 @@ export default function Scope({
 
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
-  }, [value, variant, width, height, customColor]);
+  }, [value, width, height, customColor, colors.accent]);
 
   return (
     <div 
       className={clsx('scope-display', `variant-${variant}`, className)}
       style={{ 
+        ...allVars,
         '--scope-width': `${width}px`, 
-        '--scope-height': `${height}px` 
-      } as React.CSSProperties}
+        '--scope-height': `${height}px`,
+        filter: physics.filter
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any}
     >
       <canvas 
         ref={canvasRef} 
         width={width} 
         height={height} 
         className="scope-canvas"
+        style={{ backgroundColor: `${colors.surface}cc` }}
       />
-      <div className="scope-grid" />
+      <div 
+        className="scope-grid" 
+        style={{ 
+          backgroundImage: `linear-gradient(${colors.weak}10 1px, transparent 1px), linear-gradient(90deg, ${colors.weak}10 1px, transparent 1px)`,
+          borderColor: `${colors.weak}30`
+        }} 
+      />
     </div>
   );
 }

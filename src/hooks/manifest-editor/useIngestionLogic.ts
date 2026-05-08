@@ -16,7 +16,7 @@ export const useIngestionLogic = (files: File[]) => {
     const list: IngestionFile[] = files.map(f => {
       let type: IngestionFile['type'] = 'resource';
       if (f.name.endsWith('.acemm')) type = 'manifest';
-      else if (f.name.endsWith('.wasm')) type = 'wasm';
+      else if (f.name.endsWith('.wasm') || f.name.endsWith('.ace')) type = 'wasm';
       else if (f.name.endsWith('.json')) type = 'contract';
       
       return {

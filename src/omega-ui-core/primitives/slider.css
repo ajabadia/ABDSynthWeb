@@ -39,6 +39,24 @@
 .slider-v { width: 12px !important; height: var(--slider-dim) !important; }
 .slider-h { height: 12px !important; width: var(--slider-dim) !important; }
 
+/* ASSET BRIDGE */
+.slider-wrapper.has-asset .slider-cap,
+.slider-wrapper.has-asset .slider-rail-active {
+    display: none !important;
+}
+
+.slider-asset {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+    z-index: 5;
+}
+
+.slider-asset.filmstrip-v { background-size: 100% auto; }
+.slider-asset.filmstrip-h { background-size: auto 100%; }
+
 /* COLOR VARIANTS */
 .slider-wrapper.color-cyan .slider-cap { background: var(--wb-primary); box-shadow: 0 0 10px var(--wb-primary); }
 .slider-wrapper.color-orange .slider-cap { background: var(--wb-accent); box-shadow: 0 0 10px var(--wb-accent); }

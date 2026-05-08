@@ -21,11 +21,14 @@ export function useRackLayout(manifest: OMEGA_Manifest, activeTab: string) {
     return allElements.filter(entity => {
       const containerId = entity.presentation?.container;
       const container = containers.find(c => c.id === containerId);
-      if (container) {
-        if (container.collapsed) return false;
-        return !container.tab || container.tab === activeTab;
-      }
-      return (entity.presentation?.tab || 'MAIN') === activeTab;
+      
+      // ERA 7.2.3 - Mandatory Container Mapping
+      if (!container) return false; // Orphaned cells are not rendered in the rack
+      
+      if (container.collapsed) return false;
+      
+      // Plane (Tab) resolution
+      return (container.tab || 'MAIN') === activeTab;
     });
   }, [allElements, containers, activeTab]);
 

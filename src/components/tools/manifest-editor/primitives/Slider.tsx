@@ -1,18 +1,21 @@
-'use client';
-
-import React from 'react';
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
 import { renderSliderHTML } from '@/omega-ui-core/renderers/SliderRenderer';
 
 interface SliderProps {
   type: 'slider-v' | 'slider-h';
   value: number;
   variant: string;
+  manifest: OMEGA_Manifest;
+  item?: ManifestEntity;
   onValueChange: (val: number) => void;
   onClick?: () => void;
   isMain?: boolean;
 }
 
-export default function Slider({ type, value, variant, onValueChange, onClick }: SliderProps) {
+export default function Slider({ type, value, variant, onValueChange, onClick, manifest, item }: SliderProps) {
+  const { physics, allVars } = useDesignTokens(manifest, item);
+  
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';
@@ -28,6 +31,10 @@ export default function Slider({ type, value, variant, onValueChange, onClick }:
     <div 
       dangerouslySetInnerHTML={{ __html: html }}
       className="contents cursor-crosshair"
+      style={{
+        ...allVars,
+        filter: physics.filter
+      } as React.CSSProperties}
       onPointerDown={(e) => { 
         e.stopPropagation(); 
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); 

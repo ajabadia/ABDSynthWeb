@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutContainer } from '@/types/manifest';
+import { LayoutContainer, OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 import { ValidationIssue } from '@/types/validation';
+import IndustrialContainer from '../shared/IndustrialContainer';
 
 interface RackContainerProps {
   container: LayoutContainer;
@@ -13,12 +14,11 @@ interface RackContainerProps {
   rackWidthPx: number;
   isLiveMode?: boolean;
   resolveAsset?: (ref: string | undefined) => string | undefined;
+  manifest?: OMEGA_Manifest;
 }
 
-/**
- * RackContainer (v7.2.3)
- * Renders architectural containers (sections, panels, headers) within the rack.
- */
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
+
 const RackContainerBase = ({ 
   container, 
   isSelected, 
@@ -26,11 +26,15 @@ const RackContainerBase = ({
   audit, 
   skin, 
   rackWidthPx,
-  resolveAsset
+  resolveAsset,
+  manifest
 }: RackContainerProps) => {
   const c = container;
   const isCollapsed = c.collapsed;
   
+  // INDUSTRIAL TOKEN RESOLUTION
+  useDesignTokens(manifest as OMEGA_Manifest, c as unknown as ManifestEntity);
+
   const resolveWidth = (w: string | number): number => {
     if (typeof w === 'number') return w * 1.5;
     switch (w) {
@@ -48,15 +52,12 @@ const RackContainerBase = ({
   const ch = isCollapsed ? 30 : (c.size.h * 1.5);
   const cx = c.pos.x * 1.5;
   const cy = c.pos.y * 1.5;
-  const variant = c.variant || 'default';
-  
   const containerIssues = React.useMemo(() => 
     audit?.issues?.filter((i: ValidationIssue) => i.path.includes(c.id) || i.message.includes(`'${c.id}'`)) || [],
     [audit.issues, c.id]
   );
   
   const hasIntegrityError = containerIssues.some(i => i.keyword === 'era7_integrity');
-  const bgUrl = resolveAsset ? resolveAsset(c.asset) : undefined;
 
   return (
     <motion.div
@@ -67,21 +68,25 @@ const RackContainerBase = ({
           ? '0 0 40px rgba(0,240,255,0.15)' 
           : (hasIntegrityError ? '0 0 20px rgba(255,62,62,0.1)' : '0 0 0px rgba(0,0,0,0)'),
       }}
-      className={`layout-container container-${skin} variant-${variant} ${isSelected ? 'selected' : ''} ${hasIntegrityError ? 'error' : ''}`}
+      className="absolute pointer-events-none"
       style={{ 
-        position: 'absolute',
         left: cx, 
         top: cy, 
         width: cw, 
         height: ch,
         zIndex: isSelected ? 5 : 0,
-        pointerEvents: 'none',
-        backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: c.color || undefined
       }}
     >
+      <IndustrialContainer 
+        container={c}
+        manifest={manifest as OMEGA_Manifest}
+        resolveAsset={resolveAsset}
+        isSelected={isSelected}
+        isError={hasIntegrityError}
+        className={`w-full h-full container-${skin}`}
+        style={{ '--omega-z-index': c.zIndex ?? (isSelected ? 10 : 1) } as React.CSSProperties}
+      />
+
       {/* ACTIVITY HEATMAP PULSE */}
       <motion.div 
         animate={{ 
@@ -90,12 +95,8 @@ const RackContainerBase = ({
         }}
         transition={{ type: 'spring', damping: 20 }}
         className={`absolute inset-0 rounded-xs pointer-events-none ${hasIntegrityError ? 'bg-red-500/20' : 'bg-primary/20'}`}
+        style={{ borderRadius: c.rounding ? `${c.rounding}px` : 'var(--omega-rounding)' }}
       />
-
-      {/* CANONICAL LABEL PILL */}
-      <div className="container-label-pill">
-          {hasIntegrityError ? '⚠️ INTEGRITY_LEAK' : c.label}
-      </div>
     </motion.div>
   );
 };
@@ -111,7 +112,16 @@ export const RackContainer = React.memo(RackContainerBase, (prev, next) => {
     prev.isLiveMode === next.isLiveMode &&
     prev.container.asset === next.container.asset &&
     prev.container.color === next.container.color &&
+    prev.container.rounding === next.container.rounding &&
+    prev.container.borderWidth === next.container.borderWidth &&
+    prev.container.font === next.container.font &&
+    prev.container.fontSize === next.container.fontSize &&
+    prev.container.fontColor === next.container.fontColor &&
+    prev.container.zIndex === next.container.zIndex &&
+    JSON.stringify(prev.container.style) === JSON.stringify(next.container.style) &&
     prev.activeContainers[prev.container.id] === next.activeContainers[next.container.id] &&
-    prev.audit.issues.length === next.audit.issues.length
+    prev.audit.issues.length === next.audit.issues.length &&
+    JSON.stringify(prev.manifest?.ui?.styles) === JSON.stringify(next.manifest?.ui?.styles) &&
+    JSON.stringify(prev.manifest?.ui?.typography) === JSON.stringify(next.manifest?.ui?.typography)
   );
 });

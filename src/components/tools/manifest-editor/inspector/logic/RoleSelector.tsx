@@ -1,8 +1,10 @@
 'use client';
  
 import React from 'react';
-import { Layers, Info } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { ManifestEntity } from '@/types/manifest';
+
+import InspectorCollapsible from '../shared/InspectorCollapsible';
 
 interface RoleSelectorProps {
   item: ManifestEntity;
@@ -14,17 +16,12 @@ interface RoleSelectorProps {
 
 export function RoleSelector({ item, roles, isHighlighted, onUpdate, onHelp }: RoleSelectorProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className={`text-[7px] font-bold uppercase tracking-widest flex items-center gap-1 transition-colors ${isHighlighted('role') ? 'text-amber-500' : 'wb-text-muted'}`}>
-          <Layers className="w-2.5 h-2.5" />
-          <span>Industrial Role (Registry)</span>
-        </label>
-        <button onClick={() => onHelp?.('logic')} className="hover:text-primary transition-colors">
-          <Info className="w-2.5 h-2.5 opacity-20" />
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
+    <InspectorCollapsible 
+      title="Industrial Role (Registry)" 
+      icon={Layers}
+      onHelp={() => onHelp?.('logic')}
+    >
+      <div className="flex flex-wrap gap-1.5 pt-2">
         {roles.map(role => (
           <button
             key={role}
@@ -41,6 +38,6 @@ export function RoleSelector({ item, roles, isHighlighted, onUpdate, onHelp }: R
           </button>
         ))}
       </div>
-    </div>
+    </InspectorCollapsible>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslations } from "next-intl";
 import { Button } from "./Button";
 import { Send, AlertCircle, Loader2 } from "lucide-react";

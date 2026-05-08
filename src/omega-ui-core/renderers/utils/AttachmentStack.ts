@@ -3,12 +3,16 @@
  * Logic for stacking and positioning orbitant attachments around a central component.
  */
  
-import type { Attachment } from '../../types/manifest';
+import type { Attachment, OMEGA_Manifest } from '../../types/manifest';
 import { AttachmentRenderer } from '../AttachmentRenderer';
+import { ColorResolver } from '../../utils/ColorResolver';
  
 export interface StackOptions {
   runtimeValue: number;
   steps: number;
+  inherited?: { font?: string | undefined; size?: number | undefined; color?: string | undefined } | undefined;
+  manifest?: OMEGA_Manifest;
+  resolveAsset?: (id: string | undefined) => string | undefined;
 }
  
 export function renderAttachmentStackHTML(
@@ -16,23 +20,37 @@ export function renderAttachmentStackHTML(
   attachments: Attachment[], 
   options: StackOptions
 ): string {
-  const { runtimeValue, steps } = options;
+  const { runtimeValue, steps, inherited, resolveAsset } = options;
   const stackItems = attachments.filter((a) => a.position === pos);
  
   if (stackItems.length === 0) return '';
   
   const itemsHTML = stackItems.map((a) => {
+    const resolvedStyle = ColorResolver.resolveStyle(a.style || {}, options.manifest);
+    
     const html = AttachmentRenderer.renderAttachmentHTML({
       type: a.type,
       variant: a.variant,
       text: a.text || '',
       value: runtimeValue,
-      steps: steps
+      steps: steps,
+      style: {
+        ...resolvedStyle,
+        fontSize: a.fontSize,
+        fontFamily: a.fontFamily,
+        fontColor: a.fontColor,
+      },
+      inherited,
+      manifest: options.manifest,
+      resolveAsset
     });
  
     // Apply manual offsets from manifest if present (1.5x scaling)
-    const offX = (a.offsetX || 0) * 1.5;
-    const offY = (a.offsetY || 0) * 1.5;
+    const s = resolvedStyle as Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawS = s as any;
+    const offX = (rawS.offsetX !== undefined ? Number(rawS.offsetX) : (a.offsetX || 0)) * 1.5;
+    const offY = (rawS.offsetY !== undefined ? Number(rawS.offsetY) : (a.offsetY || 0)) * 1.5;
     return `<div style="transform: translate(${offX}px, ${offY}px)">${html}</div>`;
   }).join('');
  

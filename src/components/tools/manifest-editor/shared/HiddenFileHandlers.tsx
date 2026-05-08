@@ -34,7 +34,7 @@ export const HiddenFileHandlers = ({
       <input 
         id="bulk-upload" 
         type="file" 
-        accept=".acemm,.wasm,.json" 
+        accept=".acemm,.wasm,.ace,.json" 
         multiple 
         className="hidden" 
         onChange={(e) => { 

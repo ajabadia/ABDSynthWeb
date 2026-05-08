@@ -64,7 +64,7 @@ export const MockupViewport = ({
           boxShadow: '0 50px 100px -20px rgba(0,0,0,0.9), 0 30px 60px -30px rgba(0,0,0,0.5)'
         }}
       >
-        <RackScrews />
+        <RackScrews manifest={manifest} />
 
         {/* ARCHITECTURAL LAYERS */}
           {visibleContainers.map((c) => (

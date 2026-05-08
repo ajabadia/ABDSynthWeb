@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { OMEGA_Manifest, ManifestEntity, Attachment } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 
 // Modular Components & Hooks
-import { RackScrews } from '../rack/RackScrews';
 import { RackContainer } from '../rack/RackContainer';
 import { RackEntity } from '../rack/RackEntity';
 import { SignalInjector } from '../rack/SignalInjector';
@@ -13,6 +12,7 @@ import { ModulationCables } from '../rack/ModulationCables';
 import { RackHUD } from '../rack/RackHUD';
 import { useRackSimulation } from '@/hooks/manifest-editor/rack/useRackSimulation';
 import { useRackLayout } from '@/hooks/manifest-editor/rack/useRackLayout';
+import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
  
 interface VirtualRackProps {
   manifest: OMEGA_Manifest;
@@ -32,6 +32,8 @@ interface VirtualRackProps {
  * VirtualRack (v7.2.3) - Aseptic Orchestrator
  * High-fidelity modular instrument viewport.
  */
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
+
 export default function VirtualRack({ 
   manifest, 
   selectedItemId, 
@@ -47,32 +49,74 @@ export default function VirtualRack({
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
   const skin = manifest.ui?.skin || 'industrial';
+  const { allVars } = useDesignTokens(manifest);
   
   // ASEPTIC LAYOUT & SIMULATION
   const { width, height, allElements, visibleElements, containers } = useRackLayout(manifest, activeTab);
   const { runtimeValues, activeContainers, activeInjectorPort, setActiveInjectorPort } = useRackSimulation(allElements, isLiveMode);
- 
+
+  // RACK MASTER ENTITY (Era 7.2.3 Architectural Host)
+  const rackEntity: ManifestEntity = {
+    id: 'RACK_MASTER',
+    type: 'rack',
+    pos: { x: 0, y: 0 },
+    bind: 'none',
+    role: 'infrastructure',
+    presentation: {
+      component: 'rack',
+      variant: 'default',
+      style: manifest.ui?.style,
+      attachments: (manifest.ui?.attachments || []) as unknown as Attachment[],
+      tab: 'MAIN',
+      offsetX: 0,
+      offsetY: 0
+    }
+  };
+
+  const rackHTML = CellRenderer.renderCellHTML(rackEntity, {
+    skin,
+    zoom: 1.0,
+    runtimeValue: 0,
+    steps: 100,
+    manifest,
+    resolveAsset
+  });
+
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-12 relative overflow-hidden" onClick={() => onSelectItem(null)}>
+    <div 
+      className="w-full h-full flex flex-col items-center justify-center gap-8 p-12 relative overflow-hidden" 
+      onClick={() => onSelectItem(null)}
+      style={allVars as React.CSSProperties}
+    >
       <RackHUD 
         isLiveMode={isLiveMode} 
         setIsLiveMode={setIsLiveMode} 
-        activeTab={activeTab} 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        activeTab={activeTab as any} 
         setActiveTab={setActiveTab} 
         allElements={allElements} 
+        planes={manifest.ui.layout?.planes || ['MAIN']}
       />
  
-      {/* RACK FRAME (1.5x INDUSTRIAL SCALE) */}
+      {/* RACK FRAME (UNIFIED ENGINE) */}
       <div 
         ref={rackRef} 
-        className={`relative border-x-[4px] border-y-[1px] transition-all duration-700 skin-${skin} ${isLiveMode ? 'shadow-[0_0_120px_rgba(0,0,0,1)]' : ''}`}
-        style={{ width: `${width}px`, height: `${height}px` }}
+        className={`relative transition-all duration-700 ${isLiveMode ? 'shadow-[0_0_120px_rgba(0,0,0,1)]' : ''}`}
+        style={{ 
+          width: `${width}px`, 
+          height: `${height}px`,
+          boxShadow: isLiveMode ? '0 0 120px rgba(0,0,0,0.8)' : '0 10px 30px rgba(0,0,0,0.3)'
+        }}
         onClick={(e) => { e.stopPropagation(); onSelectItem(null); }}
       >
-        <RackScrews />
- 
+        {/* The Master Chassis HTML */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          dangerouslySetInnerHTML={{ __html: rackHTML }}
+        />
+
         {/* ARCHITECTURAL PLANES */}
-        {containers.filter(c => !c.tab || c.tab === activeTab).map((c) => (
+        {containers.filter(c => (c.tab || 'MAIN') === activeTab).map((c) => (
           <RackContainer 
             key={c.id} 
             container={c} 
@@ -82,6 +126,7 @@ export default function VirtualRack({
             skin={skin} 
             rackWidthPx={width}
             resolveAsset={resolveAsset}
+            manifest={manifest}
           />
         ))}
  

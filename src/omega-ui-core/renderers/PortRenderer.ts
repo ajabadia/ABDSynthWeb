@@ -2,6 +2,8 @@
  * OMEGA UI CORE — Stateless Port (Jack) Renderer (Era 7.2.3)
  * Single Source of Truth for Port HTML Structure.
  */
+ 
+import { OmegaStyleNode } from '../types/manifest';
 
 export interface PortProps {
   size: string;          // A, B, C, D
@@ -12,6 +14,11 @@ export interface PortProps {
   id?: string;           // Canonical ID for data attributes
   label?: string;        // For color inference
   explicitColor?: string; // Explicit color from manifest (B_cyan, neon_amber)
+  inheritedFont?: string | undefined;
+  inheritedSize?: number | undefined;
+  inheritedColor?: string | undefined;
+  customSignalColor?: string; // Era 7.2.3 Custom Mode
+  style?: OmegaStyleNode; // [NEW] Era 7.2.3 Granular Style Node
 }
 
 /**
@@ -32,9 +39,9 @@ export const inferPortSignalColor = (id: string = '', label: string = '', explic
 };
 
 export const renderPortHTML = (props: PortProps): string => {
-  const { size, colorId, value, isSelected, isMain, id, label, explicitColor } = props;
+  const { size, colorId, value, isSelected, isMain, id, label, explicitColor, customSignalColor, style: customStyle } = props;
   
-  const signalColor = inferPortSignalColor(id, label, explicitColor);
+  const signalColor = customSignalColor || inferPortSignalColor(id, label, explicitColor);
   const opacity = 0.3 + (value * 0.7);
   const selectedClass = isMain && isSelected ? 'selected' : '';
   
@@ -45,7 +52,14 @@ export const renderPortHTML = (props: PortProps): string => {
     selectedClass
   ].filter(Boolean).join(' ');
 
+  // ERA 7.2.3 - CSS VARIABLE INJECTION
+  const inlineStyles = [
+    customStyle?.color ? `--omega-color-override: ${customStyle.color}` : '',
+    customStyle?.opacity !== undefined ? `opacity: ${customStyle.opacity}` : '',
+    customStyle?.shadow ? `--omega-shadow: ${customStyle.shadow}` : ''
+  ].filter(Boolean).join('; ');
+
   const ledStyle = `background-color: ${signalColor}; opacity: ${opacity};`;
 
-  return `<div class="${classes}" ${id ? `data-source="${id}"` : ''}><div class="port-inner"><div class="port-led" style="${ledStyle}"></div></div></div>`;
+  return `<div class="${classes}" ${id ? `data-source="${id}"` : ''} style="${inlineStyles}"><div class="port-inner"><div class="port-led" style="${ledStyle}"></div></div></div>`;
 };

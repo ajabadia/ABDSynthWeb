@@ -59,9 +59,11 @@ export const useEntityCRUD = (
     addLog(`Removed entity: ${id}`);
   }, [manifest, updateManifest, addLog]);
 
-  const addEntity = useCallback((type: 'control' | 'jack') => {
+  const addEntity = useCallback((type: 'control' | 'jack', template?: Partial<ManifestEntity>) => {
     const id = `new_${type}_${Date.now().toString().slice(-4)}`;
-    const newEntity: ManifestEntity = {
+    
+    // Default base structure
+    const baseEntity: ManifestEntity = {
       id,
       type: type === 'control' ? 'knob' : 'port',
       role: type === 'control' ? 'control' : 'stream',
@@ -77,6 +79,19 @@ export const useEntityCRUD = (
         attachments: []
       }
     };
+    
+    // Merge template if provided (Aseptic Ingestion)
+    const newEntity: ManifestEntity = template ? {
+      ...baseEntity,
+      ...template,
+      id, // Preserve generated ID
+      pos: baseEntity.pos, // Reset position for placement
+      presentation: {
+        ...baseEntity.presentation,
+        ...(template.presentation || {}),
+        tab: 'MAIN' // Force to current plane context
+      }
+    } as ManifestEntity : baseEntity;
 
     if (type === 'control') {
       const nextControls = [...(manifest.ui?.controls || []), newEntity];

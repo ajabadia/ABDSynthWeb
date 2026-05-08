@@ -4,6 +4,7 @@ import { useCallback, Dispatch, SetStateAction } from 'react';
 import yaml from 'js-yaml';
 import { OMEGA_Manifest } from '../../../types/manifest';
 import { ValidationIssue } from '../../../types/validation';
+import { purgeUnusedStyles, getUsedResources } from '../../../utils/manifest-editor/governanceUtils';
 
 export const useBundleTransfer = (
   manifest: OMEGA_Manifest,
@@ -35,9 +36,12 @@ export const useBundleTransfer = (
       try {
         let buffer: ArrayBuffer;
         
-        // Industrial Renaming & Sanitization (Era 7.2.3)
+        // Industrial Renaming & Path Preservation (Era 7.2.3)
         const isLogo = file.name.toLowerCase().includes('logo') || file.name.toLowerCase().includes('icon');
-        const finalName = isLogo ? 'module_logo.svg' : file.name;
+        // Prefer webkitRelativePath for folder-drop support
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const relativePath = (file as any).webkitRelativePath || file.name;
+        const finalName = isLogo && !relativePath.includes('/') ? 'module_logo.svg' : relativePath;
         const assetId = `resources/${finalName}`;
         lastAssetId = assetId;
 
@@ -104,16 +108,19 @@ export const useBundleTransfer = (
       const JSZip = (window as unknown as { JSZip: new () => JSZipInstance }).JSZip;
       const zip = new JSZip();
       
-      const yamlContent = yaml.dump(manifest, { indent: 2, lineWidth: -1 });
+      const asepticManifest = purgeUnusedStyles(manifest);
+      const yamlContent = yaml.dump(asepticManifest, { indent: 2, lineWidth: -1 });
       zip.file(`${manifest.id}.acemm`, yamlContent);
       
       if (issues.length === 0 || confirm("Audit report will be included. Proceed?")) {
-        const contractContent = JSON.stringify(manifest, null, 2);
+        const contractContent = JSON.stringify(asepticManifest, null, 2);
         zip.file(`${manifest.id}.contract.json`, contractContent);
       }
 
       const auditReport = `# OMEGA Audit Report\n\nModule ID: ${manifest.id}\nStatus: ${issues.length === 0 ? 'CERTIFIED' : 'DEGRADED'}\nIssues: ${issues.length}\nTimestamp: ${new Date().toISOString()}\n`;
       zip.file(`AUDIT_REPORT.md`, auditReport);
+
+      const { usedAssets } = getUsedResources(asepticManifest);
 
       if (wasmBuffer) {
         zip.file(`${manifest.id}.wasm`, wasmBuffer);
@@ -122,14 +129,23 @@ export const useBundleTransfer = (
 
       if (extraResources.length > 0) {
         const resFolder = zip.folder("resources");
+        let includedCount = 0;
+        
         for (const res of extraResources) {
-          if (res.name === 'module_logo.svg') {
-            zip.file(res.name, res.data); // Root for discovery
-            addLog(`[SYSTEM] Identity Logo placed in package root.`);
-          } else {
-            resFolder.file(res.name, res.data);
+          const resPath = `resources/${res.name}`;
+          
+          // Only include if actually referenced in the manifest
+          if (usedAssets.has(resPath) || res.name === 'module_logo.svg') {
+            if (res.name === 'module_logo.svg') {
+              zip.file(res.name, res.data); // Root for discovery
+              addLog(`[SYSTEM] Identity Logo placed in package root.`);
+            } else {
+              resFolder.file(res.name, res.data);
+            }
+            includedCount++;
           }
         }
+        addLog(`[SYSTEM] Resources: Included ${includedCount} of ${extraResources.length} total assets.`);
       }
 
       const content = await zip.generateAsync({ type: 'blob' });
@@ -153,7 +169,7 @@ export const useBundleTransfer = (
     addLog(`[SYSTEM] Batch Ingestion: Processing ${fileList.length} entities...`);
 
     const manifests = fileList.filter(f => f.name.endsWith('.acemm'));
-    const wasms = fileList.filter(f => f.name.endsWith('.wasm'));
+    const wasms = fileList.filter(f => f.name.endsWith('.wasm') || f.name.endsWith('.ace'));
     const contracts = fileList.filter(f => f.name.endsWith('.json') && !f.name.endsWith('.acemm'));
     const others = fileList.filter(f => !f.name.endsWith('.acemm') && !f.name.endsWith('.wasm') && !f.name.endsWith('.json'));
 

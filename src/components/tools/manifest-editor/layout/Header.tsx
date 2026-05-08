@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Shield, RotateCcw, Terminal, HelpCircle } from 'lucide-react';
+import React from 'react';
+import { Shield, Terminal, Settings } from 'lucide-react';
 
 import { AuditResult } from '@/services/auditService';
 import { ComplianceBadge } from '../shared/ComplianceBadge';
  
-// Modular Components
 import ViewModeSelector from '../header/ViewModeSelector';
-import DeploymentMenu from '../header/DeploymentMenu';
 import ThemeToggle from '../header/ThemeToggle';
+import MenuBar from './MenuBar';
 
 interface HeaderProps {
   onReset: () => void;
@@ -28,62 +27,70 @@ interface HeaderProps {
   setUiTheme: (theme: 'dark' | 'light') => void;
   audit: AuditResult;
   onOpenAudit: () => void;
+  onTriggerUpload: (id: string) => void;
+  onOpenAbout: () => void;
+  onOpenConfig: () => void;
+  onOpenCellEditor?: () => void;
 }
 
 export default function Header(props: HeaderProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
     <header className="h-11 border-b wb-outline wb-surface backdrop-blur-md flex items-center justify-between px-6 z-50 shrink-0 transition-colors duration-500">
-      <div className="flex items-center gap-6">
+      {/* LEFT: ENGINEERING MENUS */}
+      <div className="flex-1 flex items-center gap-4">
+        <MenuBar 
+          onTriggerUpload={props.onTriggerUpload}
+          onExportManifest={props.onExportManifest}
+          onExportPack={props.onExportPack}
+          onExportCAD={props.onExportCAD}
+          onExportContract={props.onExportContract}
+          onDeploy={props.onDeploy}
+          onReset={props.onReset}
+          onToggleLogs={props.onToggleLogs}
+          onHelp={props.onHelp}
+          onGenerateMockup={props.onGenerateMockup}
+          setViewMode={props.setViewMode}
+          onOpenAudit={props.onOpenAudit}
+          onOpenAbout={props.onOpenAbout}
+          onOpenConfig={props.onOpenConfig}
+          onOpenCellEditor={props.onOpenCellEditor}
+        />
+      </div>
+
+      {/* CENTER: SYSTEM IDENTITY */}
+      <div className="flex-1 flex items-center justify-center pointer-events-none">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-primary/20 border border-primary/40 rounded-xs flex items-center justify-center">
             <Shield className="w-3 h-3 text-primary" />
           </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] wb-text whitespace-nowrap">
+            OMEGA <span className="text-primary/60">Manifest Editor</span>
+          </span>
         </div>
-        
-        <div className="h-8 w-px bg-outline/20" />
-        <ComplianceBadge audit={props.audit} onClick={props.onOpenAudit} />
-        <div className="h-8 w-px bg-outline/20" />
-        <ViewModeSelector viewMode={props.viewMode} setViewMode={props.setViewMode} />
       </div>
 
-      <div className="flex items-center gap-3">
-        <ThemeToggle uiTheme={props.uiTheme} setUiTheme={props.setUiTheme} />
+      {/* RIGHT: SYSTEM CONTROLS */}
+      <div className="flex-1 flex items-center justify-end gap-4">
+        <ComplianceBadge audit={props.audit} onClick={props.onOpenAudit} />
         <div className="h-6 w-px wb-outline opacity-20 mx-1" />
+        <ViewModeSelector viewMode={props.viewMode} setViewMode={props.setViewMode} />
+        <div className="h-6 w-px wb-outline opacity-20 mx-1" />
+        <ThemeToggle uiTheme={props.uiTheme} setUiTheme={props.setUiTheme} />
         
-        <button onClick={props.onHelp} className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-sm hover:bg-primary/20 transition-all text-[8px] font-black uppercase tracking-widest text-primary group">
-          <HelpCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-          <span>Manual</span>
+        <button 
+          onClick={props.onOpenConfig}
+          className="w-8 h-8 rounded-full border wb-outline bg-black/40 flex items-center justify-center hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all group"
+          title="Global Configuration"
+        >
+          <Settings className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" />
         </button>
-
-        <button onClick={props.onReset} className="flex items-center gap-2 px-3 py-1.5 wb-surface border wb-outline rounded-sm hover:bg-red-500/10 hover:border-red-500/40 text-[8px] font-black uppercase tracking-widest wb-text-muted hover:text-red-500 transition-all group">
-          <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
-          <span>Reset</span>
-        </button>
-
-        <DeploymentMenu 
-          showMenu={showMenu} setShowMenu={setShowMenu} menuRef={menuRef}
-          onExportManifest={props.onExportManifest} onExportPack={props.onExportPack}
-          onExportCAD={props.onExportCAD} onExportContract={props.onExportContract}
-          onGenerateMockup={props.onGenerateMockup} onDeploy={props.onDeploy}
-        />
 
         <button 
           onClick={props.onToggleLogs}
-          className={`flex items-center gap-2 px-4 py-2 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${props.showLogs ? 'bg-accent border-accent text-black' : 'bg-black/40 border-outline text-foreground/60 hover:border-accent/40'}`}
+          className={`flex items-center gap-2 px-3 py-1.5 border rounded-xs text-[8px] font-black uppercase tracking-widest transition-all ${props.showLogs ? 'bg-accent border-accent text-black' : 'bg-black/40 border-outline text-foreground/60 hover:border-accent/40'}`}
         >
           <Terminal className="w-3.5 h-3.5" />
-          <span>Logs</span>
+          <span className="hidden lg:inline">Logs</span>
         </button>
       </div>
     </header>

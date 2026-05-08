@@ -8,6 +8,7 @@ export interface ScopeProps {
   bind: string;
   size: { w: number; h: number };
   color?: string;
+  font?: string | undefined;
 }
 
 export function renderScopeHTML(props: ScopeProps): string {

@@ -3,12 +3,13 @@
 
 .led {
     border-radius: 50% !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: var(--omega-border-width, 1px) solid rgba(255, 255, 255, 0.1) !important;
     transition: all 0.1s ease-out !important;
-    background-color: #111; /* Default state darker */
-    opacity: 0.3;
+    background-color: var(--omega-glow-color, var(--glow-color, #111));
+    opacity: var(--omega-opacity, 0.3);
     position: relative;
     overflow: hidden;
+    filter: var(--primitive-shadow) !important;
 }
 
 .led-glass-overlay {
@@ -25,16 +26,34 @@
     position: absolute;
     inset: 15%;
     border-radius: 50%;
-    background: var(--glow-color, transparent);
+    background: var(--omega-glow-color, var(--glow-color, transparent));
     opacity: 0.1;
     z-index: 1;
     transition: all 0.1s ease-out;
 }
 
 .led.active .led-internal-glow {
-    opacity: 0.8;
+    opacity: calc(var(--omega-intensity, 1.0) * 0.8);
     filter: blur(2px);
 }
+
+/* ASSET BRIDGE */
+.led.has-asset .led-glass-overlay,
+.led.has-asset .led-internal-glow {
+    display: none !important;
+}
+
+.led-asset {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+    z-index: 2;
+}
+
+.led-asset.filmstrip-v { background-size: 100% auto; }
+.led-asset.filmstrip-h { background-size: auto 100%; }
 
 /* SIZES */
 .led.size-A { width: 12px !important; height: 12px !important; }
@@ -42,24 +61,19 @@
 .led.size-C { width: 5px !important; height: 5px !important; }
 .led.size-D { width: 3px !important; height: 3px !important; }
 
-/* COLOR STATES & GLOW */
-.led.color-cyan { --glow-color: var(--wb-primary); background-color: var(--wb-primary); }
-.led.color-red { --glow-color: #ff4444; background-color: #ff4444; }
-.led.color-orange { --glow-color: var(--wb-accent); background-color: var(--wb-accent); }
-.led.color-green { --glow-color: #00ff88; background-color: #00ff88; }
-.led.color-white { --glow-color: #ffffff; background-color: #ffffff; }
+/* COLOR STATES & GLOW (Legacy compat) */
+.led.color-cyan { --glow-color: var(--wb-primary); }
+.led.color-red { --glow-color: #ff4444; }
+.led.color-orange { --glow-color: var(--wb-accent); }
+.led.color-green { --glow-color: #00ff88; }
+.led.color-white { --glow-color: #ffffff; }
 
 /* Dynamic Glow Logic */
 .led.active {
-    opacity: 1 !important;
+    opacity: var(--omega-opacity, 1) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 calc(var(--glow-size, 8px) * var(--omega-intensity, 1.0)) var(--omega-glow-color, var(--glow-color, #fff));
 }
-
-.led.active.color-cyan { box-shadow: 0 0 var(--glow-size, 8px) var(--wb-primary); }
-.led.active.color-red { box-shadow: 0 0 var(--glow-size, 8px) #ff4444; }
-.led.active.color-orange { box-shadow: 0 0 var(--glow-size, 8px) var(--wb-accent); }
-.led.active.color-green { box-shadow: 0 0 var(--glow-size, 8px) #00ff88; }
-.led.active.color-white { box-shadow: 0 0 var(--glow-size, 8px) #ffffff; }
 
 .led.size-A { --glow-size: 12px; }
 .led.size-B { --glow-size: 8px; }

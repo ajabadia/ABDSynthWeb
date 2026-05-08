@@ -8,6 +8,7 @@ export const useAttachmentsLogic = (item: ManifestEntity, onUpdate: (updates: Pa
   const attachments = item.presentation?.attachments || [];
 
   const coreAtt: Attachment = {
+    id: 'core',
     isCore: true,
     type: (item.presentation?.component || (item.role === 'mod_target' ? 'port' : 'knob')) as AttachmentType,
     position: 'center',
@@ -18,7 +19,14 @@ export const useAttachmentsLogic = (item: ManifestEntity, onUpdate: (updates: Pa
   };
 
   const addAttachment = () => {
-    const newAtt: Attachment = { type: 'label', position: 'bottom', offsetY: 0, offsetX: 0, variant: 'B_cyan' };
+    const newAtt: Attachment = { 
+      id: `att_${Math.random().toString(36).substring(2, 9)}`,
+      type: 'label', 
+      position: 'bottom', 
+      offsetY: 0, 
+      offsetX: 0, 
+      variant: 'B_cyan' 
+    };
     const nextAtts = [...attachments, newAtt];
     onUpdate({ presentation: { ...item.presentation, attachments: nextAtts } });
     setExpandedIdx(nextAtts.length - 1);

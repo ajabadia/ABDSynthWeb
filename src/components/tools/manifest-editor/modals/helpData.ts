@@ -28,7 +28,14 @@ export const HELP_DATA: HelpSection[] = [
     title: 'Protocolo OMEGA 7.2.3',
     icon: '🚀',
     category: 'user',
-    content: 'Bienvenido al entorno de ingeniería de OMEGA. Este editor permite construir manifiestos (.acemm) para módulos industriales con precisión sub-píxel y sincronización total con el motor WASM de la Era 7.'
+    content: 'Bienvenido al entorno de ingeniería de OMEGA. Este editor permite construir manifiestos (.acemm) para módulos industriales con precisión sub-píxel y sincronización total con el motor WASM de la Era 7.',
+    subsections: [
+      {
+        id: 'industrial_baking',
+        title: 'Industrial Baking (DNA)',
+        content: 'En la Era 7.2.3, los temas son "horneados" directamente en el manifiesto. Al seleccionar una estética (Carbono, Glass, etc.), el editor inyecta automáticamente todos los tokens de color, fuentes e iluminación. Esto garantiza que el módulo sea autoportante y se vea igual en cualquier sistema.',
+      }
+    ]
   },
   {
     id: 'rack',
@@ -69,6 +76,56 @@ export const HELP_DATA: HelpSection[] = [
         title: 'Firmware Integrity (SHA-256)',
         content: 'El hash del manifiesto debe coincidir exactamente con el del binario .wasm para ser validado.',
         category: 'professional'
+      }
+    ]
+  },
+  {
+    id: 'uca_overview',
+    title: 'Universal Cell Architecture',
+    icon: 'UCA',
+    category: 'user',
+    content: 'OMEGA evoluciona hacia un sistema de composicion universal: Rack, caras, contenedores, controles, labels, tornillos y capas graficas se entienden como Cells con distinto rol. El modelo plano actual sigue existiendo mientras se estabiliza el editor, pero la direccion arquitectonica es un arbol recursivo.',
+    subsections: [
+      {
+        id: 'uca_hierarchy',
+        title: 'Jerarquia Conceptual',
+        content: 'La unidad mayor es el Rack. Cada Rack puede tener varias caras de presentacion (MAIN, FX, MIDI, PATCH, REAR). Cada cara contiene grupos o contenedores, y cada grupo contiene Cells. Una Cell puede ser simple, como un tornillo, o compuesta, como un knob con filmstrip, label, LED e hit-area.',
+        technical_params: ['Rack > Face > Container > Cell > Layer', 'kind', 'role', 'children[]']
+      },
+      {
+        id: 'uca_contract_boundary',
+        title: 'Frontera con el Motor DSP',
+        content: 'La arquitectura de Cells organiza la interfaz visual, pero no sustituye al contrato tecnico del plugin. El .wasm sigue siendo la fuente de verdad logica y expone parametros y puertos mediante omega_get_contract(). Las Cells interactivas solo se conectan al motor mediante bind.',
+        technical_params: ['wasm = logic SOT', 'acemm = visual SOT', 'bind -> contract.id']
+      },
+      {
+        id: 'uca_template_vs_instance',
+        title: 'Template vs Instancia',
+        content: 'El catalogo debe contener CellTemplates reutilizables: por ejemplo, un knob tipo Roland o un jack SSL. El manifiesto contiene instancias colocadas en un Rack concreto: posicion, overrides visuales y bind. Al exportar un .acepack, las templates y assets usados se embeben para que el modulo sea autocontenido.',
+        technical_params: ['CellTemplate', 'OmegaNode', 'cellRef', 'resources.assets[]', '.acepack']
+      },
+      {
+        id: 'uca_tree_example',
+        title: 'Ejemplo de Arbol',
+        content: 'Representacion simplificada de un modulo con una cara principal y una Cell compuesta:',
+        code: `tree:
+  id: rack_root
+  kind: rack
+  children:
+    - id: main_face
+      kind: face
+      role: structure
+      children:
+        - id: filter_group
+          kind: container
+          role: logic-group
+          children:
+            - id: cutoff_knob
+              kind: cell
+              role: control
+              cellRef: roland_knob_b
+              bind: filter_cutoff
+              pos: { x: 40, y: 80 }`
       }
     ]
   },
@@ -208,6 +265,12 @@ export const HELP_DATA: HelpSection[] = [
         title: 'Zen del Contraste (Avanzado)',
         content: 'Los tokens de tema (ej: `outline`, `surface`) se adaptan automáticamente al modo Light/Dark. Nunca uses colores fijos para las etiquetas si quieres que tu módulo sea legible bajo cualquier condición de iluminación de la rack.',
         technical_params: ['uiTheme: light | dark']
+      },
+      {
+        id: 'aseptic_encapsulation',
+        title: 'Aseptic Encapsulation (v7.2.3)',
+        content: 'Directiva Crítica: "Identidad en el Módulo, Física en el Core".\\n• **Identidad**: Los colores específicos y assets viajan dentro del .acemm.\\n• **Física**: Las sombras y la iluminación global son impuestas por el Host via variables CSS (`--omega-global-shadow-*`). Esto garantiza que el módulo sea autoportante pero visualmente coherente en el rack.',
+        technical_params: ['--omega-global-shadow-x', '--omega-global-shadow-y', '--omega-global-shadow-blur']
       }
     ]
   },

@@ -1,19 +1,23 @@
-'use client';
-
-import React from 'react';
+import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { useDesignTokens } from '@/hooks/manifest-editor/useDesignTokens';
 import { motion } from 'framer-motion';
 
 interface KnobProps {
   value: number;
   variant: string;
   skin: string;
+  manifest: OMEGA_Manifest;
+  item?: ManifestEntity;
   isMain?: boolean;
   isSelected?: boolean;
   onValueChange: (val: number) => void;
   onClick?: () => void;
+  resolveAsset?: (id: string | undefined) => string | undefined;
 }
 
-export default function Knob({ value, variant, isSelected, onValueChange, onClick }: KnobProps) {
+export default function Knob({ value, variant, isSelected, onValueChange, onClick, manifest, item }: KnobProps) {
+  const { physics, colors, allVars } = useDesignTokens(manifest, item);
+  
   const parts = (variant || 'B_cyan').split('_');
   const size = parts[0] || 'B';
   const colorId = parts[1] || 'cyan';
@@ -36,16 +40,21 @@ export default function Knob({ value, variant, isSelected, onValueChange, onClic
       }}
       className={`knob-container size-${size} color-${colorId} ${isSelected ? 'selected' : ''}`}
       style={{ 
+        ...allVars,
         '--knob-rotation': `${rotation}deg`,
         position: 'relative',
-        cursor: 'ns-resize'
-      } as React.CSSProperties}
+        cursor: 'ns-resize',
+        filter: physics.filter // Apply global shadow filter
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any}
     >
-      <div className="knob-cap" />
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <div className="knob-cap" style={{ backgroundColor: colors.surface } as any} />
       <motion.div 
         animate={{ rotate: rotation }} 
         transition={{ type: 'spring', stiffness: 350, damping: 25 }} 
         className="knob-marker" 
+        style={{ backgroundColor: colors.accent }}
       />
     </div>
   );

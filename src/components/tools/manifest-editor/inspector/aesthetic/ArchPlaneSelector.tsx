@@ -1,25 +1,24 @@
 'use client';
-
+ 
 import React from 'react';
-import { Info } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { ManifestEntity, TabName } from '@/types/manifest';
-
+import InspectorCollapsible from '../shared/InspectorCollapsible';
+ 
 interface ArchPlaneSelectorProps {
   item: ManifestEntity;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   onHelp?: (id: string) => void;
 }
-
+ 
 export default function ArchPlaneSelector({ item, onUpdate, onHelp }: ArchPlaneSelectorProps) {
   return (
-    <div className="space-y-3 bg-white/[0.02] border border-outline/10 p-4 rounded-xs">
-      <div className="flex items-center justify-between pr-1">
-        <label className="text-[8px] font-black wb-text-muted uppercase ml-1 tracking-[0.1em]">Era 7 Plane (Tab)</label>
-        <button onClick={() => onHelp?.('tabs')} className="hover:text-primary transition-colors">
-          <Info className="w-2.5 h-2.5 wb-text-muted opacity-60" />
-        </button>
-      </div>
-      <div className="grid grid-cols-5 gap-1.5">
+    <InspectorCollapsible 
+      title="Era 7 Plane (Tab)" 
+      icon={Layers}
+      onHelp={() => onHelp?.('tabs')}
+    >
+      <div className="grid grid-cols-5 gap-1.5 pt-2">
         {(['MAIN', 'FX', 'EDIT', 'MIDI', 'MOD'] as TabName[]).map(t => (
           <button
             key={t}
@@ -34,6 +33,6 @@ export default function ArchPlaneSelector({ item, onUpdate, onHelp }: ArchPlaneS
           </button>
         ))}
       </div>
-    </div>
+    </InspectorCollapsible>
   );
 }

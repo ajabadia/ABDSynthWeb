@@ -12,6 +12,9 @@ export const useWorkbenchState = (manifest: OMEGA_Manifest) => {
   const [helpState, setHelpState] = useState<{ isOpen: boolean; sectionId?: string }>({ isOpen: false });
   const [mockupOpen, setMockupOpen] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isCellEditorOpen, setIsCellEditorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(manifest.ui?.layout?.activeTab || 'MAIN');
   const [uiTheme, setUiTheme] = useState<'dark' | 'light'>('dark');
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
@@ -33,6 +36,9 @@ export const useWorkbenchState = (manifest: OMEGA_Manifest) => {
     helpState, openHelp, closeHelp,
     mockupOpen, setMockupOpen,
     isAuditModalOpen, setIsAuditModalOpen,
+    isAboutModalOpen, setIsAboutModalOpen,
+    isConfigModalOpen, setIsConfigModalOpen,
+    isCellEditorOpen, setIsCellEditorOpen,
     activeTab, setActiveTab,
     uiTheme, setUiTheme,
     pendingFiles, setPendingFiles

@@ -1,8 +1,10 @@
 'use client';
  
 import React from 'react';
-import { Settings2, Info } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import { ManifestEntity } from '@/types/manifest';
+
+import InspectorCollapsible from '../shared/InspectorCollapsible';
 
 interface BindingFieldProps {
   item: ManifestEntity;
@@ -14,22 +16,17 @@ interface BindingFieldProps {
 
 export function BindingField({ item, availableBinds, isHighlighted, onUpdate, onHelp }: BindingFieldProps) {
   return (
-    <div className="space-y-3">
-      <div className="text-[7px] font-black uppercase wb-text-muted flex items-center justify-between tracking-[0.2em]">
-         <div className="flex items-center gap-2">
-           <Settings2 className="w-3 h-3 text-primary" />
-           <span>Canonical Binding</span>
-         </div>
-         <button onClick={() => onHelp?.('binding')} className="hover:text-primary transition-colors">
-            <Info className="w-3 h-3" />
-         </button>
-      </div>
-      <div className="space-y-1.5 relative">
+    <InspectorCollapsible 
+      title="Canonical Binding" 
+      icon={Settings2}
+      onHelp={() => onHelp?.('binding')}
+    >
+      <div className="space-y-1.5 pt-2">
         <div className="relative group">
           <select 
             value={item.bind || ''} 
             onChange={(e) => onUpdate({ bind: e.target.value })}
-            className={`w-full bg-black/5 border ${isHighlighted('bind') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : (availableBinds.length === 0 ? 'border-amber-500/20' : 'wb-outline')} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10 transition-colors duration-500`}
+            className={`w-full wb-surface-subtle border ${isHighlighted('bind') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : (availableBinds.length === 0 ? 'border-amber-500/20' : 'wb-outline')} rounded-xs px-3 py-2.5 text-[10px] font-mono text-primary outline-none focus:border-primary/60 transition-all appearance-none cursor-pointer pr-10 transition-colors duration-500`}
           >
             <option value="">-- UNBOUND (Static) --</option>
             {availableBinds.map(b => (
@@ -46,6 +43,6 @@ export function BindingField({ item, availableBinds, isHighlighted, onUpdate, on
           </p>
         )}
       </div>
-    </div>
+    </InspectorCollapsible>
   );
 }

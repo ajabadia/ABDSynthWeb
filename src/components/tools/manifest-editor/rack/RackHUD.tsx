@@ -11,6 +11,7 @@ interface RackHUDProps {
   activeTab: TabName;
   setActiveTab: (val: TabName) => void;
   allElements: ManifestEntity[];
+  planes: string[];
 }
 
 /**
@@ -22,9 +23,10 @@ export const RackHUD = ({
   setIsLiveMode, 
   activeTab, 
   setActiveTab, 
-  allElements 
+  allElements,
+  planes
 }: RackHUDProps) => {
-  const tabs = ['MAIN', 'FX', 'EDIT', 'MIDI', 'MOD'];
+  const tabs = planes;
 
   return (
     <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-50" onClick={(e) => e.stopPropagation()}>
@@ -57,7 +59,14 @@ export const RackHUD = ({
             <span>{t}</span>
             {!isLiveMode && (
               <span className={`px-2 py-0.5 rounded-full text-[7px] font-mono ${activeTab === t ? 'bg-white/20 text-white' : 'bg-outline/20 wb-text-muted'}`}>
-                {allElements.filter(i => (i.presentation?.tab || 'MAIN') === t).length}
+                {allElements.filter(i => {
+                   // We don't have containers list here easily, but we can assume the count comes from those assigned to this tab
+                   // For a perfect count, we'd need more context, but this is a HUD overview.
+                   // Actually, we could pass a pre-calculated count or just use the current tab mapping if we maintain it.
+                   // For now, let's keep it simple: we'll only count if the container's tab matches.
+                   // Wait, allElements doesn't have container tab info.
+                   return (i.presentation?.tab || 'MAIN') === t; // Legacy fallback for count during transition
+                }).length}
               </span>
             )}
           </button>

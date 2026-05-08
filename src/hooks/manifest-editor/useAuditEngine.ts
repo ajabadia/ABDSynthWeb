@@ -1,19 +1,29 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { OMEGA_Manifest, ManifestEntity } from '../../types/manifest';
 import { OmegaContract } from '../../services/wasmLoader';
 import { ValidationService } from '../../services/validationService';
 
 export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OmegaContract | null) => {
-  const [logs, setLogs] = useState<string[]>([
-    `[${new Date().toLocaleTimeString()}] OMEGA ERA 7 ENGINEERING CONSOLE READY`,
-    `[${new Date().toLocaleTimeString()}] Aseptic Protocol V7.1 Active`
-  ]);
+  const [logs, setLogs] = useState<string[]>([]);
 
+  // Industrial Logging Engine (Aseptic Sync)
   const addLog = useCallback((msg: string) => {
-    setLogs(prev => [...prev.slice(-49), `[${new Date().toLocaleTimeString()}] ${msg}`]);
+    const timestamp = new Date().toLocaleTimeString();
+    setLogs(prev => [...prev.slice(-49), `[${timestamp}] ${msg}`]);
   }, []);
+
+  const isInitialized = useRef(false);
+ 
+  // Initial Boot Sequence (Client-only to avoid hydration mismatch)
+  useEffect(() => {
+    if (!isInitialized.current) {
+      addLog('OMEGA ERA 7 ENGINEERING CONSOLE READY');
+      addLog('Aseptic Protocol V7.1 Active');
+      isInitialized.current = true;
+    }
+  }, [addLog]);
 
   const issues = useMemo(() => {
     const baseIssues = ValidationService.validate(manifest);
