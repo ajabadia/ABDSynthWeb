@@ -54,7 +54,7 @@ export default function ModuleArchitectureSection({
   const [activeSubTab, setActiveSubTab] = useState<'infra' | 'controls' | 'ports' | 'routing' | 'assets' | 'tree'>('infra');
  
   const subTabs = [
-    ...(manifest.ui?.useUCA ? [{ id: 'tree' as const, label: 'Hierarchy', icon: Layout, color: 'text-purple-400' }] : []),
+    ...(manifest.ui?.useUCA !== false ? [{ id: 'tree' as const, label: 'Hierarchy', icon: Layout, color: 'text-purple-400' }] : []),
     { id: 'infra' as const, label: 'Infrastructure', icon: Layout, color: 'text-accent' },
     { id: 'controls' as const, label: 'Controls', icon: Settings2, color: 'text-amber-400' },
     { id: 'ports' as const, label: 'Signal I/O', icon: Zap, color: 'text-cyan-400' },
@@ -64,26 +64,28 @@ export default function ModuleArchitectureSection({
  
   return (
     <div className="flex flex-col h-full">
-      {/* UCA EXPERIMENTAL TOGGLE */}
-      <div className="mb-4 p-2 bg-amber-500/5 border border-amber-500/20 rounded-xs flex items-center justify-between">
+      {/* LEGACY FALLBACK TOGGLE */}
+      <div className={`mb-4 p-2 border rounded-xs flex items-center justify-between transition-colors ${
+        manifest.ui?.useUCA === false ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/10'
+      }`}>
         <div className="flex flex-col">
-          <span className="text-[7px] font-black uppercase text-amber-500 tracking-widest">UCA Architecture</span>
-          <span className="text-[6px] text-amber-500/60 font-medium">Recursive composite engine (Experimental)</span>
+          <span className={`text-[7px] font-black uppercase tracking-widest ${manifest.ui?.useUCA === false ? 'text-amber-500' : 'text-white/50'}`}>Legacy Rendering Fallback</span>
+          <span className={`text-[6px] font-medium ${manifest.ui?.useUCA === false ? 'text-amber-500/70' : 'text-white/30'}`}>Temporarily revert to flat-array pipeline</span>
         </div>
         <button
-          onClick={() => onUpdate({ ui: { ...manifest.ui, useUCA: !manifest.ui?.useUCA } })}
+          onClick={() => onUpdate({ ui: { ...manifest.ui, useUCA: manifest.ui?.useUCA === false ? true : false } })}
           className={`px-3 py-1 text-[8px] font-black uppercase rounded-full border transition-all ${
-            manifest.ui?.useUCA 
+            manifest.ui?.useUCA === false
               ? 'bg-amber-500 border-amber-500 text-black' 
-              : 'border-amber-500/30 text-amber-500/50 hover:bg-amber-500/10'
+              : 'border-white/20 text-white/50 hover:bg-white/10'
           }`}
         >
-          {manifest.ui?.useUCA ? 'ACTIVE' : 'STABLE'}
+          {manifest.ui?.useUCA === false ? 'ACTIVE' : 'OFF'}
         </button>
       </div>
 
       {/* UCA DEBUG INSPECTOR */}
-      {manifest.ui?.useUCA && (
+      {manifest.ui?.useUCA !== false && (
         <div className="mb-4 p-2 bg-purple-500/5 border border-purple-500/20 rounded-xs flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
@@ -144,7 +146,7 @@ export default function ModuleArchitectureSection({
  
       {/* CONTENT AREA */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-        {activeSubTab === 'tree' && manifest.ui?.useUCA && (
+        {activeSubTab === 'tree' && manifest.ui?.useUCA !== false && (
           <TreeSection 
             manifest={manifest} 
             selectedItemId={highlightPath || null} // Temporary using highlightPath or we need to pass selectedItemId 

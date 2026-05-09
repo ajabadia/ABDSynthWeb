@@ -117,9 +117,9 @@ export default function VirtualRack({
           dangerouslySetInnerHTML={{ __html: rackHTML }}
         />
 
-        {/* UCA EXPERIMENTAL ENGINE (Recursive Tree) */}
-        {manifest.ui?.useUCA && (
-          <div className="absolute inset-0 uca-experimental-layer">
+        {/* UCA NATIVE ENGINE (Recursive Tree) */}
+        {manifest.ui?.useUCA !== false && (
+          <div className="absolute inset-0 uca-native-layer">
             <UniversalRenderer 
               node={manifest.ui.tree || manifestToTree(manifest)} 
               manifest={manifest} 
@@ -135,8 +135,8 @@ export default function VirtualRack({
           </div>
         )}
 
-        {/* LEGACY PIPELINE (Flat Arrays) */}
-        {!manifest.ui?.useUCA && (
+        {/* LEGACY PIPELINE FALLBACK (Flat Arrays) */}
+        {manifest.ui?.useUCA === false && (
           <>
             {/* ARCHITECTURAL PLANES */}
             {containers.filter(c => (c.tab || 'MAIN') === activeTab).map((c) => (

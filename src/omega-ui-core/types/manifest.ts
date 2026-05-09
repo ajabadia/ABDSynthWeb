@@ -355,7 +355,7 @@ export interface OMEGA_Manifest {
     dimensions: Dimensions;
     controls: ManifestEntity[];
     jacks: ManifestEntity[];
-    useUCA?: boolean; // [EXPERIMENTAL] Enable recursive rendering engine
+    useUCA?: boolean; // Legacy flag: if false, activates legacy flat-array fallback. UCA is default.
     ucaDebug?: {
       enabled: boolean;
       showLabels?: boolean;
