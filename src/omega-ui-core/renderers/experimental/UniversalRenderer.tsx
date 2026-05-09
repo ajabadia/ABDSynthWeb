@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { OmegaNode, OMEGA_Manifest } from '../../types/manifest';
+import { OmegaNode, OMEGA_Manifest, CellTemplate, ManifestEntity } from '../../types/manifest';
 import { CellRenderer } from '../CellRenderer';
 import { resolveNodeSemantics } from '../../uca/ucaSemantics';
 
@@ -9,7 +9,7 @@ interface UniversalRendererProps {
   node: OmegaNode;
   manifest: OMEGA_Manifest;
   depth?: number;
-  catalog?: any; 
+  catalog?: Record<string, CellTemplate>; 
   resolveAsset?: (id: string | undefined) => string | undefined;
 }
 
@@ -63,19 +63,24 @@ export function UniversalRenderer({
   // 2. Dispatch Atomic Cells
   if (node.kind === 'cell') {
     // Map OmegaNode back to a temporary ManifestEntity for CellRenderer parity
-    const phantomEntity = {
+    const phantomEntity: ManifestEntity = {
       id: node.id,
-      type: node.cellRef as any,
+      type: node.cellRef || 'knob',
       pos: node.layout?.pos || { x: 0, y: 0 },
-      size: node.layout?.size,
-      role: node.role as any,
-      bind: node.bind,
+      role: node.role || 'control',
+      bind: node.bind || 'none',
       presentation: {
+        tab: 'MAIN',
+        component: 'knob', // Default, will be overridden by type resolution in CellRenderer
+        variant: 'default',
+        offsetX: 0,
+        offsetY: 0,
+        attachments: [],
         style: node.style
       }
     };
 
-    const cellHTML = CellRenderer.renderCellHTML(phantomEntity as any, {
+    const cellHTML = CellRenderer.renderCellHTML(phantomEntity, {
       skin: manifest.ui?.skin || 'industrial',
       zoom: 1.0,
       runtimeValue: 0, 

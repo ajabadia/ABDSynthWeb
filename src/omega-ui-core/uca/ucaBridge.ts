@@ -1,4 +1,4 @@
-import { OMEGA_Manifest, OmegaNode, ManifestEntity, LayoutContainer } from '../types/manifest';
+import { OMEGA_Manifest, OmegaNode } from '../types/manifest';
 
 /**
  * UCA BRIDGE (Phase 1)
@@ -49,7 +49,9 @@ export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
       role: 'infrastructure',
       layout: {
         pos: c.pos,
-        size: c.size,
+        size: typeof c.size.w === 'number' 
+          ? { width: c.size.w, height: c.size.h } 
+          : undefined, // Units like 'full' will be resolved by the renderer
         zIndex: c.zIndex
       },
       style: {
@@ -74,7 +76,10 @@ export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
       bind: entity.bind,
       layout: {
         pos: entity.pos,
-        size: entity.size,
+        size: entity.presentation?.size ? {
+          width: entity.presentation.size.w,
+          height: entity.presentation.size.h
+        } : undefined,
         zIndex: entity.presentation?.style?.zIndex
       },
       style: entity.presentation?.style,
@@ -82,7 +87,7 @@ export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
       cellRef: entity.type as string
     };
 
-    const containerId = (entity as any).container;
+    const containerId = entity.presentation?.container;
     const targetParent = containerId ? containerMap.get(containerId) : mainFace;
     
     if (targetParent) {
@@ -100,7 +105,7 @@ export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
  * treeToManifest
  * (Stub) Flattens a UCA tree back to legacy arrays.
  */
-export function treeToManifest(root: OmegaNode): Partial<OMEGA_Manifest['ui']> {
+export function treeToManifest(): Partial<OMEGA_Manifest['ui']> {
   // Implementation will follow in Phase 2
   return {};
 }
