@@ -33,4 +33,4 @@ The function responsible for collapsing the UCA tree back to a flat legacy manif
 
 ## Status
 **Accepted** - Phase 2 complete. The architecture is now capable of deep structural nesting and ready for Phase 3 (Hierarchical Authoring).
-*Supersedes/extends Phase 1 PoC assumptions regarding flat structural parity.*
+*Builds on Phase 1 PoC and formalizes runtime semantics and transitional bridge behavior.*
