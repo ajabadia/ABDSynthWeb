@@ -10,6 +10,7 @@ import AestheticSection from './sections/AestheticSection';
 import AttachmentsSection from './sections/AttachmentsSection';
 import EngineeringSection from './sections/EngineeringSection';
 import ModuleArchitectureSection from './sections/ModuleArchitectureSection';
+import LayoutGovernanceSection from './sections/LayoutGovernanceSection';
 import SpatialSection from './sections/SpatialSection';
 import CellPreview from './CellPreview';
 import CustomSkinSection from './sections/CustomSkinSection';
@@ -19,7 +20,7 @@ import InspectorHeader from './layout/InspectorHeader';
 import InspectorNav from './layout/InspectorNav';
 import { usePropertyPanel } from '@/hooks/manifest-editor/usePropertyPanel';
 import { isUcaNode } from '@/hooks/manifest-editor/entities/ucaInspectorModel';
-import { adaptNodeToManifestEntity } from '@/hooks/manifest-editor/entities/ucaInspectorAdapter';
+import { adaptNodeToManifestEntity, findNodeInTree } from '@/hooks/manifest-editor/entities/ucaInspectorAdapter';
 
 import { ManifestEntity, OMEGA_Manifest, OMEGA_Modulation, LayoutContainer, ExtraResource, OmegaNode } from '@/types/manifest';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
@@ -58,7 +59,15 @@ export default function PropertyPanel(props: PropertyPanelProps) {
   const item = props.item;
   const isUCA = isUcaNode(item);
   const rootTree = props.manifest?.ui?.tree || (props.manifest ? manifestToTree(props.manifest) : undefined);
-  const legacyItem = isUCA ? adaptNodeToManifestEntity(item as OmegaNode) : (item as ManifestEntity);
+  
+  // LIVE REHYDRATION (Era 7.2.3 - Phase 4.2)
+  // Ensure we always use the latest node from the tree to avoid stale references after drag
+  const liveItem = React.useMemo(() => {
+    if (!item || !isUCA || !rootTree) return item;
+    return findNodeInTree(rootTree, item.id) || item;
+  }, [item, isUCA, rootTree]);
+
+  const legacyItem = isUCA ? adaptNodeToManifestEntity(liveItem as OmegaNode) : (liveItem as ManifestEntity);
 
   const { activeSection, setActiveSection, isModule, sections } = usePropertyPanel(legacyItem as ManifestEntity | OMEGA_Manifest, props.highlightPath);
 
@@ -92,7 +101,7 @@ export default function PropertyPanel(props: PropertyPanelProps) {
           <motion.div key={activeSection} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
             {activeSection === 'identity' && (
               <IdentitySection 
-                item={item} 
+                item={liveItem as ManifestEntity | OmegaNode} 
                 onUpdate={(u) => props.onUpdate?.(u)} 
                 onHelp={props.onHelp} 
                 rootManifest={enrichedManifest} 
@@ -141,7 +150,7 @@ export default function PropertyPanel(props: PropertyPanelProps) {
                 {activeSection === 'core' && (
                   <div className="space-y-8">
                     <IdentitySection 
-                      item={item} 
+                      item={liveItem as ManifestEntity | OmegaNode} 
                       rootManifest={enrichedManifest} 
                       rootTree={rootTree}
                       onUpdate={(u) => props.onUpdate?.(u)} 
@@ -150,13 +159,20 @@ export default function PropertyPanel(props: PropertyPanelProps) {
                       resolveAsset={props.resolveAsset} 
                     />
                     <SpatialSection 
-                      item={item as ManifestEntity | OmegaNode} 
+                      key={liveItem?.id || 'none'}
+                      item={liveItem as ManifestEntity | OmegaNode} 
                       rootTree={rootTree}
                       onUpdate={(u) => props.onUpdate?.(u)} 
                       onHelp={props.onHelp} 
                       highlightPath={props.highlightPath} 
                       containers={enrichedManifest?.ui?.layout?.containers || []} 
                     />
+                    {isUCA && (
+                      <LayoutGovernanceSection 
+                        node={liveItem as OmegaNode} 
+                        onUpdate={(u) => props.onUpdate?.(u)} 
+                      />
+                    )}
                   </div>
                 )}
                 {activeSection === 'design' && (

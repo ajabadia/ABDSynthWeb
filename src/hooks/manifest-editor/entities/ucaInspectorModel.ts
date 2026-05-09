@@ -1,5 +1,5 @@
 import { ManifestEntity, OmegaNode, OmegaStyleNode, Position, Presentation } from '@/omega-ui-core/types/manifest';
-import { findParentInTree, findNodeInTree } from './ucaInspectorAdapter';
+import { findParentInTree } from './ucaInspectorAdapter';
 
 export interface InspectorViewModel {
   id: string;
@@ -10,6 +10,10 @@ export interface InspectorViewModel {
   component: string;
   container?: string;
   colSpan?: number;
+  constraints?: {
+    clampToParent?: boolean;
+    margin?: number;
+  };
 }
 
 export function isUcaNode(item: unknown): item is OmegaNode {
@@ -18,20 +22,20 @@ export function isUcaNode(item: unknown): item is OmegaNode {
 
 export function getInspectorModel(item: ManifestEntity | OmegaNode, rootTree?: OmegaNode): InspectorViewModel {
   if (isUcaNode(item)) {
-    // CRITICAL: Always try to find the LATEST version of the node in the tree
-    const liveNode = rootTree ? findNodeInTree(rootTree, item.id) : undefined;
-    const activeNode = liveNode || item;
-    const parent = rootTree ? findParentInTree(rootTree, activeNode.id) : undefined;
+    // Freshness is now handled by PropertyPanel (Phase 4.2)
+    // We still resolve parent for the container selector
+    const parent = rootTree ? findParentInTree(rootTree, item.id) : undefined;
     
     return {
-      id: activeNode.id,
-      role: activeNode.role || 'control',
-      bind: activeNode.bind || 'none',
-      pos: activeNode.layout?.pos || { x: 0, y: 0 },
-      style: activeNode.style,
-      component: activeNode.cellRef || (activeNode.kind !== 'cell' ? activeNode.kind : 'knob'),
+      id: item.id,
+      role: item.role || 'control',
+      bind: item.bind || 'none',
+      pos: item.layout?.pos || { x: 0, y: 0 },
+      style: item.style,
+      component: item.cellRef || (item.kind !== 'cell' ? item.kind : 'knob'),
       container: parent?.id,
-      colSpan: undefined
+      colSpan: undefined,
+      constraints: item.constraints
     };
   }
 
@@ -64,6 +68,7 @@ export function buildInspectorPatch(
     if (patch.role !== undefined) nodePatch.role = patch.role;
     if (patch.bind !== undefined) nodePatch.bind = patch.bind;
     if (patch.component !== undefined) nodePatch.cellRef = patch.component;
+    if (patch.constraints !== undefined) nodePatch.constraints = patch.constraints;
     
     return nodePatch;
   }

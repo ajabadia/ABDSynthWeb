@@ -12,13 +12,14 @@ export const useEntityCRUD = (
 ) => {
   
   const findItem = useCallback((id: string): ManifestEntity | OmegaNode | undefined => {
+    // 1. UCA Priority (Industrial Rule - Phase 4.2)
     if (manifest.ui?.useUCA !== false) {
-      const treeToSearch = manifest.ui?.tree || manifestToTree(manifest);
-      if (treeToSearch) {
-        const ucaNode = findNodeInTree(treeToSearch, id);
-        if (ucaNode) return ucaNode;
-      }
+      const tree = manifest.ui?.tree || manifestToTree(manifest);
+      const ucaNode = findNodeInTree(tree, id);
+      if (ucaNode) return ucaNode;
     }
+    
+    // 2. Legacy Fallback
     return findLegacyItem(manifest, id);
   }, [manifest]);
 

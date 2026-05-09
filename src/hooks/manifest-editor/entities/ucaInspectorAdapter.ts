@@ -1,5 +1,6 @@
 import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
+import { moveChildInTree } from '@/omega-ui-core/uca/treeUtils';
 
 export type SelectionRef = 
   | { source: 'legacy'; id: string }
@@ -85,6 +86,10 @@ export function findEditableItem(manifest: OMEGA_Manifest, id: string): { item: 
   return undefined;
 }
 
+interface PatchNode extends Partial<OmegaNode> {
+  _reorder?: { nodeId: string; targetIndex: number };
+}
+
 /**
  * applyUpdatesToNode
  * Maps updates back to the OmegaNode contract. Supports both legacy ManifestEntity and native OmegaNode patches.
@@ -93,8 +98,14 @@ export function applyUpdatesToNode(node: OmegaNode, updates: Partial<ManifestEnt
   const next = { ...node };
 
   // 1. Direct OmegaNode Update (Native)
-  if ('kind' in updates || 'layout' in updates || 'style' in updates) {
-    const nodePatch = updates as Partial<OmegaNode>;
+  if ('kind' in updates || 'layout' in updates || 'style' in updates || ('_reorder' in (updates as Record<string, unknown>))) {
+    const nodePatch = updates as PatchNode;
+    
+    if (nodePatch._reorder) {
+      const { nodeId, targetIndex } = nodePatch._reorder;
+      return moveChildInTree(next, next.id, nodeId, targetIndex);
+    }
+
     if (nodePatch.layout) {
       next.layout = { 
         ...next.layout, 
@@ -199,6 +210,3 @@ export function calculateWorldPosition(root: OmegaNode, targetId: string, curren
 
   return undefined;
 }
-
-
-

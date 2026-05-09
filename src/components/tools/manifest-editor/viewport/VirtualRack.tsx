@@ -128,6 +128,7 @@ export default function VirtualRack({
                 enabled: manifest.ui.ucaDebug?.enabled || false,
                 showLabels: manifest.ui.ucaDebug?.showLabels !== false,
                 hideDecorative: manifest.ui.ucaDebug?.hideDecorative || false,
+                showCADOverlay: manifest.ui.ucaDebug?.showCADOverlay || false,
                 selectedId: selectedItemId,
                 onSelect: onSelectItem,
                 onUpdateNode: onUpdateItem

@@ -320,6 +320,13 @@ export interface OMEGA_Metric {
  * Standardizing on hierarchical nodes for Era 7.2.3 and beyond.
  */
 export type OmegaNodeKind = 'rack' | 'face' | 'container' | 'cell' | 'layer';
+ 
+export interface OmegaConstraints {
+  clampToParent?: boolean;   // [Phase 4.3] Lock child inside parent bounding box
+  margin?: number;           // [Phase 4.3] Safety margin in rack units
+}
+
+export type LayoutMode = 'absolute' | 'stack-v' | 'stack-h';
 
 export interface OmegaNode {
   id: string;
@@ -332,11 +339,17 @@ export interface OmegaNode {
     size?: Dimensions;
     transform?: string;
     zIndex?: number;
+    mode?: LayoutMode;
+    gap?: number;
+    padding?: number;
+    align?: 'start' | 'center' | 'end' | 'stretch';
+    justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-around';
   };
   style?: OmegaStyleNode;
   visible?: boolean;
   locked?: boolean;
   capabilities?: string[];
+  constraints?: OmegaConstraints;
   children?: OmegaNode[];
 }
 
@@ -360,6 +373,7 @@ export interface OMEGA_Manifest {
       enabled: boolean;
       showLabels?: boolean;
       hideDecorative?: boolean;
+      showCADOverlay?: boolean;
     };
     tree?: OmegaNode; // [NEW] Hierarchical UI Root Node
     skin?: string; // Global UI skin
@@ -368,6 +382,11 @@ export interface OMEGA_Manifest {
       containers: LayoutContainer[];
       planes?: TabName[]; // [NEW] Active architectural planes for the module
       gridSnap?: number;
+      grid?: {
+        enabled: boolean;
+        spacingX: number;
+        spacingY: number;
+      };
       activeTab?: TabName | string;
       tabStyles?: Record<string, string>; // [NEW] Maps tabId to rack style variantId
     };

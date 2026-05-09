@@ -121,10 +121,75 @@ export default function ModuleArchitectureSection({
                   className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
                 /> Hide Decorative
               </label>
+              <label className="flex items-center gap-1.5 text-[8px] font-medium text-white/70 cursor-pointer hover:text-white">
+                <input 
+                  type="checkbox" 
+                  checked={manifest.ui.ucaDebug?.showCADOverlay || false} 
+                  onChange={(e) => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: manifest.ui.ucaDebug?.enabled || false, showCADOverlay: e.target.checked } } })}
+                  className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
+                /> Show CAD Layout
+              </label>
             </div>
           )}
         </div>
       )}
+
+      {/* GRID SNAPPING (Phase 4.3.3) */}
+      <div className="mb-4 p-2 bg-emerald-500/5 border border-emerald-500/20 rounded-xs flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[7px] font-black uppercase text-emerald-500 tracking-widest">Grid Snapping (Era 7.2.3)</span>
+            <span className="text-[6px] text-emerald-500/60 font-medium">Align nodes to discrete spatial grid</span>
+          </div>
+          <button
+            onClick={() => onUpdate({ 
+              ui: { 
+                ...manifest.ui, 
+                layout: { 
+                  ...manifest.ui.layout, 
+                  containers: manifest.ui.layout?.containers || [],
+                  grid: { ...(manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24 }), enabled: !manifest.ui.layout?.grid?.enabled } 
+                } 
+              } 
+            })}
+            className={`px-3 py-1 text-[8px] font-black uppercase rounded-full border transition-all ${
+              manifest.ui.layout?.grid?.enabled 
+                ? 'bg-emerald-500 border-emerald-500 text-black' 
+                : 'border-emerald-500/30 text-emerald-500/50 hover:bg-emerald-500/10'
+            }`}
+          >
+            {manifest.ui.layout?.grid?.enabled ? 'ACTIVE' : 'OFF'}
+          </button>
+        </div>
+        {manifest.ui.layout?.grid?.enabled && (
+          <div className="flex gap-4 pt-1 border-t border-emerald-500/10 items-center">
+              <div className="flex items-center gap-1.5 text-[8px] font-medium text-white/70">
+                <span>X:</span>
+                <input 
+                  type="number" 
+                  value={manifest.ui.layout?.grid?.spacingX || 24}
+                  onChange={(e) => {
+                    const grid = manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false };
+                    onUpdate({ ui: { ...manifest.ui, layout: { ...manifest.ui.layout, containers: manifest.ui.layout?.containers || [], grid: { ...grid, spacingX: parseInt(e.target.value) || 1 } } } });
+                  }}
+                  className="w-8 bg-black/40 border border-emerald-500/20 rounded-sm px-1 text-[8px] outline-none focus:border-emerald-500/50"
+                />
+             </div>
+             <div className="flex items-center gap-1.5 text-[8px] font-medium text-white/70">
+                <span>Y:</span>
+                <input 
+                  type="number" 
+                  value={manifest.ui.layout?.grid?.spacingY || 24}
+                  onChange={(e) => {
+                    const grid = manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false };
+                    onUpdate({ ui: { ...manifest.ui, layout: { ...manifest.ui.layout, containers: manifest.ui.layout?.containers || [], grid: { ...grid, spacingY: parseInt(e.target.value) || 1 } } } });
+                  }}
+                  className="w-8 bg-black/40 border border-emerald-500/20 rounded-sm px-1 text-[8px] outline-none focus:border-emerald-500/50"
+                />
+             </div>
+          </div>
+        )}
+      </div>
 
       {/* SUB-NAVIGATION */}
       <div className="flex gap-1 mb-6 bg-black/20 p-1 rounded-xs border wb-outline shrink-0">

@@ -31,15 +31,52 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
 
   const [localX, setLocalX] = React.useState<string>(pos.x.toString());
   const [localY, setLocalY] = React.useState<string>(pos.y.toString());
-  const isFocused = React.useRef<string | null>(null);
+  const [focusedAxis, setFocusedAxis] = React.useState<string | null>(null);
+
+  // Constraints State (Phase 4.3.1.b)
+  const constraints = model.constraints ?? {};
+  const [localClamp, setLocalClamp] = React.useState<boolean>(!!constraints.clampToParent);
+  const [localMargin, setLocalMargin] = React.useState<string>((constraints.margin ?? 0).toString());
+
+  const [prevProps, setPrevProps] = React.useState({ 
+    id: item.id, 
+    x: pos.x, 
+    y: pos.y, 
+    clamp: !!constraints.clampToParent, 
+    margin: constraints.margin 
+  });
 
   const worldPos = rootTree ? calculateWorldPosition(rootTree, item.id) : pos;
-
+  
   // Sync local state when external item changes (selection change or drag end)
-  React.useEffect(() => {
-    if (isFocused.current !== 'x') setLocalX(Math.round(pos.x).toString());
-    if (isFocused.current !== 'y') setLocalY(Math.round(pos.y).toString());
-  }, [item.id, pos.x, pos.y]);
+  const shouldSyncPos = item.id !== prevProps.id || (focusedAxis === null && (pos.x !== prevProps.x || pos.y !== prevProps.y));
+  const shouldSyncConstraints = item.id !== prevProps.id || (!!constraints.clampToParent !== prevProps.clamp || constraints.margin !== prevProps.margin);
+
+  if (shouldSyncPos || shouldSyncConstraints) {
+    setPrevProps({ 
+      id: item.id, 
+      x: pos.x, 
+      y: pos.y, 
+      clamp: !!constraints.clampToParent, 
+      margin: constraints.margin 
+    });
+    
+    if (shouldSyncPos) {
+      setLocalX(Math.round(pos.x).toString());
+      setLocalY(Math.round(pos.y).toString());
+    }
+    
+    if (shouldSyncConstraints) {
+      setLocalClamp(!!constraints.clampToParent);
+      setLocalMargin((constraints.margin ?? 0).toString());
+    }
+  }
+
+  const handleApplyConstraints = (patch: Partial<NonNullable<OmegaNode['constraints']>>) => {
+    onUpdate(buildInspectorPatch(item, { 
+      constraints: { ...constraints, ...patch } 
+    }));
+  };
 
   const handleCommit = (axis: 'x' | 'y', val: string) => {
     const numeric = parseFloat(val);
@@ -87,8 +124,8 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
                 <input 
                   type="text" 
                   value={localX} 
-                  onFocus={() => { isFocused.current = 'x'; }}
-                  onBlur={() => { isFocused.current = null; handleCommit('x', localX); }}
+                  onFocus={() => setFocusedAxis('x')}
+                  onBlur={() => { setFocusedAxis(null); handleCommit('x', localX); }}
                   onChange={(e) => setLocalX(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCommit('x', localX); }}
                   className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
@@ -101,8 +138,8 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
                 <input 
                   type="text" 
                   value={localY} 
-                  onFocus={() => { isFocused.current = 'y'; }}
-                  onBlur={() => { isFocused.current = null; handleCommit('y', localY); }}
+                  onFocus={() => setFocusedAxis('y')}
+                  onBlur={() => { setFocusedAxis(null); handleCommit('y', localY); }}
                   onChange={(e) => setLocalY(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCommit('y', localY); }}
                   className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
@@ -133,6 +170,47 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
               <option value={2}>2 Columns (Wide)</option>
               <option value={3}>3 Columns (Full Width)</option>
             </select>
+          </div>
+        </InspectorCollapsible>
+      )}
+
+      {/* SPATIAL CONSTRAINTS (Phase 4.3.1.b) */}
+      {isUCA && !isRack && (
+        <InspectorCollapsible 
+          title="Hierarchical Constraints" 
+          icon={Move}
+          onHelp={() => onHelp?.('constraints')}
+        >
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between p-2 bg-black/20 rounded-xs border border-outline">
+              <span className="text-[9px] font-bold uppercase text-foreground/60 tracking-tighter">Clamp to Parent</span>
+              <input 
+                type="checkbox" 
+                checked={localClamp}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setLocalClamp(val);
+                  handleApplyConstraints({ clampToParent: val });
+                }}
+                className="w-4 h-4 rounded-xs border-outline bg-black/40 text-primary focus:ring-primary/40 transition-all cursor-pointer"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[8px] uppercase font-bold text-foreground/60 tracking-tighter ml-1">
+                Containment Margin (px)
+              </label>
+              <input 
+                type="number" 
+                value={localMargin}
+                onChange={(e) => setLocalMargin(e.target.value)}
+                onBlur={() => {
+                  const val = parseFloat(localMargin) || 0;
+                  handleApplyConstraints({ margin: val });
+                }}
+                className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-mono text-foreground outline-none focus:border-primary/40 transition-colors"
+              />
+            </div>
           </div>
         </InspectorCollapsible>
       )}
