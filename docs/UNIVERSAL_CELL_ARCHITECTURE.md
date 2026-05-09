@@ -96,7 +96,7 @@ To prevent chaotic rendering in nested trees and "phantom bugs", the engine enfo
 1. **Stabilization**: [COMPLETED] Ensure zero-noise `tsc` and `eslint` on the current flat model.
 2. **Phase 1 (Additive PoC)**: [COMPLETED] Introduce `OmegaNode` types, `manifestToTree` projection bridge, and basic experimental `UniversalRenderer`.
 3. **Phase 2 (Composition & Debugging)**: [COMPLETED] Implement immutable 6-step resolution semantics, asymmetric `treeToManifest` bridge, and interactive Debug Inspector.
-4. **Phase 3 (Hierarchical Authoring)**: Implement visual tree editor, macro-cell sub-selection, template authoring, and secure persistence mechanics.
+4. **Phase 3 (Hierarchical Authoring)**: [COMPLETED] Implement visual tree editor, deep node selection adapter (`ucaInspectorAdapter`), fallback projections, and safe mutations of the nested tree.
 5. **Phase 4 (Transition)**: Switch the default workbench viewport to UCA and progressively deprecate flat legacy arrays.
 
 ## Benefits
