@@ -47,6 +47,7 @@ export default function ModuleArchitectureSection({
   onTriggerUpload,
   onRemoveResource,
   highlightPath,
+  onUpdate,
   setActiveSection
 }: ModuleArchitectureSectionProps) {
   const [activeSubTab, setActiveSubTab] = useState<'infra' | 'controls' | 'ports' | 'routing' | 'assets'>('infra');
@@ -61,6 +62,24 @@ export default function ModuleArchitectureSection({
  
   return (
     <div className="flex flex-col h-full">
+      {/* UCA EXPERIMENTAL TOGGLE */}
+      <div className="mb-4 p-2 bg-amber-500/5 border border-amber-500/20 rounded-xs flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[7px] font-black uppercase text-amber-500 tracking-widest">UCA Architecture</span>
+          <span className="text-[6px] text-amber-500/60 font-medium">Recursive composite engine (Experimental)</span>
+        </div>
+        <button
+          onClick={() => onUpdate({ ui: { ...manifest.ui, useUCA: !manifest.ui?.useUCA } })}
+          className={`px-3 py-1 text-[8px] font-black uppercase rounded-full border transition-all ${
+            manifest.ui?.useUCA 
+              ? 'bg-amber-500 border-amber-500 text-black' 
+              : 'border-amber-500/30 text-amber-500/50 hover:bg-amber-500/10'
+          }`}
+        >
+          {manifest.ui?.useUCA ? 'ACTIVE' : 'STABLE'}
+        </button>
+      </div>
+
       {/* SUB-NAVIGATION */}
       <div className="flex gap-1 mb-6 bg-black/20 p-1 rounded-xs border wb-outline shrink-0">
         {subTabs.map((tab) => (

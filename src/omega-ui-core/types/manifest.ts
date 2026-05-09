@@ -315,6 +315,38 @@ export interface OMEGA_Metric {
   color: string;
 }
 
+/**
+ * UCA PHASE 1 - COMPOSITE TREE GRAMMAR (Additive)
+ * Standardizing on hierarchical nodes for Era 7.2.3 and beyond.
+ */
+export type OmegaNodeKind = 'rack' | 'face' | 'container' | 'cell' | 'layer';
+
+export interface OmegaNode {
+  id: string;
+  kind: OmegaNodeKind;
+  role?: string;
+  cellRef?: string; // Catalog blueprint reference (mandatory for kind: cell)
+  bind?: string;    // Signal/State binding
+  layout?: {
+    pos: Position;
+    size?: Dimensions;
+    transform?: string;
+    zIndex?: number;
+  };
+  style?: OmegaStyleNode;
+  visible?: boolean;
+  locked?: boolean;
+  capabilities?: string[];
+  children?: OmegaNode[];
+}
+
+export interface CellTemplate {
+  id: string;
+  label: string;
+  category: string;
+  baseNode: OmegaNode; // Structural blueprint
+}
+
 export interface OMEGA_Manifest {
   schemaVersion: string;
   id: string;
@@ -323,6 +355,8 @@ export interface OMEGA_Manifest {
     dimensions: Dimensions;
     controls: ManifestEntity[];
     jacks: ManifestEntity[];
+    useUCA?: boolean; // [EXPERIMENTAL] Enable recursive rendering engine
+    tree?: OmegaNode; // [NEW] Hierarchical UI Root Node
     skin?: string; // Global UI skin
     skinMode?: 'standard' | 'custom'; // Era 7.2.3 Governance Mode
     layout?: {

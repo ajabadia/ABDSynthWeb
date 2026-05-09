@@ -13,21 +13,35 @@ Nodes are recursive: a Cell can contain other Cells (Layers).
 - **Rack**: The top-level module unit.
 - **Face**: A physical or logical plane of the module (e.g., MAIN, REAR, FX).
 - **Container / Group**: A logical grouping of elements with its own coordinate system.
-- **Cell**: The universal atomic unit. Can be a simple control (Knob) or a complex composite (ADSR).
+- **Cell**: The universal atomic unit. A concrete instance of a blueprint.
+- **Layer**: A first-class rendering primitive (e.g., label, mask, hit area). Treated as a node for total composability.
 
 ### 3. Node Contract (`OmegaNode`)
-Each node in the tree follows a common contract:
+Each node in the tree follows a common operational contract:
 - `id`: Unique identifier.
 - `kind`: Structural category (`rack` | `face` | `container` | `cell` | `layer`).
 - `role`: Functional purpose (`control` | `telemetry` | `decor` | `io`).
-- `cellRef`: Reference to a `CellTemplate` in the library.
+- `visible`: Runtime visibility flag.
+- `locked`: Interaction lockout flag.
+- `cellRef`: Reference to a `CellTemplate` in the library (mandatory for `cell`).
 - `pos` / `size`: Relative spatial coordinates.
-- `style`: Aesthetic overrides.
-- `children`: Array of child nodes.
+- `transform`: Rotation, scaling, and skewing metrics.
+- `zIndex`: Explicit painting order control.
+- `capabilities`: Dynamic flags (e.g., `canReceiveFocus`, `isDraggable`).
+- `style`: Aesthetic overrides (OmegaStyleNode).
+- `children`: Array of child nodes (recursive).
 
-### 4. Cell Templates vs. Instances
-- **CellTemplate**: A reusable blueprint in the Catalog. Defines default layers, interaction rules, and capabilities.
-- **CellInstance (OmegaNode)**: A concrete usage of a template within a manifest, containing specific bindings and positioning.
+### 4. Resolution Rules (The "Inheritance Chain")
+To prevent chaotic rendering in nested trees, the engine follows a strict resolution order:
+1. **Template Base**: The default structure and properties defined in the `CellTemplate`.
+2. **Instance Overrides**: Specific properties defined in the manifest's `OmegaNode`.
+3. **Inherited Style**: Values passed down from the parent container or face.
+4. **Runtime State**: Dynamic values (modulation, MIDI input, focus state).
+
+### 5. Ownership & Boundaries
+- **Catalog**: Central registry of `CellTemplates`. The source of blueprints.
+- **Manifest**: Orchestrates `CellInstances` (`OmegaNodes`). The source of composition.
+- **ACE Pack**: Self-contained bundle. Embeds templates used in the manifest for absolute portability.
 
 ## Structural Comparison
 
