@@ -31,12 +31,15 @@ Each node in the tree follows a common operational contract:
 - `style`: Aesthetic overrides (OmegaStyleNode).
 - `children`: Array of child nodes (recursive).
 
-### 4. Resolution Rules (The "Inheritance Chain")
-To prevent chaotic rendering in nested trees, the engine follows a strict resolution order:
-1. **Template Base**: The default structure and properties defined in the `CellTemplate`.
-2. **Instance Overrides**: Specific properties defined in the manifest's `OmegaNode`.
-3. **Inherited Style**: Values passed down from the parent container or face.
-4. **Runtime State**: Dynamic values (modulation, MIDI input, focus state).
+### 4. Resolved Semantics Order (The "Inheritance Chain")
+To prevent chaotic rendering in nested trees and "phantom bugs", the engine enforces a strict, immutable 6-step resolution pipeline in `ucaSemantics.ts`:
+
+1. **Expand Template**: Deep-clones the template base if the node is an instance of a `CellTemplate`.
+2. **Merge Instance Overrides**: Applies instance-specific `pos`, `size`, and `style` directly over the template base.
+3. **Apply Inherited Style/Tokens**: Propagates missing generic styles (e.g., typography) down the inheritance chain (Era 7.2.3 Genetic Propagation).
+4. **Resolve Layout/Frame**: Normalizes layout values and fallbacks.
+5. **Compute Renderable Children**: Recursively resolves children. To prevent React DOM collisions, nested template children are assigned composite IDs (`parentID_childID`).
+6. **Dispatch Primitive/Compound**: Delivers the fully resolved node to the renderer.
 
 ### 5. Ownership & Boundaries
 - **Catalog**: Central registry of `CellTemplates`. The source of blueprints.
@@ -90,11 +93,11 @@ To prevent chaotic rendering in nested trees, the engine follows a strict resolu
 ```
 
 ## Migration Strategy
-1. **Stabilization**: Ensure zero-noise `tsc` and `eslint` on the current flat model.
-2. **Phase 1 (Additive)**: Introduce `OmegaNode` types and documentation.
-3. **Phase 2 (Conversion)**: Implement `manifestToTree` and `treeToManifest` bidirectional converters.
-4. **Phase 3 (Experimental)**: Build a recursive `UniversalRenderer` that works in parallel with the legacy renderer.
-5. **Phase 4 (Transition)**: Switch the workbench viewport to UCA and deprecate legacy arrays.
+1. **Stabilization**: [COMPLETED] Ensure zero-noise `tsc` and `eslint` on the current flat model.
+2. **Phase 1 (Additive PoC)**: [COMPLETED] Introduce `OmegaNode` types, `manifestToTree` projection bridge, and basic experimental `UniversalRenderer`.
+3. **Phase 2 (Composition & Debugging)**: [COMPLETED] Implement immutable 6-step resolution semantics, asymmetric `treeToManifest` bridge, and interactive Debug Inspector.
+4. **Phase 3 (Hierarchical Authoring)**: Implement visual tree editor, macro-cell sub-selection, template authoring, and secure persistence mechanics.
+5. **Phase 4 (Transition)**: Switch the default workbench viewport to UCA and progressively deprecate flat legacy arrays.
 
 ## Benefits
 - **Composability**: Create complex controls (like a multi-stage envelope) by nesting cells.
