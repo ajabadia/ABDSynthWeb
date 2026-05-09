@@ -356,6 +356,11 @@ export interface OMEGA_Manifest {
     controls: ManifestEntity[];
     jacks: ManifestEntity[];
     useUCA?: boolean; // [EXPERIMENTAL] Enable recursive rendering engine
+    ucaDebug?: {
+      enabled: boolean;
+      showLabels?: boolean;
+      hideDecorative?: boolean;
+    };
     tree?: OmegaNode; // [NEW] Hierarchical UI Root Node
     skin?: string; // Global UI skin
     skinMode?: 'standard' | 'custom'; // Era 7.2.3 Governance Mode

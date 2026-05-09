@@ -80,6 +80,48 @@ export default function ModuleArchitectureSection({
         </button>
       </div>
 
+      {/* UCA DEBUG INSPECTOR */}
+      {manifest.ui?.useUCA && (
+        <div className="mb-4 p-2 bg-purple-500/5 border border-purple-500/20 rounded-xs flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[7px] font-black uppercase text-purple-500 tracking-widest">UCA Debug Inspector</span>
+              <span className="text-[6px] text-purple-500/60 font-medium">Visual overlay and node selection</span>
+            </div>
+            <button
+              onClick={() => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: !manifest.ui.ucaDebug?.enabled } } })}
+              className={`px-3 py-1 text-[8px] font-black uppercase rounded-full border transition-all ${
+                manifest.ui.ucaDebug?.enabled 
+                  ? 'bg-purple-500 border-purple-500 text-black' 
+                  : 'border-purple-500/30 text-purple-500/50 hover:bg-purple-500/10'
+              }`}
+            >
+              {manifest.ui.ucaDebug?.enabled ? 'ON' : 'OFF'}
+            </button>
+          </div>
+          {manifest.ui.ucaDebug?.enabled && (
+            <div className="flex gap-4 pt-1 border-t border-purple-500/10">
+              <label className="flex items-center gap-1.5 text-[8px] font-medium text-white/70 cursor-pointer hover:text-white">
+                <input 
+                  type="checkbox" 
+                  checked={manifest.ui.ucaDebug?.showLabels !== false} 
+                  onChange={(e) => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: manifest.ui.ucaDebug?.enabled || false, showLabels: e.target.checked } } })}
+                  className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
+                /> Show Boundaries
+              </label>
+              <label className="flex items-center gap-1.5 text-[8px] font-medium text-white/70 cursor-pointer hover:text-white">
+                <input 
+                  type="checkbox" 
+                  checked={manifest.ui.ucaDebug?.hideDecorative || false} 
+                  onChange={(e) => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: manifest.ui.ucaDebug?.enabled || false, hideDecorative: e.target.checked } } })}
+                  className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
+                /> Hide Decorative
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* SUB-NAVIGATION */}
       <div className="flex gap-1 mb-6 bg-black/20 p-1 rounded-xs border wb-outline shrink-0">
         {subTabs.map((tab) => (

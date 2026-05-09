@@ -124,6 +124,13 @@ export default function VirtualRack({
               node={manifest.ui.tree || manifestToTree(manifest)} 
               manifest={manifest} 
               resolveAsset={resolveAsset}
+              debugContext={{
+                enabled: manifest.ui.ucaDebug?.enabled || false,
+                showLabels: manifest.ui.ucaDebug?.showLabels !== false,
+                hideDecorative: manifest.ui.ucaDebug?.hideDecorative || false,
+                selectedId: selectedItemId,
+                onSelect: onSelectItem
+              }}
             />
           </div>
         )}

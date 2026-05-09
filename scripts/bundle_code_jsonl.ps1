@@ -151,6 +151,13 @@ try {
             continue
         }
 
+        $ext = $item.Extension.ToLower()
+        $isSpecific = $specificFiles -contains $item.Name
+        if (-not $isSpecific -and $includeExtensions -notcontains $ext) {
+            $controlWriter.WriteLine("$relativePath : SKIPPED_BIN_OR_NOT_TEXT")
+            continue
+        }
+
         try {
             $content = [System.IO.File]::ReadAllText($filePath)
             if ([string]::IsNullOrWhiteSpace($content)) {
@@ -178,6 +185,23 @@ try {
             $controlWriter.WriteLine("${relativePath} : ERROR $_")
         }
     }
+
+    # Append a list of all project files to the bundle
+    $projectFilesList = @()
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        $origDir = Get-Location
+        Set-Location $rootDir
+        $projectFilesList = git ls-files | ForEach-Object { $_ -replace '\\', '/' }
+        Set-Location $origDir
+    } else {
+        $projectFilesList = $allFiles | ForEach-Object { $_.FullName.Substring($rootDir.Length + 1) -replace '\\', '/' }
+    }
+
+    $allFilesObj = [PSCustomObject]@{
+        type = "project_file_list"
+        files = $projectFilesList
+    }
+    $jsonlWriter.WriteLine(($allFilesObj | ConvertTo-Json -Depth 10 -Compress))
 
     # Meta
     $meta = [PSCustomObject]@{
