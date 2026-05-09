@@ -13,6 +13,7 @@ import { WorkbenchViewport } from './viewport/WorkbenchViewport';
 import { WorkbenchInspector } from './inspector/WorkbenchInspector';
 import TemplateGallery from './gallery/TemplateGallery';
 import MultiTabHeader from './layout/MultiTabHeader';
+import { SourceView } from './views/SourceView';
 
 // Types
 import { ManifestEntity, ModuleTemplate } from '@/omega-ui-core/types/manifest';
@@ -187,6 +188,19 @@ export default function WorkbenchContainer({
     actions.setLayoutRatio(state.layout.ratio + delta);
   }, [actions, state.layout.ratio]);
 
+  const handleSourceChange = useCallback((next: string) => {
+    try {
+      const updated = JSON.parse(next);
+      updateManifest(updated);
+    } catch {
+      // Silent catch for invalid JSON during typing
+    }
+  }, [updateManifest]);
+
+  const handleCaptureViewState = useCallback((tabId: string, viewState: unknown) => {
+    actions.captureTabViewState(tabId, { editorViewState: viewState });
+  }, [actions]);
+
   // View Mapper
   const renderPaneContent = (paneId: 'primary' | 'secondary') => {
     const pane = state.panesById[paneId];
@@ -268,11 +282,15 @@ export default function WorkbenchContainer({
           )}
 
           {tab?.type === 'source' && (
-            <div className="flex-1 bg-black/40 flex items-center justify-center">
-              <span className="text-10px font-mono opacity-20 uppercase tracking-widest">
-                [ Source Editor Integration Pending ]
-              </span>
-            </div>
+            <SourceView 
+              tabId={tab.id}
+              manifestId={manifest.id || 'default'}
+              value={JSON.stringify(manifest, null, 2)}
+              language="json"
+              editorViewState={state.tabViewState[tab.id]?.editorViewState}
+              onChange={handleSourceChange}
+              onCaptureViewState={(viewState) => handleCaptureViewState(tab.id, viewState)}
+            />
           )}
         </div>
       </div>

@@ -80,7 +80,7 @@ export default function EditorModals({
         resolveAsset={resolveAsset || ((id) => id)}
       />
       <AnimatePresence>
-        {pendingFiles && (
+        {pendingFiles && pendingFiles.length > 0 && (
           <IngestionModal 
             files={pendingFiles} 
             onConfirm={(selected) => {
