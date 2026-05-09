@@ -31,7 +31,7 @@ export default function IdentitySection({
   resolveAsset
 }: IdentitySectionProps) {
   const isModule = 'metadata' in item;
-  const isHighlighted = (key: string) => highlightPath?.includes(key);
+  const isHighlighted = (key: string) => !!highlightPath?.includes(key);
 
   if (!isModule) {
     return (

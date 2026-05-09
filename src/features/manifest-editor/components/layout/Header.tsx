@@ -1,7 +1,4 @@
-'use client';
-
-import React from 'react';
-import { Shield, Terminal, Settings } from 'lucide-react';
+import { Shield, Terminal, Settings, Columns } from 'lucide-react';
 
 import { AuditResult } from '@/services/auditService';
 import { ComplianceBadge } from '../shared/ComplianceBadge';
@@ -32,6 +29,8 @@ interface HeaderProps {
   onOpenConfig: () => void;
   onOpenCellEditor?: () => void;
   onOpenGallery?: () => void;
+  isSplit?: boolean;
+  onToggleSplit?: () => void;
 }
 
 export default function Header(props: HeaderProps) {
@@ -75,7 +74,19 @@ export default function Header(props: HeaderProps) {
       <div className="flex-1 flex items-center justify-end gap-4">
         <ComplianceBadge audit={props.audit} onClick={props.onOpenAudit} />
         <div className="h-6 w-px wb-outline opacity-20 mx-1" />
-        <ViewModeSelector viewMode={props.viewMode} setViewMode={props.setViewMode} />
+        <div className="h-6 w-px wb-outline opacity-20 mx-1" />
+        <div className="flex items-center gap-1">
+          <ViewModeSelector viewMode={props.viewMode} setViewMode={props.setViewMode} />
+          
+          <button
+            onClick={props.onToggleSplit}
+            className={`w-8 h-8 rounded-xs border flex items-center justify-center transition-all ${props.isSplit ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]' : 'bg-black/40 border-outline text-foreground/40 hover:text-foreground/80 hover:border-outline/60'}`}
+            title="Toggle Split View (Vertical)"
+          >
+            <Columns className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
         <div className="h-6 w-px wb-outline opacity-20 mx-1" />
         <ThemeToggle uiTheme={props.uiTheme} setUiTheme={props.setUiTheme} />
         

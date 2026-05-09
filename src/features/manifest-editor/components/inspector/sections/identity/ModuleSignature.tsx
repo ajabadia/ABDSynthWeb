@@ -3,15 +3,18 @@
 import React from 'react';
 import { Box, Target } from 'lucide-react';
 import Image from 'next/image';
-import { OMEGA_Manifest, ManifestMetadata } from '@/types/manifest';
+import { OMEGA_Manifest, ManifestMetadata } from '@/omega-ui-core/types/manifest';
 import AssetSelector from '../../shared/AssetSelector';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
+import { IndustrialField } from '../../../primitives/IndustrialField';
+import { IndustrialInput } from '../../../primitives/IndustrialInput';
+import { IndustrialTextArea } from '../../../primitives/IndustrialTextArea';
 
 interface ModuleSignatureProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
   onHelp?: (id: string) => void;
-  isHighlighted: (key: string) => boolean | undefined;
+  isHighlighted: (key: string) => boolean;
   resolveAsset: (id: string | undefined) => string | undefined;
 }
 
@@ -30,65 +33,80 @@ export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighligh
     >
       <div className="space-y-4 pt-2">
         <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Schema</label>
-            <input 
-              type="text" 
+          <IndustrialField 
+            label="Schema" 
+            highlightKey="schemaVersion" 
+            isHighlighted={isHighlighted}
+          >
+            <IndustrialInput 
               value={manifest.schemaVersion || '7.1'} 
-              onChange={(e) => onUpdate({ schemaVersion: e.target.value })}
-              className={`w-full wb-surface-subtle border ${isHighlighted('schemaVersion') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all`}
+              onChange={(v) => onUpdate({ schemaVersion: v })}
+              mono
             />
-          </div>
-          <div className="col-span-2 space-y-1.5">
-            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Canonical ID (Unique)</label>
-            <input 
-              type="text" 
-              value={manifest.id || ''} 
-              onChange={(e) => onUpdate({ id: e.target.value })}
-              className={`w-full wb-surface-subtle border ${isHighlighted('id') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all`}
-            />
+          </IndustrialField>
+
+          <div className="col-span-2">
+            <IndustrialField 
+              label="Canonical ID (Unique)" 
+              highlightKey="id" 
+              isHighlighted={isHighlighted}
+            >
+              <IndustrialInput 
+                value={manifest.id || ''} 
+                onChange={(v) => onUpdate({ id: v })}
+                mono
+                placeholder="module_id_v1"
+              />
+            </IndustrialField>
           </div>
         </div>
 
         <div className="grid grid-cols-6 gap-3">
-          <div className="col-span-3 space-y-1.5">
-            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Commercial Name</label>
-            <input 
-              type="text" 
-              value={metadata.name || ''} 
-              onChange={(e) => updateMetadata('name', e.target.value)}
-              className={`w-full wb-surface-subtle border ${isHighlighted('name') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all`}
-            />
+          <div className="col-span-3">
+            <IndustrialField 
+              label="Commercial Name" 
+              highlightKey="name" 
+              isHighlighted={isHighlighted}
+            >
+              <IndustrialInput 
+                value={metadata.name || ''} 
+                onChange={(v) => updateMetadata('name', v)}
+                placeholder="OMEGA NEURONIK"
+              />
+            </IndustrialField>
           </div>
-          <div className="col-span-2 space-y-1.5">
-            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Version</label>
-            <input 
-              type="text" 
-              value={metadata.version || '1.0.0'} 
-              onChange={(e) => updateMetadata('version', e.target.value)}
-              className="w-full wb-surface-subtle border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all"
-            />
+          <div className="col-span-2">
+            <IndustrialField label="Version">
+              <IndustrialInput 
+                value={metadata.version || '1.0.0'} 
+                onChange={(v) => updateMetadata('version', v)}
+                mono
+              />
+            </IndustrialField>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">HP</label>
-            <input 
-              type="number" 
+          <IndustrialField 
+            label="HP" 
+            highlightKey="hp" 
+            isHighlighted={isHighlighted}
+          >
+            <IndustrialInput 
+              type="number"
               value={metadata.rack?.hp || 12} 
-              onChange={(e) => updateMetadata('rack', { ...(metadata.rack || {}), hp: Math.max(1, parseInt(e.target.value) || 1) })}
-              className={`w-full wb-surface-subtle border ${isHighlighted('hp') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all text-center`}
+              onChange={(v) => updateMetadata('rack', { ...(metadata.rack || {}), hp: Math.max(1, parseInt(v) || 1) })}
+              mono
+              align="center"
             />
-          </div>
+          </IndustrialField>
         </div>
 
-        <div className="space-y-1.5 pt-1">
-          <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Module Description</label>
-          <textarea 
+        <IndustrialField label="Module Description">
+          <IndustrialTextArea 
             value={metadata.description || ''} 
-            onChange={(e) => updateMetadata('description', e.target.value)}
+            onChange={(v) => updateMetadata('description', v)}
             placeholder="ENTER MODULE DOCUMENTATION / SPECIFICATIONS..."
-            className="w-full wb-surface-subtle border wb-outline rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all resize-none h-20 custom-scrollbar placeholder:opacity-20"
+            rows={5}
           />
-        </div>
+        </IndustrialField>
 
         <div className="space-y-3 pt-2">
            <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
