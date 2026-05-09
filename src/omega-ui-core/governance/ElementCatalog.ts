@@ -93,6 +93,16 @@ export const OMEGA_ELEMENT_CATALOG: ElementDefinition[] = [
     attachmentRole: 'fragment',
     allowedFragments: ['label', 'illustration', 'led']
   },
+  {
+    id: 'face',
+    label: 'Module Faceplate',
+    category: 'rack',
+    capabilities: ['asset', 'color', 'position', 'size', 'rounding', 'borderWidth', 'blur', 'zIndex'],
+    description: 'The primary surface for component mounting.',
+    icon: '🎭',
+    attachmentRole: 'host',
+    allowedFragments: ['label', 'illustration', 'container', 'group', 'cell']
+  },
 
   // COMPONENT PRIMITIVES (CONTROLS -> SIGNAL)
   {
@@ -337,7 +347,8 @@ export const OMEGA_ELEMENT_CATALOG: ElementDefinition[] = [
     capabilities: [
       'variant', 'color', 'indicatorColor', 'font', 'fontSize', 'fontColor', 
       'rounding', 'borderWidth', 'opacity', 'alignment', 'thickness', 'shadow', 'spacing', 'zIndex', 'blur',
-      'labelX', 'labelY', 'labelW', 'labelH', 'labelBg', 'labelRounding', 'labelPadding'
+      'labelX', 'labelY', 'labelW', 'labelH', 'labelBg', 'labelRounding', 'labelPadding',
+      'position', 'size'
     ],
     attachmentRole: 'host',
     allowedFragments: ['label', 'led', 'illustration', 'rack-screw', 'graphic-fragment'],
@@ -351,7 +362,8 @@ export const OMEGA_ELEMENT_CATALOG: ElementDefinition[] = [
     icon: '🖇️',
     capabilities: [
       'variant', 'color', 'asset', 'font', 'fontSize', 'fontColor', 
-      'rounding', 'borderWidth', 'opacity', 'shadow', 'spacing', 'zIndex', 'blur'
+      'rounding', 'borderWidth', 'opacity', 'shadow', 'spacing', 'zIndex', 'blur',
+      'position', 'size'
     ],
     attachmentRole: 'host',
     allowedFragments: ['label', 'illustration']

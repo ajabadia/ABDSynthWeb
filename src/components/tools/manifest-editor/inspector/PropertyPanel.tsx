@@ -18,14 +18,17 @@ import CustomSkinSection from './sections/CustomSkinSection';
 import InspectorHeader from './layout/InspectorHeader';
 import InspectorNav from './layout/InspectorNav';
 import { usePropertyPanel } from '@/hooks/manifest-editor/usePropertyPanel';
+import { isUcaNode } from '@/hooks/manifest-editor/entities/ucaInspectorModel';
+import { adaptNodeToManifestEntity } from '@/hooks/manifest-editor/entities/ucaInspectorAdapter';
 
-import { ManifestEntity, OMEGA_Manifest, OMEGA_Modulation, LayoutContainer, ExtraResource } from '@/types/manifest';
+import { ManifestEntity, OMEGA_Manifest, OMEGA_Modulation, LayoutContainer, ExtraResource, OmegaNode } from '@/types/manifest';
+import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 
 export interface PropertyPanelProps {
-  item: ManifestEntity | OMEGA_Manifest | null;
+  item: ManifestEntity | OmegaNode | OMEGA_Manifest | null;
   onClose?: () => void;
-  onUpdateItem?: (id: string, updates: Partial<ManifestEntity>) => void;
-  onUpdate?: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => void;
+  onUpdateItem?: (id: string, updates: Partial<ManifestEntity> | Partial<OmegaNode>) => void;
+  onUpdate?: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity> | Partial<OmegaNode>) => void;
   highlightPath?: string | null;
   availableBinds?: string[];
   onSelectItem?: (id: string | null) => void;
@@ -53,7 +56,11 @@ export interface PropertyPanelProps {
 
 export default function PropertyPanel(props: PropertyPanelProps) {
   const item = props.item;
-  const { activeSection, setActiveSection, isModule, sections } = usePropertyPanel(item as ManifestEntity | OMEGA_Manifest, props.highlightPath);
+  const isUCA = isUcaNode(item);
+  const rootTree = props.manifest?.ui?.tree || (props.manifest ? manifestToTree(props.manifest) : undefined);
+  const legacyItem = isUCA ? adaptNodeToManifestEntity(item as OmegaNode) : (item as ManifestEntity);
+
+  const { activeSection, setActiveSection, isModule, sections } = usePropertyPanel(legacyItem as ManifestEntity | OMEGA_Manifest, props.highlightPath);
 
   if (!item) return null;
   
@@ -77,7 +84,7 @@ export default function PropertyPanel(props: PropertyPanelProps) {
   return (
     <div className="h-full wb-surface border-l wb-outline flex flex-col shadow-2xl overflow-hidden transition-colors duration-500">
       <InspectorHeader id={itemId} isModule={isModule} onClose={props.onClose || (() => {})} />
-      {!isModule && <CellPreview item={item as ManifestEntity} resolveAsset={props.resolveAsset} />}
+      {!isModule && <CellPreview item={legacyItem as ManifestEntity} resolveAsset={props.resolveAsset} />}
       <InspectorNav sections={sections} activeSection={activeSection} setActiveSection={setActiveSection} />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
@@ -135,23 +142,31 @@ export default function PropertyPanel(props: PropertyPanelProps) {
                   <div className="space-y-8">
                     <IdentitySection 
                       item={item} 
+                      rootManifest={enrichedManifest} 
+                      rootTree={rootTree}
                       onUpdate={(u) => props.onUpdate?.(u)} 
                       onHelp={props.onHelp} 
-                      rootManifest={enrichedManifest} 
-                      highlightPath={props.highlightPath}
-                      resolveAsset={props.resolveAsset}
+                      highlightPath={props.highlightPath} 
+                      resolveAsset={props.resolveAsset} 
                     />
-                    <SpatialSection item={item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} onHelp={props.onHelp} highlightPath={props.highlightPath} containers={enrichedManifest?.ui?.layout?.containers || []} />
+                    <SpatialSection 
+                      item={item as ManifestEntity | OmegaNode} 
+                      rootTree={rootTree}
+                      onUpdate={(u) => props.onUpdate?.(u)} 
+                      onHelp={props.onHelp} 
+                      highlightPath={props.highlightPath} 
+                      containers={enrichedManifest?.ui?.layout?.containers || []} 
+                    />
                   </div>
                 )}
                 {activeSection === 'design' && (
-                  <AestheticSection item={item as ManifestEntity} manifest={enrichedManifest} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} onHelp={props.onHelp} containers={enrichedManifest?.ui?.layout?.containers || []} highlightPath={props.highlightPath} resolveAsset={props.resolveAsset} onOpenConfig={props.onOpenConfig} />
+                  <AestheticSection item={legacyItem as ManifestEntity} manifest={enrichedManifest} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} onHelp={props.onHelp} containers={enrichedManifest?.ui?.layout?.containers || []} highlightPath={props.highlightPath} resolveAsset={props.resolveAsset} onOpenConfig={props.onOpenConfig} />
                 )}
                 {activeSection === 'logic' && (
                   <div className="space-y-8">
-                    <LogicSection item={item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} availableBinds={props.availableBinds || []} onHelp={props.onHelp} highlightPath={props.highlightPath} />
-                    <AttachmentsSection item={item as ManifestEntity} manifest={enrichedManifest} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} availableBinds={props.availableBinds || []} onHelp={props.onHelp} onOpenConfig={props.onOpenConfig} />
-                    <EngineeringSection item={item as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} onHelp={props.onHelp} highlightPath={props.highlightPath} />
+                    <LogicSection item={legacyItem as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} availableBinds={props.availableBinds || []} onHelp={props.onHelp} highlightPath={props.highlightPath} />
+                    <AttachmentsSection item={legacyItem as ManifestEntity} manifest={enrichedManifest} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} availableBinds={props.availableBinds || []} onHelp={props.onHelp} onOpenConfig={props.onOpenConfig} />
+                    <EngineeringSection item={legacyItem as ManifestEntity} onUpdate={(u) => props.onUpdate?.(u as Partial<ManifestEntity>)} onHelp={props.onHelp} highlightPath={props.highlightPath} />
                   </div>
                 )}
               </>

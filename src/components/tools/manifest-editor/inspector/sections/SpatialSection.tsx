@@ -2,7 +2,9 @@
  
 import React from 'react';
 import { Move, Grid3X3, Layout, Info } from 'lucide-react';
-import { ManifestEntity, LayoutContainer } from '@/types/manifest';
+import { ManifestEntity, LayoutContainer, OmegaNode } from '@/types/manifest';
+import { getInspectorModel, buildInspectorPatch } from '@/hooks/manifest-editor/entities/ucaInspectorModel';
+import { calculateWorldPosition } from '@/hooks/manifest-editor/entities/ucaInspectorAdapter';
 import ContainerSelector from '../ContainerSelector';
 import InspectorCollapsible from '../shared/InspectorCollapsible';
 import InfoBlock from '../shared/InfoBlock';
@@ -10,22 +12,46 @@ import InfoBlock from '../shared/InfoBlock';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
  
 interface SpatialSectionProps {
-  item: ManifestEntity;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
+  item: ManifestEntity | OmegaNode;
+  onUpdate: (updates: Partial<ManifestEntity> | Partial<OmegaNode>) => void;
   onHelp?: (sectionId?: string) => void;
   highlightPath?: string | null;
   containers?: LayoutContainer[];
+  rootTree?: OmegaNode;
 }
  
-export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, containers = [] }: SpatialSectionProps) {
-  const componentType = item.presentation?.component || 'knob';
+export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, containers = [], rootTree }: SpatialSectionProps) {
+  const model = getInspectorModel(item, rootTree);
+  
+  const componentType = model.component || 'knob';
   const elementDef = getElementDefinition(componentType);
-  const pos = item.pos || { x: 0, y: 0 };
-  const pres = item.presentation || {};
+  const pos = model.pos || { x: 0, y: 0 };
+  const colSpan = model.colSpan || 1;
   const isHighlighted = (key: string) => highlightPath?.includes(key);
 
-  const canMove = !elementDef || elementDef.capabilities.includes('position');
-  const canScale = !elementDef || elementDef.capabilities.includes('size');
+  const [localX, setLocalX] = React.useState<string>(pos.x.toString());
+  const [localY, setLocalY] = React.useState<string>(pos.y.toString());
+  const isFocused = React.useRef<string | null>(null);
+
+  const worldPos = rootTree ? calculateWorldPosition(rootTree, item.id) : pos;
+
+  // Sync local state when external item changes (selection change or drag end)
+  React.useEffect(() => {
+    if (isFocused.current !== 'x') setLocalX(Math.round(pos.x).toString());
+    if (isFocused.current !== 'y') setLocalY(Math.round(pos.y).toString());
+  }, [item.id, pos.x, pos.y]);
+
+  const handleCommit = (axis: 'x' | 'y', val: string) => {
+    const numeric = parseFloat(val);
+    if (!isNaN(numeric)) {
+      onUpdate(buildInspectorPatch(item, { pos: { ...pos, [axis]: numeric } }));
+    }
+  };
+
+  const isUCA = 'kind' in item;
+  const isRack = isUCA && (item as OmegaNode).kind === 'rack';
+  const canMove = (isUCA && !isRack) || !elementDef || elementDef.capabilities.includes('position');
+  const canScale = (isUCA && !isRack) || !elementDef || elementDef.capabilities.includes('size');
  
   return (
     <div className="space-y-4 pt-2">
@@ -35,37 +61,53 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
         containers={containers} 
         onHelp={onHelp} 
         highlightPath={highlightPath} 
+        rootTree={rootTree}
       />
 
       {/* COORDINATES */}
       {canMove && (
         <InspectorCollapsible 
-          title="Absolute Coordinates" 
+          title="Local Offset (Parent Relative)" 
           icon={Move}
           onHelp={() => onHelp?.('spatial')}
         >
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="space-y-1.5">
-              <label className={`text-[8px] uppercase font-bold tracking-tighter flex items-center gap-1 transition-colors ${isHighlighted('pos') ? 'text-amber-500' : 'text-foreground/60'}`}>
-                <span>Axis X (Horizontal)</span>
-              </label>
-              <input 
-                type="number" 
-                value={pos.x || 0} 
-                onChange={(e) => onUpdate({ pos: { ...pos, x: parseFloat(e.target.value) } })}
-                className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
-              />
+          <div className="space-y-4 pt-2">
+            {/* World Position Indicator */}
+            <div className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded-xs border border-dashed border-white/10 opacity-60">
+               <span className="text-[6px] font-black uppercase text-foreground/40">World (Absolute):</span>
+               <span className="text-[7px] font-mono font-bold">X: {worldPos?.x || 0}, Y: {worldPos?.y || 0}</span>
+               <span className="text-[6px] font-bold text-accent italic ml-auto">UCA-Rel [{Math.round(pos?.x || 0)}, {Math.round(pos?.y || 0)}]</span>
             </div>
-            <div className="space-y-1.5">
-              <label className={`text-[8px] uppercase font-bold tracking-tighter flex items-center gap-1 transition-colors ${isHighlighted('pos') ? 'text-amber-500' : 'text-foreground/60'}`}>
-                <span>Axis Y (Vertical)</span>
-              </label>
-              <input 
-                type="number" 
-                value={pos.y || 0} 
-                onChange={(e) => onUpdate({ pos: { ...pos, y: parseFloat(e.target.value) } })}
-                className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className={`text-[8px] uppercase font-bold tracking-tighter flex items-center gap-1 transition-colors ${isHighlighted('pos') ? 'text-amber-500' : 'text-foreground/60'}`}>
+                  <span>Axis X (Horizontal)</span>
+                </label>
+                <input 
+                  type="text" 
+                  value={localX} 
+                  onFocus={() => { isFocused.current = 'x'; }}
+                  onBlur={() => { isFocused.current = null; handleCommit('x', localX); }}
+                  onChange={(e) => setLocalX(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCommit('x', localX); }}
+                  className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className={`text-[8px] uppercase font-bold tracking-tighter flex items-center gap-1 transition-colors ${isHighlighted('pos') ? 'text-amber-500' : 'text-foreground/60'}`}>
+                  <span>Axis Y (Vertical)</span>
+                </label>
+                <input 
+                  type="text" 
+                  value={localY} 
+                  onFocus={() => { isFocused.current = 'y'; }}
+                  onBlur={() => { isFocused.current = null; handleCommit('y', localY); }}
+                  onChange={(e) => setLocalY(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCommit('y', localY); }}
+                  className={`w-full bg-black/40 border ${isHighlighted('pos') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'border-outline'} rounded-sm p-2 text-[11px] font-mono text-foreground outline-none focus:border-primary/40 transition-all transition-colors duration-500`}
+                />
+              </div>
             </div>
           </div>
         </InspectorCollapsible>
@@ -83,8 +125,8 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
               Column Span (Rack Width)
             </label>
             <select 
-              value={pres.colSpan || 1} 
-              onChange={(e) => onUpdate({ presentation: { ...pres, colSpan: parseInt(e.target.value) } })}
+              value={colSpan} 
+              onChange={(e) => onUpdate(buildInspectorPatch(item, { colSpan: parseInt(e.target.value) }))}
               className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none transition-colors duration-500 [color-scheme:dark]"
             >
               <option value={1}>1 Column (Standard)</option>

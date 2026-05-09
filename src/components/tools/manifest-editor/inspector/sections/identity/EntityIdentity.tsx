@@ -2,23 +2,28 @@
 
 import React from 'react';
 import { Fingerprint } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import { ManifestEntity, OMEGA_Manifest, OmegaNode } from '@/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
+import { getInspectorModel, buildInspectorPatch } from '@/hooks/manifest-editor/entities/ucaInspectorModel';
 
 interface EntityIdentityProps {
-  entity: ManifestEntity;
+  entity: ManifestEntity | OmegaNode;
   rootManifest?: OMEGA_Manifest;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
+  rootTree?: OmegaNode;
+  onUpdate: (updates: Partial<ManifestEntity> | Partial<OmegaNode>) => void;
   onHelp?: (id: string) => void;
   isHighlighted: (key: string) => boolean | undefined;
 }
 
-export default function EntityIdentity({ entity, rootManifest, onUpdate, onHelp, isHighlighted }: EntityIdentityProps) {
+export default function EntityIdentity({ entity, rootManifest, rootTree, onUpdate, onHelp, isHighlighted }: EntityIdentityProps) {
+  const model = getInspectorModel(entity, rootTree);
+
   const getAuthority = () => {
     if (!rootManifest) return null;
-    const cIdx = (rootManifest.ui?.controls || []).findIndex(c => c.id === entity.id);
+    // Authority index is mostly legacy concept, but we can search arrays
+    const cIdx = (rootManifest.ui?.controls || []).findIndex(c => c.id === model.id);
     if (cIdx !== -1) return { type: 'ParamId', value: cIdx };
-    const jIdx = (rootManifest.ui?.jacks || []).findIndex(j => j.id === entity.id);
+    const jIdx = (rootManifest.ui?.jacks || []).findIndex(j => j.id === model.id);
     if (jIdx !== -1) return { type: 'PortId', value: jIdx };
     return null;
   };
@@ -43,8 +48,8 @@ export default function EntityIdentity({ entity, rootManifest, onUpdate, onHelp,
             <label className="text-[7px] font-black wb-text-muted uppercase ml-1 tracking-widest">Canonical ID</label>
             <input 
               type="text" 
-              value={entity.id} 
-              onChange={(e) => onUpdate({ id: e.target.value })}
+              value={model.id} 
+              onChange={(e) => onUpdate(buildInspectorPatch(entity, { id: e.target.value }))}
               className={`w-full bg-black/5 border ${isHighlighted('id') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-mono wb-text outline-none focus:border-primary/40 transition-all font-mono [color-scheme:dark]`}
             />
           </div>
@@ -52,9 +57,10 @@ export default function EntityIdentity({ entity, rootManifest, onUpdate, onHelp,
             <label className="text-[7px] font-black wb-text-muted uppercase ml-1 tracking-widest">Display Label</label>
             <input 
               type="text" 
-              value={entity.label || ''} 
-              onChange={(e) => onUpdate({ label: e.target.value })}
-              className={`w-full bg-black/5 border ${isHighlighted('label') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all [color-scheme:dark]`}
+              value={'label' in entity ? (entity as ManifestEntity).label || '' : ''} 
+              onChange={(e) => onUpdate('label' in entity ? { label: e.target.value } : {})}
+              disabled={!('label' in entity)}
+              className={`w-full bg-black/5 border ${isHighlighted('label') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-2 text-[10px] font-bold wb-text outline-none focus:border-primary/40 transition-all [color-scheme:dark] ${!('label' in entity) ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
         </div>

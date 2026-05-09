@@ -13,7 +13,8 @@ import IllustrationProperties from '../primitives/IllustrationProperties';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
 import SourceCodeView from '../shared/SourceCodeView';
 import { Shield, Box, Terminal } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest, LayoutContainer } from '@/types/manifest';
+import { ManifestEntity, OMEGA_Manifest, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
+import { buildInspectorPatch } from '@/hooks/manifest-editor/entities/ucaInspectorModel';
 import InspectorCollapsible from '../shared/InspectorCollapsible';
 import IndustrialGovernanceConsole from '../shared/IndustrialGovernanceConsole';
  
@@ -31,7 +32,8 @@ interface AestheticSectionProps {
  
 export default function AestheticSection({ item, manifest, onUpdate, resolveAsset, setActiveSection, onOpenConfig: handleOpenConfig }: AestheticSectionProps) {
   const [showSource, setShowSource] = React.useState(false);
-  const componentType = item.presentation?.component || 'knob';
+  const isUCA = 'kind' in item;
+  const componentType = isUCA ? (item as unknown as OmegaNode).cellRef || (item as unknown as OmegaNode).kind || 'knob' : (item.presentation?.component || 'knob');
   const elementDef = getElementDefinition(componentType);
 
   // Governance Filter: Dynamically check if this component has ANY aesthetic capabilities defined in the Catalog
@@ -119,14 +121,20 @@ export default function AestheticSection({ item, manifest, onUpdate, resolveAsse
           <div className="pt-4 border-t border-outline/5 space-y-4">
              <IndustrialGovernanceConsole 
                type={componentType}
-               values={item.presentation?.style || {}}
+               values={isUCA ? (item as unknown as OmegaNode).style || {} : item.presentation?.style || {}}
                manifest={manifest}
-               onUpdate={(updates) => onUpdate({ 
-                 presentation: { 
-                   ...item.presentation, 
-                   style: { ...(item.presentation?.style || {}), ...updates } 
-                 } 
-               })}
+               onUpdate={(updates) => {
+                 if (isUCA) {
+                   onUpdate(buildInspectorPatch(item as unknown as OmegaNode, { style: updates }));
+                 } else {
+                   onUpdate({ 
+                     presentation: { 
+                       ...item.presentation, 
+                       style: { ...(item.presentation?.style || {}), ...updates } 
+                     } 
+                   });
+                 }
+               }}
                resolveAsset={resolveAsset}
                title="High Fidelity Overrides"
                onOpenConfig={handleOpenConfig}

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import PropertyPanel from './PropertyPanel';
-import { OMEGA_Manifest, LayoutContainer, ManifestEntity, OMEGA_Modulation, ExtraResource } from '@/types/manifest';
+import { OMEGA_Manifest, LayoutContainer, ManifestEntity, OMEGA_Modulation, ExtraResource, OmegaNode } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 
 interface WorkbenchInspectorProps {
@@ -10,13 +10,13 @@ interface WorkbenchInspectorProps {
   isLiveMode: boolean;
   uiTheme: 'dark' | 'light';
   manifest: OMEGA_Manifest;
-  selectedItem: ManifestEntity | OMEGA_Manifest | null;
+  selectedItem: ManifestEntity | OmegaNode | OMEGA_Manifest | null;
   selectedItemId: string | null;
   highlightPath: string | null;
   availableBinds: string[];
   extraResources: ExtraResource[];
   audit: AuditResult;
-  onUpdateItem: (id: string, updates: Partial<ManifestEntity>) => void;
+  onUpdateItem: (id: string, updates: Partial<ManifestEntity> | Partial<OmegaNode>) => void;
   onUpdateManifest: (updates: Partial<OMEGA_Manifest>) => void;
   onSelectItem: (id: string | null) => void;
   onAddEntity: (type: 'control' | 'jack') => void;
@@ -71,7 +71,7 @@ export function WorkbenchInspector({
 }: WorkbenchInspectorProps) {
   
   // ASEPTIC HANDLERS
-  const handleUpdate = (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => {
+  const handleUpdate = (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity> | Partial<OmegaNode>) => {
     if (selectedItemId) {
       onUpdateItem(selectedItemId, updates);
       if (updates.id && updates.id !== selectedItemId) {

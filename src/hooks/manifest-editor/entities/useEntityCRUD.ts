@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '../../../omega-ui-core/types/manifest';
-import { findEditableItem, updateNodeInTree } from './ucaInspectorAdapter';
-import { treeToManifest } from '../../../omega-ui-core/uca/ucaBridge';
+import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '../../../omega-ui-core/types/manifest';
+import { findNodeInTree, updateNodeInTree, findLegacyItem, applyUpdatesToNode } from './ucaInspectorAdapter';
+import { treeToManifest, manifestToTree } from '../../../omega-ui-core/uca/ucaBridge';
 
 export const useEntityCRUD = (
   manifest: OMEGA_Manifest,
@@ -11,17 +11,42 @@ export const useEntityCRUD = (
   addLog: (msg: string) => void
 ) => {
   
-  const findItem = useCallback((id: string): ManifestEntity | undefined => {
-    return findEditableItem(manifest, id)?.item;
+  const findItem = useCallback((id: string): ManifestEntity | OmegaNode | undefined => {
+    if (manifest.ui?.useUCA !== false) {
+      const treeToSearch = manifest.ui?.tree || manifestToTree(manifest);
+      if (treeToSearch) {
+        const ucaNode = findNodeInTree(treeToSearch, id);
+        if (ucaNode) return ucaNode;
+      }
+    }
+    return findLegacyItem(manifest, id);
   }, [manifest]);
 
-  const updateItem = useCallback((id: string, updates: Partial<ManifestEntity>) => {
-    const editable = findEditableItem(manifest, id);
-    if (!editable) return;
+  const updateItem = useCallback((id: string, updates: Partial<ManifestEntity> | Partial<OmegaNode>) => {
+    const isUCA = manifest.ui?.useUCA !== false;
+    const nodeInTree = isUCA && manifest.ui?.tree ? findNodeInTree(manifest.ui.tree, id) : undefined;
+    
+    if (nodeInTree && manifest.ui?.tree) {
+      // Direct UCA tree update
+      let finalUpdates: Partial<OmegaNode>;
+      
+      if (!('kind' in updates) && ('presentation' in updates || 'pos' in updates)) {
+        // Translation from unmigrated section (Partial<ManifestEntity>)
+        const translated = applyUpdatesToNode(nodeInTree, updates as Partial<ManifestEntity>);
+        finalUpdates = { 
+          layout: translated.layout, 
+          style: translated.style, 
+          bind: translated.bind, 
+          role: translated.role, 
+          cellRef: translated.cellRef 
+        };
+      } else {
+        // Direct OmegaNode updates from migrated section
+        finalUpdates = updates as Partial<OmegaNode>;
+      }
 
-    if (editable.ref.source === 'uca' && manifest.ui?.tree) {
-      // It's a deep UCA edit
-      const nextTree = updateNodeInTree(manifest.ui.tree, id, updates);
+      // Update node
+      const nextTree = updateNodeInTree(manifest.ui.tree, id, finalUpdates);
       const legacyProjections = treeToManifest(nextTree);
       
       updateManifest({ 
@@ -41,10 +66,10 @@ export const useEntityCRUD = (
       const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
       
       if (isJack) {
-        const nextJacks = manifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...updates } : j);
+        const nextJacks = manifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...(updates as Partial<ManifestEntity>) } : j);
         updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } });
       } else {
-        const nextControls = manifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...updates } : c);
+        const nextControls = manifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...(updates as Partial<ManifestEntity>) } : c);
         updateManifest({ ui: { ...manifest.ui, controls: nextControls } });
       }
     }
@@ -54,9 +79,8 @@ export const useEntityCRUD = (
     const item = findItem(id);
     if (!item) return;
 
-    const type = manifest.ui?.controls?.some((c: ManifestEntity) => c.id === id) ? 'control' : 'jack';
-    const key = type === 'control' ? 'controls' : 'jacks';
-    const newItem: ManifestEntity = JSON.parse(JSON.stringify(item));
+    const isControl = manifest.ui?.controls?.some((c: ManifestEntity) => c.id === id);
+    const newItem = JSON.parse(JSON.stringify(item)) as ManifestEntity | OmegaNode;
     
     const baseId = `${item.id}_copy`;
     let counter = 1;
@@ -66,9 +90,16 @@ export const useEntityCRUD = (
     }
     
     newItem.id = newId;
-    const newList = [...(manifest.ui[key] || []), newItem];
-    updateManifest({ ui: { ...manifest.ui, [key]: newList } });
-    addLog(`Duplicated ${type}: ${newId}`);
+    
+    if (isControl) {
+      const newList = [...(manifest.ui?.controls || []), newItem as ManifestEntity];
+      updateManifest({ ui: { ...manifest.ui, controls: newList } });
+    } else {
+      const newList = [...(manifest.ui?.jacks || []), newItem as ManifestEntity];
+      updateManifest({ ui: { ...manifest.ui, jacks: newList } });
+    }
+    
+    addLog(`Duplicated entity: ${newId}`);
     return newId;
   }, [manifest, findItem, updateManifest, addLog]);
 

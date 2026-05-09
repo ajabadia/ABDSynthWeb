@@ -13,35 +13,20 @@ export function findLegacyItem(manifest: OMEGA_Manifest, id: string): ManifestEn
   return [...(manifest.ui?.controls || []), ...(manifest.ui?.jacks || [])].find((i: ManifestEntity) => i.id === id);
 }
 
-const searchCache = new WeakMap<OmegaNode, Map<string, OmegaNode | null>>();
-
 /**
  * findNodeInTree
- * Performs a deep DFS search in the UCA tree, heavily memoized.
+ * Performs a deep DFS search in the UCA tree.
  */
 export function findNodeInTree(root: OmegaNode, id: string): OmegaNode | undefined {
   if (root.id === id) return root;
 
-  let nodeCache = searchCache.get(root);
-  if (!nodeCache) {
-    nodeCache = new Map();
-    searchCache.set(root, nodeCache);
-  } else if (nodeCache.has(id)) {
-    const cached = nodeCache.get(id);
-    return cached === null ? undefined : cached;
-  }
-
   if (root.children) {
     for (const child of root.children) {
       const found = findNodeInTree(child, id);
-      if (found) {
-        nodeCache.set(id, found);
-        return found;
-      }
+      if (found) return found;
     }
   }
   
-  nodeCache.set(id, null); // Cache misses to avoid redundant deep searches
   return undefined;
 }
 
@@ -66,8 +51,7 @@ export function adaptNodeToManifestEntity(node: OmegaNode): ManifestEntity {
       attachments: [],
       tab: 'MAIN',
       style: {
-        ...node.style,
-        ...(node.layout?.zIndex !== undefined ? { zIndex: node.layout.zIndex } : {})
+        ...node.style
       },
       size: node.layout?.size ? { w: node.layout.size.width, h: node.layout.size.height } : undefined
     }
@@ -103,29 +87,54 @@ export function findEditableItem(manifest: OMEGA_Manifest, id: string): { item: 
 
 /**
  * applyUpdatesToNode
- * Maps ManifestEntity property updates back to the OmegaNode contract.
+ * Maps updates back to the OmegaNode contract. Supports both legacy ManifestEntity and native OmegaNode patches.
  */
-export function applyUpdatesToNode(node: OmegaNode, updates: Partial<ManifestEntity>): OmegaNode {
+export function applyUpdatesToNode(node: OmegaNode, updates: Partial<ManifestEntity> | Partial<OmegaNode>): OmegaNode {
   const next = { ...node };
 
-  if (updates.pos) {
-    next.layout = { ...next.layout, pos: updates.pos };
-  }
-  
-  if (updates.presentation?.style) {
-    next.style = { ...next.style, ...updates.presentation.style };
+  // 1. Direct OmegaNode Update (Native)
+  if ('kind' in updates || 'layout' in updates || 'style' in updates) {
+    const nodePatch = updates as Partial<OmegaNode>;
+    if (nodePatch.layout) {
+      next.layout = { 
+        ...next.layout, 
+        ...nodePatch.layout,
+        pos: nodePatch.layout.pos 
+          ? { ...(next.layout?.pos || { x: 0, y: 0 }), ...nodePatch.layout.pos } 
+          : (next.layout?.pos || { x: 0, y: 0 }),
+        size: nodePatch.layout.size 
+          ? { ...(next.layout?.size || { width: 48, height: 48 }), ...nodePatch.layout.size } 
+          : (next.layout?.size || { width: 48, height: 48 })
+      };
+    }
+    if (nodePatch.style) next.style = { ...next.style, ...nodePatch.style };
+    if (nodePatch.role) next.role = nodePatch.role;
+    if (nodePatch.bind) next.bind = nodePatch.bind;
+    if (nodePatch.cellRef) next.cellRef = nodePatch.cellRef;
+    if (nodePatch.children) next.children = nodePatch.children;
+    return next;
   }
 
-  if (updates.presentation?.variant) {
-    next.cellRef = updates.presentation.variant;
+  // 2. Legacy ManifestEntity Update (Translation)
+  const entityPatch = updates as Partial<ManifestEntity>;
+  if (entityPatch.pos) {
+    next.layout = { ...next.layout, pos: entityPatch.pos };
   }
   
-  if (updates.bind !== undefined) {
-    next.bind = updates.bind;
+  if (entityPatch.presentation?.style) {
+    next.style = { ...next.style, ...entityPatch.presentation.style };
   }
 
-  if (updates.role) {
-    next.role = updates.role;
+  if (entityPatch.presentation?.variant) {
+    next.cellRef = entityPatch.presentation.variant;
+  }
+  
+  if (entityPatch.bind !== undefined) {
+    next.bind = entityPatch.bind;
+  }
+
+  if (entityPatch.role) {
+    next.role = entityPatch.role;
   }
 
   return next;
@@ -135,16 +144,61 @@ export function applyUpdatesToNode(node: OmegaNode, updates: Partial<ManifestEnt
  * updateNodeInTree
  * Immutable DFS update of an OmegaNode tree.
  */
-export function updateNodeInTree(root: OmegaNode, id: string, updates: Partial<ManifestEntity>): OmegaNode {
+export function updateNodeInTree(root: OmegaNode, id: string, updates: Partial<ManifestEntity> | Partial<OmegaNode>): OmegaNode {
   if (root.id === id) {
     return applyUpdatesToNode(root, updates);
   }
   
   if (root.children) {
-    const nextChildren = root.children.map(child => updateNodeInTree(child, id, updates));
-    return { ...root, children: nextChildren };
+    let changed = false;
+    const nextChildren = root.children.map(child => {
+      const updated = updateNodeInTree(child, id, updates);
+      if (updated !== child) changed = true;
+      return updated;
+    });
+    if (changed) return { ...root, children: nextChildren };
   }
   
   return root;
 }
+
+/**
+ * findParentInTree
+ * Finds the parent node of a target node ID.
+ */
+export function findParentInTree(root: OmegaNode, targetId: string): OmegaNode | undefined {
+  if (!root.children) return undefined;
+  
+  if (root.children.some(c => c.id === targetId)) return root;
+  
+  for (const child of root.children) {
+    const found = findParentInTree(child, targetId);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
+ * calculateWorldPosition
+ * Recursively sums local offsets to find the absolute rack position.
+ */
+export function calculateWorldPosition(root: OmegaNode, targetId: string, currentOffset: { x: number, y: number } = { x: 0, y: 0 }): { x: number, y: number } | undefined {
+  const absoluteX = currentOffset.x + (root.layout?.pos?.x || 0);
+  const absoluteY = currentOffset.y + (root.layout?.pos?.y || 0);
+
+  if (root.id === targetId) {
+    return { x: absoluteX, y: absoluteY };
+  }
+
+  if (root.children) {
+    for (const child of root.children) {
+      const found = calculateWorldPosition(child, targetId, { x: absoluteX, y: absoluteY });
+      if (found) return found;
+    }
+  }
+
+  return undefined;
+}
+
+
 

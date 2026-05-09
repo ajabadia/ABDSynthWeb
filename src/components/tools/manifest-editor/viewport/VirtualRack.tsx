@@ -129,7 +129,8 @@ export default function VirtualRack({
                 showLabels: manifest.ui.ucaDebug?.showLabels !== false,
                 hideDecorative: manifest.ui.ucaDebug?.hideDecorative || false,
                 selectedId: selectedItemId,
-                onSelect: onSelectItem
+                onSelect: onSelectItem,
+                onUpdateNode: onUpdateItem
               }}
             />
           </div>

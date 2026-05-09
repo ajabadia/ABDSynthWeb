@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { OmegaNode, OMEGA_Manifest, CellTemplate, ManifestEntity } from '../../types/manifest';
 import { CellRenderer } from '../CellRenderer';
 import { resolveNodeSemantics } from '../../uca/ucaSemantics';
@@ -9,6 +10,7 @@ export interface UCADebugContext {
   enabled: boolean;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onUpdateNode?: (id: string, updates: Partial<OmegaNode>) => void;
   showLabels: boolean;
   hideDecorative: boolean;
 }
@@ -20,6 +22,7 @@ interface UniversalRendererProps {
   catalog?: Record<string, CellTemplate>; 
   resolveAsset?: (id: string | undefined) => string | undefined;
   debugContext?: UCADebugContext;
+  parentWorldPos?: { x: number, y: number };
 }
 
 /**
@@ -32,10 +35,18 @@ export function UniversalRenderer({
   depth = 0,
   catalog = {},
   resolveAsset,
-  debugContext 
+  debugContext,
+  parentWorldPos = { x: 0, y: 0 }
 }: UniversalRendererProps) {
+  const labelRef = React.useRef<HTMLSpanElement>(null);
+  const localLabelRef = React.useRef<HTMLSpanElement>(null);
+  
   // Resolve semantics (Template expansion + style inheritance)
   const node = resolveNodeSemantics(rawNode, { catalog });
+
+  // Absolute coordinate calculation (Base) - Verified Era 7.2.3
+  const worldX = parentWorldPos.x + (node.layout?.pos?.x || 0);
+  const worldY = parentWorldPos.y + (node.layout?.pos?.y || 0);
 
   if (node.visible === false) return null;
 
@@ -74,27 +85,30 @@ export function UniversalRenderer({
     }
   };
 
+  const updateHUD = (offset: { x: number, y: number }) => {
+    if (labelRef.current) {
+      const wx = Math.round(worldX + offset.x);
+      const wy = Math.round(worldY + offset.y);
+      labelRef.current.innerText = `W: ${wx}, ${wy}`;
+    }
+    if (localLabelRef.current) {
+      const lx = Math.round((node.layout?.pos?.x || 0) + offset.x);
+      const ly = Math.round((node.layout?.pos?.y || 0) + offset.y);
+      localLabelRef.current.innerText = `L: ${lx}, ${ly}`;
+    }
+  };
+
   const renderDebugLabel = () => {
     if (!debugContext?.enabled || !debugContext.showLabels) return null;
-    const colors: Record<string, string> = {
-      rack: 'rgb(147, 51, 234)',
-      face: 'rgb(59, 130, 246)',
-      container: 'rgb(16, 185, 129)',
-      cell: 'rgb(245, 158, 11)',
-      layer: 'rgb(239, 68, 68)'
-    };
-    const color = colors[node.kind] || '#fff';
     
     return (
-      <div 
-        className="absolute top-0 left-0 text-[9px] font-mono px-1 text-white z-50 pointer-events-none whitespace-nowrap"
-        style={{ 
-          backgroundColor: color,
-          transform: 'translateY(-100%)',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
-        }}
-      >
-        {node.kind}:{node.id} [d:{depth}]
+      <div className="absolute -top-3 left-0 flex items-center gap-1 z-50 whitespace-nowrap pointer-events-none select-none">
+        <div className={`px-1 py-0.5 rounded-xs text-[6px] font-black uppercase text-white shadow-lg ${node.kind === 'rack' ? 'bg-purple-600' : node.kind === 'face' ? 'bg-blue-600' : 'bg-amber-600'}`}>
+          {node.kind}:{node.id} [<span ref={labelRef}>W: {Math.round(worldX)}, {Math.round(worldY)}</span>]
+        </div>
+        <div className="bg-emerald-600 px-1 py-0.5 rounded-xs text-[5px] font-bold text-white shadow-lg opacity-80">
+          <span ref={localLabelRef}>L: {Math.round(node.layout?.pos?.x || 0)}, {Math.round(node.layout?.pos?.y || 0)}</span>
+        </div>
       </div>
     );
   };
@@ -102,35 +116,48 @@ export function UniversalRenderer({
   // 1. Dispatch Structural Nodes
   if (node.kind === 'rack' || node.kind === 'face' || node.kind === 'container') {
     return (
-      <div 
+      <motion.div 
         id={`uca-${node.id}`}
         className={`uca-node uca-${node.kind}`}
         onClick={handleDebugClick}
+        drag={debugContext?.enabled && node.kind !== 'rack'}
+        dragMomentum={false}
+        onDrag={(_, info) => updateHUD(info.offset)}
+        onDragEnd={(_, info) => {
+          if (debugContext?.onUpdateNode) {
+            const finalX = Math.round((node.layout?.pos?.x || 0) + info.offset.x);
+            const finalY = Math.round((node.layout?.pos?.y || 0) + info.offset.y);
+            debugContext.onUpdateNode(node.id, { 
+              layout: { ...node.layout, pos: { x: finalX, y: finalY } } 
+            });
+          }
+        }}
         style={{
           position: 'absolute',
-          left: `${node.layout?.pos.x}px`,
-          top: `${node.layout?.pos.y}px`,
+          left: `${node.layout?.pos?.x || 0}px`,
+          top: `${node.layout?.pos?.y || 0}px`,
           width: node.layout?.size?.width ? `${node.layout.size.width}px` : 'auto',
           height: node.layout?.size?.height ? `${node.layout.size.height}px` : 'auto',
           zIndex: node.layout?.zIndex || 0,
-          pointerEvents: (node.locked && !debugContext?.enabled) ? 'none' : 'auto',
-          ...debugStyle
+          border: debugContext?.enabled ? `1px dashed ${node.kind === 'rack' ? '#9333ea' : node.kind === 'face' ? '#3b82f6' : '#10b981'}` : 'none',
+          padding: '2px',
+          boxSizing: 'border-box'
         }}
       >
         {renderDebugLabel()}
-        {/* RECURSE: Render children within this coordinate space */}
         {node.children?.map(child => (
           <UniversalRenderer 
             key={child.id} 
             node={child} 
-            manifest={manifest} 
+            manifest={manifest}
             depth={depth + 1} 
+            debugContext={debugContext}
             catalog={catalog}
             resolveAsset={resolveAsset}
-            debugContext={debugContext}
+            parentWorldPos={{ x: worldX, y: worldY }}
           />
         ))}
-      </div>
+      </motion.div>
     );
   }
 
@@ -145,7 +172,7 @@ export function UniversalRenderer({
       bind: node.bind || 'none',
       presentation: {
         tab: 'MAIN',
-        component: 'knob', // Default, will be overridden by type resolution in CellRenderer
+        component: node.cellRef || 'knob', 
         variant: 'default',
         offsetX: 0,
         offsetY: 0,
@@ -164,16 +191,30 @@ export function UniversalRenderer({
     });
 
     return (
-      <div 
+      <motion.div 
+        id={`uca-${node.id}`}
         className="uca-node uca-cell"
         onClick={handleDebugClick}
+        drag={debugContext?.enabled}
+        dragMomentum={false}
+        onDrag={(_, info) => updateHUD(info.offset)}
+        onDragEnd={(_, info) => {
+          if (debugContext?.onUpdateNode) {
+            const finalX = Math.round((node.layout?.pos?.x || 0) + info.offset.x);
+            const finalY = Math.round((node.layout?.pos?.y || 0) + info.offset.y);
+            debugContext.onUpdateNode(node.id, { 
+              layout: { ...node.layout, pos: { x: finalX, y: finalY } } 
+            });
+          }
+        }}
         style={{
           position: 'absolute',
-          left: `${node.layout?.pos.x}px`,
-          top: `${node.layout?.pos.y}px`,
+          left: `${node.layout?.pos?.x || 0}px`,
+          top: `${node.layout?.pos?.y || 0}px`,
+          width: node.layout?.size?.width ? `${node.layout.size.width}px` : '48px', 
+          height: node.layout?.size?.height ? `${node.layout.size.height}px` : '48px',
           zIndex: node.layout?.zIndex || 0,
-          pointerEvents: debugContext?.enabled ? 'auto' : 'none',
-          ...debugStyle
+          pointerEvents: debugContext?.enabled ? 'auto' : 'none'
         }}
       >
         {renderDebugLabel()}
@@ -188,20 +229,20 @@ export function UniversalRenderer({
           <UniversalRenderer 
             key={child.id} 
             node={child} 
-            manifest={manifest} 
+            manifest={manifest}
             depth={depth + 1} 
+            debugContext={debugContext}
             catalog={catalog}
             resolveAsset={resolveAsset}
-            debugContext={debugContext}
+            parentWorldPos={{ x: worldX, y: worldY }}
           />
         ))}
-      </div>
+      </motion.div>
     );
   }
 
   // 3. Dispatch Layers
   if (node.kind === 'layer') {
-    // Simple layer rendering (labels, masks, etc.)
     return (
       <div 
         className="uca-node uca-layer"

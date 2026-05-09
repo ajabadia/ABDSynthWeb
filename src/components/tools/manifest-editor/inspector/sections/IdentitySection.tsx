@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/types/manifest';
 
 // Modular Sub-components
 import EntityIdentity from './identity/EntityIdentity';
@@ -12,10 +12,11 @@ import ModuleSkinSelector from './identity/ModuleSkinSelector';
 import ModulePlaneSelector from './identity/ModulePlaneSelector';
 
 interface IdentitySectionProps {
-  item: OMEGA_Manifest | ManifestEntity;
-  onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity>) => void;
+  item: OMEGA_Manifest | ManifestEntity | OmegaNode;
+  onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity> | Partial<OmegaNode>) => void;
   onHelp?: (sectionId?: string) => void;
   rootManifest?: OMEGA_Manifest;
+  rootTree?: OmegaNode;
   highlightPath?: string | null;
   resolveAsset: (id: string | undefined) => string | undefined;
 }
@@ -25,6 +26,7 @@ export default function IdentitySection({
   onUpdate, 
   onHelp, 
   rootManifest, 
+  rootTree,
   highlightPath,
   resolveAsset
 }: IdentitySectionProps) {
@@ -34,9 +36,10 @@ export default function IdentitySection({
   if (!isModule) {
     return (
       <EntityIdentity 
-        entity={item as ManifestEntity} 
+        entity={item as ManifestEntity | OmegaNode} 
         rootManifest={rootManifest} 
-        onUpdate={(u: Partial<ManifestEntity>) => onUpdate(u)} 
+        rootTree={rootTree}
+        onUpdate={(u) => onUpdate(u)} 
         onHelp={onHelp} 
         isHighlighted={isHighlighted} 
       />
