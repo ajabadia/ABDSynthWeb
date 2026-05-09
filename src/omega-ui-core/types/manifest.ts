@@ -333,6 +333,7 @@ export interface OmegaNode {
   kind: OmegaNodeKind;
   role?: string;
   cellRef?: string; // Catalog blueprint reference (mandatory for kind: cell)
+  templateRef?: string; // [Phase 5] Reference to a ModuleTemplate
   bind?: string;    // Signal/State binding
   layout?: {
     pos: Position;
@@ -350,7 +351,49 @@ export interface OmegaNode {
   locked?: boolean;
   capabilities?: string[];
   constraints?: OmegaConstraints;
+  overrides?: Record<string, unknown>; // [Phase 5] Property overrides (path-based or nested)
+  slotMappings?: Record<string, string>; // [Phase 5] Map of SlotID -> DSP/Signal Binding
+  snapshot?: OmegaNode; // [Phase 5] Frozen blueprint copy for .acepack portability
   children?: OmegaNode[];
+}
+
+/**
+ * UCA PHASE 5 - TEMPLATE CONTRACTS
+ * Blueprints for module composition and governance.
+ */
+
+export interface TemplateSlotDefinition {
+  id: string;
+  label: string;
+  kind: 'parameter' | 'port' | 'telemetry' | 'internal'; // Era 7.2.3 Functional Kind
+  description?: string;
+  required?: boolean;
+  defaultBinding?: string; // Logical fallback
+  path?: string;           // Target node ID or UCA path where this slot is consumed
+}
+
+export type OverrideMode = 'locked' | 'editable' | 'hidden' | 'extendable';
+
+export interface OverridePolicy {
+  path: string;           // Dot-notation or JSON Pointer (e.g. "style.color")
+  mode: OverrideMode;
+  scopes?: ('designer' | 'end-user')[]; // Governance visibility
+}
+
+export interface ModuleTemplate {
+  id: string;
+  version: string;
+  label: string;
+  family: string;
+  author?: string;
+  description?: string;
+  contractVersion: string; // Target ABDOmega Era version (e.g. "7.2.3")
+  engineContractHint?: string; // Expected DSP contract hash or version
+  root: OmegaNode;         // The hierarchical blueprint
+  slots: TemplateSlotDefinition[];
+  policy: OverridePolicy[]; // Granular path-based rules
+  assets?: string[];       // IDs of external assets required by this template
+  meta?: Record<string, unknown>;
 }
 
 export interface CellTemplate {
@@ -453,6 +496,7 @@ export interface OMEGA_Manifest {
     };
     style?: OmegaStyleNode;    // Global Rack Aesthetics
     attachments?: ManifestEntity[]; // Global Rack Fragments (e.g. Screws)
+    moduleTemplates?: Record<string, ModuleTemplate>; // [Phase 5.1] Catalog of reusable blueprints
   };
   modulations?: OMEGA_Modulation[];
   resources: {

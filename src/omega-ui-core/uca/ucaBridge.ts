@@ -5,3 +5,4 @@
 
 export { manifestToTree } from './converters/manifestToTree';
 export { treeToManifest } from './converters/treeToManifest';
+export { congealSnapshot } from './treeUtils'; // [Phase 5.1]

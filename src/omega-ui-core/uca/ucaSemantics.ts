@@ -1,4 +1,5 @@
-import { OmegaNode, CellTemplate, OmegaStyleNode } from '../types/manifest';
+import { OmegaNode, CellTemplate, OmegaStyleNode, ModuleTemplate } from '../types/manifest';
+import { mergeWithOverrides, applySlotMappings } from './treeUtils';
 
 /**
  * UCA SEMANTICS (Phase 1)
@@ -7,6 +8,7 @@ import { OmegaNode, CellTemplate, OmegaStyleNode } from '../types/manifest';
 
 export interface ResolutionContext {
   catalog: Record<string, CellTemplate>;
+  moduleTemplates?: Record<string, ModuleTemplate>; // [Phase 5] Global template registry
   parentStyle?: OmegaStyleNode;
 }
 
@@ -18,12 +20,31 @@ export function resolveNodeSemantics(
   node: OmegaNode, 
   ctx: ResolutionContext
 ): OmegaNode {
-  // 1. EXPAND TEMPLATE
+  // 1. EXPAND TEMPLATE (Cell, Module, or Snapshot)
   let templateBase: Partial<OmegaNode> = {};
-  if (node.kind === 'cell' && node.cellRef) {
+
+  // Strategy A: Portable Snapshot (Highest Priority)
+  if (node.snapshot) {
+    templateBase = JSON.parse(JSON.stringify(node.snapshot));
+  } 
+  // Strategy B: Module Template (Blueprint)
+  else if (node.templateRef && ctx.moduleTemplates?.[node.templateRef]) {
+    const template = ctx.moduleTemplates[node.templateRef];
+    // Deep clone the blueprint root
+    const blueprint = JSON.parse(JSON.stringify(template.root));
+    
+    // Apply Genetic Overrides (Phase 5)
+    templateBase = mergeWithOverrides(blueprint, node.overrides || {}, template.policy) as Partial<OmegaNode>;
+
+    // Apply Slot Mappings (Recursive Binding Injection)
+    if (node.slotMappings) {
+      applySlotMappings(templateBase as OmegaNode, node.slotMappings);
+    }
+  }
+  // Strategy C: Cell Template (Legacy Primitive)
+  else if (node.kind === 'cell' && node.cellRef) {
     const template = ctx.catalog[node.cellRef];
     if (template) {
-      // Deep clone to prevent mutating the catalog
       templateBase = JSON.parse(JSON.stringify(template.baseNode));
     }
   }

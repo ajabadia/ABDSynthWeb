@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useState } from 'react';
-import WorkbenchContainer from '@/components/tools/manifest-editor/WorkbenchContainer';
+import WorkbenchContainer from '@/features/manifest-editor/components/WorkbenchContainer';
 
 export default function ManifestEditorPage() {
   // Page level modal orchestration (Governance/Audit/Cell)
