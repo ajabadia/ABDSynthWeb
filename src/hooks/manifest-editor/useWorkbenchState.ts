@@ -3,9 +3,13 @@
 import { useState, useCallback } from 'react';
 import { OMEGA_Manifest } from '@/types/manifest';
 
+export type SelectionRef = 
+  | { source: 'legacy'; id: string }
+  | { source: 'uca'; id: string; path?: string[] };
+
 export const useWorkbenchState = (manifest: OMEGA_Manifest) => {
   const [viewMode, setViewMode] = useState<'orbital' | 'rack' | 'source'>('orbital');
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectionRef, setSelectionRef] = useState<SelectionRef | null>(null);
   const [showLogs, setShowLogs] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(false);
   const [showModGrid, setShowModGrid] = useState(false);
@@ -29,7 +33,7 @@ export const useWorkbenchState = (manifest: OMEGA_Manifest) => {
 
   return {
     viewMode, setViewMode,
-    selectedItemId, setSelectedItemId,
+    selectionRef, setSelectionRef,
     showLogs, setShowLogs,
     isLiveMode, setIsLiveMode,
     showModGrid, setShowModGrid,

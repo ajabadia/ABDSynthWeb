@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '../../../types/manifest';
+import { OMEGA_Manifest, ManifestEntity } from '../../../omega-ui-core/types/manifest';
+import { findEditableItem, updateNodeInTree } from './ucaInspectorAdapter';
+import { treeToManifest } from '../../../omega-ui-core/uca/ucaBridge';
 
 export const useEntityCRUD = (
   manifest: OMEGA_Manifest,
@@ -10,18 +12,41 @@ export const useEntityCRUD = (
 ) => {
   
   const findItem = useCallback((id: string): ManifestEntity | undefined => {
-    return [...(manifest.ui?.controls || []), ...(manifest.ui?.jacks || [])].find((i: ManifestEntity) => i.id === id);
+    return findEditableItem(manifest, id)?.item;
   }, [manifest]);
 
   const updateItem = useCallback((id: string, updates: Partial<ManifestEntity>) => {
-    const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
-    
-    if (isJack) {
-      const nextJacks = manifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...updates } : j);
-      updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } });
+    const editable = findEditableItem(manifest, id);
+    if (!editable) return;
+
+    if (editable.ref.source === 'uca' && manifest.ui?.tree) {
+      // It's a deep UCA edit
+      const nextTree = updateNodeInTree(manifest.ui.tree, id, updates);
+      const legacyProjections = treeToManifest(nextTree);
+      
+      updateManifest({ 
+        ui: { 
+          ...manifest.ui, 
+          tree: nextTree,
+          controls: legacyProjections.controls || manifest.ui?.controls,
+          jacks: legacyProjections.jacks || manifest.ui?.jacks,
+          layout: {
+            ...(manifest.ui?.layout || { planes: ['MAIN'], containers: [] }),
+            containers: legacyProjections.layout?.containers || manifest.ui?.layout?.containers || []
+          }
+        } 
+      });
     } else {
-      const nextControls = manifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...updates } : c);
-      updateManifest({ ui: { ...manifest.ui, controls: nextControls } });
+      // Legacy edit
+      const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
+      
+      if (isJack) {
+        const nextJacks = manifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...updates } : j);
+        updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } });
+      } else {
+        const nextControls = manifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...updates } : c);
+        updateManifest({ ui: { ...manifest.ui, controls: nextControls } });
+      }
     }
   }, [manifest, updateManifest]);
 

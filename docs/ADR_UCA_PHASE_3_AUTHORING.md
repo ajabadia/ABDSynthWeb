@@ -18,6 +18,13 @@ We implemented a non-destructive hybrid authoring layer. The core decisions were
 - **Positive**: Complete UI authoring support for complex, nested node structures. 
 - **Positive**: Zero breakage of existing flat-array dependencies (like `OrbitalView`).
 - **Positive**: Immediate availability of the PropertyPanel for all deep UCA elements.
-- **Negative/Risk**: Slight performance overhead when recursively searching deep trees on every selection change, though negligible given typical module sizes.
+- **Negative/Risk**: Deep search performance overhead (`findNodeInTree`). Recursively traversing large trees on every selection/render cycle could degrade UX in extreme modules. Future optimization (e.g., node indexing or memoization) may be required.
+- **Transitional Debt**: The `ucaInspectorAdapter` is strictly a transitional bridge to enable Phase 3 without rewriting the PropertyPanel. It is a target for removal in Phase 4 or 5 once the PropertyPanel supports `OmegaNode` natively.
+
+## Exit Criteria for Phase 4
+Phase 4 (Advanced Composition & Transition) will be considered complete when:
+1. The default workbench viewport natively renders the UCA tree without relying on legacy array fallbacks.
+2. The flat legacy model (`manifest.ui.controls` and `manifest.ui.jacks`) is no longer required for daily editing.
+3. The `ucaInspectorAdapter` is retired, and inspectors operate directly on the UCA model.
 
 *Supersedes/extends ADR 002 (UCA Phase 2).*

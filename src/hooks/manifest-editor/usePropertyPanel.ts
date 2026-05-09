@@ -8,11 +8,11 @@ import {
 import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
 
 export const usePropertyPanel = (
-  item: ManifestEntity | OMEGA_Manifest,
+  item: ManifestEntity | OMEGA_Manifest | null,
   highlightPath?: string | null
 ) => {
   const [activeSection, setActiveSection] = useState<string>('identity');
-  const isModule = 'metadata' in item;
+  const isModule = item ? 'metadata' in item : false;
 
   const isCustom = isModule ? (item as OMEGA_Manifest).ui?.skinMode === 'custom' : false;
 

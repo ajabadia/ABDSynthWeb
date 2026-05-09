@@ -7,6 +7,7 @@ import ContainerSection from './ContainerSection';
 import EntityListSection from './EntityListSection';
 import ModulationSection from './ModulationSection';
 import ResourceSection from './ResourceSection';
+import TreeSection from './TreeSection';
  
 interface ModuleArchitectureSectionProps {
   manifest: OMEGA_Manifest;
@@ -50,15 +51,16 @@ export default function ModuleArchitectureSection({
   onUpdate,
   setActiveSection
 }: ModuleArchitectureSectionProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'infra' | 'controls' | 'ports' | 'routing' | 'assets'>('infra');
+  const [activeSubTab, setActiveSubTab] = useState<'infra' | 'controls' | 'ports' | 'routing' | 'assets' | 'tree'>('infra');
  
   const subTabs = [
-    { id: 'infra', label: 'Infrastructure', icon: Layout, color: 'text-accent' },
-    { id: 'controls', label: 'Controls', icon: Settings2, color: 'text-amber-400' },
-    { id: 'ports', label: 'Signal I/O', icon: Zap, color: 'text-cyan-400' },
-    { id: 'routing', label: 'Routing', icon: Move, color: 'text-blue-400' },
-    { id: 'assets', label: 'Assets', icon: Image, color: 'text-purple-400' },
-  ] as const;
+    ...(manifest.ui?.useUCA ? [{ id: 'tree' as const, label: 'Hierarchy', icon: Layout, color: 'text-purple-400' }] : []),
+    { id: 'infra' as const, label: 'Infrastructure', icon: Layout, color: 'text-accent' },
+    { id: 'controls' as const, label: 'Controls', icon: Settings2, color: 'text-amber-400' },
+    { id: 'ports' as const, label: 'Signal I/O', icon: Zap, color: 'text-cyan-400' },
+    { id: 'routing' as const, label: 'Routing', icon: Move, color: 'text-blue-400' },
+    { id: 'assets' as const, label: 'Assets', icon: Image, color: 'text-purple-400' },
+  ];
  
   return (
     <div className="flex flex-col h-full">
@@ -142,6 +144,14 @@ export default function ModuleArchitectureSection({
  
       {/* CONTENT AREA */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+        {activeSubTab === 'tree' && manifest.ui?.useUCA && (
+          <TreeSection 
+            manifest={manifest} 
+            selectedItemId={highlightPath || null} // Temporary using highlightPath or we need to pass selectedItemId 
+            onSelectItem={onSelectItem} 
+          />
+        )}
+        
         {activeSubTab === 'infra' && (
           <ContainerSection 
             containers={manifest.ui.layout?.containers || []} 
