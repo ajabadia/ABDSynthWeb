@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { OmegaContract } from '@/services/wasmLoader';
+import { IntegrityService } from '@/services/integrityService';
 
 /**
  * useManifestState (v7.2.3)
@@ -82,6 +83,65 @@ export const useManifestState = () => {
   const [wasmBuffer, setWasmBuffer] = useState<ArrayBuffer | null>(null);
   const [extraResources, setExtraResources] = useState<{ name: string, data: ArrayBuffer, type: string }[]>([]);
 
+  // --- Dirty State Management ---
+  const [lastStableHash, setLastStableHash] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const debouncedHashRef = useRef<NodeJS.Timeout | null>(null);
+
+  const captureStableSnapshot = useCallback(async () => {
+    const hash = await IntegrityService.generateManifestHash(manifest);
+    setLastStableHash(hash);
+    setIsDirty(false);
+  }, [manifest]);
+
+  // Initial Snapshot & Snapshot on Reset
+  useEffect(() => {
+    let active = true;
+    const init = async () => {
+      const hash = await IntegrityService.generateManifestHash(manifest);
+      if (active) {
+        setLastStableHash(hash);
+        setIsDirty(false);
+      }
+    };
+    
+    if (lastStableHash === null) {
+      init();
+    }
+    
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastStableHash === null]);
+
+  // Debounced Hashing Comparison
+  useEffect(() => {
+    if (debouncedHashRef.current) clearTimeout(debouncedHashRef.current);
+    
+    debouncedHashRef.current = setTimeout(async () => {
+      // 1s Settle period to allow manifest normalization hooks to stabilize
+      if (lastStableHash === null) return;
+      
+      const start = performance.now();
+      const currentHash = await IntegrityService.generateManifestHash(manifest);
+      const elapsed = performance.now() - start;
+      
+      if (elapsed > 30) {
+        console.warn(`[PERF] Manifest Hashing slow: ${elapsed.toFixed(2)}ms`);
+      }
+
+      if (lastStableHash) {
+        const isNowDirty = currentHash !== lastStableHash;
+        if (isNowDirty !== isDirty) {
+          setIsDirty(isNowDirty);
+        }
+      }
+    }, 300); // 300ms responsive debounce
+
+    return () => {
+      if (debouncedHashRef.current) clearTimeout(debouncedHashRef.current);
+    };
+  }, [manifest, lastStableHash, isDirty]);
+
   const updateManifest = useCallback((updates: Partial<OMEGA_Manifest>) => {
     setManifest((prev: OMEGA_Manifest) => {
       const next = { ...prev, ...updates };
@@ -155,6 +215,8 @@ export const useManifestState = () => {
     extraResources,
     setExtraResources,
     updateManifest,
-    resetState
+    resetState,
+    isDirty,
+    captureStableSnapshot
   };
 };

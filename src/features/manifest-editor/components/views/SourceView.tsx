@@ -12,6 +12,7 @@ interface SourceViewProps {
   editorViewState?: unknown | null;
   onChange: (nextValue: string) => void;
   onCaptureViewState: (viewState: unknown) => void;
+  onDiagnosticsChange?: (diagnostics: { errorCount: number; warningCount: number; infoCount: number }) => void;
 }
 
 export function SourceView({
@@ -22,6 +23,7 @@ export function SourceView({
   editorViewState,
   onChange,
   onCaptureViewState,
+  onDiagnosticsChange,
 }: SourceViewProps) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -30,11 +32,14 @@ export function SourceView({
   // Refs to avoid useEffect re-runs when callbacks change
   const onChangeRef = useRef(onChange);
   const onCaptureViewStateRef = useRef(onCaptureViewState);
+  const onDiagnosticsChangeRef = useRef(onDiagnosticsChange);
 
+  // Update refs after render to ensure callbacks are always fresh without violating render rules
   useEffect(() => {
     onChangeRef.current = onChange;
     onCaptureViewStateRef.current = onCaptureViewState;
-  }, [onChange, onCaptureViewState]);
+    onDiagnosticsChangeRef.current = onDiagnosticsChange;
+  });
 
   const modelPath = useMemo(
     () => `file:///omega/${manifestId}/${tabId}.${language}`,
@@ -76,7 +81,7 @@ export function SourceView({
     }
     editor.setModel(model);
     if (editorViewState) {
-      editor.restoreViewState(editorViewState as any);
+      editor.restoreViewState(editorViewState as Monaco.editor.ICodeEditorViewState);
     }
     lastModelUriRef.current = modelPath;
   };
@@ -106,7 +111,7 @@ export function SourceView({
       
       // Restore state if available for the new model
       if (editorViewState) {
-        editor.restoreViewState(editorViewState as any);
+        editor.restoreViewState(editorViewState as Monaco.editor.ICodeEditorViewState);
       }
       
       lastModelUriRef.current = modelPath;
@@ -117,7 +122,52 @@ export function SourceView({
         model.setValue(value);
       }
     }
-  }, [modelPath, value, language]); // Removed editorViewState and callbacks from here to break the loop
+  }, [modelPath, value, language, editorViewState]); 
+
+  // Handle diagnostics extraction
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+
+    const extractMarkers = () => {
+      const model = editor.getModel();
+      if (!model) return;
+
+      const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+      const errors = markers.filter(m => m.severity === monaco.MarkerSeverity.Error).length;
+      const warnings = markers.filter(m => m.severity === monaco.MarkerSeverity.Warning || m.severity === monaco.MarkerSeverity.Hint).length;
+      const infos = markers.filter(m => m.severity === monaco.MarkerSeverity.Info).length;
+
+      onDiagnosticsChangeRef.current?.({
+        errorCount: errors,
+        warningCount: warnings,
+        infoCount: infos
+      });
+    };
+
+    // Debounced refresh because markers might take a tick to update after model change (monaco timing issue)
+    let timeout: NodeJS.Timeout;
+    const debouncedRefresh = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(extractMarkers, 150);
+    };
+
+    const disposable = monaco.editor.onDidChangeMarkers(([uri]) => {
+      if (uri.toString() === modelPath) {
+        debouncedRefresh();
+      }
+    });
+
+    // Initial check on mount/model change
+    const initialTimeout = setTimeout(extractMarkers, 1000); // 1s wait for schema validation to settle
+
+    return () => {
+      disposable.dispose();
+      clearTimeout(timeout);
+      clearTimeout(initialTimeout);
+    };
+  }, [modelPath]);
 
   // Handle unmount capture
   useEffect(() => {

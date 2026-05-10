@@ -17,7 +17,8 @@ export const useBundleTransfer = (
   issues: ValidationIssue[],
   handleWasmUpload: (file: File) => Promise<void>,
   handleContractUpload: (file: File) => Promise<void>,
-  handleManifestUpload: (file: File) => Promise<void>
+  handleManifestUpload: (file: File) => Promise<void>,
+  captureStableSnapshot: () => void
 ) => {
 
   const sanitizeSVG = (content: string): string => {
@@ -183,10 +184,11 @@ export const useBundleTransfer = (
       URL.revokeObjectURL(url);
       
       addLog(`[SUCCESS] OmegaPack exported: ${manifest.id}.zip`);
+      captureStableSnapshot();
     } catch (err) {
       addLog(`[ERROR] Failed to generate OmegaPack: ${err}`);
     }
-  }, [manifest, issues, wasmBuffer, extraResources, addLog, processSnapshots]);
+  }, [manifest, issues, wasmBuffer, extraResources, addLog, processSnapshots, captureStableSnapshot]);
 
   const handleBulkUpload = useCallback(async (files: FileList | File[]) => {
     const fileList = Array.from(files);

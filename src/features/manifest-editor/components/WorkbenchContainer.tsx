@@ -99,6 +99,21 @@ export default function WorkbenchContainer({
   const { auditResult } = useAudit(manifest, contract);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   
+  // 3. Diagnostics Surface (Phase 6.1)
+  const [tabDiagnostics, setTabDiagnostics] = useState<Record<string, { errorCount: number; warningCount: number; infoCount: number }>>({});
+
+  const handleDiagnosticsChange = useCallback((tabId: string, diagnostics: { errorCount: number; warningCount: number; infoCount: number }) => {
+    setTabDiagnostics(prev => {
+      const current = prev[tabId];
+      if (current && 
+          current.errorCount === diagnostics.errorCount && 
+          current.warningCount === diagnostics.warningCount &&
+          current.infoCount === diagnostics.infoCount) return prev;
+      
+      return { ...prev, [tabId]: diagnostics };
+    });
+  }, []);
+
   const handleApplyTemplate = useCallback((template: ModuleTemplate) => {
     editor.applyTemplate(template);
     setIsGalleryOpen(false);
@@ -122,7 +137,32 @@ export default function WorkbenchContainer({
   // 4. Dynamic Typography Integration
   useDynamicFonts(manifest, editor.resolveAsset);
  
-  // 5. Effects & Synchronization (Aseptic Sync)
+  // 5. Exit Guards (Phase 6.1 Polish)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (editor.isDirty) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for Chrome
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [editor.isDirty]);
+
+  // 6. Keyboard Shortcuts (Phase 6.1 Polish)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        editor.addLog("[INPUT] Cmd+S detected. Triggering persistence...");
+        editor.exportManifest();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editor]);
+
+  // 7. Effects & Synchronization (Aseptic Sync)
   useEffect(() => {
     const manifestTab = manifest.ui?.layout?.activeTab;
     if (manifestTab !== activeTab) {
@@ -157,6 +197,13 @@ export default function WorkbenchContainer({
   const onDeploy = useCallback(async () => {
     if (await editor.handleDeploy() === 'AUDIT_FAIL') uiLegacy.setIsAuditModalOpen();
   }, [editor, uiLegacy]);
+
+  const onReset = useCallback(() => {
+    if (editor.isDirty) {
+      if (!confirm("Workspace has UNSAVED changes. Resetting will permanently lose these modifications. Proceed?")) return;
+    }
+    editor.reset();
+  }, [editor]);
  
   const handleExportContract = (format: 'ts' | 'cpp') => {
     ContractService.downloadContract(manifest, format);
@@ -206,7 +253,17 @@ export default function WorkbenchContainer({
     const pane = state.panesById[paneId];
     const activeTabId = pane.activeTabId;
     const tab = activeTabId ? state.tabsById[activeTabId] : null;
-    const paneTabs = pane.tabIds.map(id => state.tabsById[id]);
+    
+    // Inject global dirty state and diagnostic badges for manifest-related views
+    const paneTabs = pane.tabIds.map(id => {
+      const t = state.tabsById[id];
+      const diagnostics = tabDiagnostics[id];
+      
+      if (['source', 'rack', 'orbital', 'inspector', 'uca-tree'].includes(t.type)) {
+        return { ...t, isDirty: editor.isDirty, diagnostics };
+      }
+      return { ...t, diagnostics };
+    });
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -216,7 +273,14 @@ export default function WorkbenchContainer({
           activeTabId={activeTabId}
           isFocused={state.focusedPaneId === paneId}
           onTabSelect={(tabId) => actions.focusTab(paneId, tabId)}
-          onTabClose={(tabId) => actions.closeTab(tabId)}
+          onTabClose={(tabId) => {
+            const t = state.tabsById[tabId];
+            const isTabDirty = ['source', 'rack', 'orbital', 'inspector', 'uca-tree'].includes(t.type) && editor.isDirty;
+            if (isTabDirty) {
+              if (!confirm(`Tab "${t.title}" has unsaved changes. Close anyway?`)) return;
+            }
+            actions.closeTab(tabId);
+          }}
           onPaneFocus={() => actions.focusPane(paneId)}
         />
         
@@ -290,6 +354,7 @@ export default function WorkbenchContainer({
               editorViewState={state.tabViewState[tab.id]?.editorViewState}
               onChange={handleSourceChange}
               onCaptureViewState={(viewState) => handleCaptureViewState(tab.id, viewState)}
+              onDiagnosticsChange={(diagnostics) => handleDiagnosticsChange(tab.id, diagnostics)}
             />
           )}
         </div>
@@ -302,7 +367,7 @@ export default function WorkbenchContainer({
       <HiddenFileHandlers onResourceUpload={editor.handleResourceUpload} setPendingFiles={uiLegacy.setPendingFiles} />
       
       <Header 
-        onReset={editor.reset} onExportManifest={editor.exportManifest} onExportPack={editor.exportOmegaPack}
+        onReset={onReset} onExportManifest={editor.exportManifest} onExportPack={editor.exportOmegaPack}
         onExportCAD={() => editor.exportCADBlueprint()} onExportContract={handleExportContract}
         onGenerateMockup={() => uiLegacy.toggleUIState('mockupOpen')} onDeploy={onDeploy}
         onToggleLogs={() => uiLegacy.toggleUIState('showLogs')} showLogs={uiLegacy.showLogs}

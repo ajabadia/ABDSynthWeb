@@ -61,16 +61,53 @@ export default function MultiTabHeader({
               {tab.title}
             </span>
 
-            {tab.closable !== false && !tab.persistent && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTabClose(tab.id);
-                }}
-                className="ml-1 p-0.5 rounded-full hover:bg-white/10 text-foreground/20 hover:text-red-400 transition-colors"
+            {/* Diagnostic Badges (Phase 6.1) */}
+            {tab.diagnostics && tab.diagnostics.errorCount > 0 && (
+              <div 
+                className="ml-1.5 px-1 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-xs shadow-[0_0_10px_rgba(239,68,68,0.3)] animate-pulse-subtle"
+                title={`${tab.diagnostics.errorCount} Errors detected in ${tab.title}`}
               >
-                <X className="w-2.5 h-2.5" />
-              </button>
+                {tab.diagnostics.errorCount}
+              </div>
+            )}
+
+            {tab.diagnostics && tab.diagnostics.errorCount === 0 && tab.diagnostics.warningCount > 0 && (
+              <div 
+                className="ml-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.4)]" 
+                title={`${tab.diagnostics.warningCount} Warnings detected`}
+              />
+            )}
+
+            {tab.diagnostics && tab.diagnostics.errorCount === 0 && tab.diagnostics.warningCount === 0 && tab.diagnostics.infoCount > 0 && (
+              <div 
+                className="ml-1.5 w-1.5 h-1.5 rounded-full bg-blue-400/50" 
+                title={`${tab.diagnostics.infoCount} Info messages`}
+              />
+            )}
+
+            {/* Dirty Indicator / Close Button Logic */}
+            {tab.isDirty && (tab.closable === false || tab.persistent) && (!tab.diagnostics || tab.diagnostics.errorCount === 0) && (
+              <div className="ml-1.5 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_4px_rgba(var(--primary-rgb),0.8)] animate-pulse-subtle" />
+            )}
+
+            {tab.closable !== false && !tab.persistent && (
+              <div className="relative w-3.5 h-3.5 flex items-center justify-center ml-1">
+                {tab.isDirty && (
+                  <div className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_4px_rgba(var(--primary-rgb),0.8)] transition-opacity duration-200 group-hover:opacity-0" />
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTabClose(tab.id);
+                  }}
+                  className={`
+                    p-0.5 rounded-full hover:bg-white/10 text-foreground/20 hover:text-red-400 transition-all duration-200
+                    ${tab.isDirty ? 'opacity-0 group-hover:opacity-100' : 'opacity-60 group-hover:opacity-100'}
+                  `}
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </div>
             )}
           </div>
         );

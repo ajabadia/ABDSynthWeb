@@ -25,7 +25,9 @@ export const useManifestEditor = () => {
     extraResources,
     setExtraResources,
     updateManifest, 
-    resetState 
+    resetState,
+    isDirty,
+    captureStableSnapshot
   } = useManifestState();
 
   // 2. Audit & Validation Engine
@@ -59,7 +61,7 @@ export const useManifestEditor = () => {
     handleResourceUpload,
     handleRemoveResource,
     handleBulkUpload
-  } = useFileOps(manifest, setManifest, setContract, setWasmBuffer, wasmBuffer, setExtraResources, extraResources, addLog, issues);
+  } = useFileOps(manifest, setManifest, setContract, setWasmBuffer, wasmBuffer, setExtraResources, extraResources, addLog, issues, captureStableSnapshot);
 
   // 5. Asset Management (Fase 13)
   const { assetUrls, resolveAsset } = useAssetManager(extraResources);
@@ -77,10 +79,11 @@ export const useManifestEditor = () => {
       const { wasmRuntime } = await import('@/services/wasmRuntime');
       const { IntegrityService } = await import('@/services/integrityService');
       
+      const hashAtStart = await IntegrityService.generateManifestHash(manifest);
+
       // 1. Coherence Check (Safety Lock)
-      const currentHash = await IntegrityService.generateManifestHash(manifest);
-      if (contract?.firmwareHash && currentHash !== contract.firmwareHash) {
-        addLog(`[CRITICAL] Coherence Failure: Manifest Hash (${currentHash.slice(0, 8)}) mismatch with Binary Hash (${contract.firmwareHash.slice(0, 8)}).`);
+      if (contract?.firmwareHash && hashAtStart !== contract.firmwareHash) {
+        addLog(`[CRITICAL] Coherence Failure: Manifest Hash (${hashAtStart.slice(0, 8)}) mismatch with Binary Hash (${contract.firmwareHash.slice(0, 8)}).`);
         const proceed = confirm("FIRMWARE_MISMATCH: The manifest structure has changed and no longer matches the loaded binary. This will cause simulation errors. Proceed anyway?");
         if (!proceed) {
           addLog(`[ABORT] Deployment cancelled by engineer due to integrity failure.`);
@@ -92,13 +95,21 @@ export const useManifestEditor = () => {
       
       if (result.success) {
         addLog(`[SUCCESS] Hot-Swap injection complete.`);
-        addLog(`[SYSTEM] Engine Fingerprint: ${currentHash.slice(0, 16)}...`);
+        addLog(`[SYSTEM] Engine Fingerprint: ${hashAtStart.slice(0, 16)}...`);
         addLog(`[SYSTEM] Simulation synchronized.`);
+
+        // Race Condition Protection (Adjustment 3)
+        const hashNow = await IntegrityService.generateManifestHash(manifest);
+        if (hashNow === hashAtStart) {
+          captureStableSnapshot();
+        } else {
+          addLog(`[SYSTEM] Local changes detected during deployment. Maintaining Dirty state.`);
+        }
       }
     } catch (err) {
       addLog(`[CRITICAL] Deployment failed: ${err}`);
     }
-  }, [addLog, manifest, issues, contract]);
+  }, [addLog, manifest, issues, contract, captureStableSnapshot]);
 
   const reset = () => {
     if (confirm("Reset workspace?")) {
@@ -141,6 +152,8 @@ export const useManifestEditor = () => {
     assetUrls,
     resolveAsset,
     addLog,
-    reset
+    reset,
+    isDirty,
+    captureStableSnapshot
   };
 };

@@ -10,7 +10,8 @@ export const useManifestTransfer = (
   manifest: OMEGA_Manifest,
   setManifest: Dispatch<SetStateAction<OMEGA_Manifest>>,
   addLog: (msg: string) => void,
-  issues: ValidationIssue[]
+  issues: ValidationIssue[],
+  captureStableSnapshot: () => void
 ) => {
 
   const handleManifestUpload = useCallback(async (file: File) => {
@@ -124,11 +125,12 @@ export const useManifestTransfer = (
 
       setManifest(finalManifest);
       addLog(`Success: UI state reconstructed for '${finalManifest.metadata.name}'.`);
+      captureStableSnapshot();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       addLog(`[CRITICAL] Ingestion Failure: ${message}`);
     }
-  }, [addLog, setManifest]);
+  }, [addLog, setManifest, captureStableSnapshot]);
   
   const exportManifest = useCallback(() => {
     if (issues.length > 0) {
@@ -149,7 +151,8 @@ export const useManifestTransfer = (
     a.click();
     URL.revokeObjectURL(url);
     addLog(`[OK] Exported manifest: ${manifest.id}.acemm`);
-  }, [manifest, issues, addLog]);
+    captureStableSnapshot();
+  }, [manifest, issues, addLog, captureStableSnapshot]);
 
   const exportCADBlueprint = useCallback(async () => {
     const { CADExportService } = await import('@/services/cadExportService');

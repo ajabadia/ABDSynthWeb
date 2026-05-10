@@ -13,6 +13,12 @@ export type WorkbenchTabType =
 export type WorkbenchPaneId = "primary" | "secondary";
 export type WorkbenchLayoutMode = "single" | "vertical";
 
+export interface TabDiagnostics {
+  errorCount: number;
+  warningCount: number;
+  infoCount: number;
+}
+
 export interface WorkbenchTab {
   id: string;
   type: WorkbenchTabType;
@@ -21,6 +27,8 @@ export interface WorkbenchTab {
   closable?: boolean;
   persistent?: boolean;
   payload?: Record<string, unknown>;
+  isDirty?: boolean;
+  diagnostics?: TabDiagnostics;
 }
 
 export interface WorkbenchPane {

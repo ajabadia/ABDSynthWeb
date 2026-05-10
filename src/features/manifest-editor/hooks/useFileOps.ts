@@ -20,11 +20,12 @@ export const useFileOps = (
   setExtraResources: React.Dispatch<React.SetStateAction<{ name: string, data: ArrayBuffer, type: string }[]>>,
   extraResources: { name: string, data: ArrayBuffer, type: string }[],
   addLog: (msg: string) => void,
-  issues: ValidationIssue[]
+  issues: ValidationIssue[],
+  captureStableSnapshot: () => void
 ) => {
 
   // 1. Manifest Operations (Import/Export/CAD)
-  const manifestIO = useManifestTransfer(manifest, setManifest, addLog, issues);
+  const manifestIO = useManifestTransfer(manifest, setManifest, addLog, issues, captureStableSnapshot);
 
   // 2. WASM Operations (Binary/Contract)
   const wasmIO = useWasmTransfer(manifest, setManifest, setContract, setWasmBuffer, addLog);
@@ -40,7 +41,8 @@ export const useFileOps = (
     issues,
     wasmIO.handleWasmUpload,
     wasmIO.handleContractUpload,
-    manifestIO.handleManifestUpload
+    manifestIO.handleManifestUpload,
+    captureStableSnapshot
   );
 
   return {
