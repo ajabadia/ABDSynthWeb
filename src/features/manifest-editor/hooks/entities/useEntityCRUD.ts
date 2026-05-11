@@ -2,12 +2,12 @@
 
 import { useCallback } from 'react';
 import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
-import { findNodeInTree, updateNodeInTree, findLegacyItem, applyUpdatesToNode } from './ucaInspectorAdapter';
+import { findNodeInTree, updateNodeInTree, findLegacyItem, applyUpdatesToNode, insertNodeInTree, getAllIdsInTree } from './ucaInspectorAdapter';
 import { treeToManifest, manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 
 export const useEntityCRUD = (
   manifest: OMEGA_Manifest,
-  updateManifest: (updates: Partial<OMEGA_Manifest>) => void,
+  updateManifest: (updates: Partial<OMEGA_Manifest>, label?: string) => void,
   addLog: (msg: string) => void
 ) => {
   
@@ -61,17 +61,17 @@ export const useEntityCRUD = (
             containers: legacyProjections.layout?.containers || manifest.ui?.layout?.containers || []
           }
         } 
-      });
+      }, `Update Entity: ${id}`);
     } else {
       // Legacy edit
       const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
       
       if (isJack) {
         const nextJacks = manifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...(updates as Partial<ManifestEntity>) } : j);
-        updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } });
+        updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Update Jack: ${id}`);
       } else {
         const nextControls = manifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...(updates as Partial<ManifestEntity>) } : c);
-        updateManifest({ ui: { ...manifest.ui, controls: nextControls } });
+        updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Update Control: ${id}`);
       }
     }
   }, [manifest, updateManifest]);
@@ -94,10 +94,10 @@ export const useEntityCRUD = (
     
     if (isControl) {
       const newList = [...(manifest.ui?.controls || []), newItem as ManifestEntity];
-      updateManifest({ ui: { ...manifest.ui, controls: newList } });
+      updateManifest({ ui: { ...manifest.ui, controls: newList } }, `Duplicate Control: ${id}`);
     } else {
       const newList = [...(manifest.ui?.jacks || []), newItem as ManifestEntity];
-      updateManifest({ ui: { ...manifest.ui, jacks: newList } });
+      updateManifest({ ui: { ...manifest.ui, jacks: newList } }, `Duplicate Jack: ${id}`);
     }
     
     addLog(`Duplicated entity: ${newId}`);
@@ -108,10 +108,10 @@ export const useEntityCRUD = (
     const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
     if (isJack) {
       const nextJacks = manifest.ui.jacks.filter((j: ManifestEntity) => j.id !== id);
-      updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } });
+      updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Remove Jack: ${id}`);
     } else {
       const nextControls = manifest.ui.controls.filter((c: ManifestEntity) => c.id !== id);
-      updateManifest({ ui: { ...manifest.ui, controls: nextControls } });
+      updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Remove Control: ${id}`);
     }
     addLog(`Removed entity: ${id}`);
   }, [manifest, updateManifest, addLog]);
@@ -152,13 +152,74 @@ export const useEntityCRUD = (
 
     if (type === 'control') {
       const nextControls = [...(manifest.ui?.controls || []), newEntity];
-      updateManifest({ ui: { ...manifest.ui, controls: nextControls } });
+      updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Add Control: ${id}`);
     } else {
       const nextJacks = [...(manifest.ui?.jacks || []), newEntity];
-      updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } });
+      updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Add Jack: ${id}`);
     }
     addLog(`Added new ${type}: ${id}`);
     return id;
+  }, [manifest, updateManifest, addLog]);
+  
+  const pasteEntity = useCallback((item: ManifestEntity | OmegaNode) => {
+    // 1. Collision Detection & ID Regeneration
+    const isUCA = manifest.ui?.useUCA !== false;
+    const allIds = [
+      ...(manifest.ui?.controls || []), 
+      ...(manifest.ui?.jacks || []),
+      ...(manifest.ui?.layout?.containers || [])
+    ].map(i => i.id);
+
+    if (isUCA && manifest.ui?.tree) {
+      allIds.push(...getAllIdsInTree(manifest.ui.tree));
+    }
+
+    const baseId = `${item.id}_p`;
+    let counter = 1;
+    let newId = baseId;
+    while (allIds.includes(newId)) {
+      newId = `${baseId}_${counter++}`;
+    }
+
+    const newItem = JSON.parse(JSON.stringify(item));
+    newItem.id = newId;
+
+    // 2. Insertion Strategy
+    if (isUCA && manifest.ui?.tree) {
+      addLog(`[CLIPBOARD] Strategic Insertion: UCA Tree Mode.`);
+      // UCA Strategy: Insert into tree and sync projections
+      const nextTree = insertNodeInTree(manifest.ui.tree, newItem as OmegaNode);
+      const projections = treeToManifest(nextTree);
+      
+      updateManifest({
+        ui: {
+          ...manifest.ui,
+          tree: nextTree,
+          controls: projections.controls || manifest.ui?.controls,
+          jacks: projections.jacks || manifest.ui?.jacks,
+          layout: {
+            ...(manifest.ui?.layout || { planes: ['MAIN'], containers: [] }),
+            containers: projections.layout?.containers || manifest.ui?.layout?.containers || []
+          }
+        }
+      }, `Paste Entity (UCA): ${newId}`);
+    } else {
+      addLog(`[CLIPBOARD] Strategic Insertion: Legacy Array Mode.`);
+      // Legacy Strategy: Add to correct array
+      const entity = newItem as ManifestEntity;
+      const isJack = entity.role === 'stream' || entity.role === 'port' || entity.type === 'port';
+      
+      if (isJack) {
+        const nextJacks = [...(manifest.ui?.jacks || []), entity];
+        updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Paste Jack: ${newId}`);
+      } else {
+        const nextControls = [...(manifest.ui?.controls || []), entity];
+        updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Paste Control: ${newId}`);
+      }
+    }
+
+    addLog(`Pasted entity: ${newId} (Industrial Sync Complete)`);
+    return newId;
   }, [manifest, updateManifest, addLog]);
 
   return {
@@ -166,6 +227,7 @@ export const useEntityCRUD = (
     updateItem,
     duplicateItem,
     removeItem,
-    addEntity
+    addEntity,
+    pasteEntity
   };
 };

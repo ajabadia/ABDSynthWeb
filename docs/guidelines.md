@@ -73,6 +73,19 @@ Using spaces, capitals, or special characters in IDs.
 - **Effect**: RPC communication and JSON parsing failures.
 - **Rule**: Always use `snake_case` (e.g., `main_volume`).
 
+### 8. Multi-Document & Clipboard Ethics
+Copy-pasting between independent manifests requires structural awareness.
+- **ID Regeneration**: When pasting, the engine will automatically detect collisions and regenerate IDs (e.g., `knob1` -> `knob1_p`). Never rely on hardcoded ID assumptions during cross-document transfers.
+- **Context Switching**: The active document governed by the orchestrator determines the target of the paste. Always verify which tab is focused before performing clipboard operations.
+- **Persistence**: Work is automatically persisted to `omega_session_docs`.
+- **Undoable Resets**: A "Factory Reset" is now reversible. However, it will clear the `dirty` state. Use undo (`Ctrl+Z`) to recover a reset manifest if necessary.
+
+### 9. History & Reversibility Ethics
+The OMEGA History Engine provides a safety net for experimental authoring.
+- **Action Coalescing**: Rapid changes (e.g., slider drags, typing) are grouped within a 1-second window. This means a single "Undo" might revert a series of micro-adjustments to a property.
+- **Descriptive Labels**: When implementing custom UI controls that call `updateManifest`, always provide a meaningful `label`. This label appears in the history log and helps engineers navigate their design timeline.
+- **Focus Protection**: Global undo/redo is automatically suppressed when focusing on text editors (Monaco) or inputs. This preserves local text editing history.
+
 ---
 
 ## 🦾 Pro-Master Engineering Details (World-Class Standards)

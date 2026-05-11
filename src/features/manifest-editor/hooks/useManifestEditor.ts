@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useDocumentOrchestrator } from './useDocumentOrchestrator';
 import { useAuditEngine } from './useAuditEngine';
 import { useEntityManager } from './useEntityManager';
@@ -30,11 +30,55 @@ export const useManifestEditor = () => {
     isDirty,
   } = activeDoc;
 
-  // Compatibility Setters (route to orchestrator)
-  const setManifest = useCallback((updater: OMEGA_Manifest | ((prev: OMEGA_Manifest) => OMEGA_Manifest)) => {
-    const next = typeof updater === 'function' ? updater(manifest) : updater;
-    orchestrator.updateDocument(activeId, { manifest: next });
+  // 2. Audit & Validation Engine
+  const { logs, addLog, issues } = useAuditEngine(manifest, contract);
+
+  // 3. History Engine Integration
+  const lastHistoryPushRef = useRef<{ timestamp: number; label: string } | null>(null);
+
+  const pushHistoryEntry = useCallback((label: string, force = false) => {
+    const now = Date.now();
+    const lastPush = lastHistoryPushRef.current;
+
+    // Coalescing logic: If same label and within 1s window, skip unless forced
+    if (!force && lastPush && lastPush.label === label && (now - lastPush.timestamp) < 1000) {
+      return;
+    }
+
+    orchestrator.pushHistory(activeId, {
+      manifest: JSON.parse(JSON.stringify(manifest)), // Deep copy to ensure snapshot isolation
+      timestamp: now,
+      label,
+      metadata: {
+        // Selection/focus metadata could be added here in Phase 8.1
+      }
+    });
+
+    lastHistoryPushRef.current = { timestamp: now, label };
   }, [orchestrator, activeId, manifest]);
+
+  const undo = useCallback(() => {
+    orchestrator.undo(activeId);
+    addLog(`[HISTORY] Undo performed.`);
+  }, [orchestrator, activeId, addLog]);
+
+  const redo = useCallback(() => {
+    orchestrator.redo(activeId);
+    addLog(`[HISTORY] Redo performed.`);
+  }, [orchestrator, activeId, addLog]);
+
+  const updateManifestWithHistory = useCallback((updates: Partial<OMEGA_Manifest>, label: string, forceHistory = false) => {
+    // Push current state to history BEFORE applying updates
+    pushHistoryEntry(label, forceHistory);
+    orchestrator.updateDocument(activeId, { manifest: updates });
+  }, [pushHistoryEntry, orchestrator, activeId]);
+
+  // 4. Compatibility Setters (route to orchestrator)
+  const setManifest = useCallback((updater: OMEGA_Manifest | ((prev: OMEGA_Manifest) => OMEGA_Manifest), label?: string) => {
+    const next = typeof updater === 'function' ? updater(manifest) : updater;
+    if (label) pushHistoryEntry(label);
+    orchestrator.updateDocument(activeId, { manifest: next });
+  }, [orchestrator, activeId, manifest, pushHistoryEntry]);
 
   const setContract = useCallback((updater: OmegaContract | null | ((prev: OmegaContract | null) => OmegaContract | null)) => {
     const next = typeof updater === 'function' ? updater(contract) : updater;
@@ -51,22 +95,20 @@ export const useManifestEditor = () => {
     orchestrator.updateDocument(activeId, { extraResources: next });
   }, [orchestrator, activeId, extraResources]);
 
-  const updateManifest = useCallback((updates: Partial<OMEGA_Manifest>) => {
+  const updateManifest = useCallback((updates: Partial<OMEGA_Manifest>, label?: string) => {
+    const finalLabel = label || 'Edit Properties';
+    pushHistoryEntry(finalLabel);
     orchestrator.updateDocument(activeId, { manifest: updates });
-  }, [orchestrator, activeId]);
+  }, [orchestrator, activeId, pushHistoryEntry]);
 
   const captureStableSnapshot = useCallback(() => {
     return orchestrator.captureStableSnapshot(activeId);
   }, [orchestrator, activeId]);
 
   const resetState = useCallback(() => {
-    // Resetting the active document means deleting it and recreating it or just resetting its fields
-    // For now, let's just use a simple reset in the orchestrator
-    // We'll implement orchestrator.resetDocument(activeId) in the next step if needed
-  }, []);
-
-  // 2. Audit & Validation Engine
-  const { logs, addLog, issues } = useAuditEngine(manifest, contract);
+    orchestrator.resetDocument(activeId);
+    addLog(`[SYSTEM] Document ${activeId} reset to factory defaults.`);
+  }, [orchestrator, activeId, addLog]);
 
   // 3. Entity & Modulation Management
   const {
@@ -81,7 +123,8 @@ export const useManifestEditor = () => {
     addContainer,
     updateContainer,
     removeContainer,
-    applyTemplate
+    applyTemplate,
+    pasteEntity
   } = useEntityManager(manifest, setManifest, updateManifest, addLog);
 
   // 4. File I/O Operations
@@ -174,6 +217,10 @@ export const useManifestEditor = () => {
     handleResourceUpload,
     handleBulkUpload,
     updateManifest,
+    updateManifestWithHistory,
+    pushHistoryEntry,
+    undo,
+    redo,
     findItem,
     updateItem,
     removeItem,
@@ -202,9 +249,10 @@ export const useManifestEditor = () => {
     pasteFromClipboard: () => {
       const item = ClipboardService.paste();
       if (item) {
-        addEntity('control'); // This is a placeholder, we should have a more generic addFromClipboard
-        // For now, let's just log it. Real implementation in next step.
-        addLog(`[SYSTEM] Pasted item ${item.id} from clipboard.`);
+        const newId = pasteEntity(item);
+        addLog(`[SYSTEM] Industrial Paste Complete: ${newId} (Source: ${item.id})`);
+      } else {
+        addLog(`[WARNING] Clipboard empty or incompatible data.`);
       }
     },
     assetUrls,

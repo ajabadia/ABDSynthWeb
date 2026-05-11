@@ -9,7 +9,7 @@ import { OMEGA_Manifest, ModuleTemplate, OmegaNode } from '@/omega-ui-core/types
  */
 export const useTemplateCRUD = (
   manifest: OMEGA_Manifest,
-  updateManifest: (updates: Partial<OMEGA_Manifest>) => void,
+  updateManifest: (updates: Partial<OMEGA_Manifest>, label?: string) => void,
   addLog: (msg: string) => void
 ) => {
 
@@ -62,7 +62,7 @@ export const useTemplateCRUD = (
         tree: updatedTree,
         moduleTemplates: updatedTemplates
       }
-    });
+    }, `Apply Template: ${template.label}`);
 
     addLog(`[SUCCESS] Template '${template.label}' injected into workspace.`);
   }, [manifest, updateManifest, addLog]);

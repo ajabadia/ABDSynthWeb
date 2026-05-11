@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useReducer } from "react";
+import { useCallback, useMemo, useReducer, useEffect } from "react";
 import { LucideIcon } from "lucide-react";
 
 export type WorkbenchTabType =
@@ -92,8 +92,9 @@ type WorkbenchAction =
   | { type: "CAPTURE_TAB_VIEW_STATE"; payload: { tabId: string; viewState: Partial<WorkbenchTabViewState> } }
   | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen'> } }
   | { type: "SET_HELP_STATE"; payload: { isOpen: boolean; sectionId?: string } }
-  | { type: "SET_UI_THEME"; payload: { theme: "dark" | "light" } }
-  | { type: "SET_PENDING_FILES"; payload: { files: File[] } };
+  | { type: "SET_UI_THEME"; payload: { theme: "light" | "dark" } }
+  | { type: "SET_PENDING_FILES"; payload: { files: File[] } }
+  | { type: "HYDRATE_WORKBENCH"; payload: { state: Partial<WorkbenchState> } };
 
 const DEFAULT_TABS: WorkbenchTab[] = [
   { id: "tab-orbital", type: "orbital", title: "Orbital", persistent: true, closable: false, payload: { documentId: 'primary' } },
@@ -102,17 +103,7 @@ const DEFAULT_TABS: WorkbenchTab[] = [
 ];
 
 const createInitialState = (): WorkbenchState => {
-  let savedLayout = { mode: "single" as WorkbenchLayoutMode, ratio: 0.62 };
-  if (typeof window !== "undefined") {
-    try {
-      const stored = window.localStorage.getItem("omega_workbench_layout");
-      if (stored) savedLayout = JSON.parse(stored);
-    } catch {
-      // Ignore
-    }
-  }
-
-  return {
+  const baseState: WorkbenchState = {
     tabsById: Object.fromEntries(DEFAULT_TABS.map((tab) => [tab.id, tab])),
     panesById: {
       primary: {
@@ -127,7 +118,7 @@ const createInitialState = (): WorkbenchState => {
       },
     },
     focusedPaneId: "primary",
-    layout: savedLayout,
+    layout: { mode: "single", ratio: 0.62 },
     selectedNodeId: null,
     expandedNodeIds: [],
     tabViewState: {},
@@ -143,6 +134,8 @@ const createInitialState = (): WorkbenchState => {
     uiTheme: "dark",
     pendingFiles: [],
   };
+
+  return baseState;
 };
 
 const clampRatio = (ratio: number) => Math.min(0.8, Math.max(0.2, ratio));
@@ -391,6 +384,8 @@ function workbenchReducer(state: WorkbenchState, action: WorkbenchAction): Workb
       return { ...state, uiTheme: action.payload.theme };
     case "SET_PENDING_FILES":
       return { ...state, pendingFiles: action.payload.files };
+    case "HYDRATE_WORKBENCH":
+      return { ...state, ...action.payload.state };
 
     default:
       return state;
@@ -403,6 +398,42 @@ export function useWorkbenchState() {
     undefined,
     () => createInitialState()
   );
+
+  // Client-Side Hydration (Fix for Hydration Mismatch)
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("omega_workbench_session");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        dispatch({ 
+          type: "HYDRATE_WORKBENCH", 
+          payload: { 
+            state: {
+              ...parsed,
+              // Merge tabs to ensure default tabs are always present if missing
+              tabsById: { ...createInitialState().tabsById, ...parsed.tabsById }
+            }
+          } 
+        });
+      }
+    } catch (err) {
+      console.warn("[OMEGA WORKBENCH] Session restore failed:", err);
+    }
+  }, []);
+
+  // Persistence Layer: Industrial Sync
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const data = {
+        tabsById: state.tabsById,
+        panesById: state.panesById,
+        focusedPaneId: state.focusedPaneId,
+        layout: state.layout,
+        tabViewState: state.tabViewState
+      };
+      window.localStorage.setItem("omega_workbench_session", JSON.stringify(data));
+    }
+  }, [state.tabsById, state.panesById, state.focusedPaneId, state.layout, state.tabViewState]);
 
   const actions = useMemo(
     () => ({
@@ -430,18 +461,10 @@ export function useWorkbenchState() {
 
       setLayoutMode: (mode: WorkbenchLayoutMode) => {
         dispatch({ type: "SET_LAYOUT_MODE", payload: { mode } });
-        if (typeof window !== "undefined") {
-          const current = JSON.parse(window.localStorage.getItem("omega_workbench_layout") || '{"ratio": 0.62}');
-          window.localStorage.setItem("omega_workbench_layout", JSON.stringify({ ...current, mode }));
-        }
       },
 
       setLayoutRatio: (ratio: number) => {
         dispatch({ type: "SET_LAYOUT_RATIO", payload: { ratio } });
-        if (typeof window !== "undefined") {
-          const current = JSON.parse(window.localStorage.getItem("omega_workbench_layout") || '{"mode": "single"}');
-          window.localStorage.setItem("omega_workbench_layout", JSON.stringify({ ...current, ratio }));
-        }
       },
 
       setSelectedNode: (nodeId: string | null) =>

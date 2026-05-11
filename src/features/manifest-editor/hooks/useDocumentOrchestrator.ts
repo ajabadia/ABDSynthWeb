@@ -4,6 +4,7 @@ import { useCallback, useMemo, useReducer, useEffect, useRef } from 'react';
 import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { DocumentState } from '../types/document';
 import { IntegrityService } from '@/services/integrityService';
+import { HistoryEntry, INITIAL_HISTORY_STATE } from '../types/history';
 
 type DocumentAction = 
   | { type: 'OPEN_DOCUMENT'; id: string; manifest: OMEGA_Manifest }
@@ -12,7 +13,12 @@ type DocumentAction =
   | { type: 'SET_ACTIVE_DOCUMENT'; id: string }
   | { type: 'CAPTURE_HASH'; id: string; hash: string }
   | { type: 'SET_DIRTY'; id: string; isDirty: boolean }
-  | { type: 'SET_INITIALIZED'; id: string };
+  | { type: 'SET_INITIALIZED'; id: string }
+  | { type: 'HYDRATE_SESSION'; state: OrchestratorState }
+  | { type: 'RESET_DOCUMENT'; id: string }
+  | { type: 'UNDO_DOCUMENT'; id: string }
+  | { type: 'REDO_DOCUMENT'; id: string }
+  | { type: 'PUSH_HISTORY'; id: string; entry: HistoryEntry };
 
 interface OrchestratorState {
   documentsById: Record<string, DocumentState>;
@@ -27,7 +33,8 @@ const createInitialDocument = (id: string, manifest: OMEGA_Manifest): DocumentSt
   extraResources: [],
   isDirty: false,
   lastStableHash: null,
-  isInitializing: true
+  isInitializing: true,
+  history: INITIAL_HISTORY_STATE
 });
 
 function orchestratorReducer(state: OrchestratorState, action: DocumentAction): OrchestratorState {
@@ -106,6 +113,108 @@ function orchestratorReducer(state: OrchestratorState, action: DocumentAction): 
           }
         }
       };
+    case 'HYDRATE_SESSION':
+      return {
+        ...action.state
+      };
+    case 'RESET_DOCUMENT': {
+      const doc = state.documentsById[action.id];
+      if (!doc) return state;
+      // Push current state to history before resetting to make it undoable
+      const resetEntry: HistoryEntry = {
+        manifest: doc.manifest,
+        timestamp: Date.now(),
+        label: 'Reset Document (Automatic Snapshot)'
+      };
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...createInitialDocument(action.id, DEFAULT_MANIFEST),
+            isInitializing: false,
+            history: {
+              ...doc.history,
+              past: [...doc.history.past, resetEntry],
+              future: []
+            }
+          }
+        }
+      };
+    }
+    case 'UNDO_DOCUMENT': {
+      const doc = state.documentsById[action.id];
+      if (!doc || doc.history.past.length === 0) return state;
+      
+      const newPast = [...doc.history.past];
+      const previousEntry = newPast.pop()!;
+      
+      const currentAsFutureEntry: HistoryEntry = {
+        manifest: doc.manifest,
+        timestamp: Date.now(),
+        label: 'Undo Action'
+      };
+
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...doc,
+            manifest: previousEntry.manifest,
+            history: {
+              past: newPast,
+              future: [currentAsFutureEntry, ...doc.history.future]
+            }
+          }
+        }
+      };
+    }
+    case 'REDO_DOCUMENT': {
+      const doc = state.documentsById[action.id];
+      if (!doc || doc.history.future.length === 0) return state;
+      
+      const newFuture = [...doc.history.future];
+      const nextEntry = newFuture.shift()!;
+      
+      const currentAsPastEntry: HistoryEntry = {
+        manifest: doc.manifest,
+        timestamp: Date.now(),
+        label: 'Redo Action'
+      };
+
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...doc,
+            manifest: nextEntry.manifest,
+            history: {
+              past: [...doc.history.past, currentAsPastEntry],
+              future: newFuture
+            }
+          }
+        }
+      };
+    }
+    case 'PUSH_HISTORY': {
+      const doc = state.documentsById[action.id];
+      if (!doc) return state;
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...doc,
+            history: {
+              past: [...doc.history.past, action.entry].slice(-50), // Cap history at 50 entries
+              future: []
+            }
+          }
+        }
+      };
+    }
     default:
       return state;
   }
@@ -146,6 +255,37 @@ export const useDocumentOrchestrator = () => {
     activeDocumentId: 'primary'
   });
 
+  // Client-Side Hydration (Fix for Hydration Mismatch)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('omega_session_docs');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Re-hydrate documents with isInitializing: true to trigger fresh hash check
+        const hydratedDocs = Object.fromEntries(
+          Object.entries(parsed.documentsById).map(([id, doc]) => [
+            id, 
+            { 
+              ...(doc as DocumentState), 
+              isInitializing: true, 
+              lastStableHash: null,
+              history: INITIAL_HISTORY_STATE // History is volatile
+            }
+          ])
+        );
+        dispatch({ 
+          type: 'HYDRATE_SESSION', 
+          state: {
+            ...parsed,
+            documentsById: hydratedDocs
+          } 
+        });
+      }
+    } catch (err) {
+      console.error('[OMEGA ORCHESTRATOR] Session restore failed:', err);
+    }
+  }, []);
+
   // Session Persistence: Save to LocalStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -153,9 +293,9 @@ export const useDocumentOrchestrator = () => {
         documentsById: state.documentsById,
         activeDocumentId: state.activeDocumentId
       };
-      // We only save manifests and IDs, not buffers/contracts
+      // We only save manifests and IDs, not buffers/contracts/history
       localStorage.setItem('omega_session_docs', JSON.stringify(data, (key, value) => {
-        if (key === 'wasmBuffer' || key === 'contract' || key === 'extraResources') return undefined;
+        if (key === 'wasmBuffer' || key === 'contract' || key === 'extraResources' || key === 'history') return undefined;
         return value;
       }));
     }
@@ -180,6 +320,22 @@ export const useDocumentOrchestrator = () => {
 
   const setActiveDocument = useCallback((id: string) => {
     dispatch({ type: 'SET_ACTIVE_DOCUMENT', id });
+  }, []);
+
+  const resetDocument = useCallback((id: string) => {
+    dispatch({ type: 'RESET_DOCUMENT', id });
+  }, []);
+
+  const undo = useCallback((id: string) => {
+    dispatch({ type: 'UNDO_DOCUMENT', id });
+  }, []);
+
+  const redo = useCallback((id: string) => {
+    dispatch({ type: 'REDO_DOCUMENT', id });
+  }, []);
+
+  const pushHistory = useCallback((id: string, entry: HistoryEntry) => {
+    dispatch({ type: 'PUSH_HISTORY', id, entry });
   }, []);
 
   const captureStableSnapshot = useCallback(async (id: string) => {
@@ -235,6 +391,10 @@ export const useDocumentOrchestrator = () => {
     updateDocument,
     setActiveDocument,
     captureStableSnapshot,
+    resetDocument,
+    undo,
+    redo,
+    pushHistory,
     // Compat with Phase 7.0 primary accessor
     primaryDocument: activeDocument 
   }), [
@@ -245,6 +405,10 @@ export const useDocumentOrchestrator = () => {
     closeDocument, 
     updateDocument, 
     setActiveDocument, 
-    captureStableSnapshot
+    captureStableSnapshot,
+    resetDocument,
+    undo,
+    redo,
+    pushHistory
   ]);
 };

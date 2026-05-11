@@ -17,7 +17,7 @@ export function useAssetManager(extraResources: AssetResource[]) {
   const assetUrls = useMemo(() => {
     const urls: Record<string, string> = {};
     
-    extraResources.forEach(res => {
+    (extraResources || []).forEach(res => {
       if (res.type.startsWith('image/') || res.name.endsWith('.svg') || res.name.endsWith('.png') || res.name.endsWith('.jpg')) {
         const blob = new Blob([res.data], { type: res.type || 'image/png' });
         // Standard OMEGA Prefix

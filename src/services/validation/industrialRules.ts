@@ -91,10 +91,10 @@ export class IndustrialRules {
       }
 
       // Asset Validation (Fase 13 — AGGRESSIVE)
-      const assetId = entity.presentation.asset;
+      const assetId = entity.presentation?.asset;
       const isLogo = entity.bind === 'module_logo' || entity.id === 'logo';
 
-      if ((assetId || isLogo) && !availableAssets.has(assetId || '')) {
+      if (entity.presentation && (assetId || isLogo) && !availableAssets.has(assetId || '')) {
           issues.push({
               path: `${path}/presentation/asset`,
               message: `CRITICAL ASSET: El recurso '${assetId || 'module_logo'}' referenciado por '${entity.id}' no existe en el manifiesto.`,
@@ -110,7 +110,7 @@ export class IndustrialRules {
       usedIds.add(entity.id);
 
       // Pro-Master: Rule of 5px
-      if (entity.pos.x % 5 !== 0 || entity.pos.y % 5 !== 0) {
+      if (entity.pos && (entity.pos.x % 5 !== 0 || entity.pos.y % 5 !== 0)) {
         issues.push({
           path: `${path}/pos`,
           message: `PRO-MASTER: Desalineado. La posición (${entity.pos.x}, ${entity.pos.y}) debe ser múltiplo de 5 (Regla de los 5px).`,
@@ -140,7 +140,7 @@ export class IndustrialRules {
       }
 
       // Advanced: Out of Bounds
-      if (entity.pos.x < 0 || entity.pos.x > rackWidth || entity.pos.y < 0 || entity.pos.y > rackHeight) {
+      if (entity.pos && (entity.pos.x < 0 || entity.pos.x > rackWidth || entity.pos.y < 0 || entity.pos.y > rackHeight)) {
         issues.push({ path: `${path}/pos`, message: `OUT OF BOUNDS: '${entity.id}' fuera del metal.`, keyword: 'era7_integrity', severity: 'error' });
       }
 
@@ -170,6 +170,7 @@ export class IndustrialRules {
 
       allEntities.forEach((other) => {
         if (entity.id === other.id) return;
+        if (!entity.pos || !other.pos) return;
         
         const otherTab = containerTabMap.get(other.presentation?.container || 'STATUS') || 'MAIN';
         if (entityTab !== otherTab) return;

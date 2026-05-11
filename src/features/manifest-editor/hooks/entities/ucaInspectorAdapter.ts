@@ -210,3 +210,25 @@ export function calculateWorldPosition(root: OmegaNode, targetId: string, curren
 
   return undefined;
 }
+/**
+ * insertNodeInTree
+ * Inserts a new node into the tree, typically into the root's children.
+ */
+export function insertNodeInTree(root: OmegaNode, newNode: OmegaNode): OmegaNode {
+  return {
+    ...root,
+    children: [...(root.children || []), newNode]
+  };
+}
+
+/**
+ * getAllIdsInTree
+ * Helper to collect all IDs for collision detection.
+ */
+export function getAllIdsInTree(root: OmegaNode): string[] {
+  const ids = [root.id];
+  if (root.children) {
+    root.children.forEach(c => ids.push(...getAllIdsInTree(c)));
+  }
+  return ids;
+}

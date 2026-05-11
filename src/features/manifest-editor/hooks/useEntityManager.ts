@@ -13,8 +13,8 @@ import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
  */
 export const useEntityManager = (
   manifest: OMEGA_Manifest, 
-  setManifest: React.Dispatch<React.SetStateAction<OMEGA_Manifest>>, 
-  updateManifest: (updates: Partial<OMEGA_Manifest>) => void,
+  setManifest: (updater: OMEGA_Manifest | ((prev: OMEGA_Manifest) => OMEGA_Manifest), label?: string) => void, 
+  updateManifest: (updates: Partial<OMEGA_Manifest>, label?: string) => void,
   addLog: (msg: string) => void
 ) => {
   
@@ -32,6 +32,7 @@ export const useEntityManager = (
 
   return {
     ...entityOps,
+    pasteEntity: entityOps.pasteEntity,
     ...modulationOps,
     ...layoutOps,
     ...templateOps

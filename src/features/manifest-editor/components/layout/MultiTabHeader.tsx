@@ -26,6 +26,14 @@ export default function MultiTabHeader({
   onPaneFocus,
   onDiagnosticClick
 }: MultiTabHeaderProps) {
+  const [mounted, setMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Avoid synchronous cascading render lint error
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (tabs.length === 0) return null;
 
   return (
@@ -52,8 +60,8 @@ export default function MultiTabHeader({
             `}
           >
             {/* Active Indicator Glow */}
-            {isActive && (
-              <div className="absolute inset-x-0 -bottom-[5px] h-[2px] bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)]" />
+            {isActive && mounted && (
+              <div className="absolute inset-x-0 -bottom-[5px] h-[2px] bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
             )}
 
             {Icon && typeof Icon !== 'string' && (

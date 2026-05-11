@@ -5,7 +5,7 @@ import { OMEGA_Manifest, LayoutContainer } from '@/omega-ui-core/types/manifest'
 
 export const useLayoutCRUD = (
   manifest: OMEGA_Manifest,
-  updateManifest: (updates: Partial<OMEGA_Manifest>) => void,
+  updateManifest: (updates: Partial<OMEGA_Manifest>, label?: string) => void,
   addLog: (msg: string) => void
 ) => {
 
@@ -24,7 +24,7 @@ export const useLayoutCRUD = (
       containers: [...(manifest.ui.layout?.containers || []), newContainer]
     };
 
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } });
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } }, `Add Container: ${id}`);
     addLog(`Added new layout container: ${id}`);
     return id;
   }, [manifest, updateManifest, addLog]);
@@ -35,7 +35,7 @@ export const useLayoutCRUD = (
       ...(manifest.ui.layout || { containers: [], gridSnap: 5 }),
       containers: nextContainers
     };
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } });
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } }, `Update Container: ${id}`);
   }, [manifest, updateManifest]);
 
   const removeContainer = useCallback((id: string) => {
@@ -49,7 +49,7 @@ export const useLayoutCRUD = (
     const nextControls = manifest.ui.controls.map(c => c.presentation?.container === id ? { ...c, presentation: { ...c.presentation, container: undefined } } : c);
     const nextJacks = manifest.ui.jacks.map(j => j.presentation?.container === id ? { ...j, presentation: { ...j.presentation, container: undefined } } : j);
 
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout, controls: nextControls, jacks: nextJacks } });
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout, controls: nextControls, jacks: nextJacks } }, `Remove Container: ${id}`);
     addLog(`Removed container: ${id}`);
   }, [manifest, updateManifest, addLog]);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, Dispatch, SetStateAction } from 'react';
+import { useCallback } from 'react';
 import yaml from 'js-yaml';
 import { OMEGA_Manifest, ManifestEntity, ComponentType, AttachmentType, Attachment } from '@/omega-ui-core/types/manifest';
 import { ValidationIssue } from '@/types/validation';
@@ -8,7 +8,7 @@ import { purgeUnusedStyles } from '@/features/manifest-editor/utils/governanceUt
 
 export const useManifestTransfer = (
   manifest: OMEGA_Manifest,
-  setManifest: Dispatch<SetStateAction<OMEGA_Manifest>>,
+  setManifest: (updater: OMEGA_Manifest | ((prev: OMEGA_Manifest) => OMEGA_Manifest), label?: string) => void,
   addLog: (msg: string) => void,
   issues: ValidationIssue[],
   captureStableSnapshot: () => void
@@ -123,7 +123,7 @@ export const useManifestTransfer = (
         modulations: parsed.modulations || []
       };
 
-      setManifest(finalManifest);
+      setManifest(finalManifest, `Import Manifest: ${file.name}`);
       addLog(`Success: UI state reconstructed for '${finalManifest.metadata.name}'.`);
       captureStableSnapshot();
     } catch (err: unknown) {

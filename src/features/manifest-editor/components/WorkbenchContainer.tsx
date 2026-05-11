@@ -190,18 +190,66 @@ export default function WorkbenchContainer({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [editor.orchestrator.documentsById]);
 
-  // 6. Keyboard Shortcuts (Phase 6.1 Polish)
+  // 6. Keyboard Shortcuts (Phase 6.1 Polish & 8.0 History)
   useEffect(() => {
+    const isInputFocused = () => {
+      const active = document.activeElement;
+      if (!active) return false;
+      const tag = active.tagName.toLowerCase();
+      return (
+        tag === 'input' || 
+        tag === 'textarea' || 
+        tag === 'select' || 
+        active.hasAttribute('contenteditable') ||
+        active.classList.contains('monaco-editor') || // Monaco focus
+        active.closest('.monaco-editor') !== null      // Focus inside Monaco
+      );
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. Persistence (Ctrl+S)
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         editor.addLog("[INPUT] Cmd+S detected. Triggering persistence...");
         editor.exportManifest();
       }
+
+      // 2. Clipboard (Ctrl+C / Ctrl+V)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        if (selectedItemId && !isInputFocused()) {
+          editor.copyToClipboard(selectedItemId);
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        if (!isInputFocused()) {
+          e.preventDefault();
+          editor.pasteFromClipboard();
+        }
+      }
+
+      // 3. History Engine (Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (!isInputFocused()) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            editor.redo();
+          } else {
+            editor.undo();
+          }
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        if (!isInputFocused()) {
+          e.preventDefault();
+          editor.redo();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editor]);
+  }, [editor, selectedItemId]);
 
   // 7. Effects & Synchronization (Aseptic Sync)
   useEffect(() => {

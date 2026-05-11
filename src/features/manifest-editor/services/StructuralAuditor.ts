@@ -75,7 +75,7 @@ export class StructuralAuditor implements DiagnosticSource {
       }
 
       // C. Invalid Coordinates
-      if (entity.pos.x < 0 || entity.pos.y < 0) {
+      if (entity.pos && (entity.pos.x < 0 || entity.pos.y < 0)) {
         results.warnings.push({
           id: `invalid-pos-${entity.id}`,
           source: this.name,

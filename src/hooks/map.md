@@ -8,14 +8,14 @@
 ```mermaid
 graph TD
     %% Global Orchestrator
-    UME[useManifestEditor] --> UMS[useManifestState]
+    UME[useManifestEditor] --> UDO[useDocumentOrchestrator]
     UME --> UAE[useAuditEngine]
     UME --> UEM[useEntityManager]
     UME --> UFO[useFileOps]
 
     %% manifest-editor/ Sub-hooks
     subgraph ManifestEditor[manifest-editor/]
-        UMS
+        UDO
         UAE
         UEM
         UFO
@@ -56,7 +56,7 @@ graph TD
 
 ### 2.1 Core Orchestrators
 - **useManifestEditor**: The top-level hook that synchronizes state, I/O, and business logic.
-- **useManifestState**: Manages the atomic state of the `.acemm` manifest and associated WASM binaries.
+- **useDocumentOrchestrator**: Manages the atomic state of multiple `.acemm` documents, handling persistence, hashing, and isolation.
 
 ### 2.2 Specialized Feature Hooks
 - **useAuditEngine / useAudit**: Handles real-time validation and cryptographic fingerprinting.
@@ -64,6 +64,7 @@ graph TD
 - **useFileOps**: Orchestrates complex file system operations (Uploads, Exports, Previews).
 - **useSourceEditor**: Provides logic for the YAML/JSON raw source editor.
 - **useViewport**: Manages the 2D/3D canvas coordinates and zoom levels.
+- **useWorkbenchState**: Manages the workspace layout, tab orchestration, and visual session state.
 
 ### 2.3 Modular Sub-Hooks
 - **entities/**: Specific CRUD operations for controls, jacks, and layout containers.
@@ -72,5 +73,5 @@ graph TD
 
 ## 3. Governance Rules
 - **Aseptic Composition**: Hooks should be composed from smaller, single-responsibility hooks (e.g., `useManifestEditor`).
-- **State Isolation**: Use `useManifestState` as the single source of truth for the working document.
-- **Side Effects**: Heavy side effects (File I/O, Integrity checks) must be encapsulated in their respective `io/` hooks.
+- **Multi-Document Isolation**: Use `useDocumentOrchestrator` as the single source of truth for all working documents.
+- **Side Effects**: Heavy side effects (File I/O, Integrity checks) must be encapsulated in their respective hooks.
