@@ -17,8 +17,8 @@ interface HeaderProps {
   onDeploy: () => void;
   onToggleLogs: () => void;
   showLogs: boolean;
-  viewMode: 'orbital' | 'rack' | 'source';
-  setViewMode: (mode: 'orbital' | 'rack' | 'source') => void;
+  activeTabType: 'orbital' | 'rack' | 'source';
+  onTabFocus: (type: 'orbital' | 'rack' | 'source') => void;
   onHelp: () => void;
   uiTheme: 'dark' | 'light';
   setUiTheme: (theme: 'dark' | 'light') => void;
@@ -49,7 +49,7 @@ export default function Header(props: HeaderProps) {
           onToggleLogs={props.onToggleLogs}
           onHelp={props.onHelp}
           onGenerateMockup={props.onGenerateMockup}
-          setViewMode={props.setViewMode}
+          onTabFocus={props.onTabFocus}
           onOpenAudit={props.onOpenAudit}
           onOpenAbout={props.onOpenAbout}
           onOpenConfig={props.onOpenConfig}
@@ -76,7 +76,7 @@ export default function Header(props: HeaderProps) {
         <div className="h-6 w-px wb-outline opacity-20 mx-1" />
         <div className="h-6 w-px wb-outline opacity-20 mx-1" />
         <div className="flex items-center gap-1">
-          <ViewModeSelector viewMode={props.viewMode} setViewMode={props.setViewMode} />
+          <ViewModeSelector viewMode={props.activeTabType} setViewMode={props.onTabFocus} />
           
           <button
             onClick={props.onToggleSplit}

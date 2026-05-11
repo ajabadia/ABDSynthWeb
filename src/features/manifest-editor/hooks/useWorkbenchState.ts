@@ -13,11 +13,7 @@ export type WorkbenchTabType =
 export type WorkbenchPaneId = "primary" | "secondary";
 export type WorkbenchLayoutMode = "single" | "vertical";
 
-export interface TabDiagnostics {
-  errorCount: number;
-  warningCount: number;
-  infoCount: number;
-}
+import { TabDiagnostics } from "../types/diagnostics";
 
 export interface WorkbenchTab {
   id: string;
@@ -94,52 +90,60 @@ type WorkbenchAction =
   | { type: "SET_SELECTED_NODE"; payload: { nodeId: string | null } }
   | { type: "SET_EXPANDED_NODE_IDS"; payload: { nodeIds: string[] } }
   | { type: "CAPTURE_TAB_VIEW_STATE"; payload: { tabId: string; viewState: Partial<WorkbenchTabViewState> } }
-  | { type: "HYDRATE_FROM_VIEWMODE"; payload: { viewMode: "orbital" | "rack" | "source" } }
   | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen'> } }
   | { type: "SET_HELP_STATE"; payload: { isOpen: boolean; sectionId?: string } }
   | { type: "SET_UI_THEME"; payload: { theme: "dark" | "light" } }
   | { type: "SET_PENDING_FILES"; payload: { files: File[] } };
 
 const DEFAULT_TABS: WorkbenchTab[] = [
-  { id: "tab-orbital", type: "orbital", title: "Orbital", persistent: true, closable: false },
-  { id: "tab-rack", type: "rack", title: "Rack", persistent: true, closable: false },
-  { id: "tab-source", type: "source", title: "Source", persistent: true, closable: false },
+  { id: "tab-orbital", type: "orbital", title: "Orbital", persistent: true, closable: false, payload: { documentId: 'primary' } },
+  { id: "tab-rack", type: "rack", title: "Rack", persistent: true, closable: false, payload: { documentId: 'primary' } },
+  { id: "tab-source", type: "source", title: "Source", persistent: true, closable: false, payload: { documentId: 'primary' } },
 ];
 
-const createInitialState = (): WorkbenchState => ({
-  tabsById: Object.fromEntries(DEFAULT_TABS.map((tab) => [tab.id, tab])),
-  panesById: {
-    primary: {
-      id: "primary",
-      tabIds: DEFAULT_TABS.map((tab) => tab.id),
-      activeTabId: "tab-rack",
+const createInitialState = (): WorkbenchState => {
+  let savedLayout = { mode: "single" as WorkbenchLayoutMode, ratio: 0.62 };
+  if (typeof window !== "undefined") {
+    try {
+      const stored = window.localStorage.getItem("omega_workbench_layout");
+      if (stored) savedLayout = JSON.parse(stored);
+    } catch {
+      // Ignore
+    }
+  }
+
+  return {
+    tabsById: Object.fromEntries(DEFAULT_TABS.map((tab) => [tab.id, tab])),
+    panesById: {
+      primary: {
+        id: "primary",
+        tabIds: DEFAULT_TABS.map((tab) => tab.id),
+        activeTabId: "tab-rack",
+      },
+      secondary: {
+        id: "secondary",
+        tabIds: [],
+        activeTabId: null,
+      },
     },
-    secondary: {
-      id: "secondary",
-      tabIds: [],
-      activeTabId: null,
-    },
-  },
-  focusedPaneId: "primary",
-  layout: {
-    mode: "single",
-    ratio: 0.62,
-  },
-  selectedNodeId: null,
-  expandedNodeIds: [],
-  tabViewState: {},
-  showLogs: false,
-  isLiveMode: false,
-  showModGrid: false,
-  helpState: { isOpen: false },
-  mockupOpen: false,
-  isAuditModalOpen: false,
-  isAboutModalOpen: false,
-  isConfigModalOpen: false,
-  isCellEditorOpen: false,
-  uiTheme: "dark",
-  pendingFiles: [],
-});
+    focusedPaneId: "primary",
+    layout: savedLayout,
+    selectedNodeId: null,
+    expandedNodeIds: [],
+    tabViewState: {},
+    showLogs: false,
+    isLiveMode: false,
+    showModGrid: false,
+    helpState: { isOpen: false },
+    mockupOpen: false,
+    isAuditModalOpen: false,
+    isAboutModalOpen: false,
+    isConfigModalOpen: false,
+    isCellEditorOpen: false,
+    uiTheme: "dark",
+    pendingFiles: [],
+  };
+};
 
 const clampRatio = (ratio: number) => Math.min(0.8, Math.max(0.2, ratio));
 
@@ -368,26 +372,7 @@ function workbenchReducer(state: WorkbenchState, action: WorkbenchAction): Workb
       };
     }
 
-    case "HYDRATE_FROM_VIEWMODE": {
-      const tabId =
-        action.payload.viewMode === "orbital"
-          ? "tab-orbital"
-          : action.payload.viewMode === "source"
-          ? "tab-source"
-          : "tab-rack";
 
-      return {
-        ...state,
-        focusedPaneId: "primary",
-        panesById: {
-          ...state.panesById,
-          primary: {
-            ...state.panesById.primary,
-            activeTabId: tabId,
-          },
-        },
-      };
-    }
 
     case "TOGGLE_UI_STATE": {
       return {
@@ -412,18 +397,11 @@ function workbenchReducer(state: WorkbenchState, action: WorkbenchAction): Workb
   }
 }
 
-export function useWorkbenchState(initialViewMode?: "orbital" | "rack" | "source") {
+export function useWorkbenchState() {
   const [state, dispatch] = useReducer(
     workbenchReducer,
     undefined,
-    () => {
-      const base = createInitialState();
-      if (!initialViewMode) return base;
-      return workbenchReducer(base, {
-        type: "HYDRATE_FROM_VIEWMODE",
-        payload: { viewMode: initialViewMode },
-      });
-    }
+    () => createInitialState()
   );
 
   const actions = useMemo(
@@ -450,11 +428,21 @@ export function useWorkbenchState(initialViewMode?: "orbital" | "rack" | "source
           payload: { tabId, targetPaneId, index },
         }),
 
-      setLayoutMode: (mode: WorkbenchLayoutMode) =>
-        dispatch({ type: "SET_LAYOUT_MODE", payload: { mode } }),
+      setLayoutMode: (mode: WorkbenchLayoutMode) => {
+        dispatch({ type: "SET_LAYOUT_MODE", payload: { mode } });
+        if (typeof window !== "undefined") {
+          const current = JSON.parse(window.localStorage.getItem("omega_workbench_layout") || '{"ratio": 0.62}');
+          window.localStorage.setItem("omega_workbench_layout", JSON.stringify({ ...current, mode }));
+        }
+      },
 
-      setLayoutRatio: (ratio: number) =>
-        dispatch({ type: "SET_LAYOUT_RATIO", payload: { ratio } }),
+      setLayoutRatio: (ratio: number) => {
+        dispatch({ type: "SET_LAYOUT_RATIO", payload: { ratio } });
+        if (typeof window !== "undefined") {
+          const current = JSON.parse(window.localStorage.getItem("omega_workbench_layout") || '{"mode": "single"}');
+          window.localStorage.setItem("omega_workbench_layout", JSON.stringify({ ...current, ratio }));
+        }
+      },
 
       setSelectedNode: (nodeId: string | null) =>
         dispatch({ type: "SET_SELECTED_NODE", payload: { nodeId } }),
@@ -477,11 +465,7 @@ export function useWorkbenchState(initialViewMode?: "orbital" | "rack" | "source
       setHelpState: (isOpen: boolean, sectionId?: string) =>
         dispatch({ type: "SET_HELP_STATE", payload: { isOpen, sectionId } }),
         
-      setViewMode: (viewMode: "orbital" | "rack" | "source") =>
-        dispatch({
-          type: "HYDRATE_FROM_VIEWMODE",
-          payload: { viewMode },
-        }),
+
       setUiTheme: (theme: "dark" | "light") =>
         dispatch({ type: "SET_UI_THEME", payload: { theme } }),
       setPendingFiles: (files: File[]) =>
@@ -500,13 +484,7 @@ export function useWorkbenchState(initialViewMode?: "orbital" | "rack" | "source
       primaryActiveTab: primaryActiveTabId ? state.tabsById[primaryActiveTabId] : null,
       secondaryActiveTab: secondaryActiveTabId ? state.tabsById[secondaryActiveTabId] : null,
       focusedTabId: state.panesById[state.focusedPaneId].activeTabId,
-      isSplit: state.layout.mode !== "single",
-      viewModeCompat:
-        state.panesById.primary.activeTabId === "tab-orbital"
-          ? "orbital"
-          : state.panesById.primary.activeTabId === "tab-source"
-          ? "source"
-          : "rack",
+      isSplit: state.layout.mode !== "single"
     };
   }, [state]);
 
@@ -521,7 +499,6 @@ export function useWorkbenchState(initialViewMode?: "orbital" | "rack" | "source
     derived,
     getTabViewState,
     // Flat accessors for legacy compatibility
-    viewMode: derived.viewModeCompat,
     selectionRef: state.selectedNodeId, // Mapping selectedNodeId to selectionRef for compatibility
     showLogs: state.showLogs,
     isLiveMode: state.isLiveMode,
@@ -534,23 +511,13 @@ export function useWorkbenchState(initialViewMode?: "orbital" | "rack" | "source
     isCellEditorOpen: state.isCellEditorOpen,
     uiTheme: state.uiTheme,
     pendingFiles: state.pendingFiles,
-    activeTab: derived.viewModeCompat,
+    
     // Setters (via actions)
     setUiTheme: actions.setUiTheme,
     setIsLiveMode: actions.setIsLiveMode,
     setHelpState: actions.setHelpState,
     toggleUIState: actions.toggleUIState,
     setPendingFiles: actions.setPendingFiles,
-    setActiveTab: (tab: string) => {
-      // If it's one of the view modes, we hydrate, otherwise we just focus
-      if (tab === 'orbital' || tab === 'rack' || tab === 'source') {
-        actions.setViewMode(tab);
-      } else {
-        // Find if there's a tab with this ID
-        const targetPane = findPaneContainingTab(state.panesById, tab);
-        if (targetPane) actions.focusTab(targetPane, tab);
-      }
-    },
     setIsAuditModalOpen: () => actions.toggleUIState('isAuditModalOpen'),
   };
 }

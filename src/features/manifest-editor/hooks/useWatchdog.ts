@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface WatchdogMessage {
   filename: string;
@@ -11,6 +11,11 @@ interface WatchdogMessage {
 export const useWatchdog = (onUpdate: (content: string) => void) => {
   const [status, setStatus] = useState<'idle' | 'connected' | 'error'>('idle');
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+
+  const onUpdateRef = useRef(onUpdate);
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  });
 
   useEffect(() => {
     let eventSource: EventSource | null = null;
@@ -32,7 +37,7 @@ export const useWatchdog = (onUpdate: (content: string) => void) => {
         try {
           const data: WatchdogMessage = JSON.parse(event.data);
           console.log(`[OMEGA WATCHDOG] Atomic update detected: ${data.filename}`);
-          onUpdate(data.content);
+          onUpdateRef.current(data.content);
           setLastUpdate(new Date().toLocaleTimeString());
         } catch (err) {
           console.error('[OMEGA WATCHDOG] Telemetry parse error:', err);
@@ -55,7 +60,7 @@ export const useWatchdog = (onUpdate: (content: string) => void) => {
       if (eventSource) eventSource.close();
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [onUpdate]);
+  }, []);
 
   return { status, lastUpdate };
 };

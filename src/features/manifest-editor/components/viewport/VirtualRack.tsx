@@ -25,8 +25,6 @@ interface VirtualRackProps {
   isLiveMode: boolean;
   setIsLiveMode: (val: boolean) => void;
   audit: AuditResult;
-  activeTab: string;
-  setActiveTab: (val: string) => void;
   resolveAsset?: (ref: string | undefined) => string | undefined;
 }
  
@@ -45,16 +43,16 @@ export default function VirtualRack({
   isLiveMode, 
   setIsLiveMode, 
   audit,
-  activeTab,
-  setActiveTab,
   resolveAsset
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
   const skin = manifest.ui?.skin || 'industrial';
   const { allVars } = useDesignTokens(manifest);
+  const [activePlane, setActivePlane] = React.useState('MAIN');
   
   // ASEPTIC LAYOUT & SIMULATION
-  const { width, height, allElements, visibleElements, containers } = useRackLayout(manifest, activeTab);
+  const manifestTab = activePlane;
+  const { width, height, allElements, visibleElements, containers } = useRackLayout(manifest, manifestTab);
   const { runtimeValues, activeContainers, activeInjectorPort, setActiveInjectorPort } = useRackSimulation(allElements, isLiveMode);
 
   // RACK MASTER ENTITY (Era 7.2.3 Architectural Host)
@@ -93,9 +91,8 @@ export default function VirtualRack({
       <RackHUD 
         isLiveMode={isLiveMode} 
         setIsLiveMode={setIsLiveMode} 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        activeTab={activeTab as any} 
-        setActiveTab={setActiveTab} 
+        activeTab={activePlane} 
+        setActiveTab={setActivePlane} 
         allElements={allElements} 
         planes={manifest.ui.layout?.planes || ['MAIN']}
       />
@@ -141,7 +138,7 @@ export default function VirtualRack({
         {manifest.ui?.useUCA === false && (
           <>
             {/* ARCHITECTURAL PLANES */}
-            {containers.filter(c => (c.tab || 'MAIN') === activeTab).map((c) => (
+            {containers.filter(c => (c.tab || 'MAIN') === activePlane).map((c) => (
               <RackContainer 
                 key={c.id} 
                 container={c} 
@@ -155,7 +152,7 @@ export default function VirtualRack({
               />
             ))}
     
-            <ModulationCables manifest={manifest} allElements={allElements} activeTab={activeTab} />
+            <ModulationCables manifest={manifest} allElements={allElements} activeTab={activePlane} />
     
             {/* ENTITIES LAYER */}
             {visibleElements.map((item) => (

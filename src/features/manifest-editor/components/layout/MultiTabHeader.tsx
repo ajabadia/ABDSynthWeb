@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, LucideIcon } from 'lucide-react';
 import { WorkbenchTab, WorkbenchPaneId } from '../../hooks/useWorkbenchState';
+import { Diagnostic } from '../../types/diagnostics';
 
 interface MultiTabHeaderProps {
   paneId: WorkbenchPaneId;
@@ -12,6 +13,7 @@ interface MultiTabHeaderProps {
   onTabSelect: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
   onPaneFocus: () => void;
+  onDiagnosticClick?: (tabId: string, diagnostic: Diagnostic) => void;
 }
 
 export default function MultiTabHeader({
@@ -21,7 +23,8 @@ export default function MultiTabHeader({
   isFocused,
   onTabSelect,
   onTabClose,
-  onPaneFocus
+  onPaneFocus,
+  onDiagnosticClick
 }: MultiTabHeaderProps) {
   if (tabs.length === 0) return null;
 
@@ -61,11 +64,17 @@ export default function MultiTabHeader({
               {tab.title}
             </span>
 
-            {/* Diagnostic Badges (Phase 6.1) */}
+            {/* Diagnostic Badges (Phase 6.3 Aggregation) */}
             {tab.diagnostics && tab.diagnostics.errorCount > 0 && (
               <div 
-                className="ml-1.5 px-1 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-xs shadow-[0_0_10px_rgba(239,68,68,0.3)] animate-pulse-subtle"
-                title={`${tab.diagnostics.errorCount} Errors detected in ${tab.title}`}
+                className="ml-1.5 px-1 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-[7px] font-black rounded-xs shadow-[0_0_10px_rgba(239,68,68,0.3)] animate-pulse-subtle cursor-help"
+                title={`${tab.diagnostics.errorCount} Errors:\n${tab.diagnostics.errors.map(e => `• [${e.source}] ${e.message}`).join('\n')}`}
+                onClick={(e) => {
+                  if (onDiagnosticClick) {
+                    e.stopPropagation();
+                    onDiagnosticClick(tab.id, tab.diagnostics!.errors[0]);
+                  }
+                }}
               >
                 {tab.diagnostics.errorCount}
               </div>
@@ -73,28 +82,42 @@ export default function MultiTabHeader({
 
             {tab.diagnostics && tab.diagnostics.errorCount === 0 && tab.diagnostics.warningCount > 0 && (
               <div 
-                className="ml-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.4)]" 
-                title={`${tab.diagnostics.warningCount} Warnings detected`}
+                className="ml-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.4)] cursor-help" 
+                title={`${tab.diagnostics.warningCount} Warnings:\n${tab.diagnostics.warnings.map(w => `• [${w.source}] ${w.message}`).join('\n')}`}
+                onClick={(e) => {
+                  if (onDiagnosticClick) {
+                    e.stopPropagation();
+                    onDiagnosticClick(tab.id, tab.diagnostics!.warnings[0]);
+                  }
+                }}
               />
             )}
 
             {tab.diagnostics && tab.diagnostics.errorCount === 0 && tab.diagnostics.warningCount === 0 && tab.diagnostics.infoCount > 0 && (
               <div 
-                className="ml-1.5 w-1.5 h-1.5 rounded-full bg-blue-400/50" 
-                title={`${tab.diagnostics.infoCount} Info messages`}
+                className="ml-1.5 w-1.5 h-1.5 rounded-full bg-blue-400/50 cursor-help" 
+                title={`${tab.diagnostics.infoCount} Info:\n${tab.diagnostics.infos.map(i => `• [${i.source}] ${i.message}`).join('\n')}`}
+                onClick={(e) => {
+                  if (onDiagnosticClick) {
+                    e.stopPropagation();
+                    onDiagnosticClick(tab.id, tab.diagnostics!.infos[0]);
+                  }
+                }}
               />
             )}
 
-            {/* Dirty Indicator / Close Button Logic */}
-            {tab.isDirty && (tab.closable === false || tab.persistent) && (!tab.diagnostics || tab.diagnostics.errorCount === 0) && (
-              <div className="ml-1.5 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_4px_rgba(var(--primary-rgb),0.8)] animate-pulse-subtle" />
+            {/* Dirty Indicator (Aseptic Standard) */}
+            {tab.isDirty && (!tab.diagnostics || tab.diagnostics.errorCount === 0) && (
+              <div className="relative w-3.5 h-3.5 flex items-center justify-center ml-1">
+                <div 
+                  className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_4px_rgba(var(--primary-rgb),0.8)] animate-pulse-subtle" 
+                  title="Unsaved changes"
+                />
+              </div>
             )}
 
             {tab.closable !== false && !tab.persistent && (
               <div className="relative w-3.5 h-3.5 flex items-center justify-center ml-1">
-                {tab.isDirty && (
-                  <div className="absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_4px_rgba(var(--primary-rgb),0.8)] transition-opacity duration-200 group-hover:opacity-0" />
-                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -102,7 +125,7 @@ export default function MultiTabHeader({
                   }}
                   className={`
                     p-0.5 rounded-full hover:bg-white/10 text-foreground/20 hover:text-red-400 transition-all duration-200
-                    ${tab.isDirty ? 'opacity-0 group-hover:opacity-100' : 'opacity-60 group-hover:opacity-100'}
+                    ${tab.isDirty ? 'opacity-0 hover:opacity-100' : 'opacity-60'}
                   `}
                 >
                   <X className="w-2.5 h-2.5" />

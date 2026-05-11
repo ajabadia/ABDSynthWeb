@@ -25,8 +25,6 @@ interface WorkbenchViewportProps {
   handleFitViewport: (mode: string) => void;
   isLiveMode: boolean;
   setIsLiveMode: (val: boolean) => void;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   resolveAsset?: (ref: string | undefined) => string | undefined;
 }
 
@@ -72,8 +70,6 @@ export function WorkbenchViewport({
   handleFitViewport,
   isLiveMode,
   setIsLiveMode,
-  activeTab,
-  setActiveTab,
   resolveAsset
 }: WorkbenchViewportProps) {
  
@@ -113,8 +109,6 @@ export function WorkbenchViewport({
               isLiveMode={isLiveMode} 
               setIsLiveMode={setIsLiveMode} 
               audit={auditResult} 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
               resolveAsset={resolveAsset}
             />
           </ViewWrapper>

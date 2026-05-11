@@ -10,9 +10,9 @@ export class IntegrityService {
    * Uses canonical normalization (alphabetical key sorting and minification).
    */
   static async generateHash(obj: Record<string, unknown>): Promise<string> {
-    // 1. Remove hash/firmwareHash property if present to calculate clean hash
+    // 1. Remove hash/firmwareHash/id property if present to calculate clean structural hash
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { hash, firmwareHash, ...cleanObj } = obj;
+    const { hash, firmwareHash, id, ...cleanObj } = obj;
     
     // Canonical Normalization: Recursive Key Sorting
     const sortObject = (o: unknown): unknown => {
@@ -21,7 +21,11 @@ export class IntegrityService {
       
       const record = o as Record<string, unknown>;
       return Object.keys(record).sort().reduce((acc: Record<string, unknown>, key: string) => {
-        acc[key] = sortObject(record[key]);
+        const val = record[key];
+        // Treat undefined as non-existent for canonical comparison
+        if (val !== undefined) {
+          acc[key] = sortObject(val);
+        }
         return acc;
       }, {});
     };

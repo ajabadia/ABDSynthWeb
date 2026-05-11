@@ -4,9 +4,19 @@ import { useState, useCallback } from 'react';
  * useViewport (v7.2.3)
  * Manages pan and zoom state for the manifest editor canvas/rack.
  */
-export const useViewport = () => {
-  const [zoom, setZoom] = useState(1.0);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+export const useViewport = (initialState?: { zoom: number; offsetX: number; offsetY: number }) => {
+  const [zoom, setZoom] = useState(initialState?.zoom ?? 1.0);
+  const [pan, setPan] = useState({ x: initialState?.offsetX ?? 0, y: initialState?.offsetY ?? 0 });
+
+  // Sync state when initialState changes (e.g. tab switch)
+  const [prevInitial, setPrevInitial] = useState(initialState);
+  if (initialState?.zoom !== prevInitial?.zoom || 
+      initialState?.offsetX !== prevInitial?.offsetX || 
+      initialState?.offsetY !== prevInitial?.offsetY) {
+    setZoom(initialState?.zoom ?? 1.0);
+    setPan({ x: initialState?.offsetX ?? 0, y: initialState?.offsetY ?? 0 });
+    setPrevInitial(initialState);
+  }
 
   const handleZoom = useCallback((delta: number) => {
     setZoom(prev => Math.max(0.2, Math.min(3, prev + delta)));

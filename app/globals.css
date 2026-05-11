@@ -182,3 +182,18 @@
 .wb-outline { border-color: var(--wb-outline) !important; }
 .wb-text { color: var(--wb-text) !important; }
 .wb-text-muted { color: var(--wb-text-muted) !important; }
+
+/* ═══════════════════════════════════════════════
+   MONACO SOURCE HIGHLIGHT (PHASE 6.2)
+   ═══════════════════════════════════════════════ */
+.omega-source-selection-highlight {
+  background: rgba(0, 240, 255, 0.08) !important;
+  border-left: 2px solid #00f0ff;
+  transition: all 0.3s ease;
+}
+
+.omega-source-selection-gutter {
+  background: #00f0ff !important;
+  width: 4px !important;
+  margin-left: 2px;
+}

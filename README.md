@@ -1,4 +1,4 @@
-# ABD Virtual Instruments: Aseptic Synthesis Research Lab
+# ABD Virtual Instruments: Aseptic Synthesis Research Lab [SYS_READY]
 
 ![ABD Virtual Instruments Banner](/public/images/instruments/hero_junio_601_render.png)
 
@@ -23,6 +23,11 @@ This repository hosts the web interface, instrument catalog, and the communicati
 - **Contact Terminal**: A hardened communication interface with built-in math challenge verification.
 - **Serverless Dispatch**: Live email transmission powered by the **Resend API**.
 - **Diagnostic Logging**: Server-side telemetry for monitoring dispatch health.
+
+### ⚙️ OMEGA Manifest Engine (Era 7.2.3)
+- **Industrial Integrity**: Deterministic hashing for dirty state management (<4ms).
+- **Cross-View Diagnostics**: Unified aggregation of Monaco markers and structural audits.
+- **Safety Guards**: Workspace protection via `Reset Guard` and `Reload Guard`.
 
 ## Tech Stack
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
@@ -62,6 +67,24 @@ This repository hosts the web interface, instrument catalog, and the communicati
    ```bash
    npm run dev
    ```
+
+## Performance
+
+The OMEGA Manifest Editor is optimized for industrial-grade efficiency:
+- **Hashing**: 3.46ms for 500 controls (8.6x better than threshold).
+- **Diagnostics**: Instantaneous aggregation (<1ms).
+- **Structural Audit**: Real-time semantic validation (0.1ms).
+
+See the [Performance Report](docs/performance-report.md) for full audit details.
+
+## Testing
+
+A comprehensive E2E suite using Playwright ensures the stability of critical workflows:
+- **Dirty State Lifecycle**: Load -> Edit -> Dirty -> Save -> Clean.
+- **Cross-View Sync**: Rack selection to Source reveal.
+- **Safety Guards**: BeforeUnload and Reset Workspace confirmation flows.
+
+See the [E2E Testing Guide](README_E2E.md) for execution instructions.
 
 ## Development Standards
 All visual assets must adhere to the [Visual Style Guide](docs/VISUAL_STYLE_GUIDE.md) and the [Studio Render Guide](docs/STUDIO_RENDER_GUIDE.md).

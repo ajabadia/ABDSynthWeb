@@ -1,12 +1,12 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import PropertyPanel from './PropertyPanel';
 import { OMEGA_Manifest, LayoutContainer, ManifestEntity, OMEGA_Modulation, ExtraResource, OmegaNode } from '@/types/manifest';
 import { AuditResult } from '@/services/auditService';
 
 interface WorkbenchInspectorProps {
-  isVisible: boolean;
+  // isVisible: boolean; (unused)
   isLiveMode: boolean;
   uiTheme: 'dark' | 'light';
   manifest: OMEGA_Manifest;
@@ -33,13 +33,12 @@ interface WorkbenchInspectorProps {
   onRemoveResource: (name: string) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
   onTriggerUpload: (id: string) => void;
-  activeTab: string;
   onOpenConfig?: () => void;
   onOpenLibrary?: () => void;
 }
 
 export function WorkbenchInspector({
-  isVisible,
+  // isVisible, (unused)
   isLiveMode,
   uiTheme,
   manifest,
@@ -64,7 +63,6 @@ export function WorkbenchInspector({
   onHelp,
   onRemoveResource,
   resolveAsset,
-  activeTab,
   onTriggerUpload,
   onOpenConfig,
   onOpenLibrary
@@ -83,45 +81,36 @@ export function WorkbenchInspector({
   };
 
   return (
-    <AnimatePresence>
-      {isVisible && !isLiveMode && (
-        <motion.aside 
-          key="inspector" 
-          initial={{ x: 600 }} 
-          animate={{ x: 0 }} 
-          exit={{ x: 600 }} 
-          className="w-[600px] shrink-0 h-full border-l wb-outline transition-colors duration-500"
-        >
-          <PropertyPanel 
-            uiTheme={uiTheme} 
-            manifest={manifest} 
-            item={selectedItem!} 
-            highlightPath={highlightPath}
-            onUpdate={handleUpdate}
-            onClose={() => onSelectItem(null)} 
-            availableBinds={availableBinds}
-            onSelectItem={onSelectItem} 
-            onAddEntity={onAddEntity} 
-            onDuplicateItem={onDuplicateItem} 
-            onRemoveItem={onRemoveItem}
-            onAddModulation={onAddModulation} 
-            onRemoveModulation={onRemoveModulation} 
-            onUpdateModulation={onUpdateModulation} 
-            onOpenModGrid={onOpenModGrid}
-            addContainer={addContainer} 
-            updateContainer={updateContainer} 
-            removeContainer={removeContainer}
-            onHelp={onHelp} 
-            extraResources={extraResources} 
-            onRemoveResource={onRemoveResource}
-            resolveAsset={resolveAsset}
-            activeTab={activeTab}
-            onTriggerUpload={onTriggerUpload}
-            onOpenConfig={onOpenConfig}
-            onOpenLibrary={onOpenLibrary}
-          />
-        </motion.aside>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {!isLiveMode && (
+        <PropertyPanel 
+          uiTheme={uiTheme} 
+          manifest={manifest} 
+          item={selectedItem!} 
+          highlightPath={highlightPath}
+          onUpdate={handleUpdate}
+          onClose={() => onSelectItem(null)} 
+          availableBinds={availableBinds}
+          onSelectItem={onSelectItem} 
+          onAddEntity={onAddEntity} 
+          onDuplicateItem={onDuplicateItem} 
+          onRemoveItem={onRemoveItem}
+          onAddModulation={onAddModulation} 
+          onRemoveModulation={onRemoveModulation} 
+          onUpdateModulation={onUpdateModulation} 
+          onOpenModGrid={onOpenModGrid}
+          addContainer={addContainer} 
+          updateContainer={updateContainer} 
+          removeContainer={removeContainer}
+          onHelp={onHelp} 
+          extraResources={extraResources} 
+          onRemoveResource={onRemoveResource}
+          resolveAsset={resolveAsset}
+          onTriggerUpload={onTriggerUpload}
+          onOpenConfig={onOpenConfig}
+          onOpenLibrary={onOpenLibrary}
+        />
       )}
-    </AnimatePresence>
+    </div>
   );
 }

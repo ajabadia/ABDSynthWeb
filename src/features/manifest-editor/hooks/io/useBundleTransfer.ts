@@ -211,8 +211,10 @@ export const useBundleTransfer = (
         await handleWasmUpload(wasms[0]);
       }
       if (manifests.length > 0) {
-        addLog(`[TRACE] Ingesting manifest: ${manifests[0].name}`);
-        await handleManifestUpload(manifests[0]);
+        addLog(`[TRACE] Ingesting ${manifests.length} manifests...`);
+        for (const m of manifests) {
+          await handleManifestUpload(m);
+        }
       }
 
       for (const res of others) {

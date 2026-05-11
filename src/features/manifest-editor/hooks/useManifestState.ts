@@ -86,6 +86,7 @@ export const useManifestState = () => {
   // --- Dirty State Management ---
   const [lastStableHash, setLastStableHash] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const debouncedHashRef = useRef<NodeJS.Timeout | null>(null);
 
   const captureStableSnapshot = useCallback(async () => {
@@ -94,53 +95,56 @@ export const useManifestState = () => {
     setIsDirty(false);
   }, [manifest]);
 
-  // Initial Snapshot & Snapshot on Reset
+  const manifestRef = useRef(manifest);
+  
+  // Sync ref with manifest safely (Aseptic Standard)
+  useEffect(() => {
+    manifestRef.current = manifest;
+  }, [manifest]);
+
   useEffect(() => {
     let active = true;
     const init = async () => {
-      const hash = await IntegrityService.generateManifestHash(manifest);
+      // Wait 3s for manifest normalization to settle before capturing baseline
+      await new Promise(r => setTimeout(r, 3000));
+      const hash = await IntegrityService.generateManifestHash(manifestRef.current);
       if (active) {
+        console.log(`[SYSTEM] Baseline Captured: ${hash.slice(0, 8)}`);
         setLastStableHash(hash);
         setIsDirty(false);
+        setIsInitializing(false);
       }
     };
-    
-    if (lastStableHash === null) {
-      init();
-    }
-    
+    init();
     return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastStableHash === null]);
+  }, []); // Strictly run once on mount
 
   // Debounced Hashing Comparison
   useEffect(() => {
-    if (debouncedHashRef.current) clearTimeout(debouncedHashRef.current);
-    
-    debouncedHashRef.current = setTimeout(async () => {
-      // 1s Settle period to allow manifest normalization hooks to stabilize
-      if (lastStableHash === null) return;
-      
-      const start = performance.now();
-      const currentHash = await IntegrityService.generateManifestHash(manifest);
-      const elapsed = performance.now() - start;
-      
-      if (elapsed > 30) {
-        console.warn(`[PERF] Manifest Hashing slow: ${elapsed.toFixed(2)}ms`);
-      }
+    if (debouncedHashRef.current) {
+      clearTimeout(debouncedHashRef.current);
+    }
 
+    debouncedHashRef.current = setTimeout(async () => {
+      if (lastStableHash === null || isInitializing) return;
+      
+      const currentHash = await IntegrityService.generateManifestHash(manifestRef.current);
+      
       if (lastStableHash) {
         const isNowDirty = currentHash !== lastStableHash;
         if (isNowDirty !== isDirty) {
           setIsDirty(isNowDirty);
+          if (isNowDirty) console.log(`[SYSTEM] Manifest Dirty: ${currentHash.slice(0, 8)} != ${lastStableHash.slice(0, 8)}`);
         }
       }
-    }, 300); // 300ms responsive debounce
+    }, 1000);
 
     return () => {
-      if (debouncedHashRef.current) clearTimeout(debouncedHashRef.current);
+      if (debouncedHashRef.current) {
+        clearTimeout(debouncedHashRef.current);
+      }
     };
-  }, [manifest, lastStableHash, isDirty]);
+  }, [lastStableHash, isDirty, isInitializing]);
 
   const updateManifest = useCallback((updates: Partial<OMEGA_Manifest>) => {
     setManifest((prev: OMEGA_Manifest) => {

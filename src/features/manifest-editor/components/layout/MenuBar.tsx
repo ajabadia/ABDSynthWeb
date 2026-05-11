@@ -19,7 +19,7 @@ interface MenuBarProps {
   onToggleLogs: () => void;
   onHelp: () => void;
   onGenerateMockup: () => void;
-  setViewMode: (mode: 'orbital' | 'rack' | 'source') => void;
+  onTabFocus: (type: 'orbital' | 'rack' | 'source') => void;
   onOpenAudit: () => void;
   onOpenAbout: () => void;
   onOpenConfig: () => void;
@@ -109,9 +109,9 @@ export default function MenuBar(props: MenuBarProps) {
       id: 'view',
       label: 'View',
       items: [
-        { label: 'Orbital View', icon: Layers, onClick: () => props.setViewMode('orbital') },
-        { label: 'Virtual Rack', icon: Layers, onClick: () => props.setViewMode('rack') },
-        { label: 'Source Code', icon: FileCode, onClick: () => props.setViewMode('source') },
+        { label: 'Orbital View', icon: Layers, onClick: () => props.onTabFocus('orbital') },
+        { label: 'Virtual Rack', icon: Layers, onClick: () => props.onTabFocus('rack') },
+        { label: 'Source Code', icon: FileCode, onClick: () => props.onTabFocus('source') },
         { type: 'divider' },
         { label: 'Toggle Logs Terminal', icon: Terminal, onClick: props.onToggleLogs },
       ]

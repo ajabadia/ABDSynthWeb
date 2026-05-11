@@ -4,6 +4,9 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 
+import { TabDiagnostics } from '../../types/diagnostics';
+import { mapMonacoMarkers } from '../../utils/diagnosticUtils';
+
 interface SourceViewProps {
   tabId: string;
   manifestId: string;
@@ -12,7 +15,8 @@ interface SourceViewProps {
   editorViewState?: unknown | null;
   onChange: (nextValue: string) => void;
   onCaptureViewState: (viewState: unknown) => void;
-  onDiagnosticsChange?: (diagnostics: { errorCount: number; warningCount: number; infoCount: number }) => void;
+  onDiagnosticsUpdate?: (diagnostics: TabDiagnostics) => void;
+  selectedItemId?: string | null;
 }
 
 export function SourceView({
@@ -23,22 +27,24 @@ export function SourceView({
   editorViewState,
   onChange,
   onCaptureViewState,
-  onDiagnosticsChange,
+  onDiagnosticsUpdate,
+  selectedItemId,
 }: SourceViewProps) {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const lastModelUriRef = useRef<string | null>(null);
+  const decorationsRef = useRef<Monaco.editor.IEditorDecorationsCollection | null>(null);
   
   // Refs to avoid useEffect re-runs when callbacks change
   const onChangeRef = useRef(onChange);
   const onCaptureViewStateRef = useRef(onCaptureViewState);
-  const onDiagnosticsChangeRef = useRef(onDiagnosticsChange);
+  const onDiagnosticsUpdateRef = useRef(onDiagnosticsUpdate);
 
   // Update refs after render to ensure callbacks are always fresh without violating render rules
   useEffect(() => {
     onChangeRef.current = onChange;
     onCaptureViewStateRef.current = onCaptureViewState;
-    onDiagnosticsChangeRef.current = onDiagnosticsChange;
+    onDiagnosticsUpdateRef.current = onDiagnosticsUpdate;
   });
 
   const modelPath = useMemo(
@@ -60,13 +66,14 @@ export function SourceView({
           fileMatch: ['*'],
           schema: {
             type: 'object',
-            required: ['id', 'type', 'metadata'],
+            required: ['id', 'metadata'],
             properties: {
               id: { type: 'string' },
-              type: { enum: ['control', 'jack', 'processor'] },
+              schemaVersion: { type: 'string' },
               metadata: { type: 'object' },
               ui: { type: 'object' },
-              containers: { type: 'array' }
+              modulations: { type: 'array' },
+              resources: { type: 'object' }
             }
           }
         }
@@ -135,15 +142,9 @@ export function SourceView({
       if (!model) return;
 
       const markers = monaco.editor.getModelMarkers({ resource: model.uri });
-      const errors = markers.filter(m => m.severity === monaco.MarkerSeverity.Error).length;
-      const warnings = markers.filter(m => m.severity === monaco.MarkerSeverity.Warning || m.severity === monaco.MarkerSeverity.Hint).length;
-      const infos = markers.filter(m => m.severity === monaco.MarkerSeverity.Info).length;
+      const diagnostics = mapMonacoMarkers(markers);
 
-      onDiagnosticsChangeRef.current?.({
-        errorCount: errors,
-        warningCount: warnings,
-        infoCount: infos
-      });
+      onDiagnosticsUpdateRef.current?.(diagnostics);
     };
 
     // Debounced refresh because markers might take a tick to update after model change (monaco timing issue)
@@ -177,6 +178,60 @@ export function SourceView({
       }
     };
   }, []);
+
+  // Handle Selection Highlight (Phase 6.2)
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco || !selectedItemId) {
+      decorationsRef.current?.clear();
+      return;
+    }
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    const content = model.getValue();
+    // Search for the ID in the JSON/YAML structure
+    const pattern = new RegExp(`"id"\\s*:\\s*"${selectedItemId}"`, 'g');
+    const match = pattern.exec(content);
+
+    if (match) {
+      const startPos = model.getPositionAt(match.index);
+      const endPos = model.getPositionAt(match.index + match[0].length);
+      
+      const range = new monaco.Range(
+        startPos.lineNumber,
+        1, // Highlight whole line
+        endPos.lineNumber,
+        model.getLineMaxColumn(endPos.lineNumber)
+      );
+
+      // Apply decoration
+      if (!decorationsRef.current) {
+        decorationsRef.current = editor.createDecorationsCollection();
+      }
+
+      decorationsRef.current.set([
+        {
+          range,
+          options: {
+            isWholeLine: true,
+            className: 'omega-source-selection-highlight',
+            linesDecorationsClassName: 'omega-source-selection-gutter',
+            minimap: { color: '#00f2ff55', position: 1 },
+          },
+        },
+      ]);
+
+      // Reveal in center with a small delay to ensure rendering
+      setTimeout(() => {
+        editor.revealRangeInCenterIfOutsideViewport(range, monaco.editor.ScrollType.Smooth);
+      }, 100);
+    } else {
+      decorationsRef.current?.clear();
+    }
+  }, [selectedItemId, modelPath]);
 
   return (
     <div className="h-full w-full overflow-hidden wb-bg">
