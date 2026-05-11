@@ -31,5 +31,6 @@ export interface DocumentOrchestrator {
   // History API
   undo: (id: string) => void;
   redo: (id: string) => void;
+  undoTo: (id: string, index: number) => void;
   pushHistory: (id: string, entry: HistoryEntry) => void;
 }

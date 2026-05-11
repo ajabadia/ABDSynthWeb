@@ -430,11 +430,17 @@ if ($Mode -eq "total") {
         $report += "## 5. localStorage Keys Inventory" + "`n`n"
 
 
-        $lsPattern = 'localStorage\.(getItem|setItem|removeItem)\([''"]([^''"]+)[''"]'
+        # OMEGA ERA 7.2.3 - Industrial Storage Detection
+        # Detects both literals: localStorage.getItem('key') 
+        # and constants: localStorage.getItem(STORAGE_KEYS.SESSION_DOCS)
+        $lsPattern = 'localStorage\.(getItem|setItem|removeItem)\(([''"]([^''"]+)[''"]|STORAGE_KEYS\.([A-Z_]+))\)'
         $localStorageKeys = Get-ChildItem -Path (Join-Path $rootDir "src") -Include *.ts,*.tsx,*.js,*.jsx -Recurse |
             Select-String -Pattern $lsPattern -AllMatches |
             ForEach-Object {
-                foreach ($m in $_.Matches) { $m.Groups[2].Value }
+                foreach ($m in $_.Matches) { 
+                    if ($m.Groups[3].Value) { $m.Groups[3].Value } # Literal
+                    else { $m.Groups[4].Value } # STORAGE_KEYS constant
+                }
             } | Sort-Object -Unique
 
 

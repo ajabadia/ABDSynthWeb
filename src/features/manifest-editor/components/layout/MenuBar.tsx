@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileCode, Package, Layers, Camera, Zap, FolderOpen, 
   Cpu, Database, Image as ImageIcon, LogOut, Undo2, 
-  Redo2, Terminal, HelpCircle, Shield, ChevronRight, Settings, Layout
+  Redo2, Terminal, HelpCircle, Shield, ChevronRight, Settings, Layout, History
 } from 'lucide-react';
 
 interface MenuBarProps {
@@ -16,10 +16,12 @@ interface MenuBarProps {
   onExportContract: (format: 'ts' | 'cpp') => void;
   onDeploy: () => void;
   onReset: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
   onToggleLogs: () => void;
   onHelp: () => void;
   onGenerateMockup: () => void;
-  onTabFocus: (type: 'orbital' | 'rack' | 'source') => void;
+  onTabFocus: (type: 'orbital' | 'rack' | 'source' | 'history') => void;
   onOpenAudit: () => void;
   onOpenAbout: () => void;
   onOpenConfig: () => void;
@@ -88,8 +90,10 @@ export default function MenuBar(props: MenuBarProps) {
       id: 'edit',
       label: 'Edit',
       items: [
-        { label: 'Undo', icon: Undo2, onClick: () => {}, disabled: true },
-        { label: 'Redo', icon: Redo2, onClick: () => {}, disabled: true },
+        { label: 'Undo', icon: Undo2, onClick: props.onUndo },
+        { label: 'Redo', icon: Redo2, onClick: props.onRedo },
+        { type: 'divider' },
+        { label: 'Document Timeline', icon: History, onClick: () => props.onTabFocus('history') },
         { type: 'divider' },
         { label: 'Universal Cell Laboratory', icon: Cpu, onClick: props.onOpenCellEditor || (() => {}), highlight: 'accent' },
         { label: 'Module Global Configuration', icon: Settings, onClick: props.onOpenConfig },

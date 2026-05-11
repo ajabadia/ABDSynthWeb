@@ -2,8 +2,9 @@
 
 import { useCallback } from 'react';
 import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
-import { findNodeInTree, updateNodeInTree, findLegacyItem, applyUpdatesToNode, insertNodeInTree, getAllIdsInTree } from './ucaInspectorAdapter';
+import { findNodeInTree, updateNodeInTree, findLegacyItem, applyUpdatesToNode, insertNodeInTree } from './ucaInspectorAdapter';
 import { treeToManifest, manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
+import { regenerateEntityId, cloneAndRegenerateNodeIds } from '../../utils/idManagement';
 
 export const useEntityCRUD = (
   manifest: OMEGA_Manifest,
@@ -81,16 +82,16 @@ export const useEntityCRUD = (
     if (!item) return;
 
     const isControl = manifest.ui?.controls?.some((c: ManifestEntity) => c.id === id);
-    const newItem = JSON.parse(JSON.stringify(item)) as ManifestEntity | OmegaNode;
     
-    const baseId = `${item.id}_copy`;
-    let counter = 1;
-    let newId = baseId;
-    while ([...(manifest.ui?.controls || []), ...(manifest.ui?.jacks || [])].some((i: ManifestEntity) => i.id === newId)) {
-      newId = `${baseId}_${counter++}`;
+    // Industrial Cloning and ID Regeneration (RISK-003 & RISK-004 Fix)
+    let newItem: ManifestEntity | OmegaNode;
+    if ('kind' in item) {
+      newItem = cloneAndRegenerateNodeIds(item as OmegaNode).node;
+    } else {
+      newItem = regenerateEntityId(item as ManifestEntity);
     }
     
-    newItem.id = newId;
+    const newId = newItem.id;
     
     if (isControl) {
       const newList = [...(manifest.ui?.controls || []), newItem as ManifestEntity];
@@ -162,27 +163,17 @@ export const useEntityCRUD = (
   }, [manifest, updateManifest, addLog]);
   
   const pasteEntity = useCallback((item: ManifestEntity | OmegaNode) => {
-    // 1. Collision Detection & ID Regeneration
+    // 1. Collision Detection & ID Regeneration (RISK-004 Fix)
     const isUCA = manifest.ui?.useUCA !== false;
-    const allIds = [
-      ...(manifest.ui?.controls || []), 
-      ...(manifest.ui?.jacks || []),
-      ...(manifest.ui?.layout?.containers || [])
-    ].map(i => i.id);
-
-    if (isUCA && manifest.ui?.tree) {
-      allIds.push(...getAllIdsInTree(manifest.ui.tree));
+    
+    let newItem: ManifestEntity | OmegaNode;
+    if ('kind' in item) {
+      newItem = cloneAndRegenerateNodeIds(item as OmegaNode).node;
+    } else {
+      newItem = regenerateEntityId(item as ManifestEntity);
     }
-
-    const baseId = `${item.id}_p`;
-    let counter = 1;
-    let newId = baseId;
-    while (allIds.includes(newId)) {
-      newId = `${baseId}_${counter++}`;
-    }
-
-    const newItem = JSON.parse(JSON.stringify(item));
-    newItem.id = newId;
+    
+    const newId = newItem.id;
 
     // 2. Insertion Strategy
     if (isUCA && manifest.ui?.tree) {

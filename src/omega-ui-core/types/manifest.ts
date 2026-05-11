@@ -319,7 +319,8 @@ export interface OMEGA_Metric {
  * UCA PHASE 1 - COMPOSITE TREE GRAMMAR (Additive)
  * Standardizing on hierarchical nodes for Era 7.2.3 and beyond.
  */
-export type OmegaNodeKind = 'rack' | 'face' | 'container' | 'cell' | 'layer';
+/** Tipo de nodo en el árbol UCA (Original) */
+export type LegacyOmegaNodeKind = 'rack' | 'face' | 'container' | 'cell' | 'layer';
  
 export interface OmegaConstraints {
   clampToParent?: boolean;   // [Phase 4.3] Lock child inside parent bounding box
@@ -380,6 +381,179 @@ export interface OverridePolicy {
   scopes?: ('designer' | 'end-user')[]; // Governance visibility
 }
 
+/**
+ * ─── OMEGA PHASE 9.4A FORMAL CONTRACT ─────────────────────────────────────────
+ * Canonical types for the Selective Merge & Live Templates Engine.
+ */
+
+/** Tipo de nodo en el árbol UCA que un blueprint puede insertar */
+export type OmegaNodeKind =
+  | 'voice'
+  | 'fx_chain'
+  | 'mod_hub'
+  | 'layout_container'
+  | 'bus'
+  | 'rack'
+  | 'group'
+  | 'leaf_module'
+  | 'face'
+  | 'container'
+  | 'cell'
+  | 'layer'
+  | string;
+
+/** Plano lógico de inserción en la UI/arquitectura */
+export type OmegaPlane = 'synthesis' | 'modulation' | 'fx' | 'meta' | 'custom';
+
+/** Tab lógico del editor donde aplica el blueprint */
+export type OmegaTab = string; // e.g. 'voice', 'global', 'performance'
+
+/** Modo de inserción */
+export type BlueprintInsertionMode = 'preview' | 'commit';
+
+/** Origen del blueprint */
+export type BlueprintOrigin = 'system' | 'user' | 'imported';
+
+/** Resultado de validación de compatibilidad */
+export type CompatibilityStatus = 'compatible' | 'incompatible' | 'warning' | 'unknown';
+
+/** Severidad de un issue de validación */
+export type ValidationSeverity = 'error' | 'warning' | 'info';
+
+/** Estrategia de resolución de colisiones de ID */
+export type IdCollisionStrategy = 'remap' | 'abort' | 'merge_if_identical';
+
+/** Modo de auto-wiring */
+export type AutoWireMode =
+  | 'none'          // sin auto-wiring
+  | 'strict'        // solo wires inequívocos (1 fuente → 1 destino por tipo)
+  | 'suggestive';   // propone pero no aplica (para 9.4B)
+
+/**
+ * Define una variable parametrizable dentro de un blueprint.
+ */
+export interface BlueprintPlaceholderDefinition {
+  /** ID único del placeholder dentro del blueprint */
+  id: string;
+  /** Etiqueta legible para el usuario */
+  label: string;
+  /** Tipo de valor esperado */
+  valueType:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'nodeId'       // referencia a un OmegaNode existente
+    | 'slotRef'      // referencia a un slot específico
+    | 'enumValue'    // uno de los valores permitidos
+    | 'color'
+    | 'json';
+  /** Valores permitidos si valueType === 'enumValue' */
+  allowedValues?: Array<string | number>;
+  /** Valor por defecto; puede ser una expresión {{otherPlaceholderId}} */
+  defaultValue?: unknown;
+  /** Si true, debe resolverse antes de commit (no tiene default válido) */
+  required: boolean;
+  /** Descripción contextual para la UI / HUD */
+  description?: string;
+  /**
+   * Path dentro del blueprint donde este placeholder se inyecta.
+   * Formato: dot-notation relativa al root del blueprint.
+   */
+  targetPath: string;
+  /** Validación adicional como expresión evaluable (opcional) */
+  validation?: string; 
+  /** [UI Helper] Hint text */
+  hint?: string;
+}
+
+/** Mapa de valores resueltos para los placeholders */
+export type BlueprintPlaceholderValues = Record<string, unknown>;
+
+/**
+ * Declara en qué contextos puede insertarse un blueprint.
+ */
+export interface BlueprintCompatibility {
+  allowedParentKinds?: OmegaNodeKind[];
+  deniedParentKinds?: OmegaNodeKind[];
+  allowedPlanes?: OmegaPlane[];
+  allowedTabs?: OmegaTab[];
+  requiredParentCapabilities?: string[];
+  exportedCapabilities?: string[];
+  targetSlotIds?: string[] | null;
+  singleton?: boolean;
+  minManifestVersion?: string;
+}
+
+/**
+ * Define cómo el injector debe crear conexiones automáticas.
+ */
+export interface BlueprintAutoWirePolicy {
+  mode: AutoWireMode;
+  acceptedSignals?: Array<{
+    signalType: string;       // e.g. 'cv_pitch', 'gate', 'audio_stereo'
+    targetPortId: string;     // puerto interno del blueprint a conectar
+    priority: 'required' | 'optional';
+  }>;
+  emittedSignals?: Array<{
+    signalType: string;
+    sourcePortId: string;
+  }>;
+  abortOnWireFailure?: boolean;
+  maxCandidatesPerSignal?: number;
+}
+
+/**
+ * Representa una decisión tomada por el AutoWireResolver.
+ */
+export interface BlueprintAutoWireDecision {
+  signalType: string;
+  targetPortId: string;
+  resolvedSourceNodeId: string | null;
+  resolvedSourcePortId: string | null;
+  strategy: 'exact_match' | 'fuzzy_match' | 'user_defined';
+  status: 'applied' | 'proposed' | 'failed' | 'skipped_optional' | 'ambiguous';
+  candidatesConsidered: string[];
+  reason: string;
+  error?: string;
+}
+
+/**
+ * Nodo dentro del árbol de un blueprint que permite expresiones {{placeholder}}.
+ */
+export interface OmegaBlueprintNode extends Omit<OmegaNode, 'id' | 'children'> {
+  id: string; // Puede ser literal o "{{placeholderId}}"
+  children?: OmegaBlueprintNode[];
+  params?: Record<string, unknown>; // valores o expresiones placeholder
+}
+
+/**
+ * Contrato principal de un blueprint: unidad de composición paramétrica.
+ */
+export interface BlueprintDefinition {
+  blueprintId: string;
+  version: string;
+  name: string;
+  description?: string;
+  origin: BlueprintOrigin;
+  tags?: string[];
+  iconKey?: string;
+  templateId: string | null;
+  rootNode: OmegaBlueprintNode;
+  placeholders: BlueprintPlaceholderDefinition[];
+  compatibility: BlueprintCompatibility;
+  autoWirePolicy: BlueprintAutoWirePolicy;
+  defaultOverridePolicy?: OverrideMode;
+  materializeSnapshot?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  authorId?: string;
+  changeLog?: string[];
+}
+
+/**
+ * Reemplaza a ModuleTemplate para la Phase 9.4+
+ * Mantenemos compatibilidad si es necesario envolviendo el anterior.
+ */
 export interface ModuleTemplate {
   id: string;
   version: string;
@@ -387,13 +561,20 @@ export interface ModuleTemplate {
   family: string;
   author?: string;
   description?: string;
-  contractVersion: string; // Target ABDOmega Era version (e.g. "7.2.3")
-  engineContractHint?: string; // Expected DSP contract hash or version
-  root: OmegaNode;         // The hierarchical blueprint
+  contractVersion: string;
+  root: OmegaNode;         
   slots: TemplateSlotDefinition[];
-  policy: OverridePolicy[]; // Granular path-based rules
-  assets?: string[];       // IDs of external assets required by this template
+  policy: OverridePolicy[]; 
+  assets?: string[];       
   meta?: Record<string, unknown>;
+  // [DEPRECATED] En favor de BlueprintDefinition
+  placeholders?: BlueprintPlaceholderDefinition[];
+  compatibility?: BlueprintCompatibility;
+  capabilities?: {
+    supportsAutoWiring?: boolean;
+    supportsUserPrompt?: boolean;
+    isRootLevelOnly?: boolean;
+  };
 }
 
 export interface CellTemplate {

@@ -7,8 +7,11 @@ import { OMEGA_Manifest, ManifestEntity, LayoutContainer } from '@/omega-ui-core
 import { OmegaContract } from '@/services/wasmLoader';
 import { AuditResult } from '@/services/auditService';
 
+import { HistoryPanel } from '../inspector/HistoryPanel';
+import { HistoryEntry } from '../../hooks/useDocumentOrchestrator';
+
 interface WorkbenchViewportProps {
-  viewMode: 'orbital' | 'rack' | 'source';
+  viewMode: 'orbital' | 'rack' | 'source' | 'history';
   manifest: OMEGA_Manifest;
   contract: OmegaContract | null;
   selectedItemId: string | null;
@@ -26,7 +29,14 @@ interface WorkbenchViewportProps {
   isLiveMode: boolean;
   setIsLiveMode: (val: boolean) => void;
   resolveAsset?: (ref: string | undefined) => string | undefined;
+  pushParameterUpdate?: (id: string, value: number) => void;
+  
+  // History Integration (Phase 9.2)
+  past?: HistoryEntry[];
+  onUndoTo?: (index: number) => void;
+  onCompareWithHistory?: (index: number) => void;
 }
+
 
 interface ViewWrapperProps {
   children: React.ReactNode;
@@ -70,12 +80,16 @@ export function WorkbenchViewport({
   handleFitViewport,
   isLiveMode,
   setIsLiveMode,
-  resolveAsset
+  resolveAsset,
+  pushParameterUpdate,
+  past,
+  onUndoTo,
+  onCompareWithHistory
 }: WorkbenchViewportProps) {
- 
+  
   return (
     <section className="flex-1 relative wb-bg overflow-hidden transition-colors duration-500">
-      {viewMode !== 'source' && (
+      {viewMode !== 'source' && viewMode !== 'history' && (
         <ViewportControls 
           zoom={zoom} 
           onZoom={handleZoom} 
@@ -110,6 +124,7 @@ export function WorkbenchViewport({
               setIsLiveMode={setIsLiveMode} 
               audit={auditResult} 
               resolveAsset={resolveAsset}
+              pushParameterUpdate={pushParameterUpdate}
             />
           </ViewWrapper>
         )}
@@ -121,6 +136,21 @@ export function WorkbenchViewport({
               selectedItemId={selectedItemId} 
               onUpdate={updateManifest} 
             />
+          </ViewWrapper>
+        )}
+
+        {viewMode === 'history' && (
+          <ViewWrapper id="history" applyTransform={false} zoom={zoom} pan={pan}>
+            <div className="h-full p-8 bg-black/40">
+              <div className="max-w-2xl mx-auto h-full">
+                <HistoryPanel 
+                  past={past || []} 
+                  onUndoTo={onUndoTo || (() => {})} 
+                  onCompare={onCompareWithHistory || (() => {})}
+                  className="h-full shadow-2xl border-white/10"
+                />
+              </div>
+            </div>
           </ViewWrapper>
         )}
       </AnimatePresence>

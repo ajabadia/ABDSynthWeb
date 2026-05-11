@@ -9,6 +9,8 @@ import MenuBar from './MenuBar';
 
 interface HeaderProps {
   onReset: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
   onExportManifest: () => void;
   onExportPack: () => void;
   onExportCAD: () => void;
@@ -17,8 +19,8 @@ interface HeaderProps {
   onDeploy: () => void;
   onToggleLogs: () => void;
   showLogs: boolean;
-  activeTabType: 'orbital' | 'rack' | 'source';
-  onTabFocus: (type: 'orbital' | 'rack' | 'source') => void;
+  activeTabType: 'orbital' | 'rack' | 'source' | 'history';
+  onTabFocus: (type: 'orbital' | 'rack' | 'source' | 'history') => void;
   onHelp: () => void;
   uiTheme: 'dark' | 'light';
   setUiTheme: (theme: 'dark' | 'light') => void;
@@ -46,6 +48,8 @@ export default function Header(props: HeaderProps) {
           onExportContract={props.onExportContract}
           onDeploy={props.onDeploy}
           onReset={props.onReset}
+          onUndo={props.onUndo}
+          onRedo={props.onRedo}
           onToggleLogs={props.onToggleLogs}
           onHelp={props.onHelp}
           onGenerateMockup={props.onGenerateMockup}

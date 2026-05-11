@@ -8,7 +8,11 @@ import { wasmRuntime } from '@/services/wasmRuntime';
  * useRackSimulation (v7.2.3)
  * Handles the real-time simulation loop and container activity (heatmap) logic.
  */
-export const useRackSimulation = (allElements: ManifestEntity[], isLiveMode: boolean) => {
+export const useRackSimulation = (
+  allElements: ManifestEntity[], 
+  isLiveMode: boolean,
+  pushParameterUpdate?: (id: string, value: number) => void
+) => {
   const [runtimeValues, setRuntimeValues] = useState<Record<string, number>>({});
   const [activeContainers, setActiveContainers] = useState<Record<string, number>>({});
   const [activeInjectorPort, setActiveInjectorPort] = useState<string | null>(null);
@@ -65,14 +69,19 @@ export const useRackSimulation = (allElements: ManifestEntity[], isLiveMode: boo
   const updateValue = useCallback((id: string, val: number) => {
     const clampedVal = Math.max(0, Math.min(1, parseFloat(val.toFixed(4))));
     setRuntimeValues(prev => ({ ...prev, [id]: clampedVal }));
-    wasmRuntime.setParameter(id, clampedVal);
+    
+    if (pushParameterUpdate) {
+      pushParameterUpdate(id, clampedVal);
+    } else {
+      wasmRuntime.setParameter(id, clampedVal);
+    }
 
     const element = allElements.find(e => e.id === id);
     const containerId = element?.presentation?.container;
     if (containerId) {
       setActiveContainers(prev => ({ ...prev, [containerId]: 1.0 }));
     }
-  }, [allElements]);
+  }, [allElements, pushParameterUpdate]);
 
   return {
     runtimeValues,

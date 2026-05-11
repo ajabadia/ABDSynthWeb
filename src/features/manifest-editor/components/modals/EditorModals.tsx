@@ -10,9 +10,16 @@ import AboutModal from './AboutModal';
 import GlobalGovernanceModal from './GlobalGovernanceModal';
 import UniversalCellEditorModal from './UniversalCellEditorModal';
 import UniversalCellLibraryModal from './UniversalCellLibraryModal';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import ManifestDiffModal from './ManifestDiffModal';
+import BlueprintPromptDialog from './BlueprintPromptDialog';
+import { 
+  OMEGA_Manifest, 
+  BlueprintDefinition, 
+  BlueprintPlaceholderValues 
+} from '@/omega-ui-core/types/manifest';
 import { AuditResult } from '@/services/auditService';
 import { useModuleMetrics } from '@/features/manifest-editor/hooks/useModuleMetrics';
+import { ManifestDiffResult, DiffEntry } from '@/features/manifest-editor/types/diff';
 
 interface EditorModalsProps {
   manifest: OMEGA_Manifest;
@@ -40,7 +47,24 @@ interface EditorModalsProps {
   setIsCellLibraryOpen?: (open: boolean) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAddEntityFromLibrary?: (template: any) => void;
+  
+  // Phase 9.2 Diff Integration
+  isDiffModalOpen?: boolean;
+  setIsDiffModalOpen?: (open: boolean) => void;
+  activeDiff?: ManifestDiffResult | null;
+  onMergeEntries?: (entries: DiffEntry[]) => void;
+
+  // Phase 9.4 Blueprint Integration
+  blueprintInjection?: {
+    activeBlueprint: BlueprintDefinition | null;
+    isPromptOpen: boolean;
+    setIsPromptOpen: (open: boolean) => void;
+    confirmInjection: (values: BlueprintPlaceholderValues) => void;
+    cancelInjection: () => void;
+  };
 }
+
+import { STORAGE_KEYS } from '../../constants/storage';
 
 export default function EditorModals({
   manifest,
@@ -66,12 +90,26 @@ export default function EditorModals({
   setIsCellEditorOpen,
   isCellLibraryOpen,
   setIsCellLibraryOpen,
-  onAddEntityFromLibrary
+  onAddEntityFromLibrary,
+  isDiffModalOpen,
+  setIsDiffModalOpen,
+  activeDiff,
+  onMergeEntries,
+  blueprintInjection
 }: EditorModalsProps) {
   const { metrics, sysReady } = useModuleMetrics(manifest);
 
   return (
     <>
+      <ManifestDiffModal 
+        isOpen={isDiffModalOpen || false}
+        onClose={() => setIsDiffModalOpen?.(false)}
+        diff={activeDiff || null}
+        onMergeEntries={(entries) => {
+          onMergeEntries?.(entries);
+          setIsDiffModalOpen?.(false);
+        }}
+      />
       <GlobalGovernanceModal 
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
@@ -131,14 +169,14 @@ export default function EditorModals({
             onSave={(cell) => {
               console.log("Saving Cell to Library:", cell);
               try {
-                const localLibrary = JSON.parse(localStorage.getItem('omega_cell_library') || '[]');
+                const localLibrary = JSON.parse(localStorage.getItem(STORAGE_KEYS.CELL_LIBRARY) || '[]');
                 localLibrary.push({
                   ...cell,
                   id: `local_${Date.now()}`,
                   isLocal: true,
                   timestamp: new Date().toISOString()
                 });
-                localStorage.setItem('omega_cell_library', JSON.stringify(localLibrary));
+                localStorage.setItem(STORAGE_KEYS.CELL_LIBRARY, JSON.stringify(localLibrary));
               } catch (e) {
                 console.error("Failed to save to local library", e);
               }
@@ -157,6 +195,17 @@ export default function EditorModals({
         }}
         resolveAsset={resolveAsset}
       />
+
+      {/* Phase 9.4 Blueprint Prompt */}
+      {blueprintInjection && (
+        <BlueprintPromptDialog 
+          key={blueprintInjection.activeBlueprint?.blueprintId || 'none'}
+          isOpen={blueprintInjection.isPromptOpen}
+          blueprint={blueprintInjection.activeBlueprint}
+          onClose={blueprintInjection.cancelInjection}
+          onConfirm={blueprintInjection.confirmInjection}
+        />
+      )}
     </>
   );
 }

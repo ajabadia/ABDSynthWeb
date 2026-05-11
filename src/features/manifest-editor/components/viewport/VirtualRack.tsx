@@ -26,6 +26,7 @@ interface VirtualRackProps {
   setIsLiveMode: (val: boolean) => void;
   audit: AuditResult;
   resolveAsset?: (ref: string | undefined) => string | undefined;
+  pushParameterUpdate?: (id: string, value: number) => void;
 }
  
 /**
@@ -43,7 +44,8 @@ export default function VirtualRack({
   isLiveMode, 
   setIsLiveMode, 
   audit,
-  resolveAsset
+  resolveAsset,
+  pushParameterUpdate
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
   const skin = manifest.ui?.skin || 'industrial';
@@ -53,7 +55,7 @@ export default function VirtualRack({
   // ASEPTIC LAYOUT & SIMULATION
   const manifestTab = activePlane;
   const { width, height, allElements, visibleElements, containers } = useRackLayout(manifest, manifestTab);
-  const { runtimeValues, activeContainers, activeInjectorPort, setActiveInjectorPort } = useRackSimulation(allElements, isLiveMode);
+  const { runtimeValues, activeContainers, activeInjectorPort, setActiveInjectorPort } = useRackSimulation(allElements, isLiveMode, pushParameterUpdate);
 
   // RACK MASTER ENTITY (Era 7.2.3 Architectural Host)
   const rackEntity: ManifestEntity = {

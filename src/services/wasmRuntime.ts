@@ -56,8 +56,9 @@ export class WasmRuntime {
     return 0;
   }
 
-  async deployManifest(manifest: OMEGA_Manifest): Promise<{ success: boolean; hash: string }> {
-    console.log(`OMEGA HIL: Desplegando manifiesto '${manifest.id}' v${manifest.schemaVersion}...`);
+  async deployManifest(manifest: OMEGA_Manifest, options?: { isHotReload?: boolean }): Promise<{ success: boolean; hash: string }> {
+    const mode = options?.isHotReload ? '[HOT-RELOAD]' : '[MANUAL]';
+    console.log(`OMEGA HIL: ${mode} Desplegando manifiesto '${manifest.id}' v${manifest.schemaVersion}...`);
     
     // Simulación de latencia de red/carga en hardware real
     await new Promise(resolve => setTimeout(resolve, 800));

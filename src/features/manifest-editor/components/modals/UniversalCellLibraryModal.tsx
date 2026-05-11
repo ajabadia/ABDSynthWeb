@@ -13,6 +13,8 @@ interface UniversalCellLibraryModalProps {
   resolveAsset?: (id: string | undefined) => string | undefined;
 }
 
+import { STORAGE_KEYS } from '../../constants/storage';
+
 export default function UniversalCellLibraryModal({ 
   isOpen, onClose, onSelect, resolveAsset 
 }: UniversalCellLibraryModalProps) {
@@ -40,7 +42,7 @@ export default function UniversalCellLibraryModal({
           });
           
           // 2. Load Local Library from LocalStorage
-          const localStr = localStorage.getItem('omega_cell_library');
+          const localStr = localStorage.getItem(STORAGE_KEYS.CELL_LIBRARY);
           if (localStr) {
             const localCells = JSON.parse(localStr) as ManifestEntity[];
             localCells.forEach((item: ManifestEntity) => flattenedCells.push({ ...item, category: 'Local', isLocal: true } as ManifestEntity));
