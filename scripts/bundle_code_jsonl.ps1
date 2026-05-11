@@ -251,7 +251,7 @@ if ($Mode -eq "total") {
         $gitCommit = git rev-parse --short HEAD 2>$null
 
 
-        $report = "# OMEGA Phase 8/9 — Delta Report`n"
+        $report = "# OMEGA Phase 8/9 - Delta Report`n"
         $report += "**Generated:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")`n"
         $report += "**Branch:** $gitBranch`n"
         $report += "**Commit:** $gitCommit`n`n"
@@ -259,7 +259,7 @@ if ($Mode -eq "total") {
 
 
         $report += "## 1. Archivos Modificados (último commit + staged)`n`n"
-        $report += "```" + "`n"
+        $report += '```' + "`n"
 
 
         # Parent Commit Safety
@@ -294,11 +294,11 @@ if ($Mode -eq "total") {
         }
 
 
-        $report += "```" + "`n`n"
+        $report += '```' + "`n`n"
 
 
         # --- Sección 2: Archivos clave ---
-        $report += "## 2. Archivos Clave Tocados" + "`n`n" + "```" + "`n"
+        $report += "## 2. Archivos Clave Tocados" + "`n`n" + '```' + "`n"
 
 
         $criticalFiles = @(
@@ -338,11 +338,11 @@ if ($Mode -eq "total") {
         }
 
 
-        $report += "```" + "`n`n"
+        $report += '```' + "`n`n"
 
 
         # --- Sección 3: Phase 8 Status ---
-        $report += "## 3. Phase 8 Implementation Status" + "`n`n" + "```" + "`n"
+        $report += "## 3. Phase 8 Implementation Status" + "`n`n" + '```' + "`n"
 
 
         $phase8Files = @(
@@ -398,10 +398,10 @@ if ($Mode -eq "total") {
         }
 
 
-        $report += "```" + "`n`n"
+        $report += '```' + "`n`n"
 
 
-        $report += "## 4. TypeScript and Lint Status" + "`n`n" + "```" + "`n"
+        $report += "## 4. TypeScript and Lint Status" + "`n`n" + '```' + "`n"
 
 
         Write-Host "Running TypeScript check..." -ForegroundColor Yellow
@@ -424,13 +424,13 @@ if ($Mode -eq "total") {
         }
 
 
-        $report += "```" + "`n`n"
+        $report += '```' + "`n`n"
 
 
         $report += "## 5. localStorage Keys Inventory" + "`n`n"
 
 
-        $lsPattern = "localStorage\.(getItem|setItem|removeItem)\(['\""]([^'\""]+)['\""]"
+        $lsPattern = 'localStorage\.(getItem|setItem|removeItem)\([''"]([^''"]+)[''"]'
         $localStorageKeys = Get-ChildItem -Path (Join-Path $rootDir "src") -Include *.ts,*.tsx,*.js,*.jsx -Recurse |
             Select-String -Pattern $lsPattern -AllMatches |
             ForEach-Object {
@@ -473,14 +473,14 @@ if ($Mode -eq "total") {
         $report += "- [ ] **Undo/Redo**: History navigation works correctly`n"
         $report += "- [ ] **Zero Legacy**: No active references to useManifestState`n"
         
-        $report += "`n" + "## 8. Recent Commits" + "`n`n" + "```" + "`n"
+        $report += "`n" + "## 8. Recent Commits" + "`n`n" + '```' + "`n"
         $recentCommits = git log --oneline -n 5 2>$null
         if ($recentCommits) {
             $report += (($recentCommits | ForEach-Object { $_.ToString().TrimEnd() }) -join "`n") + "`n"
         } else {
             $report += "(No git history available)`n"
         }
-        $report += "```" + "`n`n"
+        $report += '```' + "`n`n"
         
         # --- CERTIFICACIÓN AUTOMÁTICA ---
         $readyForPhase9 = $isTscPass -and $isLintPass -and $isPhase8Pass
