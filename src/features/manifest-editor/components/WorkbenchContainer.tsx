@@ -63,17 +63,17 @@ export default function WorkbenchContainer({
   const { manifest, contract, updateManifest } = editor;
 
   // 2. Workspace State
-  const { state, actions, derived, ...uiLegacy } = useWorkbenchState();
+  const { state, actions, derived } = useWorkbenchState();
   const { auditResult } = useAudit(manifest, contract);
   
   // 3. Diff & History Operations (Consolidated in useWorkbenchState)
   const handleCompareWithHistory = useCallback((index: number) => {
     const diff = editor.compareWithHistory(index);
     if (diff) {
-      uiLegacy.setActiveDiff(diff);
-      uiLegacy.setIsDiffModalOpen(true);
+      actions.setActiveDiff(diff);
+      actions.setIsDiffModalOpen(true);
     }
-  }, [editor, uiLegacy]);
+  }, [editor, actions]);
 
   const activeTabId = state.panesById[state.focusedPaneId].activeTabId;
   const activeTab = activeTabId ? state.tabsById[activeTabId] : null;
@@ -216,8 +216,8 @@ export default function WorkbenchContainer({
   }, [editor, selectedItemId, handleSelectItem]);
   
   const onDeploy = useCallback(async () => {
-    if (await editor.handleDeploy() === 'AUDIT_FAIL') uiLegacy.setIsAuditModalOpen();
-  }, [editor, uiLegacy]);
+    if (await editor.handleDeploy() === 'AUDIT_FAIL') actions.toggleUIState('isAuditModalOpen');
+  }, [editor, actions]);
 
   const onReset = useCallback(() => {
     editor.reset();
@@ -327,8 +327,8 @@ export default function WorkbenchContainer({
         handlePan={handlePan}
         handleResetViewport={handleResetViewport}
         handleFitViewport={handleFitViewport}
-        isLiveMode={uiLegacy.isLiveMode}
-        setIsLiveMode={uiLegacy.setIsLiveMode}
+        isLiveMode={state.isLiveMode}
+        setIsLiveMode={() => actions.toggleUIState('isLiveMode')}
         onUndoTo={editor.undoTo}
         onCompareWithHistory={handleCompareWithHistory}
       />
@@ -336,8 +336,8 @@ export default function WorkbenchContainer({
   };
 
   return (
-    <div className="h-screen flex flex-col wb-bg wb-text font-sans overflow-hidden select-none relative transition-colors duration-500" data-ui-theme={uiLegacy.uiTheme}>
-      <HiddenFileHandlers onResourceUpload={editor.handleResourceUpload} setPendingFiles={uiLegacy.setPendingFiles} />
+    <div className="h-screen flex flex-col wb-bg wb-text font-sans overflow-hidden select-none relative transition-colors duration-500" data-ui-theme={state.uiTheme}>
+      <HiddenFileHandlers onResourceUpload={editor.handleResourceUpload} setPendingFiles={actions.setPendingFiles} />
       
       <Header 
         onReset={onReset} 
@@ -346,21 +346,21 @@ export default function WorkbenchContainer({
         onExportManifest={editor.exportManifest} 
         onExportPack={editor.exportOmegaPack}
         onExportCAD={() => editor.exportCADBlueprint()} onExportContract={handleExportContract}
-        onGenerateMockup={() => uiLegacy.toggleUIState('mockupOpen')} onDeploy={onDeploy}
-        onToggleLogs={() => uiLegacy.toggleUIState('showLogs')} showLogs={uiLegacy.showLogs}
+        onGenerateMockup={() => actions.toggleUIState('mockupOpen')} onDeploy={onDeploy}
+        onToggleLogs={() => actions.toggleUIState('showLogs')} showLogs={state.showLogs}
         activeTabType={(activeTab?.type && ['orbital', 'rack', 'source', 'history'].includes(activeTab.type)) ? (activeTab.type as 'orbital' | 'rack' | 'source' | 'history') : 'rack'}
         onTabFocus={(type) => actions.openTab({ 
           id: `tab-${type}`,
           type: type as WorkbenchTabType, 
           title: type.charAt(0).toUpperCase() + type.slice(1) 
         })}
-        uiTheme={uiLegacy.uiTheme}
-        setUiTheme={uiLegacy.setUiTheme}
-        onHelp={() => uiLegacy.setHelpState(true)}
+        uiTheme={state.uiTheme}
+        setUiTheme={actions.setUiTheme}
+        onHelp={() => actions.setHelpState(true)}
         audit={auditResult}
         onOpenAudit={() => actions.toggleUIState('isAuditModalOpen')}
         onTriggerUpload={triggerUpload}
-        onOpenAbout={() => uiLegacy.toggleUIState('isAboutModalOpen')}
+        onOpenAbout={() => actions.toggleUIState('isAboutModalOpen')}
         onOpenConfig={() => actions.toggleUIState('isConfigModalOpen')}
         onOpenCellEditor={() => actions.toggleUIState('isCellEditorOpen')}
         onOpenGallery={() => setIsGalleryOpen(true)}
@@ -401,7 +401,7 @@ export default function WorkbenchContainer({
         {/* RIGHT WORKSPACE: DOCKED INSPECTOR */}
         <div className="w-[340px] flex-shrink-0 border-l wb-outline flex flex-col bg-black/10 overflow-hidden">
             <WorkbenchInspector 
-              isLiveMode={uiLegacy.isLiveMode} uiTheme={uiLegacy.uiTheme}
+              isLiveMode={state.isLiveMode} uiTheme={state.uiTheme}
               manifest={manifest as OMEGA_Manifest} selectedItem={selectedItem}
               selectedItemId={selectedItemId} highlightPath={gps.highlightPath}
               availableBinds={availableBinds} extraResources={editor.extraResources}
@@ -410,13 +410,13 @@ export default function WorkbenchContainer({
               onSelectItem={handleSelectItem} onAddEntity={handleAddEntity}
               onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
               onAddModulation={editor.addModulation} onRemoveModulation={editor.removeModulation}
-              onUpdateModulation={editor.updateModulation} onOpenModGrid={() => uiLegacy.toggleUIState('showModGrid')}
+              onUpdateModulation={editor.updateModulation} onOpenModGrid={() => actions.toggleUIState('showModGrid')}
               addContainer={editor.addContainer} updateContainer={editor.updateContainer}
-              removeContainer={editor.removeContainer} onHelp={(sectionId) => uiLegacy.setHelpState(true, sectionId)}
+              removeContainer={editor.removeContainer} onHelp={(sectionId) => actions.setHelpState(true, sectionId)}
               onRemoveResource={editor.handleRemoveResource}
               resolveAsset={editor.resolveAsset}
               onTriggerUpload={triggerUpload}
-              onOpenConfig={onOpenGovernance || (() => uiLegacy.toggleUIState('isConfigModalOpen'))}
+              onOpenConfig={onOpenGovernance || (() => actions.toggleUIState('isConfigModalOpen'))}
               onOpenLibrary={() => setIsCellLibraryOpen(true)}
               onSelectBlueprint={editor.blueprintInjection.startInjection}
             />
@@ -458,9 +458,9 @@ export default function WorkbenchContainer({
         onAddEntityFromLibrary={handleAddFromLibrary}
         
         // Phase 9.2 Diff
-        isDiffModalOpen={uiLegacy.isDiffModalOpen}
-        setIsDiffModalOpen={uiLegacy.setIsDiffModalOpen}
-        activeDiff={uiLegacy.activeDiff}
+        isDiffModalOpen={state.isDiffModalOpen}
+        setIsDiffModalOpen={actions.setIsDiffModalOpen}
+        activeDiff={state.activeDiff}
         onMergeEntries={editor.handleMergeEntries}
         blueprintInjection={editor.blueprintInjection}
       />

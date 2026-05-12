@@ -112,37 +112,11 @@ export function useWorkbenchState() {
     [state.tabViewState]
   );
 
-  // 4. Legacy API & Flat Accessors (Backward Compatibility)
+  // 4. API Export
   return {
     state,
     actions,
     derived,
     getTabViewState,
-    
-    // Flat accessors for legacy compatibility
-    selectionRef: state.selectedNodeId,
-    showLogs: state.showLogs,
-    isLiveMode: state.isLiveMode,
-    showModGrid: state.showModGrid,
-    helpState: state.helpState,
-    mockupOpen: state.mockupOpen,
-    isAuditModalOpen: state.isAuditModalOpen,
-    isAboutModalOpen: state.isAboutModalOpen,
-    isConfigModalOpen: state.isConfigModalOpen,
-    isCellEditorOpen: state.isCellEditorOpen,
-    isDiffModalOpen: state.isDiffModalOpen,
-    activeDiff: state.activeDiff,
-    uiTheme: state.uiTheme,
-    pendingFiles: state.pendingFiles,
-    
-    // Setters (via actions)
-    setUiTheme: actions.setUiTheme,
-    setIsLiveMode: actions.setIsLiveMode,
-    setHelpState: actions.setHelpState,
-    toggleUIState: actions.toggleUIState,
-    setPendingFiles: actions.setPendingFiles,
-    setIsAuditModalOpen: () => actions.toggleUIState('isAuditModalOpen'),
-    setIsDiffModalOpen: actions.setIsDiffModalOpen,
-    setActiveDiff: actions.setActiveDiff,
   };
 }

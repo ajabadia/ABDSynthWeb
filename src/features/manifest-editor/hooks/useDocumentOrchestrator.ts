@@ -396,7 +396,7 @@ export const useDocumentOrchestrator = () => {
                 ...d, 
                 isInitializing: true, 
                 lastStableHash: null,
-                history: INITIAL_HISTORY_STATE 
+                history: d.history || INITIAL_HISTORY_STATE 
               }
             ];
           })
@@ -421,9 +421,9 @@ export const useDocumentOrchestrator = () => {
         documentsById: state.documentsById,
         activeDocumentId: state.activeDocumentId
       };
-      // We only save manifests and IDs, not buffers/contracts/history
+      // We only save manifests and IDs, not large binary buffers or contracts
       localStorage.setItem(STORAGE_KEYS.SESSION_DOCS, JSON.stringify(data, (key, value) => {
-        if (key === 'wasmBuffer' || key === 'contract' || key === 'extraResources' || key === 'history') return undefined;
+        if (key === 'wasmBuffer' || key === 'contract' || key === 'extraResources') return undefined;
         return value;
       }));
     }
