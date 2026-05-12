@@ -251,7 +251,7 @@ if ($Mode -eq "total") {
         $gitCommit = git rev-parse --short HEAD 2>$null
 
 
-        $report = "# OMEGA Phase 8/9 - Delta Report`n"
+        $report = "# OMEGA Phase 14 - Industrial Delta Report`n"
         $report += "**Generated:** $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")`n"
         $report += "**Branch:** $gitBranch`n"
         $report += "**Commit:** $gitCommit`n`n"
@@ -350,7 +350,8 @@ if ($Mode -eq "total") {
             @{Path="src/features/manifest-editor/hooks/useDocumentOrchestrator.ts"; Expected=@("UNDO_DOCUMENT","REDO_DOCUMENT","PUSH_HISTORY")},
             @{Path="src/features/manifest-editor/hooks/useManifestEditor.ts"; Expected=@("pushHistoryEntry","useHistoryActions")},
             @{Path="src/features/manifest-editor/hooks/useHistoryActions.ts"; Expected=@("Date.now","1000","undo","redo")},
-            @{Path="src/features/manifest-editor/components/WorkbenchContainer.tsx"; Expected=@("keydown","metaKey","ctrlKey","isInputFocused")}
+            @{Path="src/features/manifest-editor/components/WorkbenchContainer.tsx"; Expected=@("useWorkbenchState","useManifestEditor","renderPane","useWorkbenchShortcuts")},
+            @{Path="src/features/manifest-editor/hooks/useWorkbenchShortcuts.ts"; Expected=@("keydown","metaKey","ctrlKey","useWorkbenchShortcuts")}
         )
 
 
@@ -462,7 +463,7 @@ if ($Mode -eq "total") {
         if ((Test-Path $contractFile) -and (Test-Path $implFile)) {
             $contractContent = Get-Content $contractFile -Raw
             $implContent = Get-Content $implFile -Raw
-            $methods = @("openDocument", "closeDocument", "updateDocument", "setActiveDocument", "captureStableSnapshot", "resetDocument", "undo", "redo")
+            $methods = @("openDocument", "closeDocument", "updateDocument", "setActiveDocument", "captureStableSnapshot", "resetDocument", "undo", "redo", "undoTo", "pushHistory")
             foreach ($method in $methods) {
                 $inContract = $contractContent -match $method
                 $inImpl = $implContent -match "const $method"
@@ -494,18 +495,18 @@ if ($Mode -eq "total") {
         $certStatus = if ($readyForPhase9) { "✅ YES" } else { "⚠️ NO" }
         
         $report += "---`n"
-        $report += "## 🎯 Phase 9 Certification Status`n`n"
-        $report += "**Ready for Phase 9:** $certStatus`n`n"
+        $report += "## 🎯 Phase 14 Certification Status`n`n"
+        $report += "**Ready for Phase 14 Deployment:** $certStatus`n`n"
         
         if ($readyForPhase9) {
             $report += "All critical systems verified:`n"
             $report += "- ✅ Phase 8 History Engine implementation complete`n"
             $report += "- ✅ Legacy artifacts properly tombstoned`n"
             $report += "- ✅ Zero TypeScript/ESLint errors`n"
-            $report += "`nSystem status: **SYS_READY_FOR_PHASE_9_PLANNING**`n"
+            $report += "`nSystem status: **SYS_READY_FOR_PHASE_14_CALIBRATION**`n"
         } else {
-            $report += "Issues detected - resolve before Phase 9:`n"
-            if (-not $isPhase8Pass) { $report += "- ❌ Phase 8 implementation incomplete or legacy still active`n" }
+            $report += "Issues detected - resolve before Phase 14:`n"
+            if (-not $isPhase8Pass) { $report += "- ❌ Phase 14 architectural requirements incomplete`n" }
             if (-not $isTscPass) { $report += "- ❌ TypeScript errors present`n" }
             if (-not $isLintPass) { $report += "- ❌ ESLint violations detected`n" }
         }

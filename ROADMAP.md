@@ -32,7 +32,10 @@ Este documento detalla el estado actual de industrialización y los próximos pa
     - [x] Exportación unificada **.acepack** (OmegaPack) para despliegue industrial.
 
 ---
-## 🚀 Fase 14: Final Calibration & Live Deployment
+## ✅ Fase 14: Final Calibration & Live Deployment (Industrial Certification)
+- [x] **Phase 8/9 Architectural Hardening**: Total elimination of `uiLegacy` and legacy state hooks. Orchestration unified via `useWorkbenchState`.
+- [x] **Industrial History Engine**: Persistent undo/redo stacks across session refresh.
+- [x] **Zero-Noise Certification**: Automated architectural guard (ADR-014) integrated into deployment pipeline.
 - [ ] **End-to-End Validation**: Prueba de carga de un `.acepack` generado en el motor C++ real.
 - [ ] **Production Hardening**: Auditoría final de rendimiento para racks de alta densidad (>100 entidades).
 - [ ] **Public Beta Launch**: Despliegue en producción de la suite de ingeniería en `ajabadia.es`.
@@ -44,4 +47,4 @@ Este documento detalla el estado actual de industrialización y los próximos pa
 - [ ] **Live RPC Bridge**: Comunicación directa con el motor de C++ mediante `OmegaRPC`.
 
 ---
-*OMEGA — Engineering Standard V8.1-WIP — Industrial Governance ERA 4 — Roadmap Updated 2026-05-05*
+*OMEGA — Engineering Standard V8.1 — Industrial Governance ERA 7.2.3 — Roadmap Updated 2026-05-12*

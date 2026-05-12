@@ -14,7 +14,7 @@ $gitBranch = git rev-parse --abbrev-ref HEAD 2>$null
 $gitCommit = git rev-parse --short HEAD 2>$null
 
 $report = @"
-# OMEGA Phase 7.1.b — Delta Report
+# OMEGA Phase 14 — Industrial Delta Report
 **Generated:** $timestamp
 **Branch:** $gitBranch
 **Commit:** $gitCommit
@@ -178,7 +178,7 @@ if ((Test-Path $contractFile) -and (Test-Path $implFile)) {
     $contractContent = Get-Content $contractFile -Raw
     $implContent = Get-Content $implFile -Raw
     
-    $methods = @("openDocument", "closeDocument", "updateDocument", "setActiveDocument", "captureStableSnapshot", "resetDocument")
+    $methods = @("openDocument", "closeDocument", "updateDocument", "setActiveDocument", "captureStableSnapshot", "resetDocument", "undo", "redo", "undoTo", "pushHistory")
     
     foreach ($method in $methods) {
         $inContract = $contractContent -match "$method"

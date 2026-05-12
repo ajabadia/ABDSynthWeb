@@ -426,7 +426,7 @@ export default function WorkbenchContainer({
           <ModulationGrid 
             manifest={manifest as OMEGA_Manifest} onAdd={editor.addModulation} 
             onRemove={editor.removeModulation} onUpdate={editor.updateModulation} 
-            onClose={() => uiLegacy.toggleUIState('showModGrid')} 
+            onClose={() => actions.toggleUIState('showModGrid')} 
           />
         )}
       </main>
@@ -465,7 +465,7 @@ export default function WorkbenchContainer({
         blueprintInjection={editor.blueprintInjection}
       />
 
-      <WorkbenchLogs showLogs={uiLegacy.showLogs} setShowLogs={() => actions.toggleUIState('showLogs')} logs={editor.logs} />
+      <WorkbenchLogs showLogs={state.showLogs} setShowLogs={() => actions.toggleUIState('showLogs')} logs={editor.logs} />
       <WorkbenchFooter 
         watchdogStatus={watchdog.status}
         watchdogTime={watchdog.lastUpdate}

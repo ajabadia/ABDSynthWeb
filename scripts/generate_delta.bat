@@ -74,10 +74,10 @@ echo. >> %OUTPUT%
 echo ## 6. Manual Checklist >> %OUTPUT%
 echo. >> %OUTPUT%
 echo - [ ] Clipboard cross-doc tested >> %OUTPUT%
-echo - [ ] Session restore tested >> %OUTPUT%
+echo - [ ] Session restore (inc. history) tested >> %OUTPUT%
 echo - [ ] Reset document tested >> %OUTPUT%
 echo - [ ] Legacy purge verified >> %OUTPUT%
-echo - [ ] Contract alignment checked >> %OUTPUT%
+echo - [ ] Contract alignment (undo/redo) checked >> %OUTPUT%
 echo. >> %OUTPUT%
 echo --- >> %OUTPUT%
 echo. >> %OUTPUT%
