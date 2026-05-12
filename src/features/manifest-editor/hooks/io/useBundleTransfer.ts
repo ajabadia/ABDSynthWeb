@@ -2,7 +2,7 @@
 
 import { useCallback, Dispatch, SetStateAction } from 'react';
 import yaml from 'js-yaml';
-import { OMEGA_Manifest, OmegaNode, ModuleTemplate } from '@/omega-ui-core/types/manifest';
+import { OMEGA_Manifest, OmegaNode, CellTemplate } from '@/omega-ui-core/types/manifest';
 import { ValidationIssue } from '@/types/validation';
 import { purgeUnusedStyles, getUsedResources } from '@/features/manifest-editor/utils/governanceUtils';
 import { congealSnapshot } from '@/omega-ui-core/uca/ucaBridge';
@@ -34,11 +34,11 @@ export const useBundleTransfer = (
    * processSnapshots (Phase 5.1)
    * Recursively congeals snapshots for all nodes referencing templates.
    */
-  const processSnapshots = useCallback((rootNode: OmegaNode, templates: Record<string, ModuleTemplate>) => {
+  const processSnapshots = useCallback((rootNode: OmegaNode, templates: Record<string, CellTemplate>) => {
     const internalProcess = (node: OmegaNode) => {
-      if (node.templateRef && templates[node.templateRef]) {
-        addLog(`[SYSTEM] Congealing snapshot for node: ${node.id} (Template: ${node.templateRef})`);
-        node.snapshot = congealSnapshot(node, templates[node.templateRef]);
+      if (node.cellRef && templates[node.cellRef]) {
+        addLog(`[SYSTEM] Congealing snapshot for node: ${node.id} (Template: ${node.cellRef})`);
+        node.snapshot = congealSnapshot(node, templates[node.cellRef]);
       }
       
       if (node.children) {
@@ -133,7 +133,7 @@ export const useBundleTransfer = (
       
       // [Phase 5.1] Automated Portability Audit: Congeal Snapshots
       if (asepticManifest.ui?.tree) {
-        processSnapshots(asepticManifest.ui.tree, asepticManifest.ui.moduleTemplates || {});
+        processSnapshots(asepticManifest.ui.tree, asepticManifest.ui.cellLibrary || {});
       }
 
       const yamlContent = yaml.dump(asepticManifest, { indent: 2, lineWidth: -1 });

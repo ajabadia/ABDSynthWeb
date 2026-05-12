@@ -98,6 +98,7 @@ export interface OmegaStyleNode {
   graphicMode?: 'static' | 'sequence';
   zeroAnchor?: number;
   mode?: 'rotate' | 'sequence' | 'state' | string;
+  // UCA Phase 10.2 - Interaction Mode
   mouseResponse?: 'rotary' | 'linear';
   category?: string; // Asset-specific category (e.g. 'knob', 'slider')
   polarity?: 'normal' | 'inverted'; // Mechanical polarity for assets
@@ -117,7 +118,8 @@ export interface OmegaStyleNode {
   defaultFrame?: number;
   testValue?: number;
   variant?: string;
-  [key: string]: unknown; // Allow for dynamic aesthetic properties
+  backgroundAsset?: string;
+  [key: string]: unknown; // HARDENED from any
 }
 
 export interface StyleVariant {
@@ -289,6 +291,7 @@ export interface ManifestMetadata {
   family: string;
   author?: string;
   version?: string;
+  authorEmail?: string;
   status?: string;      // Industrial status (Stable, Alpha, etc.)
   icon?: string;        // Era 7.2.3 Module icon
   description?: string; // Module description
@@ -316,27 +319,58 @@ export interface OMEGA_Metric {
 }
 
 /**
- * UCA PHASE 1 - COMPOSITE TREE GRAMMAR (Additive)
- * Standardizing on hierarchical nodes for Era 7.2.3 and beyond.
+ * UCA PHASE 10.2 - UNIVERSAL CELL ARCHITECTURE
+ * The hierarchical tree is the canonical visual source of truth.
  */
-/** Tipo de nodo en el árbol UCA (Original) */
-export type LegacyOmegaNodeKind = 'rack' | 'face' | 'container' | 'cell' | 'layer';
- 
+
+export type NodeKind = 
+  | 'rack' 
+  | 'face' 
+  | 'container' 
+  | 'cell' 
+  | 'asset-layer'
+  | 'group'
+  | string;
+
+export type NodeRole = 
+  | 'structure' 
+  | 'decor' 
+  | 'mechanical' 
+  | 'control' 
+  | 'telemetry' 
+  | 'io' 
+  | 'logic-group'
+  | 'root'
+  | 'presentation'
+  | string;
+
+export type CellKind = 
+  | 'decor' 
+  | 'mechanical' 
+  | 'control' 
+  | 'telemetry' 
+  | 'io' 
+  | 'container' 
+  | 'composite'
+  | string;
+
 export interface OmegaConstraints {
-  clampToParent?: boolean;   // [Phase 4.3] Lock child inside parent bounding box
-  margin?: number;           // [Phase 4.3] Safety margin in rack units
+  clampToParent?: boolean;   // Lock child inside parent bounding box
+  margin?: number;           // Safety margin in rack units
 }
 
 export type LayoutMode = 'absolute' | 'stack-v' | 'stack-h';
 
+/**
+ * OmegaNode: The concrete unit of visual composition.
+ */
 export interface OmegaNode {
   id: string;
-  kind: OmegaNodeKind;
-  role?: string;
-  cellRef?: string; // Catalog blueprint reference (mandatory for kind: cell)
-  templateRef?: string; // [Phase 5] Reference to a ModuleTemplate
-  bind?: string;    // Signal/State binding
-  layout?: {
+  kind: NodeKind;
+  role?: NodeRole;
+  cellRef?: string;  // Reference to a CellTemplate
+  bind?: string;     // DSP Contract ID / Signal mapping
+  layout: {
     pos: Position;
     size?: Dimensions;
     transform?: string;
@@ -352,337 +386,187 @@ export interface OmegaNode {
   locked?: boolean;
   capabilities?: string[];
   constraints?: OmegaConstraints;
-  overrides?: Record<string, unknown>; // [Phase 5] Property overrides (path-based or nested)
-  slotMappings?: Record<string, string>; // [Phase 5] Map of SlotID -> DSP/Signal Binding
-  snapshot?: OmegaNode; // [Phase 5] Frozen blueprint copy for .acepack portability
   children?: OmegaNode[];
+  // UCA EXTENSIONS
+  overrides?: Record<string, unknown>; // HARDENED
+  assetBehavior?: import('./assetBehavior').AssetBehavior;
+  slotMappings?: Record<string, string>;
+  snapshot?: OmegaNode;
+  templateRef?: string; // Legacy alias for cellRef
+  [key: string]: unknown; // HARDENED
 }
 
-/**
- * UCA PHASE 5 - TEMPLATE CONTRACTS
- * Blueprints for module composition and governance.
- */
-
-export interface TemplateSlotDefinition {
-  id: string;
-  label: string;
-  kind: 'parameter' | 'port' | 'telemetry' | 'internal'; // Era 7.2.3 Functional Kind
-  description?: string;
-  required?: boolean;
-  defaultBinding?: string; // Logical fallback
-  path?: string;           // Target node ID or UCA path where this slot is consumed
-}
-
-export type OverrideMode = 'locked' | 'editable' | 'hidden' | 'extendable';
+// ALIASES FOR COMPATIBILITY
+export type OverrideMode = 'editable' | 'locked' | 'hidden';
 
 export interface OverridePolicy {
-  path: string;           // Dot-notation or JSON Pointer (e.g. "style.color")
+  path: string;
   mode: OverrideMode;
-  scopes?: ('designer' | 'end-user')[]; // Governance visibility
+  [key: string]: unknown;
 }
 
 /**
- * ─── OMEGA PHASE 9.4A FORMAL CONTRACT ─────────────────────────────────────────
- * Canonical types for the Selective Merge & Live Templates Engine.
+ * CellTemplate: Reusable catalog definition for a visual cell.
  */
-
-/** Tipo de nodo en el árbol UCA que un blueprint puede insertar */
-export type OmegaNodeKind =
-  | 'voice'
-  | 'fx_chain'
-  | 'mod_hub'
-  | 'layout_container'
-  | 'bus'
-  | 'rack'
-  | 'group'
-  | 'leaf_module'
-  | 'face'
-  | 'container'
-  | 'cell'
-  | 'layer'
-  | string;
-
-/** Plano lógico de inserción en la UI/arquitectura */
-export type OmegaPlane = 'synthesis' | 'modulation' | 'fx' | 'meta' | 'custom';
-
-/** Tab lógico del editor donde aplica el blueprint */
-export type OmegaTab = string; // e.g. 'voice', 'global', 'performance'
-
-/** Modo de inserción */
-export type BlueprintInsertionMode = 'preview' | 'commit';
-
-/** Origen del blueprint */
-export type BlueprintOrigin = 'system' | 'user' | 'imported';
-
-/** Resultado de validación de compatibilidad */
-export type CompatibilityStatus = 'compatible' | 'incompatible' | 'warning' | 'unknown';
-
-/** Severidad de un issue de validación */
-export type ValidationSeverity = 'error' | 'warning' | 'info';
-
-/** Estrategia de resolución de colisiones de ID */
-export type IdCollisionStrategy = 'remap' | 'abort' | 'merge_if_identical';
-
-/** Modo de auto-wiring */
-export type AutoWireMode =
-  | 'none'          // sin auto-wiring
-  | 'strict'        // solo wires inequívocos (1 fuente → 1 destino por tipo)
-  | 'suggestive';   // propone pero no aplica (para 9.4B)
-
-/**
- * Define una variable parametrizable dentro de un blueprint.
- */
-export interface BlueprintPlaceholderDefinition {
-  /** ID único del placeholder dentro del blueprint */
+export interface CellTemplate {
   id: string;
-  /** Etiqueta legible para el usuario */
   label: string;
-  /** Tipo de valor esperado */
-  valueType:
-    | 'string'
-    | 'number'
-    | 'boolean'
-    | 'nodeId'       // referencia a un OmegaNode existente
-    | 'slotRef'      // referencia a un slot específico
-    | 'enumValue'    // uno de los valores permitidos
-    | 'color'
-    | 'json';
-  /** Valores permitidos si valueType === 'enumValue' */
-  allowedValues?: Array<string | number>;
-  /** Valor por defecto; puede ser una expresión {{otherPlaceholderId}} */
-  defaultValue?: unknown;
-  /** Si true, debe resolverse antes de commit (no tiene default válido) */
-  required: boolean;
-  /** Descripción contextual para la UI / HUD */
+  category: CellKind;
+  family?: string; // Add family for gallery filtering
+  baseNode: OmegaNode; // The structural blueprint of the cell
+  root?: OmegaNode;    // [COMPAT] Legacy alias for baseNode
+  policy?: OverridePolicy[]; // HARDENED
+  version?: string;
+  slots?: Array<{ id: string; label: string; kind: string; required?: boolean; path?: string }>; // HARDENED
+  metadata?: Record<string, unknown>;
+  compatibility?: Record<string, unknown>; // HARDENED
   description?: string;
-  /**
-   * Path dentro del blueprint donde este placeholder se inyecta.
-   * Formato: dot-notation relativa al root del blueprint.
-   */
-  targetPath: string;
-  /** Validación adicional como expresión evaluable (opcional) */
-  validation?: string; 
-  /** [UI Helper] Hint text */
-  hint?: string;
+  placeholders?: BlueprintPlaceholderDefinition[]; // HARDENED
+  assetBehavior?: import('./assetBehavior').AssetBehavior;
+  recipe?: import('./assetBehavior').LayerRecipe; // Phase 12 Layer Composition
 }
 
-/** Mapa de valores resueltos para los placeholders */
-export type BlueprintPlaceholderValues = Record<string, unknown>;
+export type ModuleTemplate = CellTemplate;
+export type CompatibilityStatus = 'compatible' | 'incompatible' | 'unknown';
+export type ValidationSeverity = 'info' | 'warning' | 'error';
+export type BlueprintPlaceholderValues = Record<string, unknown>; // HARDENED
+export type BlueprintInsertionMode = 'commit' | 'dry-run';
+export type IdCollisionStrategy = 'remap' | 'fail' | 'ignore';
+export type BlueprintAutoWirePolicy = { mode: string; [key: string]: unknown }; // HARDENED
+export type BlueprintAutoWireDecision = unknown; // HARDENED
+export type BlueprintCompatibility = Record<string, unknown>; // HARDENED
 
 /**
- * Declara en qué contextos puede insertarse un blueprint.
- */
-export interface BlueprintCompatibility {
-  allowedParentKinds?: OmegaNodeKind[];
-  deniedParentKinds?: OmegaNodeKind[];
-  allowedPlanes?: OmegaPlane[];
-  allowedTabs?: OmegaTab[];
-  requiredParentCapabilities?: string[];
-  exportedCapabilities?: string[];
-  targetSlotIds?: string[] | null;
-  singleton?: boolean;
-  minManifestVersion?: string;
-}
-
-/**
- * Define cómo el injector debe crear conexiones automáticas.
- */
-export interface BlueprintAutoWirePolicy {
-  mode: AutoWireMode;
-  acceptedSignals?: Array<{
-    signalType: string;       // e.g. 'cv_pitch', 'gate', 'audio_stereo'
-    targetPortId: string;     // puerto interno del blueprint a conectar
-    priority: 'required' | 'optional';
-  }>;
-  emittedSignals?: Array<{
-    signalType: string;
-    sourcePortId: string;
-  }>;
-  abortOnWireFailure?: boolean;
-  maxCandidatesPerSignal?: number;
-}
-
-/**
- * Representa una decisión tomada por el AutoWireResolver.
- */
-export interface BlueprintAutoWireDecision {
-  signalType: string;
-  targetPortId: string;
-  resolvedSourceNodeId: string | null;
-  resolvedSourcePortId: string | null;
-  strategy: 'exact_match' | 'fuzzy_match' | 'user_defined';
-  status: 'applied' | 'proposed' | 'failed' | 'skipped_optional' | 'ambiguous';
-  candidatesConsidered: string[];
-  reason: string;
-  error?: string;
-}
-
-/**
- * Nodo dentro del árbol de un blueprint que permite expresiones {{placeholder}}.
- */
-export interface OmegaBlueprintNode extends Omit<OmegaNode, 'id' | 'children'> {
-  id: string; // Puede ser literal o "{{placeholderId}}"
-  children?: OmegaBlueprintNode[];
-  params?: Record<string, unknown>; // valores o expresiones placeholder
-}
-
-/**
- * Contrato principal de un blueprint: unidad de composición paramétrica.
+ * BlueprintDefinition: The declarative intent for module composition.
  */
 export interface BlueprintDefinition {
   blueprintId: string;
   version: string;
   name: string;
   description?: string;
-  origin: BlueprintOrigin;
+  origin: 'system' | 'user' | 'imported';
   tags?: string[];
-  iconKey?: string;
-  templateId: string | null;
-  rootNode: OmegaBlueprintNode;
+  rootNode: OmegaBlueprintNode; // Allows placeholders
   placeholders: BlueprintPlaceholderDefinition[];
-  compatibility: BlueprintCompatibility;
-  autoWirePolicy: BlueprintAutoWirePolicy;
-  defaultOverridePolicy?: OverrideMode;
+  compatibility: {
+    allowedParentKinds?: NodeKind[];
+    deniedParentKinds?: NodeKind[];
+    allowedPlanes?: string[];
+    singleton?: boolean;
+    minManifestVersion?: string;
+    [key: string]: unknown; // HARDENED
+  };
+  autoWirePolicy?: BlueprintAutoWirePolicy;
   materializeSnapshot?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  authorId?: string;
-  changeLog?: string[];
+  templateId?: string;
+  [key: string]: unknown; // HARDENED
+}
+
+export interface OmegaBlueprintNode extends Omit<OmegaNode, 'id' | 'children'> {
+  id: string; // Allows expressions like "{{placeholderId}}"
+  children?: OmegaBlueprintNode[];
+}
+
+export interface BlueprintPlaceholderDefinition {
+  id: string;
+  label: string;
+  valueType: 'string' | 'number' | 'boolean' | 'nodeId' | 'color' | 'enum' | 'enumValue';
+  defaultValue?: unknown;
+  required: boolean;
+  description?: string;
+  targetPath: string; // JSON Pointer or dot-notation
+  allowedValues?: unknown[]; // HARDENED
+  hint?: string;
+}
+
+export interface GridConfig {
+  enabled: boolean;
+  spacingX: number;
+  spacingY: number;
 }
 
 /**
- * Reemplaza a ModuleTemplate para la Phase 9.4+
- * Mantenemos compatibilidad si es necesario envolviendo el anterior.
+ * OMEGA_Manifest: The final serialized editable instance.
  */
-export interface ModuleTemplate {
-  id: string;
-  version: string;
-  label: string;
-  family: string;
-  author?: string;
-  description?: string;
-  contractVersion: string;
-  root: OmegaNode;         
-  slots: TemplateSlotDefinition[];
-  policy: OverridePolicy[]; 
-  assets?: string[];       
-  meta?: Record<string, unknown>;
-  // [DEPRECATED] En favor de BlueprintDefinition
-  placeholders?: BlueprintPlaceholderDefinition[];
-  compatibility?: BlueprintCompatibility;
-  capabilities?: {
-    supportsAutoWiring?: boolean;
-    supportsUserPrompt?: boolean;
-    isRootLevelOnly?: boolean;
-  };
-}
-
-export interface CellTemplate {
-  id: string;
-  label: string;
-  category: string;
-  baseNode: OmegaNode; // Structural blueprint
-}
-
 export interface OMEGA_Manifest {
   schemaVersion: string;
   id: string;
   metadata: ManifestMetadata;
   ui: {
     dimensions: Dimensions;
+    /** @deprecated Projections of the tree model */
     controls: ManifestEntity[];
+    /** @deprecated Projections of the tree model */
     jacks: ManifestEntity[];
-    useUCA?: boolean; // Legacy flag: if false, activates legacy flat-array fallback. UCA is default.
+    /** @deprecated Projections of the tree model */
+    layout?: {
+      containers: LayoutContainer[];
+      planes?: string[];
+      gridSnap?: number;
+      grid?: GridConfig; // Typed for CADOverlay
+      tabStyles?: Record<string, string>;
+      activeTab?: string;
+    };
+    
+    // CANONICAL UCA STATE (Phase 10.2)
+    tree?: OmegaNode; // Canonic hierarchical source of truth
+    useUCA?: boolean; // Feature flag for recursive rendering
+    cellLibrary?: Record<string, CellTemplate>; // Library of reusable visual cells
+    moduleTemplates?: Record<string, CellTemplate>; // [COMPAT] Alias for cellLibrary
+    
     ucaDebug?: {
       enabled: boolean;
       showLabels?: boolean;
-      hideDecorative?: boolean;
       showCADOverlay?: boolean;
+      hideDecorative?: boolean;
     };
-    tree?: OmegaNode; // [NEW] Hierarchical UI Root Node
-    skin?: string; // Global UI skin
-    skinMode?: 'standard' | 'custom'; // Era 7.2.3 Governance Mode
-    layout?: {
-      containers: LayoutContainer[];
-      planes?: TabName[]; // [NEW] Active architectural planes for the module
-      gridSnap?: number;
-      grid?: {
-        enabled: boolean;
-        spacingX: number;
-        spacingY: number;
-      };
-      activeTab?: TabName | string;
-      tabStyles?: Record<string, string>; // [NEW] Maps tabId to rack style variantId
-    };
-    resources?: {
-      fonts?: { name: string; file: string }[];
-    };
-    lighting?: {
-      shadowAngle: number;
-      shadowColor: string;
-      distance: number;
-      blur: number;
-      ambientIntensity?: number; // [NEW] Base illumination level
-      specularIntensity?: number; // [NEW] Edge highlights / reflection strength
-      surfaceGrain?: number;      // [NEW] Procedural noise intensity
-      opacity?: number;           // [NEW] Global UI transparency
-      globalBlur?: number;        // [NEW] Backdrop blur (Glassmorphism)
-    };
-    hardware?: {
-      screwCount?: 0 | 4 | 6 | 8;  // [NEW] Total mounting points
-      screwMapping?: string[];     // [NEW] Style IDs for each position (e.g. ['standard', 'custom', ...])
-      screwOffset?: number;        // Distance from corners in px
-      railStyle?: 'none' | 'slim' | 'heavy' | 'industrial';
-      railColor?: string;
-      showRails?: boolean;
-      variant?: string; // [NEW] Era 7.2.3 Industrial Variant selection
-    };
-    faceplate?: string | Record<string, string>;
-    faceplateMode?: 'stretch' | 'cover' | 'contain' | 'tile' | 'center'; // [NEW] Image fitting strategy
-    palette?: {
-      primary: string;
-      secondary: string;
-      utility: string;
-      feedback: string;
-      hardware?: string;
-      chassis?: string;
-      glow?: string;
-      glass?: string;
-      warning?: string;
-      highlight?: string;
-      [key: string]: string | undefined;
-    };
-    colors?: {
-      accent: string;
-      weak?: string;
-      surface?: string;
-      text?: string;
-      [key: string]: string | undefined;
-    };
+    
+    // GLOBAL AESTHETICS (Inherited by UCA nodes)
+    palette?: Record<string, string>;
+    colors?: Record<string, string>;
     typography?: {
       defaultFont?: string;
-      headings?: { font?: string; size?: number; color?: string };
-      labels?: { font?: string; size?: number; color?: string };
-      displays?: { font?: string; size?: number; color?: string };
-      technical?: { font?: string; size?: number; color?: string };
-      definitions?: {
-        id: string;
-        label: string;
-        family: string;
-      }[];
+      definitions?: { id: string; label: string; family: string }[];
       [key: string]: unknown;
     };
-    styles?: {
-      [componentType: string]: StyleVariant[];
+    lighting?: {
+      shadowAngle?: number;
+      ambientIntensity?: number;
+      surfaceGrain?: number;
+      specularIntensity?: number;
+      opacity?: number;
+      globalBlur?: number;
+      [key: string]: unknown;
     };
-    style?: OmegaStyleNode;    // Global Rack Aesthetics
-    attachments?: ManifestEntity[]; // Global Rack Fragments (e.g. Screws)
-    moduleTemplates?: Record<string, ModuleTemplate>; // [Phase 5.1] Catalog of reusable blueprints
+    
+    // LEGACY UI GOVERNANCE (Restored for Editor Parity)
+    skin?: string;
+    skinMode?: 'standard' | 'custom' | string;
+    styles?: Record<string, StyleVariant[]>; 
+    faceplate?: string | Record<string, string>;
+    faceplateMode?: string;
+    hardware?: {
+      screwCount?: number;
+      screwMapping?: string[];
+      screwOffset?: number;
+      showRails?: boolean;
+      railStyle?: string;
+      railColor?: string;
+      variant?: string;
+    };
+    attachments?: Attachment[];
+    resources?: {
+       fonts?: { id?: string, name: string, url?: string, file?: string, family?: string }[];
+       [key: string]: unknown;
+    };
+    [key: string]: unknown; // HARDENED for extension
   };
-  modulations?: OMEGA_Modulation[];
   resources: {
     wasm: string;
     contract?: string;
-    assets?: OMEGA_Asset[]; // [NEW] Catálogo de recursos externos
+    assets?: OMEGA_Asset[];
+    [key: string]: unknown;
   };
+  modulations?: OMEGA_Modulation[]; // Restored to root
+  [key: string]: unknown; 
 }

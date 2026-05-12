@@ -20,7 +20,7 @@ import InspectorHeader from './layout/InspectorHeader';
 import InspectorNav from './layout/InspectorNav';
 import { usePropertyPanel } from '@/features/manifest-editor/hooks/usePropertyPanel';
 import { isUcaNode } from '@/features/manifest-editor/hooks/entities/ucaInspectorModel';
-import { adaptNodeToManifestEntity, findNodeInTree } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
+import { adaptNodeToManifestEntity, findNodeInTree, findLegacyItem } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
 
 import { ManifestEntity, OMEGA_Manifest, OMEGA_Modulation, LayoutContainer, ExtraResource, OmegaNode } from '@/omega-ui-core/types/manifest';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
@@ -58,16 +58,23 @@ export interface PropertyPanelProps {
 export default function PropertyPanel(props: PropertyPanelProps) {
   const item = props.item;
   const isUCA = isUcaNode(item);
-  const rootTree = props.manifest?.ui?.tree || (props.manifest ? manifestToTree(props.manifest) : undefined);
+  const rootTree = props.manifest?.ui?.tree || (props.manifest ? manifestToTree(props.manifest, props.manifest.ui?.tree) : undefined);
   
-  // LIVE REHYDRATION (Era 7.2.3 - Phase 4.2)
-  // Ensure we always use the latest node from the tree to avoid stale references after drag
+  // LIVE REHYDRATION (Era 7.2.3 - Phase 4.2 - Unified Sync)
+  // Ensure we always use the latest node from the tree (if available) to avoid stale references 
+  // after drag or background updates, even for projected legacy items.
   const liveItem = React.useMemo(() => {
-    if (!item || !isUCA || !rootTree) return item;
-    return findNodeInTree(rootTree, item.id) || item;
-  }, [item, isUCA, rootTree]);
-
-  const legacyItem = isUCA ? adaptNodeToManifestEntity(liveItem as OmegaNode) : (liveItem as ManifestEntity);
+    if (!item || !rootTree) return item;
+    // We attempt to find the node in the tree first (Universal Priority)
+    const treeNode = findNodeInTree(rootTree, item.id);
+    if (treeNode) return treeNode;
+    
+    // Fallback to legacy arrays if not in tree (rare but possible for unmapped entities)
+    return findLegacyItem(props.manifest, item.id) || item;
+  }, [item, rootTree, props.manifest]);
+ 
+  const isNowUCA = isUcaNode(liveItem);
+  const legacyItem = isNowUCA ? adaptNodeToManifestEntity(liveItem as OmegaNode) : (liveItem as ManifestEntity);
 
   const { activeSection, setActiveSection, isModule, sections } = usePropertyPanel(legacyItem as ManifestEntity | OMEGA_Manifest, props.highlightPath);
 
@@ -159,7 +166,6 @@ export default function PropertyPanel(props: PropertyPanelProps) {
                       resolveAsset={props.resolveAsset} 
                     />
                     <SpatialSection 
-                      key={liveItem?.id || 'none'}
                       item={liveItem as ManifestEntity | OmegaNode} 
                       rootTree={rootTree}
                       onUpdate={(u) => props.onUpdate?.(u)} 

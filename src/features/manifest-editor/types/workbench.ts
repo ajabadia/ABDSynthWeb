@@ -69,6 +69,10 @@ export interface WorkbenchState {
   isCellEditorOpen: boolean;
   uiTheme: "dark" | "light";
   pendingFiles: File[];
+  
+  // Phase 9.2 History Diff
+  isDiffModalOpen: boolean;
+  activeDiff: import("../types/diff").ManifestDiffResult | null;
 }
 
 export type OpenTabInput = Omit<WorkbenchTab, "id"> & {
@@ -88,8 +92,9 @@ export type WorkbenchAction =
   | { type: "SET_SELECTED_NODE"; payload: { nodeId: string | null } }
   | { type: "SET_EXPANDED_NODE_IDS"; payload: { nodeIds: string[] } }
   | { type: "CAPTURE_TAB_VIEW_STATE"; payload: { tabId: string; viewState: Partial<WorkbenchTabViewState> } }
-  | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen'> } }
+  | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen' | 'isDiffModalOpen'>, value?: boolean } }
   | { type: "SET_HELP_STATE"; payload: { isOpen: boolean; sectionId?: string } }
   | { type: "SET_UI_THEME"; payload: { theme: "light" | "dark" } }
   | { type: "SET_PENDING_FILES"; payload: { files: File[] } }
+  | { type: "SET_ACTIVE_DIFF"; payload: { diff: import("../types/diff").ManifestDiffResult | null } }
   | { type: "HYDRATE_WORKBENCH"; payload: { state: Partial<WorkbenchState> } };

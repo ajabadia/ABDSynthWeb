@@ -9,6 +9,7 @@ interface BlueprintPromptDialogProps {
   onClose: () => void;
   blueprint: BlueprintDefinition | null;
   onConfirm: (values: BlueprintPlaceholderValues) => void;
+  onUpdatePlaceholder?: (id: string, value: string | number | boolean) => void;
 }
 
 /**
@@ -19,7 +20,8 @@ export default function BlueprintPromptDialog({
   isOpen,
   onClose,
   blueprint,
-  onConfirm
+  onConfirm,
+  onUpdatePlaceholder
 }: BlueprintPromptDialogProps) {
   const [values, setValues] = useState<BlueprintPlaceholderValues>(() => {
     if (!blueprint) return {};
@@ -44,6 +46,11 @@ export default function BlueprintPromptDialog({
     onConfirm(values);
   };
 
+  const updateValue = (id: string, value: string | number | boolean) => {
+    setValues(prev => ({ ...prev, [id]: value }));
+    onUpdatePlaceholder?.(id, value);
+  };
+
   const renderInput = (p: BlueprintPlaceholderDefinition) => {
     const value = values[p.id] ?? '';
 
@@ -53,7 +60,7 @@ export default function BlueprintPromptDialog({
           <select
             className="w-full px-4 py-2 bg-[#111] border border-[#333] rounded text-white focus:outline-none focus:border-blue-500"
             value={String(value)}
-            onChange={(e) => setValues({ ...values, [p.id]: e.target.value })}
+            onChange={(e) => updateValue(p.id, e.target.value)}
           >
             {p.allowedValues?.map(opt => (
               <option key={String(opt)} value={String(opt)}>{String(opt)}</option>
@@ -67,7 +74,7 @@ export default function BlueprintPromptDialog({
             type="color"
             className="w-full h-10 bg-[#222] border border-[#444] rounded cursor-pointer"
             value={String(value || '#0070f3')}
-            onChange={(e) => setValues({ ...values, [p.id]: e.target.value })}
+            onChange={(e) => updateValue(p.id, e.target.value)}
           />
         );
       
@@ -79,7 +86,7 @@ export default function BlueprintPromptDialog({
               id={`p-${p.id}`}
               className="w-5 h-5 accent-blue-600 rounded"
               checked={!!value}
-              onChange={(e) => setValues({ ...values, [p.id]: e.target.checked })}
+              onChange={(e) => updateValue(p.id, e.target.checked)}
             />
             <label htmlFor={`p-${p.id}`} className="text-sm text-gray-400">Enable {p.label}</label>
           </div>
@@ -91,7 +98,7 @@ export default function BlueprintPromptDialog({
             type="number"
             className="w-full px-4 py-2 bg-[#111] border border-[#333] rounded text-white focus:outline-none focus:border-blue-500"
             value={Number(value)}
-            onChange={(e) => setValues({ ...values, [p.id]: Number(e.target.value) })}
+            onChange={(e) => updateValue(p.id, Number(e.target.value))}
           />
         );
 
@@ -102,7 +109,7 @@ export default function BlueprintPromptDialog({
             className="w-full px-4 py-2 bg-[#111] border border-[#333] rounded text-white focus:outline-none focus:border-blue-500 transition-colors"
             placeholder={p.hint || `Enter ${p.label}...`}
             value={String(value)}
-            onChange={(e) => setValues({ ...values, [p.id]: e.target.value })}
+            onChange={(e) => updateValue(p.id, e.target.value)}
           />
         );
     }

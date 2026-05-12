@@ -17,4 +17,7 @@ export const STORAGE_KEYS = {
   
   // Services: Cross-document clipboard
   CLIPBOARD: `omega_${STORAGE_VERSION}_clipboard`,
+
+  // Audit Engine: Persistent audit trail (Phase 9.5+)
+  AUDIT_LOGS: `omega_${STORAGE_VERSION}_audit_logs`,
 };

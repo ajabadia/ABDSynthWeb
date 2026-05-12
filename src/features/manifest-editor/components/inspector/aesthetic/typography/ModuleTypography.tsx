@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Type, ShieldAlert } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 import InfoBlock from '../../shared/InfoBlock';
 import { 
@@ -23,33 +23,33 @@ interface ModuleTypographyProps {
 const SYSTEM_FONTS = OMEGA_OFFICIAL_FONTS;
  
 export default function ModuleTypography({ manifest, onUpdate, onHelp }: ModuleTypographyProps) {
-  const fonts = manifest.ui.resources?.fonts || [];
   const typography = manifest.ui.typography || {};
-  const allAvailableFonts = [...SYSTEM_FONTS.map(f => f.name), ...fonts.map(f => f.name)];
+  const fonts = (manifest.ui.resources?.fonts || []) as { name: string; file: string }[];
+  const allAvailableFonts = [...SYSTEM_FONTS.map((f: { name: string }) => f.name), ...fonts.map((f: { name: string }) => f.name)];
  
   const handleAddFont = (name: string, file: string) => {
     const updatedFonts = [...fonts, { name, file }];
     onUpdate({
       ui: {
         ...manifest.ui,
-        resources: { ...manifest.ui.resources, fonts: updatedFonts }
+        resources: { ...(manifest.ui.resources || {}), fonts: updatedFonts }
       }
     });
   };
  
   const handleRemoveFont = (index: number) => {
-    const updatedFonts = fonts.filter((_, i) => i !== index);
+    const updatedFonts = fonts.filter((_: unknown, i: number) => i !== index);
     onUpdate({
       ui: {
         ...manifest.ui,
-        resources: { ...manifest.ui.resources, fonts: updatedFonts }
+        resources: { ...(manifest.ui.resources || {}), fonts: updatedFonts }
       }
     });
   };
 
   const handleUpdatePointer = (id: string, updates: { label?: string; family?: string }) => {
-    const others = (typography.definitions || []).filter(d => d.id !== id);
-    const def = typography.definitions?.find(d => d.id === id) || { 
+    const others = (typography.definitions || []).filter((d: { id: string }) => d.id !== id);
+    const def = (typography.definitions || []).find((d: { id: string }) => d.id === id) || { 
       id, 
       label: id.replace('font_', 'Font ').toUpperCase(), 
       family: '' 

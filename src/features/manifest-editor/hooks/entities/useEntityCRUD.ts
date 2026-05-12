@@ -8,7 +8,7 @@ import { regenerateEntityId, cloneAndRegenerateNodeIds } from '../../utils/idMan
 
 export const useEntityCRUD = (
   manifest: OMEGA_Manifest,
-  updateManifest: (updates: Partial<OMEGA_Manifest>, label?: string) => void,
+  updateManifest: (updates: Partial<OMEGA_Manifest> | ((prev: OMEGA_Manifest) => Partial<OMEGA_Manifest>), label?: string) => void,
   addLog: (msg: string) => void
 ) => {
   
@@ -25,57 +25,57 @@ export const useEntityCRUD = (
   }, [manifest]);
 
   const updateItem = useCallback((id: string, updates: Partial<ManifestEntity> | Partial<OmegaNode>) => {
-    const isUCA = manifest.ui?.useUCA !== false;
-    const nodeInTree = isUCA && manifest.ui?.tree ? findNodeInTree(manifest.ui.tree, id) : undefined;
-    
-    if (nodeInTree && manifest.ui?.tree) {
-      // Direct UCA tree update
-      let finalUpdates: Partial<OmegaNode>;
+    updateManifest((latestManifest) => {
+      const isUCA = latestManifest.ui?.useUCA !== false;
+      const currentTree = isUCA && latestManifest.ui?.tree ? latestManifest.ui.tree : manifestToTree(latestManifest, latestManifest.ui?.tree);
+      const nodeInTree = findNodeInTree(currentTree, id);
       
-      if (!('kind' in updates) && ('presentation' in updates || 'pos' in updates)) {
-        // Translation from unmigrated section (Partial<ManifestEntity>)
-        const translated = applyUpdatesToNode(nodeInTree, updates as Partial<ManifestEntity>);
-        finalUpdates = { 
-          layout: translated.layout, 
-          style: translated.style, 
-          bind: translated.bind, 
-          role: translated.role, 
-          cellRef: translated.cellRef 
+      if (nodeInTree) {
+        // Direct UCA tree update
+        let finalUpdates: Partial<OmegaNode>;
+        
+        if (!('kind' in updates) && ('presentation' in updates || 'pos' in updates)) {
+          const translated = applyUpdatesToNode(nodeInTree, updates as Partial<ManifestEntity>);
+          finalUpdates = { 
+            layout: translated.layout, 
+            style: translated.style, 
+            bind: translated.bind, 
+            role: translated.role, 
+            cellRef: translated.cellRef 
+          };
+        } else {
+          finalUpdates = updates as Partial<OmegaNode>;
+        }
+
+        const nextTree = updateNodeInTree(currentTree, id, finalUpdates);
+        const legacyProjections = treeToManifest(nextTree);
+        
+        return { 
+          ui: { 
+            ...latestManifest.ui, 
+            tree: nextTree,
+            controls: legacyProjections.controls || latestManifest.ui?.controls || [],
+            jacks: legacyProjections.jacks || latestManifest.ui?.jacks || [],
+            layout: {
+              ...(latestManifest.ui?.layout || { planes: ['MAIN'], containers: [] }),
+              containers: legacyProjections.layout?.containers || latestManifest.ui?.layout?.containers || []
+            }
+          } 
         };
       } else {
-        // Direct OmegaNode updates from migrated section
-        finalUpdates = updates as Partial<OmegaNode>;
+        // Legacy edit fallback
+        const isJack = latestManifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
+        
+        if (isJack) {
+          const nextJacks = latestManifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...(updates as Partial<ManifestEntity>) } : j);
+          return { ui: { ...latestManifest.ui, jacks: nextJacks } };
+        } else {
+          const nextControls = latestManifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...(updates as Partial<ManifestEntity>) } : c);
+          return { ui: { ...latestManifest.ui, controls: nextControls } };
+        }
       }
-
-      // Update node
-      const nextTree = updateNodeInTree(manifest.ui.tree, id, finalUpdates);
-      const legacyProjections = treeToManifest(nextTree);
-      
-      updateManifest({ 
-        ui: { 
-          ...manifest.ui, 
-          tree: nextTree,
-          controls: legacyProjections.controls || manifest.ui?.controls,
-          jacks: legacyProjections.jacks || manifest.ui?.jacks,
-          layout: {
-            ...(manifest.ui?.layout || { planes: ['MAIN'], containers: [] }),
-            containers: legacyProjections.layout?.containers || manifest.ui?.layout?.containers || []
-          }
-        } 
-      }, `Update Entity: ${id}`);
-    } else {
-      // Legacy edit
-      const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
-      
-      if (isJack) {
-        const nextJacks = manifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...(updates as Partial<ManifestEntity>) } : j);
-        updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Update Jack: ${id}`);
-      } else {
-        const nextControls = manifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...(updates as Partial<ManifestEntity>) } : c);
-        updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Update Control: ${id}`);
-      }
-    }
-  }, [manifest, updateManifest]);
+    }, `Update Entity: ${id}`);
+  }, [updateManifest]);
 
   const duplicateItem = useCallback((id: string) => {
     const item = findItem(id);

@@ -17,7 +17,7 @@ export default function Label({ variant, text, manifest, item }: LabelProps) {
   const dims: Record<string, number> = { A: 32, B: 24, C: 16, D: 12 };
   const d = dims[size] || 24;
 
-  const font = style?.resolvedFont || resolveFont('labels');
+  const font = style?.font || resolveFont('labels');
   const color = style?.color || colors.text;
 
   return (

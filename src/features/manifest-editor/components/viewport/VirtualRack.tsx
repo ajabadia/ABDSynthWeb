@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { OMEGA_Manifest, ManifestEntity, Attachment } from '@/omega-ui-core/types/manifest';
+import { OMEGA_Manifest, ManifestEntity, Attachment, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import { AuditResult } from '@/services/auditService';
 
 // Modular Components & Hooks
@@ -15,6 +15,7 @@ import { useRackLayout } from '@/features/manifest-editor/hooks/rack/useRackLayo
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 import { UniversalRenderer } from '@/omega-ui-core/renderers/UniversalRenderer';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
+import { InjectionPreviewOverlay } from './InjectionPreviewOverlay';
  
 interface VirtualRackProps {
   manifest: OMEGA_Manifest;
@@ -27,6 +28,7 @@ interface VirtualRackProps {
   audit: AuditResult;
   resolveAsset?: (ref: string | undefined) => string | undefined;
   pushParameterUpdate?: (id: string, value: number) => void;
+  previewManifest?: OMEGA_Manifest | null;
 }
  
 /**
@@ -45,7 +47,8 @@ export default function VirtualRack({
   setIsLiveMode, 
   audit,
   resolveAsset,
-  pushParameterUpdate
+  pushParameterUpdate,
+  previewManifest
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
   const skin = manifest.ui?.skin || 'industrial';
@@ -67,7 +70,7 @@ export default function VirtualRack({
     presentation: {
       component: 'rack',
       variant: 'default',
-      style: manifest.ui?.style,
+      style: (manifest.ui as Record<string, unknown>)?.style as unknown as OmegaStyleNode,
       attachments: (manifest.ui?.attachments || []) as unknown as Attachment[],
       tab: 'MAIN',
       offsetX: 0,
@@ -120,8 +123,9 @@ export default function VirtualRack({
         {manifest.ui?.useUCA !== false && (
           <div className="absolute inset-0 uca-native-layer">
             <UniversalRenderer 
-              node={manifest.ui.tree || manifestToTree(manifest)} 
+              node={manifest.ui.tree || manifestToTree(manifest, manifest.ui?.tree)} 
               manifest={manifest} 
+              catalog={manifest.ui.cellLibrary || {}}
               resolveAsset={resolveAsset}
               debugContext={{
                 enabled: manifest.ui.ucaDebug?.enabled || false,
@@ -134,6 +138,14 @@ export default function VirtualRack({
               }}
             />
           </div>
+        )}
+
+        {/* BLUEPRINT STUDIO GHOST LAYER (Phase 11) */}
+        {previewManifest && (
+          <InjectionPreviewOverlay 
+            previewManifest={previewManifest} 
+            resolveAsset={resolveAsset} 
+          />
         )}
 
         {/* LEGACY PIPELINE FALLBACK (Flat Arrays) */}

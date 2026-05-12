@@ -1,106 +1,97 @@
-# Universal Cell Architecture (UCA)
+# Phase 10.2 — Universal Cell Architecture (UCA) Foundation
 
-## Overview
-The Universal Cell Architecture (UCA) transitions the OMEGA Manifest from a flat, attachment-based structure to a hierarchical, recursive tree of "Cells". This unifies all visual elements into a single, composable contract.
+**Status:** ACTIVE
+**Date:** 2026-05-12
+**Scope:** OMEGA Manifest Editor
+**Related:** OMEGA Phase 10.1C, OMEGA_ENGINEERING_MANIFEST_SPEC, INTEGRATION_BRIEF, src/omega-ui-core/SPEC.md
 
-## Key Concepts
+---
 
-### 1. The Tree Model
-Everything in the OMEGA UI is a `Node`. A node can be a Rack, a Face, a Container, or a Cell.
-Nodes are recursive: a Cell can contain other Cells (Layers).
+## Objective
 
-### 2. Taxonomy
-- **Rack**: The top-level module unit.
-- **Face**: A physical or logical plane of the module (e.g., MAIN, REAR, FX).
-- **Container / Group**: A logical grouping of elements with its own coordinate system.
-- **Cell**: The universal atomic unit. A concrete instance of a blueprint.
-- **Layer**: A first-class rendering primitive (e.g., label, mask, hit area). Treated as a node for total composability.
+Phase 10.2 establishes UCA as the canonical visual data model and formalizes **blueprint compilation** as the path from declarative intent to tree materialization. Blueprints are authored against templates and slots, compiled into OmegaNode trees, and serialized as `.acemm` manifests for rendering and packaging.
 
-### 3. Node Contract (`OmegaNode`)
-Each node in the tree follows a common operational contract:
-- `id`: Unique identifier.
-- `kind`: Structural category (`rack` | `face` | `container` | `cell` | `layer`).
-- `role`: Functional purpose (`control` | `telemetry` | `decor` | `io`).
-- `visible`: Runtime visibility flag.
-- `locked`: Interaction lockout flag.
-- `cellRef`: Reference to a `CellTemplate` in the library (mandatory for `cell`).
-- `pos` / `size`: Relative spatial coordinates.
-- `transform`: Rotation, scaling, and skewing metrics.
-- `zIndex`: Explicit painting order control.
-- `capabilities`: Dynamic flags (e.g., `canReceiveFocus`, `isDraggable`).
-- `style`: Aesthetic overrides (OmegaStyleNode).
-- `children`: Array of child nodes (recursive).
+---
 
-### 4. Resolved Semantics Order (The "Inheritance Chain")
-To prevent chaotic rendering in nested trees and "phantom bugs", the engine enforces a strict, immutable 6-step resolution pipeline in `ucaSemantics.ts`:
+## The Compilation Pipeline
 
-1. **Expand Template**: Deep-clones the template base if the node is an instance of a `CellTemplate`.
-2. **Merge Instance Overrides**: Applies instance-specific `pos`, `size`, and `style` directly over the template base.
-3. **Apply Inherited Style/Tokens**: Propagates missing generic styles (e.g., typography) down the inheritance chain (Era 7.2.3 Genetic Propagation).
-4. **Resolve Layout/Frame**: Normalizes layout values and fallbacks.
-5. **Compute Renderable Children**: Recursively resolves children. To prevent React DOM collisions, nested template children are assigned composite IDs (`parentID_childID`).
-6. **Dispatch Primitive/Compound**: Delivers the fully resolved node to the renderer.
+The transition from intent to serialized instance follows a formal, unidirectional pipeline:
 
-### 5. Ownership & Boundaries
-- **Catalog**: Central registry of `CellTemplates`. The source of blueprints.
-- **Manifest**: Orchestrates `CellInstances` (`OmegaNodes`). The source of composition.
-- **ACE Pack**: Self-contained bundle. Embeds templates used in the manifest for absolute portability.
+1. **BlueprintDefinition**: High-level declarative intent.
+2. **Validation**: Integrity checks against schemas and versioning.
+3. **Resolution**: Expansion of `CellTemplates`, slot filling, and default propagation.
+4. **OmegaNode Tree**: The concrete, recursive materialization in memory.
+5. **Manifest (.acemm)**: The final serialized state, serving as the source of truth for the runtime.
+6. **Package (.acepack)**: Distribution bundle containing WASM, Manifest, and Assets.
 
-## Structural Comparison
+---
 
-### Legacy (Flat)
-```json
-{
-  "controls": [
-    { "id": "cutoff", "type": "knob", "container": "vcf_section" }
-  ],
-  "layout": {
-    "containers": [
-      { "id": "vcf_section", "pos": { "x": 10, "y": 10 } }
-    ]
-  }
-}
-```
+## Operational Rules
 
-### UCA (Hierarchical)
-```json
-{
-  "tree": {
-    "kind": "rack",
-    "children": [
-      {
-        "id": "main_face",
-        "kind": "face",
-        "children": [
-          {
-            "id": "vcf_section",
-            "kind": "container",
-            "pos": { "x": 10, "y": 10 },
-            "children": [
-              {
-                "id": "cutoff",
-                "kind": "cell",
-                "cellRef": "moog_knob_01",
-                "bind": "vcf.cutoff"
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+### 1. Overrides & Authority
+- **Blueprint** defines the "factory defaults" and structural constraints.
+- **Manifest (.acemm)** stores the "instance overrides" (e.g., specific knob positions, custom colors).
+- **Rule**: Manifest values always take precedence over Blueprint defaults. If a property is defined in both, the Manifest value is the source of truth.
 
-## Migration Strategy
-1. **Stabilization**: [COMPLETED] Ensure zero-noise `tsc` and `eslint` on the current flat model.
-2. **Phase 1 (Additive PoC)**: [COMPLETED] Introduce `OmegaNode` types, `manifestToTree` projection bridge, and basic experimental `UniversalRenderer`.
-3. **Phase 2 (Composition & Debugging)**: [COMPLETED] Implement immutable 6-step resolution semantics, asymmetric `treeToManifest` bridge, and interactive Debug Inspector.
-4. **Phase 3 (Hierarchical Authoring)**: [COMPLETED] Implement visual tree editor, deep node selection adapter (`ucaInspectorAdapter`), fallback projections, and safe mutations of the nested tree.
-5. **Phase 4 (Transition)**: Switch the default workbench viewport to UCA and progressively deprecate flat legacy arrays.
+### 2. Template Resiliance
+- If a referenced `CellTemplate` is missing from the catalog during resolution:
+  - The system must log a **CRITICAL** warning.
+  - A **Fallback Cell** (Generic/Error placeholder) must be rendered to prevent tree collapse.
+  - The integrity of the rest of the tree must be preserved.
 
-## Benefits
-- **Composability**: Create complex controls (like a multi-stage envelope) by nesting cells.
-- **Encapsulation**: Styles and assets are bundled at the cell level.
-- **Clean Bindings**: Clear hierarchy for signal routing and modulation.
-- **Portability**: .acepack generation becomes a simple tree traversal.
+### 3. Versioning Strategy
+- **Blueprint Version**: Tracks the evolution of the recipe/intent.
+- **Manifest Schema**: Tracks the technical format of the `.acemm` file.
+- **Rule**: Blueprints and Manifests are versioned independently. The Bridge must handle cross-version resolution (e.g., applying an older blueprint to a newer schema).
+
+---
+
+## Principles
+
+1. **Tree is source of truth.**
+   - The manifest uses `tree` as the canonical structure.
+   
+2. **Cell is the universal unit.**
+   - Everything visible is modeled as a Cell or a Cell-like node.
+
+3. **Rack, Face, Container, and Cell are all nodes.**
+   - Recursive structure where role defines behavior.
+
+---
+
+## Core Definitions
+
+### OmegaNode
+The concrete unit of composition.
+- `id`, `kind`, `role`, `cellRef?`, `bind?`, `pos?`, `size?`, `style?`, `children?`.
+
+### CellTemplate
+Reusable catalog piece with default layers, style tokens, and asset references.
+
+### BlueprintDefinition
+Authoring artifact with slots, placeholders, and structural intent.
+
+---
+
+## Bridge Contract
+
+The `ucaBridge.ts` serves as the formal gateway for data transformation:
+- `blueprintToTree(blueprint, context) -> OmegaNode`: Compiles intent into structure.
+- `manifestToOmegaTree(manifest) -> OmegaNode`: Migrates legacy data into UCA.
+- `omegaTreeToManifest(tree) -> OMEGA_Manifest`: Serializes UCA into the manifest format.
+
+---
+
+## Phase Scope
+
+### Deliverables
+- **Foundation**: `OmegaNode`, `CellTemplate`, `BlueprintDefinition` interfaces.
+- **Source of Truth**: Implementation of `manifest.ui.tree`.
+- **Bridge Engine**: `ucaBridge.ts` (Compilers & Migrators).
+- **Runtime**: `UniversalRenderer.tsx` (Recursive traversal).
+- **Feature Flag**: `ui.useUCA` for side-by-side verification.
+
+### Not in scope
+- Blueprint Studio UI (Future Authoring Interface).
+- Real-time legacy array syncing (One-way migration only).
+- Packaging automation.

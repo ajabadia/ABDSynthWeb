@@ -4,6 +4,12 @@
  * ═══════════════════════════════════════════════
  * Central Governance Registry for OMEGA UI Elements.
  * Defines the taxonomy and capabilities of all aesthetic primitives.
+ *
+ * IMPORTANT ARCHITECTURAL NOTE:
+ * This catalog acts as an INVENTORY and UX HINT engine.
+ * - 'capabilities' and 'allowedFragments' are soft suggestions for UI filtering.
+ * - RUNTIME AUTHORITY belongs to the UCA Tree and Blueprints.
+ * - The renderer MUST NOT block configurations not present in this catalog.
  */
 
 export type ElementCategory = 'infrastructure' | 'signal' | 'io' | 'telemetry' | 'mechanical' | 'decor' | 'rack';
@@ -64,6 +70,11 @@ export interface ElementDefinition {
   icon: string;
   capabilities: AestheticCapability[];
   attachmentRole: 'host' | 'fragment' | 'both' | 'none';
+  /**
+   * ARCHITECTURAL NOTE: 
+   * `allowedFragments` is advisory only. Use it for editor UX suggestions (e.g. "+ Add" menus),
+   * not for runtime enforcement. Blueprints and UCA own structural authority.
+   */
   allowedFragments?: string[]; // IDs of elements that can be attached to this host
   cssSelector?: string; // Reference to the primary CSS class
   defaultAssetPath?: string;

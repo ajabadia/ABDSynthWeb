@@ -25,11 +25,49 @@ export const useBlueprintInjection = (
   const [targetParentId, setTargetParentId] = useState<string | null>(null);
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [lastResult, setLastResult] = useState<BlueprintInjectionResult | null>(null);
+  const [previewManifest, setPreviewManifest] = useState<OMEGA_Manifest | null>(null);
+  const [placeholderValues, setPlaceholderValues] = useState<BlueprintPlaceholderValues>({});
 
   const injector = useMemo(() => new BlueprintInjector(), []);
 
   /**
-   * Internal execution logic.
+   * Dry-run for preview (Non-mutant)
+   */
+  const executeDryRun = useCallback(async (
+    blueprint: BlueprintDefinition, 
+    targetId: string | undefined, 
+    values: BlueprintPlaceholderValues
+  ) => {
+    const request: BlueprintInjectionRequest = {
+      blueprintId: blueprint.blueprintId,
+      placeholderValues: values,
+      manifestId: manifest.id,
+      mode: 'commit', // We use 'commit' mode but don't apply it to orchestrator
+      strategy: {
+        targetParentNodeId: targetId || null,
+        idCollisionStrategy: 'remap',
+        dryRun: true,
+        forceIdRemap: true
+      }
+    };
+
+    const result = await injector.inject(manifest, blueprint, request);
+    if (result.success && result.resultManifest) {
+      setPreviewManifest(result.resultManifest);
+    } else if (result.success && result.injectedSubtree) {
+      // If resultManifest is undefined because of dryRun logic in injector, 
+      // we might need to simulate the merge for the preview if injector doesn't return it.
+      // However, our injector.ts line 123 says: resultManifest: request.strategy.dryRun ? undefined : nextManifest
+      // We'll temporarily force dryRun: false for the INTERNAL preview manifest generation.
+      
+      const previewRequest = { ...request, strategy: { ...request.strategy, dryRun: false } };
+      const previewResult = await injector.inject(manifest, blueprint, previewRequest);
+      setPreviewManifest(previewResult.resultManifest || null);
+    }
+  }, [manifest, injector]);
+
+  /**
+   * Internal execution logic (Final Commit)
    */
   const executeInjection = useCallback(async (
     blueprint: BlueprintDefinition, 
@@ -45,11 +83,11 @@ export const useBlueprintInjection = (
         targetParentNodeId: targetId || null,
         idCollisionStrategy: 'remap',
         dryRun: false,
-        forceIdRemap: true // Recommended default
+        forceIdRemap: true
       }
     };
 
-    addLog(`[SYSTEM] Initiating Blueprint injection: ${blueprint.name}...`);
+    addLog(`[SYSTEM] Committing Blueprint injection: ${blueprint.name}...`);
     
     const result = await injector.inject(manifest, blueprint, request);
     setLastResult(result);
@@ -62,20 +100,15 @@ export const useBlueprintInjection = (
     if (result.resultManifest) {
       const label = `[BLUEPRINT] Inject ${blueprint.name} (v${blueprint.version})`;
       updateManifest(result.resultManifest, label, true);
-      addLog(`[SUCCESS] ${blueprint.name} inserted successfully. Duration: ${result.report.durationMs}ms`);
-      
-      // Log validation warnings if any
-      result.report.validationIssues.forEach(issue => {
-        if (issue.severity === 'warning') {
-          addLog(`[WARNING] ${issue.message}`);
-        }
-      });
+      addLog(`[SUCCESS] ${blueprint.name} inserted successfully.`);
     }
 
     // Cleanup
     setIsPromptOpen(false);
     setActiveBlueprint(null);
     setTargetParentId(null);
+    setPreviewManifest(null);
+    setPlaceholderValues({});
   }, [manifest, updateManifest, addLog, injector]);
 
   /**
@@ -85,34 +118,54 @@ export const useBlueprintInjection = (
     setActiveBlueprint(blueprint);
     setTargetParentId(targetId || null);
     
-    // Check if we need to show the prompt
+    const initialValues: BlueprintPlaceholderValues = {};
+    blueprint.placeholders?.forEach(p => {
+      initialValues[p.id] = p.defaultValue;
+    });
+    setPlaceholderValues(initialValues);
+
     if (blueprint.placeholders && blueprint.placeholders.length > 0) {
       setIsPromptOpen(true);
+      executeDryRun(blueprint, targetId, initialValues);
     } else {
-      // Direct injection (no placeholders)
       executeInjection(blueprint, targetId, {});
     }
-  }, [executeInjection]);
+  }, [executeInjection, executeDryRun]);
 
   /**
-   * Finalizes the injection after placeholder resolution.
+   * Update placeholders and refresh preview
    */
-  const confirmInjection = useCallback((values: BlueprintPlaceholderValues) => {
+  const updatePlaceholder = useCallback((id: string, value: string | number | boolean) => {
     if (!activeBlueprint) return;
-    executeInjection(activeBlueprint, targetParentId || undefined, values);
-  }, [activeBlueprint, targetParentId, executeInjection]);
+    const nextValues = { ...placeholderValues, [id]: value };
+    setPlaceholderValues(nextValues);
+    executeDryRun(activeBlueprint, targetParentId || undefined, nextValues);
+  }, [activeBlueprint, placeholderValues, targetParentId, executeDryRun]);
+
+  /**
+   * Finalizes the injection.
+   */
+  const confirmInjection = useCallback(() => {
+    if (!activeBlueprint) return;
+    executeInjection(activeBlueprint, targetParentId || undefined, placeholderValues);
+  }, [activeBlueprint, targetParentId, placeholderValues, executeInjection]);
 
   const cancelInjection = useCallback(() => {
     setIsPromptOpen(false);
     setActiveBlueprint(null);
     setTargetParentId(null);
+    setPreviewManifest(null);
+    setPlaceholderValues({});
   }, []);
 
   return {
     activeBlueprint,
+    placeholderValues,
+    previewManifest,
     isPromptOpen,
     setIsPromptOpen,
     startInjection,
+    updatePlaceholder,
     confirmInjection,
     cancelInjection,
     lastResult

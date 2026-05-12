@@ -49,7 +49,8 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
   const worldPos = rootTree ? calculateWorldPosition(rootTree, item.id) : pos;
   
   // Sync local state when external item changes (selection change or drag end)
-  const shouldSyncPos = item.id !== prevProps.id || (focusedAxis === null && (pos.x !== prevProps.x || pos.y !== prevProps.y));
+  const isExternalChange = item.id !== prevProps.id || pos.x !== prevProps.x || pos.y !== prevProps.y;
+  const shouldSyncPos = isExternalChange && focusedAxis === null;
   const shouldSyncConstraints = item.id !== prevProps.id || (!!constraints.clampToParent !== prevProps.clamp || constraints.margin !== prevProps.margin);
 
   if (shouldSyncPos || shouldSyncConstraints) {

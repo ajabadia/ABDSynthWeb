@@ -33,10 +33,26 @@ Phase 8 established multi-document history with undo/redo and dirty tracking. Ph
 - **Details:** Delegated entirely to [ADR-010](ADR-010.md) to prevent two normative sources.
 
 ### 9.4 Advanced Templating (Blueprint Injection / Live Templates)
-*Status: Proposed / Next*
+*Status: Accepted and Implemented*
 - **Goal:** Parametric injection of complex UCA hierarchies.
-- **Format:** Blueprints as validated JSON schemas with placeholder support (e.g., `${ID_PREFIX}`).
-- **Integration:** A dedicated `BlueprintLibrary` side-panel for one-click injection into the active layout container.
+- **Mechanism:** 
+    - Transitioned from flat `moduleTemplates` to formal `BlueprintDefinition` objects.
+    - **Blueprint Registry:** Externalized catalog in `constants/templates.ts` for modular governance.
+    - **Adaptive UI:** Enhanced `TemplateGallery` with high-fidelity descriptions and category-specific iconography.
+
+### 9.5 Semantic Integrity Engine (Aseptic Guard)
+*Status: Accepted and Implemented*
+- **Goal:** Prevent unstable topologies and broken resource references.
+- **Detección de Ciclos:** Implementación de un algoritmo DFS de 3 estados (White/Gray/Black) para detectar y reportar rutas de modulación circular (CIRCULAR_MODULATION).
+- **Asset Resolution:** Validación automática de `assetId` frente al catálogo de recursos del manifiesto.
+- **Contract Auditing:** Verificación de rangos críticos (`min < max`) y límites de valores por defecto.
+
+### 9.6 Blueprint Expansion & Industrial Audit Trail
+*Status: Accepted and Implemented*
+- **Goal:** Provide immutable authoring history across sessions while expanding the library.
+- **Persistence:** Implementation of `localStorage` sync for the engineering console (capped at 100 entries).
+- **Expansion:** Externalized blueprint registry in `constants/templates.ts`.
+- **Centralization:** Unified diagnostic pipeline integrating `StructuralAuditor` results with the legacy `ValidationService`.
 
 ## Consequences
 
@@ -69,9 +85,20 @@ Phase 8 established multi-document history with undo/redo and dirty tracking. Ph
 - [x] Enable "Apply" and "Merge All" controls in the Diff Viewer.
 
 ### Phase 9.4: Live Templates (Structural Acceleration)
-- [ ] Define Blueprint schema and placeholder logic.
-- [ ] Implement `BlueprintInjector` with ID collision protection.
-- [ ] Create initial library of "Standard Modules" (OSC-Env-Filter chains).
+- [x] Define Blueprint schema and placeholder logic.
+- [x] Implement `BlueprintInjector` with ID collision protection.
+- [x] Create initial library of "Standard Modules" (VCO Macro, Performance Grid).
+- [x] Externalize blueprint registry for industrial governance.
+
+### Phase 9.5: Semantic Integrity (Aseptic Guard)
+- [x] Implement `StructuralAuditor.ts` for deep validation.
+- [x] Circular Modulation Detection (3-state DFS) with path reporting.
+- [x] Asset Resolution & Parameter Range audits.
+
+### Phase 9.6: Blueprint Expansion & Industrial Audit Trail
+- [x] Implement persistent log storage (localStorage).
+- [x] Centralize all diagnostics into `useAuditEngine`.
+- [x] Expand blueprint registry with industrial VCO and Grid templates.
 
 ## Validation Criteria
 

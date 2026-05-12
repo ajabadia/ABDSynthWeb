@@ -22,7 +22,7 @@ export default function Stepper({ type, value, variant, onValueChange, onClick, 
   const dims: Record<string, number> = { A: 24, B: 18, C: 14, D: 12 };
   const d = dims[size] || 18;
 
-  const font = style?.resolvedFont || resolveFont('labels');
+  const font = style?.font || resolveFont('labels');
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();

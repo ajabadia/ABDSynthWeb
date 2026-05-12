@@ -12,19 +12,20 @@ interface AtmosphericPhysicsGovernanceProps {
   resolveAsset: (id: string | undefined) => string | undefined;
 }
 
+type LightingConfig = NonNullable<OMEGA_Manifest['ui']['lighting']>;
+
 // Removed unused ColorTokenInput
 
 export default function AtmosphericPhysicsGovernance({ manifest, onUpdate, resolveAsset }: AtmosphericPhysicsGovernanceProps) {
   const { physics } = useDesignTokens(manifest);
-  const lighting = manifest.ui.lighting || { 
-    shadowAngle: 135, shadowColor: 'rgba(0,0,0,0.5)', 
-    distance: 4, blur: 4, 
+  const lighting = (manifest.ui.lighting || { 
+    shadowAngle: 135, 
     ambientIntensity: 0.5, specularIntensity: 0.2, 
     surfaceGrain: 0.1, opacity: 1, globalBlur: 0 
-  };
+  }) as LightingConfig;
   const colors = manifest.ui.colors || { accent: '#00f2ff', weak: '#555555', surface: '#1a1c1e', text: '#ffffff' };
   
-  const updateLighting = (updates: Partial<NonNullable<OMEGA_Manifest['ui']['lighting']>>) => {
+  const updateLighting = (updates: Partial<LightingConfig>) => {
     onUpdate({ ui: { ...manifest.ui, lighting: { ...lighting, ...updates } } });
   };
   

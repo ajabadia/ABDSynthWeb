@@ -44,8 +44,8 @@ export function UniversalRenderer({
 
   // 2. Dispatchers
   
-  // A. Structural Nodes (Rack, Face, Container)
-  if (node.kind === 'rack' || node.kind === 'face' || node.kind === 'container') {
+  // A. Structural Nodes (Rack, Face, Container, Group)
+  if (node.kind === 'rack' || node.kind === 'face' || node.kind === 'container' || node.kind === 'group') {
     return (
       <StructuralNode 
         node={node}
@@ -78,12 +78,12 @@ export function UniversalRenderer({
     );
   }
 
-  // C. Layers (Simple rendering)
-  if (node.kind === 'layer') {
+  // C. Layers & Assets (Simple rendering)
+  if (node.kind === 'layer' || node.kind === 'asset-layer') {
     const isSelected = debugContext?.selectedId === node.id;
     return (
       <div 
-        className="uca-node uca-layer"
+        className={`uca-node uca-${node.kind}`}
         onClick={handleDebugClick}
         style={{
           position: 'absolute',

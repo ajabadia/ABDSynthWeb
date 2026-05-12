@@ -114,7 +114,10 @@ export const useManifestTransfer = (
           controls: normalize(parsed.ui.controls, 'MAIN'),
           jacks: normalize(parsed.ui.jacks, 'MAIN'),
           skin: parsed.ui.skin || 'industrial',
-          layout: parsed.ui.layout || { containers: [], gridSnap: 5 }
+          layout: parsed.ui.layout || { containers: [], gridSnap: 5 },
+          // UCA Persistence (Phase 10.2)
+          tree: parsed.ui.tree,
+          useUCA: parsed.ui.useUCA ?? true 
         },
         resources: {
           wasm: String(parsed.resources?.wasm || 'module.wasm'),

@@ -28,13 +28,12 @@ export function resolveNodeSemantics(
     templateBase = JSON.parse(JSON.stringify(node.snapshot));
   } 
   // Strategy B: Module Template (Blueprint)
-  else if (node.templateRef && ctx.moduleTemplates?.[node.templateRef]) {
-    const template = ctx.moduleTemplates[node.templateRef];
-    // Deep clone the blueprint root
-    const blueprint = JSON.parse(JSON.stringify(template.root));
+  else if (node.cellRef && ctx.moduleTemplates?.[node.cellRef]) {
+    const template = ctx.moduleTemplates[node.cellRef];
+    const blueprint = JSON.parse(JSON.stringify(template.baseNode || template.root)) as OmegaNode;
     
-    // Apply Genetic Overrides (Phase 5)
-    templateBase = mergeWithOverrides(blueprint, node.overrides || {}, template.policy) as Partial<OmegaNode>;
+    // Apply Genetic Overrides
+    templateBase = mergeWithOverrides(blueprint, node.overrides || {}, template.policy || []) as Partial<OmegaNode>;
 
     // Apply Slot Mappings (Recursive Binding Injection)
     if (node.slotMappings) {
@@ -42,10 +41,11 @@ export function resolveNodeSemantics(
     }
   }
   // Strategy C: Cell Template (Legacy Primitive)
-  else if (node.kind === 'cell' && node.cellRef) {
-    const template = ctx.catalog[node.cellRef];
+  else if (node.kind === 'cell' && (node.cellRef || node.templateRef)) {
+    const ref = node.cellRef || node.templateRef;
+    const template = ctx.catalog[ref!];
     if (template) {
-      templateBase = JSON.parse(JSON.stringify(template.baseNode));
+      templateBase = JSON.parse(JSON.stringify(template.baseNode || template.root));
     }
   }
 

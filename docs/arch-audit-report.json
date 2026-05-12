@@ -1,0 +1,514 @@
+{
+  "timestamp": "2026-05-12T10:00:17.981Z",
+  "counts": {
+    "high": 0,
+    "medium": 33,
+    "low": 50,
+    "total": 83
+  },
+  "details": {
+    "HIGH": [],
+    "MEDIUM": [
+      {
+        "file": "src\\components\\ui\\contact\\useContactForm.ts",
+        "line": 54,
+        "content": "throw new Error(result.error || t(\"error\"));",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\aesthetic\\styles\\library\\GuildNavigator.tsx",
+        "line": 4,
+        "content": "import { ElementCategory } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\aesthetic\\styles\\ModuleStyleLibrary.tsx",
+        "line": 6,
+        "content": "import { OMEGA_ELEMENT_CATALOG, ElementCategory, getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\attachments\\AttachmentTypeAnchor.tsx",
+        "line": 19,
+        "content": "const allowedIds = hostDef?.allowedFragments || [];",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\attachments\\AttachmentTypeAnchor.tsx",
+        "line": 7,
+        "content": "import { OMEGA_ELEMENT_CATALOG, getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\sections\\AestheticSection.tsx",
+        "line": 13,
+        "content": "import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\sections\\LogicSection.tsx",
+        "line": 11,
+        "content": "import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\sections\\SpatialSection.tsx",
+        "line": 12,
+        "content": "import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\aesthetic\\GovernanceRegistry.ts",
+        "line": 1,
+        "content": "import { AestheticCapability } from \"@/omega-ui-core/governance/ElementCatalog\";",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\aesthetic\\IdentityGovernance.tsx",
+        "line": 5,
+        "content": "import { AestheticCapability, OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\aesthetic\\map.md",
+        "line": 2,
+        "content": "Componentes modulares de gobernanza estética impulsados por el ElementCatalog.",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\aesthetic\\SequenceIngestionLab.tsx",
+        "line": 42,
+        "content": "return new Promise<HTMLImageElement>((resolve, reject) => {",
+        "pattern": "reject"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\aesthetic\\SequenceIngestionLab.tsx",
+        "line": 45,
+        "content": "img.onerror = reject;",
+        "pattern": "reject"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\aesthetic\\UnifiedGraphicGovernance.tsx",
+        "line": 5,
+        "content": "import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\IndustrialGovernanceConsole.tsx",
+        "line": 6,
+        "content": "import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\map.md",
+        "line": 5,
+        "content": "- [IndustrialGovernanceConsole.tsx](file:///d:/desarrollos/ABDSynthsWeb/abd-ia_synths/src/components/tools/manifest-editor/inspector/shared/IndustrialGovernanceConsole.tsx): Orquestador dinámico que compone la interfaz de edición basándose en las capacidades del ElementCatalog.",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\inspector\\shared\\StyleEditorModal.tsx",
+        "line": 10,
+        "content": "import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\modals\\UniversalCellEditorModal.tsx",
+        "line": 6,
+        "content": "import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\components\\views\\SourceView.tsx",
+        "line": 60,
+        "content": "validate: true,",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\io\\useBundleTransfer.ts",
+        "line": 115,
+        "content": "await new Promise((resolve, reject) => {",
+        "pattern": "reject"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\io\\useBundleTransfer.ts",
+        "line": 119,
+        "content": "script.onerror = reject;",
+        "pattern": "reject"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\io\\useManifestTransfer.ts",
+        "line": 23,
+        "content": "if (!parsed || typeof parsed !== 'object') throw new Error(\"Invalid manifest format.\");",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\io\\useWasmTransfer.ts",
+        "line": 84,
+        "content": "throw new Error(\"Missing mandatory 'id' or 'ports' fields in contract.\");",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\io\\useWasmTransfer.ts",
+        "line": 116,
+        "content": "addLog(`[AUDIT] Contract '${loadedContract.id}' validated and fingerprinted.`);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\useAuditEngine.ts",
+        "line": 56,
+        "content": "const baseIssues = ValidationService.validate(manifest, contract as Parameters<typeof ValidationService.validate>[1]) || [];",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\hooks\\useSimulationBridge.ts",
+        "line": 79,
+        "content": "throw new Error('Deployment failed at runtime');",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
+        "line": 180,
+        "content": "if (def.required) throw new Error(`Missing required parameter: ${def.id}`);",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
+        "line": 225,
+        "content": "if (!tree) throw new Error('Manifest tree not found.');",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
+        "line": 73,
+        "content": "const compIssues = this.validateCompatibility(blueprint, parentNode || null);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
+        "line": 144,
+        "content": "private validateCompatibility(blueprint: BlueprintDefinition, parent: OmegaNode | null): BlueprintValidationIssue[] {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\blueprintUtils.ts",
+        "line": 21,
+        "content": "throw new Error(`[BLUEPRINT] Invalid ModuleTemplate: Missing ID or Root Node.`);",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\blueprintUtils.ts",
+        "line": 55,
+        "content": "export function validateBlueprint(blueprint: BlueprintDefinition): { valid: boolean; errors: string[] } {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\features\\manifest-editor\\utils\\governanceUtils.ts",
+        "line": 2,
+        "content": "import { ElementCategory, OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';",
+        "pattern": "ElementCatalog"
+      }
+    ],
+    "LOW": [
+      {
+        "file": "src\\data\\map.md",
+        "line": 45,
+        "content": "- **Schema Parity**: Any changes to instrument data structures MUST be reflected in `types.ts` and validated against `omega-schema-v7.json`.",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 10,
+        "content": "* - 'capabilities' and 'allowedFragments' are soft suggestions for UI filtering.",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 75,
+        "content": "* `allowedFragments` is advisory only. Use it for editor UX suggestions (e.g. \"+ Add\" menus),",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 78,
+        "content": "allowedFragments?: string[]; // IDs of elements that can be attached to this host",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 94,
+        "content": "allowedFragments: ['rack-screw', 'label', 'illustration'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 105,
+        "content": "allowedFragments: ['label', 'illustration', 'led']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 115,
+        "content": "allowedFragments: ['label', 'illustration', 'container', 'group', 'cell']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 127,
+        "content": "allowedFragments: ['label', 'led', 'port', 'switch', 'stepper', 'graphic-fragment'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 138,
+        "content": "allowedFragments: ['label', 'led', 'port', 'graphic-fragment'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 149,
+        "content": "allowedFragments: ['label', 'led', 'port', 'graphic-fragment'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 160,
+        "content": "allowedFragments: ['label', 'led'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 171,
+        "content": "allowedFragments: ['label'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 182,
+        "content": "allowedFragments: ['label']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 192,
+        "content": "allowedFragments: ['label']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 202,
+        "content": "allowedFragments: ['label']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 214,
+        "content": "allowedFragments: ['label', 'led']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 235,
+        "content": "allowedFragments: ['label', 'stepper']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 245,
+        "content": "allowedFragments: ['label']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 255,
+        "content": "allowedFragments: ['label', 'illustration', 'led']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 274,
+        "content": "allowedFragments: ['label']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 315,
+        "content": "allowedFragments: []",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 336,
+        "content": "allowedFragments: ['label', 'led', 'graphic-fragment'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 365,
+        "content": "allowedFragments: ['label', 'led', 'illustration', 'rack-screw', 'graphic-fragment'],",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\governance\\ElementCatalog.ts",
+        "line": 380,
+        "content": "allowedFragments: ['label', 'illustration']",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\uca\\ucaTemplateTest.ts",
+        "line": 114,
+        "content": "function validateDSPCompatibility(template: ModuleTemplate, instance: OmegaNode): boolean {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\omega-ui-core\\uca\\ucaTemplateTest.ts",
+        "line": 132,
+        "content": "validateDSPCompatibility(mockTemplate, instance); // Should pass",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\omega-ui-core\\uca\\ucaTemplateTest.ts",
+        "line": 133,
+        "content": "validateDSPCompatibility(mockTemplate, { id: 'bad', kind: 'container', role: 'structure', layout: { pos: { x: 0, y: 0 } } } as OmegaNode); // Should fail",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\auditService.ts",
+        "line": 24,
+        "content": "const issues = ValidationService.validate(manifest, contract);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\industrialRules.ts",
+        "line": 6,
+        "content": "static validate(manifest: OMEGA_Manifest, contract: OmegaContract | null): ValidationIssue[] {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\industrialRules.ts",
+        "line": 71,
+        "content": "const validateEntity = (entity: ManifestEntity | OmegaNode, path: string) => {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\industrialRules.ts",
+        "line": 189,
+        "content": "allTreeNodes.forEach((n) => validateEntity(n, `/ui/tree/node/${n.id}`));",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\industrialRules.ts",
+        "line": 191,
+        "content": "(manifest.ui?.controls || []).forEach((e, idx) => validateEntity(e, `/ui/controls/${idx}`));",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\industrialRules.ts",
+        "line": 192,
+        "content": "(manifest.ui?.jacks || []).forEach((e, idx) => validateEntity(e, `/ui/jacks/${idx}`));",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\schemaValidator.ts",
+        "line": 16,
+        "content": "const validateV6 = ajv.compile(era6Schema);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\schemaValidator.ts",
+        "line": 17,
+        "content": "const validateV7 = ajv.compile(era7Schema);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\schemaValidator.ts",
+        "line": 20,
+        "content": "static validate(manifest: OMEGA_Manifest): ValidationIssue[] {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validation\\schemaValidator.ts",
+        "line": 22,
+        "content": "const validator = isV7 ? validateV7 : validateV6;",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validationService.ts",
+        "line": 11,
+        "content": "static validate(manifest: OMEGA_Manifest, contract: OmegaContract | null = null): ValidationIssue[] {",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validationService.ts",
+        "line": 13,
+        "content": "const schemaIssues = SchemaValidator.validate(manifest);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\validationService.ts",
+        "line": 16,
+        "content": "const industrialIssues = IndustrialRules.validate(manifest, contract);",
+        "pattern": "validate"
+      },
+      {
+        "file": "src\\services\\wasmLoader.ts",
+        "line": 66,
+        "content": "throw new Error(\"WASM module is not OMEGA-compliant (missing 'omega_get_contract' export).\");",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "src\\services\\wasmLoader.ts",
+        "line": 103,
+        "content": "throw new Error(`LinkError: Binary requires host functions or is corrupted. Details: ${message}`);",
+        "pattern": "throw new Error"
+      },
+      {
+        "file": "docs\\ADR-009.md",
+        "line": 33,
+        "content": "3. **Phase 9.3 — Advanced Templating (Blueprint Injection):** Formalize blueprint/template injection with validated schemas, collision-safe ID regeneration, and a reusable library UI for rapid composition of common synth structures.[cite:333][cite:335]",
+        "pattern": "validate"
+      },
+      {
+        "file": "docs\\ADR-011.md",
+        "line": 92,
+        "content": "- **Phase 9.4A** — system templates only, curated and validated by the product.",
+        "pattern": "validate"
+      },
+      {
+        "file": "docs\\ADR-011.md",
+        "line": 54,
+        "content": "- **Drag and drop insertion** into compatible containers, with visible acceptance or rejection states according to compatibility metadata and structural rules.",
+        "pattern": "reject"
+      },
+      {
+        "file": "docs\\ADR-013-asset-behavior-lab.md",
+        "line": 31,
+        "content": "- **Visual Scrubbing**: Real-time simulation of input values in the preview pane to validate behavior before save.",
+        "pattern": "validate"
+      },
+      {
+        "file": "docs\\OMEGA_Remediation_Map.md",
+        "line": 24,
+        "content": "*   **Decoupled UX**: `allowedFragments` and `capabilities` are UI hints. If a node in the UCA tree contains non-standard data, it must be rendered and persisted regardless of catalog state.",
+        "pattern": "allowedFragments"
+      },
+      {
+        "file": "docs\\OMEGA_Remediation_Map.md",
+        "line": 17,
+        "content": "| `src/omega-ui-core/governance/ElementCatalog.ts` | Low | Keep explicit warnings and maintain it as a consultative inventory. | **Low** | ✅ Documented |",
+        "pattern": "ElementCatalog"
+      },
+      {
+        "file": "docs\\OMEGA_Remediation_Map.md",
+        "line": 10,
+        "content": "| `src/features/manifest-editor/components/inspector/attachments/AttachmentTypeAnchor.tsx` | Medium | Maintain as a UX filter; document that it does not validate structure. | **High** | 🔍 Monitoring |",
+        "pattern": "validate"
+      },
+      {
+        "file": "docs\\performance-report.md",
+        "line": 4,
+        "content": "This report documents the performance profile of the OMEGA Manifest Editor as of May 11, 2026. The goal was to validate that the industrialization of the state management and diagnostic pipeline did not introduce overhead that would hinder the user experience.",
+        "pattern": "validate"
+      }
+    ]
+  }
+}

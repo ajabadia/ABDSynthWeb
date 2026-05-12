@@ -15,6 +15,7 @@ import {
 } from '../types/blueprint';
 import { IdManager } from './idManager';
 import { AutoWireResolver } from './autoWireResolver';
+import { manifestToTree, treeToManifest } from '@/omega-ui-core/uca/ucaBridge';
 
 /**
  * OMEGA Phase 9.4A - Blueprint Injector Engine (Industrial Revision)
@@ -32,6 +33,16 @@ export class BlueprintInjector {
     request: BlueprintInjectionRequest
   ): Promise<BlueprintInjectionResult> {
     const startTime = Date.now();
+    
+    // 0. Aseptic Tree Initialization (Phase 10.1)
+    const activeManifest = { ...manifest };
+    if (!activeManifest.ui.tree) {
+      activeManifest.ui = {
+        ...activeManifest.ui,
+        tree: manifestToTree(activeManifest)
+      };
+    }
+
     const report: BlueprintInjectionReport = {
       blueprintId: blueprint.blueprintId,
       blueprintVersion: blueprint.version,
@@ -54,10 +65,11 @@ export class BlueprintInjector {
       }
 
       // 2. Compatibility Check
-      const parentNode = this.findNode(manifest.ui?.tree, request.strategy.targetParentNodeId);
+      const parentNode = this.findNode(activeManifest.ui?.tree, request.strategy.targetParentNodeId);
       if (request.strategy.targetParentNodeId && !parentNode) {
         return this.fatal('MISSING_PARENT', `Target parent '${request.strategy.targetParentNodeId}' not found.`, report);
       }
+      
       const compIssues = this.validateCompatibility(blueprint, parentNode || null);
       report.validationIssues.push(...compIssues);
       report.compatibilityStatus = compIssues.some(i => i.severity === 'error') ? 'incompatible' : 'compatible';
@@ -66,47 +78,52 @@ export class BlueprintInjector {
         return this.fatal('INCOMPATIBLE_CONTEXT', 'Blueprint compatibility check failed.', report);
       }
 
-      // 3. Placeholder Materialization
+      // 3. Semantic Pre-validation (ERA 7.2.3 Step 2.B)
+      const preSemanticIssues = this.performSemanticValidation(blueprint, null);
+      report.validationIssues.push(...preSemanticIssues);
+      if (preSemanticIssues.some(i => i.severity === 'error')) {
+        return this.fatal('PRE_SEMANTIC_FAILURE', 'Blueprint failed initial semantic validation.', report);
+      }
+
+      // 4. Placeholder Materialization
       const resolvedValues = this.resolvePlaceholders(blueprint.placeholders, request.placeholderValues);
       let materializedNode = this.materializeSubtree(blueprint.rootNode, resolvedValues);
 
-      // 4. Identity Governance (ID Remapping)
-      const idManager = new IdManager(manifest.ui?.tree || { id: 'root', kind: 'rack' });
+      // 5. Identity Governance (ID Remapping)
+      const idManager = new IdManager(activeManifest);
       if (request.strategy.forceIdRemap) {
         const { node: remappedNode, remapLog } = idManager.remapSubtree(materializedNode as unknown as OmegaNode);
         materializedNode = remappedNode as unknown as OmegaBlueprintNode;
         report.idRemapLog = remapLog;
       }
 
-      // 5. Semantic Validation (Post-materialization)
-      const semanticIssues = this.performSemanticValidation(materializedNode);
-      report.validationIssues.push(...semanticIssues);
-      if (semanticIssues.some(i => i.severity === 'error')) {
+      // 6. Semantic Validation (Post-materialization)
+      const postSemanticIssues = this.performSemanticValidation(blueprint, materializedNode as unknown as OmegaNode);
+      report.validationIssues.push(...postSemanticIssues);
+      if (postSemanticIssues.some(i => i.severity === 'error')) {
         return this.fatal('SEMANTIC_FAILURE', 'Materialized subtree failed semantic validation.', report);
       }
 
-      // 6. Tree Integration (Merge)
-      let nextManifest = this.performMerge(manifest, materializedNode as unknown as OmegaNode, request.strategy);
+      // 7. Tree Integration (Merge)
+      let nextManifest = this.performMerge(activeManifest, materializedNode as unknown as OmegaNode, request.strategy);
 
-      // 7. Auto-wiring Resolution
+      // 8. Auto-wiring Resolution
       const { decisions, updatedManifest } = this.autoWireResolver.resolve(
         nextManifest, 
-        blueprint, 
-        materializedNode as unknown as OmegaNode
+        blueprint
       );
       report.autoWireDecisions = decisions;
       nextManifest = updatedManifest;
 
-      // 8. Snapshot Generation (Optional Phase 9.4B)
+      // 9. Snapshot Generation (Optional Phase 9.4B)
       if (blueprint.materializeSnapshot) {
         // Reserved for Phase 9.4B: Congealing physical snapshots
       }
 
-      // 9. History Prep
+      // 10. Commit or Dry-Run Return
       report.durationMs = Date.now() - startTime;
       report.insertedNodeIds = [materializedNode.id];
 
-      // 10. Commit or Dry-Run Return
       return {
         success: true,
         mode: request.mode,
@@ -169,13 +186,34 @@ export class BlueprintInjector {
 
   /**
    * Materializes variables into the subtree.
+   * Supports basic expression evaluation (Phase 11 Extension)
    */
   private materializeSubtree(root: OmegaBlueprintNode, values: BlueprintPlaceholderValues): OmegaBlueprintNode {
     let json = JSON.stringify(root);
+    
+    // 1. Literal Substitution
     Object.entries(values).forEach(([key, value]) => {
       const regex = new RegExp(`\\{\\{${key}\\s*\\}\\}`, 'g');
       json = json.replace(regex, String(value));
     });
+
+    // 2. Expression Evaluation (e.g. {{x + 10}})
+    // Simple regex for basic arithmetic placeholders
+    const exprRegex = /\{\{\s*([a-zA-Z0-9_]+)\s*([\+\-\*\/])\s*([0-9\.]+)\s*\}\}/g;
+    json = json.replace(exprRegex, (match, varName, op, valStr) => {
+      const baseVal = Number(values[varName]);
+      const modifier = Number(valStr);
+      if (isNaN(baseVal) || isNaN(modifier)) return match;
+      
+      switch(op) {
+        case '+': return String(baseVal + modifier);
+        case '-': return String(baseVal - modifier);
+        case '*': return String(baseVal * modifier);
+        case '/': return String(baseVal / modifier);
+        default: return match;
+      }
+    });
+
     return JSON.parse(json);
   }
 
@@ -203,19 +241,78 @@ export class BlueprintInjector {
       return root;
     };
 
+    const nextTree = updateTree(tree);
+    const legacyProjections = treeToManifest(nextTree);
+
     return {
       ...manifest,
-      ui: { ...manifest.ui, tree: updateTree(tree) }
+      ui: { 
+        ...manifest.ui, 
+        tree: nextTree,
+        controls: legacyProjections.controls || manifest.ui.controls || [],
+        jacks: legacyProjections.jacks || manifest.ui.jacks || [],
+        layout: {
+          ...manifest.ui.layout,
+          containers: legacyProjections.layout?.containers || manifest.ui.layout?.containers || []
+        }
+      }
     };
   }
 
   /**
-   * High-level semantic check.
+   * High-level semantic check (Phase 11 Implementation).
    */
-  private performSemanticValidation(_node: OmegaBlueprintNode): BlueprintValidationIssue[] {
+  private performSemanticValidation(blueprint: BlueprintDefinition, materializedNode: OmegaNode | null): BlueprintValidationIssue[] {
     const issues: BlueprintValidationIssue[] = [];
-    // Reserved for Phase 9.4B: Strict UCA structural auditing
+    
+    // 1. Recursive Loop Detection (Genetic Guard)
+    const detectLoop = (node: OmegaBlueprintNode | OmegaNode, visited: Set<string>, path: string[] = []) => {
+      if (node.kind === 'cell' && node.cellRef) {
+        const ref = node.cellRef as string;
+        if (visited.has(ref)) {
+          issues.push({
+            severity: 'error',
+            code: 'RECURSIVE_TEMPLATE_LOOP',
+            message: `Recursive template loop detected: ${ref}`,
+            affectedNodeId: node.id
+          });
+          return;
+        }
+        visited.add(ref);
+      }
+      node.children?.forEach(c => detectLoop(c, new Set(visited), [...path, node.id]));
+    };
+
+    if (materializedNode) {
+      detectLoop(materializedNode, new Set());
+    } else {
+      detectLoop(blueprint.rootNode as unknown as OmegaNode, new Set());
+    }
+
+    // 2. Slot Integrity Check
+    if (materializedNode) {
+      this.walkTree(materializedNode, (node) => {
+        if (node.kind === 'cell' && node.slotMappings) {
+          // Check if mapped slots exist (would require template definitions)
+          // For now, we just ensure slotMappings is a valid record
+          if (typeof node.slotMappings !== 'object') {
+            issues.push({
+              severity: 'error',
+              code: 'INVALID_SLOT_MAPPINGS',
+              message: `Entity '${node.id}' has malformed slotMappings.`,
+              affectedNodeId: node.id
+            });
+          }
+        }
+      });
+    }
+
     return issues;
+  }
+
+  private walkTree(node: OmegaNode, callback: (n: OmegaNode) => void) {
+    callback(node);
+    node.children?.forEach(c => this.walkTree(c, callback));
   }
 
   private findNode(root: OmegaNode | undefined, id: string | null): OmegaNode | undefined {

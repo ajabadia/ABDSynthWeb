@@ -78,7 +78,7 @@ export default function TemplateGallery({ onSelect, onClose }: TemplateGalleryPr
             {categories.map(cat => (
               <button 
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => setActiveCategory(cat || null)}
                 className={`px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${
                   activeCategory === cat 
                     ? 'bg-primary/20 border-primary/40 text-primary' 
@@ -106,31 +106,60 @@ export default function TemplateGallery({ onSelect, onClose }: TemplateGalleryPr
                   onClick={() => handleSelect(template)}
                   className="group relative flex flex-col text-left wb-surface border wb-outline rounded-xl p-5 hover:border-primary/40 transition-all hover:shadow-[0_0_30px_rgba(0,242,255,0.05)] overflow-hidden"
                 >
-                  {/* CATEGORY TAG */}
-                  <div className="absolute top-4 right-4 px-2 py-1 bg-white/5 rounded-md border border-white/5">
-                    <span className="text-[7px] font-black uppercase text-white/40 group-hover:text-primary transition-colors">
-                      {template.family}
-                    </span>
+                   {/* CATEGORY TAG */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                   {!!template.compatibility?.minFaceplateVersion && (
+                      <div className="px-2 py-1 bg-accent/10 rounded-md border border-accent/20">
+                         <span className="text-[7px] font-black uppercase text-accent">
+                          FP v{String(template.compatibility.minFaceplateVersion)}
+                        </span>
+                      </div>
+                    )}
+                    {!!template.assetBehavior && (
+                      <div className="px-2 py-1 bg-amber-500/10 rounded-md border border-amber-500/20 flex items-center gap-1">
+                         <Cpu className="w-2.5 h-2.5 text-amber-500" />
+                         <span className="text-[7px] font-black uppercase text-amber-500">
+                           LAB
+                         </span>
+                      </div>
+                    )}
+                    <div className="px-2 py-1 bg-white/5 rounded-md border border-white/5">
+                      <span className="text-[7px] font-black uppercase text-white/40 group-hover:text-primary transition-colors">
+                        {template.family}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="mb-6 w-12 h-12 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover:border-primary/40 group-hover:bg-primary/5 transition-all shadow-inner">
-                    {template.family === 'Filter' && <Cpu className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
-                    {template.family === 'I/O' && <Box className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
-                    {!['Filter', 'I/O'].includes(template.family) && <Grid className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
+                   <div className="mb-6 w-12 h-12 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover:border-primary/40 group-hover:bg-primary/5 transition-all shadow-inner">
+                    {(template.family || '') === 'Filter' && <Cpu className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
+                    {(template.family || '') === 'I/O' && <Box className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
+                    {(template.family || '') === 'Oscillator' && <Sparkles className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
+                    {(template.family || '') === 'Control' && <Grid className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
+                    {!['Filter', 'I/O', 'Oscillator', 'Control'].includes(template.family || '') && <Grid className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors" />}
                   </div>
 
                   <h3 className="text-[13px] font-black uppercase tracking-[0.15em] wb-text group-hover:text-primary transition-colors">
                     {template.label}
                   </h3>
                   <p className="mt-2 text-[9px] wb-text-muted leading-relaxed font-medium uppercase tracking-tighter line-clamp-2">
-                    Industrial blueprint v{template.version} for ABDOmega Era 7 compliant modules.
+                    {template.description || `Industrial blueprint v${template.version} for ABDOmega Era 7 compliant modules.`}
                   </p>
+
+                  {/* QUICK PREVIEW HINT (Phase 11) */}
+                  <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                    <div className="flex -space-x-1">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="w-3 h-3 rounded-full border border-black bg-white/10" />
+                      ))}
+                    </div>
+                    <span className="text-[6px] font-black uppercase text-primary/60 tracking-widest">Blueprint structure ready</span>
+                  </div>
 
                   <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shadow-[0_0_8px_var(--wb-bloom)]" />
                       <span className="text-[8px] font-bold text-white/20 group-hover:text-white/60 transition-colors uppercase">
-                        {template.slots.length} Logical Slots
+                        {(template.slots || []).length} Logical Slots
                       </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />

@@ -121,7 +121,7 @@ export const useManifestEditor = () => {
     activeId,
     
     // Core Actions
-    updateManifest: (updates: Partial<OMEGA_Manifest>, label?: string) => history.updateManifestWithHistory(updates, label || 'Edit Properties'),
+    updateManifest: (updates: Partial<OMEGA_Manifest> | ((prev: OMEGA_Manifest) => Partial<OMEGA_Manifest>), label?: string) => history.updateManifestWithHistory(updates, label || 'Edit Properties'),
     updateManifestWithHistory: history.updateManifestWithHistory,
     pushHistoryEntry: history.pushHistoryEntry,
     pushHistory: orchestrator.pushHistory,

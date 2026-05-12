@@ -22,7 +22,7 @@ export default function Select({ value, variant, options = [], lookup, manifest,
   const currentIndex = Math.min(labels.length - 1, Math.floor(value * labels.length));
   const currentLabel = labels[currentIndex];
 
-  const font = style?.resolvedFont || resolveFont('labels');
+  const font = style?.font || resolveFont('labels');
 
   return (
     <div 

@@ -9,6 +9,7 @@ import { CADOverlay } from './CADOverlay';
 import { GovernedOverlay } from './GovernedOverlay';
 import { UniversalRenderer } from '../UniversalRenderer';
 import { UCADebugContext } from '../ucaTypes';
+import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
 
 interface StructuralNodeProps {
   node: OmegaNode;
@@ -49,6 +50,9 @@ export function StructuralNode({
     parentNode
   });
 
+  const isSelected = debugContext?.selectedId === node.id;
+  const { cssVars } = useDesignTokens(manifest);
+
   return (
     <motion.div 
       id={`uca-${node.id}`}
@@ -64,10 +68,19 @@ export function StructuralNode({
         top: `${node.layout?.pos?.y || 0}px`,
         width: node.layout?.size?.width ? `${node.layout.size.width}px` : 'auto',
         height: node.layout?.size?.height ? `${node.layout.size.height}px` : 'auto',
-        zIndex: node.layout?.zIndex || 0,
-        border: debugContext?.enabled ? `1px dashed ${node.kind === 'rack' ? '#9333ea' : node.kind === 'face' ? '#3b82f6' : '#10b981'}` : 'none',
+        zIndex: isSelected ? 101 : (node.layout?.zIndex || 0),
+        ...cssVars,
+        // Semantic overrides for structural types
+        backgroundColor: node.kind === 'rack' ? 'var(--omega-color-surface)' : (node.kind === 'face' ? 'var(--omega-color-background)' : 'transparent'),
+        border: debugContext?.enabled 
+          ? `1px dashed ${node.kind === 'rack' ? '#9333ea' : node.kind === 'face' ? '#3b82f6' : '#10b981'}` 
+          : `${node.style?.borderWidth || 0}px solid rgba(255,255,255,0.05)`,
+        backdropFilter: node.kind === 'face' ? 'var(--omega-blur-global)' : 'none',
         padding: '2px',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        outline: isSelected ? '2px solid #00f2ff' : 'none',
+        outlineOffset: '4px',
+        boxShadow: isSelected ? '0 0 20px rgba(0, 242, 255, 0.5)' : 'none'
       }}
     >
       <UCADebugHUD 

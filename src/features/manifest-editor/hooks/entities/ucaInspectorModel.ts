@@ -107,9 +107,9 @@ export function buildInspectorPatch(
  * resolveGovernance
  * Flattens the policy array into a direct path-to-mode map for the Inspector.
  */
-function resolveGovernance(policy: OverridePolicy[]): Record<string, OverrideMode> {
+function resolveGovernance(policy?: OverridePolicy[]): Record<string, OverrideMode> {
   const gov: Record<string, OverrideMode> = {};
-  policy.forEach(p => {
+  (policy || []).forEach((p: OverridePolicy) => {
     gov[p.path] = p.mode;
   });
   return gov;

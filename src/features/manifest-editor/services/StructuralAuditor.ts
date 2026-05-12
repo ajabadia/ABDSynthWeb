@@ -87,8 +87,10 @@ export class StructuralAuditor implements DiagnosticSource {
       }
     });
 
-    // 3. Modulation Integrity
+    // 3. Modulation Integrity & Circularity
+    const adjacencyList = new Map<string, string[]>();
     (manifest.modulations || []).forEach((mod, index) => {
+      // Basic connectivity checks
       if (!entityIds.has(mod.source)) {
         results.errors.push({
           id: `mod-source-${index}`,
@@ -107,7 +109,106 @@ export class StructuralAuditor implements DiagnosticSource {
           code: 'BROKEN_MOD_TARGET'
         });
       }
+
+      // Build graph for circularity check
+      if (entityIds.has(mod.source) && entityIds.has(mod.target)) {
+        const targets = adjacencyList.get(mod.source) || [];
+        targets.push(mod.target);
+        adjacencyList.set(mod.source, targets);
+      }
     });
+
+    // 4. Circular Modulation Detection (Industrial 3-State DFS)
+    // States: 0 = Unvisited (White), 1 = Visiting (Gray), 2 = Visited (Black)
+    const states = new Map<string, number>();
+    const pathStack: string[] = [];
+
+    const findCycle = (nodeId: string): { cycle: string[] } | null => {
+      states.set(nodeId, 1); // Gray
+      pathStack.push(nodeId);
+
+      const targets = adjacencyList.get(nodeId) || [];
+      for (const targetId of targets) {
+        const targetState = states.get(targetId) || 0;
+        
+        if (targetState === 1) {
+          // Cycle detected! Back-edge to a Gray node.
+          const cycleStartIdx = pathStack.indexOf(targetId);
+          const cyclePath = pathStack.slice(cycleStartIdx);
+          return { cycle: [...cyclePath, targetId] };
+        }
+        
+        if (targetState === 0) {
+          const result = findCycle(targetId);
+          if (result) return result;
+        }
+      }
+
+      pathStack.pop();
+      states.set(nodeId, 2); // Black
+      return null;
+    };
+
+    // Run DFS from each potential root
+    const nodes = Array.from(entityIds);
+    nodes.forEach(startNodeId => {
+      if ((states.get(startNodeId) || 0) === 0) {
+        const result = findCycle(startNodeId);
+        if (result) {
+          const pathStr = result.cycle.join(' -> ');
+          results.errors.push({
+            id: `circular-mod-${result.cycle[0]}`,
+            source: this.name,
+            message: `CIRCULAR_MODULATION: Feedback loop detected: [${pathStr}]. This topology is unstable and blocked.`,
+            severity: 'error',
+            code: 'CIRCULAR_MODULATION',
+            entityId: result.cycle[0]
+          });
+        }
+      }
+    });
+
+    // 5. Asset Resolution Audit
+    const assetIds = new Set((manifest.resources.assets || []).map(a => a.id));
+    allEntities.forEach(entity => {
+      const assetId = entity.presentation?.asset;
+      if (assetId && assetId !== 'none' && !assetIds.has(assetId)) {
+        results.warnings.push({
+          id: `broken-asset-${entity.id}`,
+          source: this.name,
+          message: `Missing Asset: Entity '${entity.id}' references unknown asset '${assetId}'.`,
+          severity: 'warning',
+          code: 'BROKEN_ASSET_REF',
+          entityId: entity.id
+        });
+      }
+    });
+
+    // 6. Parameter & Range Integrity (Contract Audit)
+    if (contract?.parameters) {
+      contract.parameters.forEach(param => {
+        // A. Inverted Range
+        if (param.min >= param.max) {
+          results.errors.push({
+            id: `invalid-range-${param.id}`,
+            source: this.name,
+            message: `Invalid Range: Parameter '${param.id}' has min (${param.min}) >= max (${param.max}).`,
+            severity: 'error',
+            code: 'INVALID_PARAM_RANGE'
+          });
+        }
+        // B. Default Out of Bounds
+        if (param.default < param.min || param.default > param.max) {
+          results.errors.push({
+            id: `invalid-default-${param.id}`,
+            source: this.name,
+            message: `Out of Bounds: Parameter '${param.id}' default (${param.default}) is outside [${param.min}, ${param.max}].`,
+            severity: 'error',
+            code: 'INVALID_PARAM_DEFAULT'
+          });
+        }
+      });
+    }
 
     results.errorCount = results.errors.length;
     results.warningCount = results.warnings.length;

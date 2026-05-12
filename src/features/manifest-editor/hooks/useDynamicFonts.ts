@@ -22,7 +22,8 @@ export function useDynamicFonts(manifest: OMEGA_Manifest, resolveAsset?: (path: 
     }
  
     const fontRules = fonts.map(font => {
-      const url = resolveAsset ? resolveAsset(font.file) : font.file;
+      const fontFile = font.url || font.file || '';
+      const url = resolveAsset ? resolveAsset(fontFile) : fontFile;
       if (!url) return '';
       
       return `

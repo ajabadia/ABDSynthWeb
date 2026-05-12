@@ -61,6 +61,7 @@ interface EditorModalsProps {
     setIsPromptOpen: (open: boolean) => void;
     confirmInjection: (values: BlueprintPlaceholderValues) => void;
     cancelInjection: () => void;
+    onUpdatePlaceholder?: (id: string, value: string | number | boolean) => void;
   };
 }
 
@@ -166,6 +167,7 @@ export default function EditorModals({
             isOpen={isCellEditorOpen}
             onClose={() => setIsCellEditorOpen(false)}
             resolveAsset={resolveAsset}
+            manifest={manifest}
             onSave={(cell) => {
               console.log("Saving Cell to Library:", cell);
               try {
@@ -204,6 +206,7 @@ export default function EditorModals({
           blueprint={blueprintInjection.activeBlueprint}
           onClose={blueprintInjection.cancelInjection}
           onConfirm={blueprintInjection.confirmInjection}
+          onUpdatePlaceholder={blueprintInjection.onUpdatePlaceholder}
         />
       )}
     </>

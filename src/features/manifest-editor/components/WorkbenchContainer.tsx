@@ -9,18 +9,20 @@ import WorkbenchLogs from './layout/WorkbenchLogs';
 import EditorModals from './modals/EditorModals';
 import ModulationGrid from './modulation/ModulationGrid';
 import { HiddenFileHandlers } from './shared/HiddenFileHandlers';
-import { WorkbenchViewport } from './viewport/WorkbenchViewport';
-import { WorkbenchInspector } from './inspector/WorkbenchInspector';
 import TemplateGallery from './gallery/TemplateGallery';
-import MultiTabHeader from './layout/MultiTabHeader';
-import { SourceView } from './views/SourceView';
+import { WorkbenchInspector } from './inspector/WorkbenchInspector';
+import WorkbenchPane from './workspace/WorkbenchPane';
+import { SplitDivider } from './workspace/SplitDivider';
+
+// Hooks
+import { useWorkbenchShortcuts } from '@/features/manifest-editor/hooks/useWorkbenchShortcuts';
 
 // Types
-import { ManifestEntity, ModuleTemplate } from '@/omega-ui-core/types/manifest';
+import { ManifestEntity, ModuleTemplate, OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import { useManifestEditor } from '@/features/manifest-editor/hooks/useManifestEditor';
 import { useViewport } from '@/features/manifest-editor/hooks/useViewport';
 import { useAudit } from '@/features/manifest-editor/hooks/useAudit';
-import { useWorkbenchState, WorkbenchTabType } from '@/features/manifest-editor/hooks/useWorkbenchState';
+import { useWorkbenchState, WorkbenchTabType, WorkbenchPaneId } from '@/features/manifest-editor/hooks/useWorkbenchState';
 import { useAuditNavigator } from '@/features/manifest-editor/hooks/useAuditNavigator';
 import { useWatchdog } from '@/features/manifest-editor/hooks/useWatchdog';
 import { adaptModuleTemplateToBlueprintDefinition } from '../utils/blueprintUtils';
@@ -28,46 +30,12 @@ import { useDynamicFonts } from '@/features/manifest-editor/hooks/useDynamicFont
 import { TabDiagnostics, createEmptyDiagnostics, Diagnostic } from '../types/diagnostics';
 import { mergeDiagnostics } from '../utils/diagnosticUtils';
 import { structuralAuditor } from '../services/StructuralAuditor';
-import { ManifestDiffResult } from '../types/diff';
+import { DocumentState } from '../types/document';
 
 // Services
 import { ContractService } from '@/services/contractService';
 
 // --- Components ---
-
-interface SplitDividerProps {
-  onDrag: (delta: number) => void;
-}
-
-const SplitDivider = React.memo(({ onDrag }: SplitDividerProps) => {
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const totalWidth = window.innerWidth;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const delta = moveEvent.clientX - startX;
-      onDrag(delta / totalWidth);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [onDrag]);
-
-  return (
-    <div 
-      onMouseDown={handleMouseDown}
-      className="w-1 bg-white/5 hover:bg-primary/40 cursor-col-resize transition-colors duration-200 z-10"
-    />
-  );
-});
-
-SplitDivider.displayName = 'SplitDivider';
 
 interface WorkbenchContainerProps {
   onOpenCellEditor?: () => void;
@@ -87,7 +55,7 @@ interface WorkbenchContainerProps {
 
 export default function WorkbenchContainer({ 
   onOpenGovernance,
-  setIsCellLibraryOpen: setIsCellLibraryOpenProp, // Renamed to avoid collision if needed
+  setIsCellLibraryOpen: setIsCellLibraryOpenProp,
   isCellLibraryOpen: isCellLibraryOpenProp
 }: WorkbenchContainerProps) {
   // 1. Core Data & Operations
@@ -98,17 +66,14 @@ export default function WorkbenchContainer({
   const { state, actions, derived, ...uiLegacy } = useWorkbenchState();
   const { auditResult } = useAudit(manifest, contract);
   
-  // 3. Diff & History State (Phase 9.2)
-  const [activeDiff, setActiveDiff] = useState<ManifestDiffResult | null>(null);
-  const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
-
+  // 3. Diff & History Operations (Consolidated in useWorkbenchState)
   const handleCompareWithHistory = useCallback((index: number) => {
     const diff = editor.compareWithHistory(index);
     if (diff) {
-      setActiveDiff(diff);
-      setIsDiffModalOpen(true);
+      uiLegacy.setActiveDiff(diff);
+      uiLegacy.setIsDiffModalOpen(true);
     }
-  }, [editor]);
+  }, [editor, uiLegacy]);
 
   const activeTabId = state.panesById[state.focusedPaneId].activeTabId;
   const activeTab = activeTabId ? state.tabsById[activeTabId] : null;
@@ -149,11 +114,12 @@ export default function WorkbenchContainer({
 
   // Memoize Structural Diagnostics (Global)
   const structuralDiagnostics = useMemo(() => 
-    structuralAuditor.extractDiagnostics(manifest, { contract }), 
+    structuralAuditor.extractDiagnostics(manifest as OMEGA_Manifest, { contract: contract as OMEGA_Contract }), 
     [manifest, contract]
   );
 
-  const handleDiagnosticsUpdate = useCallback((tabId: string, diagnostics: TabDiagnostics) => {
+  const handleDiagnosticsUpdate = useCallback((tabId: string, diagnosticsRaw: unknown) => {
+    const diagnostics = diagnosticsRaw as TabDiagnostics;
     setTabDiagnostics(prev => {
       const current = prev[tabId];
       if (current && 
@@ -182,13 +148,12 @@ export default function WorkbenchContainer({
   const selectedItemId = state.selectedNodeId;
 
   const setActiveTab = useCallback((tabId: string) => {
-    // Basic compat mapping: if someone asks for 'orbital' etc, we open/focus the default tab
     if (['orbital', 'rack', 'source'].includes(tabId)) {
       actions.focusTab('primary', `tab-${tabId}`);
     }
   }, [actions]);
 
-  const gps = useAuditNavigator(manifest, handleSelectItem, setActiveTab);
+  const gps = useAuditNavigator(manifest as OMEGA_Manifest, handleSelectItem, setActiveTab);
   const handleNavigateToIssue = gps.handleNavigateToIssue;
   
   // 3. Watchdog Integration (Hot-Reload)
@@ -197,117 +162,59 @@ export default function WorkbenchContainer({
   }, [editor]);
 
   const watchdog = useWatchdog(handleWatchdogUpdate);
- 
-  // 4. Dynamic Typography Integration
-  useDynamicFonts(manifest, editor.resolveAsset);
- 
-  // 5. Exit Guards (Phase 6.1 Polish & 7.0 Multi-Doc Ready)
+  useDynamicFonts(manifest as OMEGA_Manifest, editor.resolveAsset);
+  
+  // 5. Exit Guards
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      const hasDirty = Object.values(editor.orchestrator.documentsById).some(doc => doc.isDirty);
+      const docs = editor.orchestrator.documentsById as Record<string, DocumentState>;
+      const hasDirty = Object.values(docs).some(doc => doc.isDirty);
       if (hasDirty) {
         e.preventDefault();
-        e.returnValue = ''; // Required for Chrome
+        e.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [editor.orchestrator.documentsById]);
 
-  // 6. Keyboard Shortcuts (Phase 6.1 Polish & 8.0 History)
-  useEffect(() => {
-    const isInputFocused = () => {
-      const active = document.activeElement;
-      if (!active) return false;
-      const tag = active.tagName.toLowerCase();
-      return (
-        tag === 'input' || 
-        tag === 'textarea' || 
-        tag === 'select' || 
-        active.hasAttribute('contenteditable') ||
-        active.classList.contains('monaco-editor') || // Monaco focus
-        active.closest('.monaco-editor') !== null      // Focus inside Monaco
-      );
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 1. Persistence (Ctrl+S)
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        editor.addLog("[INPUT] Cmd+S detected. Triggering persistence...");
-        editor.exportManifest();
-      }
-
-      // 2. Clipboard (Ctrl+C / Ctrl+V)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        if (selectedItemId && !isInputFocused()) {
-          editor.copyToClipboard(selectedItemId);
-        }
-      }
-
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-        if (!isInputFocused()) {
-          e.preventDefault();
-          editor.pasteFromClipboard();
-        }
-      }
-
-      // 3. History Engine (Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-        if (!isInputFocused()) {
-          e.preventDefault();
-          if (e.shiftKey) {
-            editor.redo();
-          } else {
-            editor.undo();
-          }
-        }
-      }
-
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-        if (!isInputFocused()) {
-          e.preventDefault();
-          editor.redo();
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editor, selectedItemId]);
+  // 6. Keyboard Shortcuts Modularized
+  useWorkbenchShortcuts(editor, selectedItemId);
 
   // 7. Effects & Synchronization (Aseptic Sync)
   useEffect(() => {
-    const manifestTab = manifest.ui?.layout?.activeTab;
+    const m = manifest as OMEGA_Manifest;
+    const manifestTab = m.ui?.layout?.activeTab;
     const currentTabType = activeTab?.type || 'rack';
     if (manifestTab !== currentTabType && ['rack', 'orbital'].includes(currentTabType)) {
       updateManifest({ 
         ui: { 
-          ...manifest.ui, 
+          ...m.ui, 
           layout: { 
-            containers: manifest.ui?.layout?.containers || [],
-            ...manifest.ui?.layout, 
+            containers: m.ui?.layout?.containers || [],
+            ...m.ui?.layout, 
             activeTab: currentTabType as WorkbenchTabType
           } 
         } 
       });
     }
-  }, [activeTab?.type, manifest.ui, updateManifest]);
- 
+  }, [activeTab?.type, manifest, updateManifest]);
+  
   const handleAddEntity = useCallback((type: 'control' | 'jack') => {
     const id = editor.addEntity(type);
     if (id) handleSelectItem(id);
   }, [editor, handleSelectItem]);
- 
+  
   const handleDuplicateItem = useCallback((id: string) => {
     const newId = editor.duplicateItem(id);
     if (newId) handleSelectItem(newId);
   }, [editor, handleSelectItem]);
- 
+  
   const handleRemoveItem = useCallback((id: string) => {
     editor.removeItem(id);
     if (selectedItemId === id) handleSelectItem(null);
   }, [editor, selectedItemId, handleSelectItem]);
- 
+  
   const onDeploy = useCallback(async () => {
     if (await editor.handleDeploy() === 'AUDIT_FAIL') uiLegacy.setIsAuditModalOpen();
   }, [editor, uiLegacy]);
@@ -315,21 +222,22 @@ export default function WorkbenchContainer({
   const onReset = useCallback(() => {
     editor.reset();
   }, [editor]);
- 
+  
   const handleExportContract = (format: 'ts' | 'cpp') => {
-    ContractService.downloadContract(manifest, format);
+    ContractService.downloadContract(manifest as OMEGA_Manifest, format);
   };
- 
+  
   const triggerUpload = (id: string) => document.getElementById(id)?.click();
 
   const availableBinds = useMemo(() => {
-    if (!contract) return [];
+    const c = contract as OMEGA_Contract | null;
+    if (!c) return [];
     return [
-      ...(contract.parameters?.map((p: { id: string }) => p.id) || []),
-      ...(contract.ports?.map((p: { id: string }) => p.id) || [])
+      ...(c.parameters?.map((p: { id: string }) => p.id) || []),
+      ...(c.ports?.map((p: { id: string }) => p.id) || [])
     ];
   }, [contract]);
- 
+  
   const [localIsCellLibraryOpen, setLocalIsCellLibraryOpen] = useState(false);
   const isCellLibraryOpen = isCellLibraryOpenProp ?? localIsCellLibraryOpen;
   const setIsCellLibraryOpen = setIsCellLibraryOpenProp ?? setLocalIsCellLibraryOpen;
@@ -348,20 +256,11 @@ export default function WorkbenchContainer({
     actions.setLayoutRatio(state.layout.ratio + delta);
   }, [actions, state.layout.ratio]);
 
-  const handleSourceChange = useCallback((next: string) => {
-    try {
-      const updated = JSON.parse(next);
-      updateManifest(updated);
-    } catch {
-      // Silent catch for invalid JSON during typing
-    }
-  }, [updateManifest]);
-
-  const handleDiagnosticClick = useCallback((tabId: string, diag: Diagnostic) => {
+  const handleDiagnosticClick = useCallback((tabId: string, diagRaw: unknown) => {
+    const diag = diagRaw as Diagnostic;
     // 1. If it's a Monaco error, switch to source tab and highlight
     if (diag.source === 'Monaco' || diag.line) {
       actions.focusTab('primary', 'tab-source');
-      // Monaco handles the highlight via its internal markers once we switch
     } 
     // 2. If it's a structural error with an entityId, we could select the item
     else if (diag.entityId) {
@@ -373,102 +272,66 @@ export default function WorkbenchContainer({
     actions.captureTabViewState(tabId, { editorViewState: viewState });
   }, [actions]);
 
-  // View Mapper
-  const renderPaneContent = (paneId: 'primary' | 'secondary') => {
+  // 7. Render Helper
+  const renderPane = (paneId: WorkbenchPaneId) => {
     const pane = state.panesById[paneId];
-    const activeTabId = pane.activeTabId;
-    const tab = activeTabId ? state.tabsById[activeTabId] : null;
+    const activeId = pane.activeTabId;
     
-    // Inject global dirty state and diagnostic badges for manifest-related views
     const paneTabs = pane.tabIds.map(id => {
       const t = state.tabsById[id];
       const monacoDiags = tabDiagnostics[id] || createEmptyDiagnostics();
-      
-      // Merge structural diagnostics with specific tab diagnostics
-      // Structural diagnostics are global to the manifest, so they affect all manifest views
       const isManifestView = ['source', 'rack', 'orbital', 'inspector', 'uca-tree'].includes(t.type);
-      const diagnostics = isManifestView 
-        ? mergeDiagnostics([monacoDiags, structuralDiagnostics])
-        : monacoDiags;
-      
+      const diagnostics = isManifestView ? mergeDiagnostics([monacoDiags, structuralDiagnostics]) : monacoDiags;
       const documentId = (t.payload?.documentId as string) || 'primary';
-      const isDocumentDirty = (editor.orchestrator.documentsById as Record<string, { isDirty: boolean }>)[documentId]?.isDirty ?? false;
+      const docs = editor.orchestrator.documentsById as Record<string, DocumentState>;
+      const isDocumentDirty = docs[documentId]?.isDirty ?? false;
 
-      if (isManifestView) {
-        return { ...t, isDirty: isDocumentDirty, diagnostics };
-      }
-      return { ...t, diagnostics };
+      return { ...t, isDirty: isDocumentDirty, diagnostics };
     });
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <MultiTabHeader 
-          paneId={paneId}
-          tabs={paneTabs}
-          activeTabId={activeTabId}
-          isFocused={state.focusedPaneId === paneId}
-          onTabSelect={(tabId) => actions.focusTab(paneId, tabId)}
-          onTabClose={(tabId) => {
-            const t = state.tabsById[tabId];
-            const isManifestView = ['source', 'rack', 'orbital', 'inspector', 'uca-tree'].includes(t.type);
-            const documentId = (t.payload?.documentId as string) || 'primary';
-            const isTabDirty = isManifestView && (editor.orchestrator.documentsById as Record<string, { isDirty: boolean }>)[documentId]?.isDirty;
-            if (isTabDirty) {
-              if (!confirm(`Tab "${t.title}" has unsaved changes. Close anyway?`)) return;
-            }
-            actions.closeTab(tabId);
-          }}
-          onPaneFocus={() => actions.focusPane(paneId)}
-          onDiagnosticClick={handleDiagnosticClick}
-          simulationBridge={editor.simulationBridge}
-        />
-        
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-          {!tab && (
-            <div className="flex-1 flex items-center justify-center bg-black/20">
-              <span className="text-[10px] font-black wb-text-muted uppercase tracking-[0.2em] opacity-30">
-                Empty Workspace Pane
-              </span>
-            </div>
-          )}
-
-        {['orbital', 'rack', 'history'].includes(tab?.type as string) && (
-          <WorkbenchViewport 
-            viewMode={tab?.type as 'orbital' | 'rack' | 'source' | 'history'} 
-            manifest={manifest} contract={contract}
-              selectedItemId={selectedItemId} onSelectItem={handleSelectItem}
-              updateItem={editor.updateItem} updateManifest={updateManifest}
-              updateContainer={editor.updateContainer} auditResult={auditResult}
-              zoom={zoom} pan={pan} handleZoom={handleZoom} handlePan={handlePan}
-              handleResetViewport={handleResetViewport} handleFitViewport={handleFitViewport}
-              isLiveMode={uiLegacy.isLiveMode} setIsLiveMode={uiLegacy.setIsLiveMode}
-              resolveAsset={editor.resolveAsset}
-              pushParameterUpdate={editor.simulationBridge.pushParameterUpdate}
-              
-              // Phase 9.2 History Integration
-              past={editor.orchestrator.documentsById[editor.activeId]?.history.past || []}
-              onUndoTo={(index) => editor.undoTo(index)}
-              onCompareWithHistory={handleCompareWithHistory}
-            />
-          )}
-          
-
-
-          {tab?.type === 'source' && (
-            <SourceView 
-              tabId={tab.id}
-              manifestId={manifest.id || 'default'}
-              value={JSON.stringify(manifest, null, 2)}
-              language="json"
-              editorViewState={state.tabViewState[tab.id]?.editorViewState}
-              onChange={handleSourceChange}
-              onCaptureViewState={(viewState) => handleCaptureViewState(tab.id, viewState)}
-              onDiagnosticsUpdate={(diagnostics) => handleDiagnosticsUpdate(tab.id, diagnostics)}
-              selectedItemId={selectedItemId}
-            />
-          )}
-        </div>
-      </div>
+      <WorkbenchPane 
+        paneId={paneId}
+        tabs={paneTabs}
+        activeTabId={activeId}
+        isFocused={state.focusedPaneId === paneId}
+        onTabSelect={(tabId) => actions.focusTab(paneId, tabId)}
+        onTabClose={(tabId) => {
+          const t = state.tabsById[tabId];
+          const isManifestView = ['source', 'rack', 'orbital', 'inspector', 'uca-tree'].includes(t.type);
+          const documentId = (t.payload?.documentId as string) || 'primary';
+          const docs = editor.orchestrator.documentsById as Record<string, DocumentState>;
+          const isTabDirty = isManifestView && docs[documentId]?.isDirty;
+          if (isTabDirty && !confirm(`Tab "${t.title}" has unsaved changes. Close anyway?`)) return;
+          actions.closeTab(tabId);
+        }}
+        onPaneFocus={() => actions.focusPane(paneId)}
+        onDiagnosticClick={handleDiagnosticClick}
+        simulationBridge={editor.simulationBridge}
+        manifest={manifest as OMEGA_Manifest}
+        contract={contract as OMEGA_Contract | null}
+        orchestrator={editor.orchestrator}
+        activeId={editor.activeId}
+        tabViewState={state.tabViewState}
+        onCaptureViewState={handleCaptureViewState}
+        onDiagnosticsUpdate={handleDiagnosticsUpdate}
+        selectedItemId={selectedItemId}
+        onSelectItem={handleSelectItem}
+        updateItem={editor.updateItem}
+        updateContainer={editor.updateContainer}
+        auditResult={auditResult}
+        resolveAsset={editor.resolveAsset}
+        zoom={zoom}
+        pan={pan}
+        handleZoom={handleZoom}
+        handlePan={handlePan}
+        handleResetViewport={handleResetViewport}
+        handleFitViewport={handleFitViewport}
+        isLiveMode={uiLegacy.isLiveMode}
+        setIsLiveMode={uiLegacy.setIsLiveMode}
+        onUndoTo={editor.undoTo}
+        onCompareWithHistory={handleCompareWithHistory}
+      />
     );
   };
 
@@ -521,7 +384,7 @@ export default function WorkbenchContainer({
             className="flex flex-col overflow-hidden" 
             style={{ width: derived.isSplit ? `${state.layout.ratio * 100}%` : '100%' }}
           >
-            {renderPaneContent('primary')}
+            {renderPane('primary')}
           </div>
 
           {/* SPLIT DIVIDER */}
@@ -530,7 +393,7 @@ export default function WorkbenchContainer({
           {/* SECONDARY PANE (SPLIT) */}
           {derived.isSplit && (
             <div className="flex-1 border-l wb-outline flex flex-col overflow-hidden animate-in slide-in-from-right duration-500">
-              {renderPaneContent('secondary')}
+              {renderPane('secondary')}
             </div>
           )}
         </div>
@@ -539,7 +402,7 @@ export default function WorkbenchContainer({
         <div className="w-[340px] flex-shrink-0 border-l wb-outline flex flex-col bg-black/10 overflow-hidden">
             <WorkbenchInspector 
               isLiveMode={uiLegacy.isLiveMode} uiTheme={uiLegacy.uiTheme}
-              manifest={manifest} selectedItem={selectedItem}
+              manifest={manifest as OMEGA_Manifest} selectedItem={selectedItem}
               selectedItemId={selectedItemId} highlightPath={gps.highlightPath}
               availableBinds={availableBinds} extraResources={editor.extraResources}
               audit={auditResult}
@@ -561,7 +424,7 @@ export default function WorkbenchContainer({
 
         {state.showModGrid && (
           <ModulationGrid 
-            manifest={manifest} onAdd={editor.addModulation} 
+            manifest={manifest as OMEGA_Manifest} onAdd={editor.addModulation} 
             onRemove={editor.removeModulation} onUpdate={editor.updateModulation} 
             onClose={() => uiLegacy.toggleUIState('showModGrid')} 
           />
@@ -569,7 +432,7 @@ export default function WorkbenchContainer({
       </main>
 
       <EditorModals 
-        manifest={manifest}
+        manifest={manifest as OMEGA_Manifest}
         pendingFiles={state.pendingFiles}
         setPendingFiles={(files) => actions.setPendingFiles(files || [])}
         handleBulkUpload={editor.handleBulkUpload}
@@ -595,9 +458,9 @@ export default function WorkbenchContainer({
         onAddEntityFromLibrary={handleAddFromLibrary}
         
         // Phase 9.2 Diff
-        isDiffModalOpen={isDiffModalOpen}
-        setIsDiffModalOpen={setIsDiffModalOpen}
-        activeDiff={activeDiff}
+        isDiffModalOpen={uiLegacy.isDiffModalOpen}
+        setIsDiffModalOpen={uiLegacy.setIsDiffModalOpen}
+        activeDiff={uiLegacy.activeDiff}
         onMergeEntries={editor.handleMergeEntries}
         blueprintInjection={editor.blueprintInjection}
       />

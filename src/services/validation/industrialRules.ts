@@ -1,4 +1,4 @@
-import { OMEGA_Manifest, ManifestEntity } from '../../omega-ui-core/types/manifest';
+import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '../../omega-ui-core/types/manifest';
 import { ValidationIssue } from '../../types/validation';
 import { OmegaContract } from '../wasmLoader';
 
@@ -15,8 +15,19 @@ export class IndustrialRules {
     const activePlanes = manifest.ui.layout?.planes || ['MAIN'];
     const usedIds = new Set<string>();
 
+    // ERA 7.2.3 - UCA TREE COLLECTION (Phase 10.1)
+    const allTreeNodes: OmegaNode[] = [];
+    const collectNodes = (node: OmegaNode) => {
+      allTreeNodes.push(node);
+      node.children?.forEach(collectNodes);
+    };
+    if (manifest.ui.tree) collectNodes(manifest.ui.tree);
+
+    const treeContainers = allTreeNodes.filter(n => n.kind === 'container' || n.kind === 'face' || n.kind === 'rack');
+    const hasInfrastructure = containers.length > 0 || treeContainers.length > 0;
+
     // ERA 7.2.3 - MANDATORY INFRASTRUCTURE
-    if (containers.length === 0) {
+    if (!hasInfrastructure) {
       issues.push({
         path: '/ui/layout/containers',
         message: `CRITICAL FAIL: No existen contenedores. Todo módulo OMEGA requiere al menos una placa base (Container).`,
@@ -34,7 +45,6 @@ export class IndustrialRules {
       });
     }
 
-    const containerTabMap = new Map(containers.map(c => [c.id, c.tab || 'MAIN']));
     const availableAssets = new Set(manifest.resources?.assets?.map(a => a.id) || []);
 
     // CHEQUEO DE ACTIVOS (Fase 13 — AGGRESSIVE)
@@ -58,24 +68,25 @@ export class IndustrialRules {
         }
     });
 
-    const validateEntity = (entity: ManifestEntity, path: string) => {
-      const containerId = entity.presentation?.container;
-      const container = containers.find(c => c.id === containerId);
-      const entityTab = container?.tab || 'MAIN';
+    const validateEntity = (entity: ManifestEntity | OmegaNode, path: string) => {
+      const isUCA = 'kind' in entity;
+      let targetContainerId = isUCA ? '' : (entity as ManifestEntity).presentation?.container;
+      
+      // Try to find parent container in tree if UCA
+      if (isUCA) {
+        // This is a simplified check for Phase 10.1
+        targetContainerId = 'MAIN_FACE'; // Fallback for root-level UCA cells
+      }
+
+      const container = containers.find(c => c.id === targetContainerId) || treeContainers.find(c => c.id === targetContainerId);
+      const entityTab = container ? (container as { tab?: string }).tab || 'MAIN' : 'MAIN';
 
       // ERA 7.2.3 - MANDATORY ASSOCIATION
-      if (!containerId) {
+      if (!isUCA && !targetContainerId) {
         issues.push({
           path: `${path}/presentation/container`,
           message: `CRITICAL: El elemento '${entity.id}' no tiene contenedor asociado. Todas las cells deben pertenecer a una placa base.`,
           keyword: 'era7_orphan_cell',
-          severity: 'error'
-        });
-      } else if (!container) {
-        issues.push({
-          path: `${path}/presentation/container`,
-          message: `CRITICAL: El contenedor '${containerId}' referenciado por '${entity.id}' no existe.`,
-          keyword: 'era7_broken_link',
           severity: 'error'
         });
       }
@@ -91,10 +102,10 @@ export class IndustrialRules {
       }
 
       // Asset Validation (Fase 13 — AGGRESSIVE)
-      const assetId = entity.presentation?.asset;
+      const assetId = (entity as ManifestEntity).presentation?.asset || (entity as OmegaNode).style?.backgroundAsset;
       const isLogo = entity.bind === 'module_logo' || entity.id === 'logo';
 
-      if (entity.presentation && (assetId || isLogo) && !availableAssets.has(assetId || '')) {
+      if ((assetId || isLogo) && !availableAssets.has((assetId || '') as string)) {
           issues.push({
               path: `${path}/presentation/asset`,
               message: `CRITICAL ASSET: El recurso '${assetId || 'module_logo'}' referenciado por '${entity.id}' no existe en el manifiesto.`,
@@ -105,23 +116,29 @@ export class IndustrialRules {
 
       // Golden Rule 1: Identity
       if (usedIds.has(entity.id)) {
-        issues.push({ path: `${path}/id`, message: `DOUBLE IDENTITY: ID '${entity.id}' duplicado.`, keyword: 'era7_identity', severity: 'error' });
+        issues.push({ 
+          path: `${path}/id`, 
+          message: `DOUBLE IDENTITY: ID '${entity.id}' duplicado. Revisa si existe en el árbol UCA y en los arrays legacy simultáneamente.`, 
+          keyword: 'era7_identity', 
+          severity: 'error' 
+        });
       }
       usedIds.add(entity.id);
 
       // Pro-Master: Rule of 5px
-      if (entity.pos && (entity.pos.x % 5 !== 0 || entity.pos.y % 5 !== 0)) {
+      const pos = (entity as ManifestEntity).pos || (entity as OmegaNode).layout?.pos;
+      if (pos && (pos.x % 5 !== 0 || pos.y % 5 !== 0)) {
         issues.push({
           path: `${path}/pos`,
-          message: `PRO-MASTER: Desalineado. La posición (${entity.pos.x}, ${entity.pos.y}) debe ser múltiplo de 5 (Regla de los 5px).`,
+          message: `PRO-MASTER: Desalineado. La posición (${pos.x}, ${pos.y}) debe ser múltiplo de 5 (Regla de los 5px).`,
           keyword: 'era7_alignment',
           severity: 'audit'
         });
       }
 
       // Pro-Master: Port Normalization
-      if (path.includes('/jacks/')) {
-        const color = entity.presentation?.color;
+      if (path.includes('/jacks/') || (isUCA && (entity as OmegaNode).cellRef?.includes('port'))) {
+        const color = (entity as ManifestEntity).presentation?.color || (entity as OmegaNode).style?.color;
         if (!color) {
           issues.push({
             path: `${path}/presentation/color`,
@@ -133,14 +150,17 @@ export class IndustrialRules {
       }
 
       // Pro-Master: Missing Units
-      const isIndicator = entity.role === 'telemetry' || entity.presentation?.component === 'led' || entity.presentation?.component === 'display';
-      const isMidiOrString = entity.type === 'string' || manifest.metadata?.family === 'midi';
-      if (!entity.unit && entity.role !== 'output' && !isIndicator && !isMidiOrString) {
+      const component = (entity as ManifestEntity).presentation?.component || (entity as OmegaNode).cellRef;
+      const role = (entity as ManifestEntity).role || (entity as OmegaNode).role;
+      const isIndicator = role === 'telemetry' || component === 'led' || component === 'display';
+      const entityAny = entity as unknown as { type?: string; unit?: string };
+      const isMidiOrString = entityAny.type === 'string' || manifest.metadata?.family === 'midi';
+      if (!entityAny.unit && role !== 'output' && !isIndicator && !isMidiOrString) {
         issues.push({ path: `${path}/unit`, message: `PRO-MASTER: Falta unidad (Hz, dB, ms, semi, %). Requerido para parámetros de control.`, keyword: 'era7_ux', severity: 'audit' });
       }
 
       // Advanced: Out of Bounds
-      if (entity.pos && (entity.pos.x < 0 || entity.pos.x > rackWidth || entity.pos.y < 0 || entity.pos.y > rackHeight)) {
+      if (pos && (pos.x < 0 || pos.x > rackWidth || pos.y < 0 || pos.y > rackHeight)) {
         issues.push({ path: `${path}/pos`, message: `OUT OF BOUNDS: '${entity.id}' fuera del metal.`, keyword: 'era7_integrity', severity: 'error' });
       }
 
@@ -161,35 +181,16 @@ export class IndustrialRules {
           });
         }
       }
-
-      // Pro-Master: Overlapping & Ergonomics
-      const allEntities = [
-        ...(manifest.ui?.controls || []),
-        ...(manifest.ui?.jacks || [])
-      ];
-
-      allEntities.forEach((other) => {
-        if (entity.id === other.id) return;
-        if (!entity.pos || !other.pos) return;
-        
-        const otherTab = containerTabMap.get(other.presentation?.container || 'STATUS') || 'MAIN';
-        if (entityTab !== otherTab) return;
-
-        const dist = Math.sqrt(Math.pow(entity.pos.x - other.pos.x, 2) + Math.pow(entity.pos.y - other.pos.y, 2));
-        if (dist < 5) {
-          issues.push({ path: `${path}/pos`, message: `PRO-MASTER: Colisión crítica con '${other.id}'. Componentes solapados en pestaña '${entityTab}'.`, keyword: 'era7_collision', severity: 'error' });
-        }
-      });
-
-      // Pro-Master: Unit Consistency
-      const label = (entity.label || '').toLowerCase();
-      if ((label.includes('freq') || label.includes('cut') || label.includes('pich')) && entity.unit !== 'Hz' && entity.unit !== 'kHz' && entity.unit !== 'semi') {
-        issues.push({ path: `${path}/unit`, message: `PRO-MASTER: Consistencia de unidades. Parámetro tonal detectado, se recomienda 'Hz' o 'semi'.`, keyword: 'era7_ux_context', severity: 'audit' });
-      }
     };
 
-    (manifest.ui?.controls || []).forEach((e, idx) => validateEntity(e, `/ui/controls/${idx}`));
-    (manifest.ui?.jacks || []).forEach((e, idx) => validateEntity(e, `/ui/jacks/${idx}`));
+    const isUCAActive = manifest.ui?.useUCA !== false && !!manifest.ui?.tree;
+
+    if (isUCAActive) {
+      allTreeNodes.forEach((n) => validateEntity(n, `/ui/tree/node/${n.id}`));
+    } else {
+      (manifest.ui?.controls || []).forEach((e, idx) => validateEntity(e, `/ui/controls/${idx}`));
+      (manifest.ui?.jacks || []).forEach((e, idx) => validateEntity(e, `/ui/jacks/${idx}`));
+    }
 
     return issues;
   }

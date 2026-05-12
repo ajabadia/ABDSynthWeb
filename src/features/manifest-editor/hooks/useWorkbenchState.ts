@@ -84,9 +84,15 @@ export function useWorkbenchState() {
         
       setIsLiveMode: () =>
         dispatch({ type: "TOGGLE_UI_STATE", payload: { key: 'isLiveMode' } }),
+        
+      setActiveDiff: (diff: import("../types/diff").ManifestDiffResult | null) =>
+        dispatch({ type: "SET_ACTIVE_DIFF", payload: { diff } }),
+        
+      setIsDiffModalOpen: (open: boolean) =>
+        dispatch({ type: "TOGGLE_UI_STATE", payload: { key: 'isDiffModalOpen', value: open } }),
     }),
     []
-  );
+);
 
   // 3. Derived State (Selectors)
   const derived = useMemo(() => {
@@ -124,6 +130,8 @@ export function useWorkbenchState() {
     isAboutModalOpen: state.isAboutModalOpen,
     isConfigModalOpen: state.isConfigModalOpen,
     isCellEditorOpen: state.isCellEditorOpen,
+    isDiffModalOpen: state.isDiffModalOpen,
+    activeDiff: state.activeDiff,
     uiTheme: state.uiTheme,
     pendingFiles: state.pendingFiles,
     
@@ -134,5 +142,7 @@ export function useWorkbenchState() {
     toggleUIState: actions.toggleUIState,
     setPendingFiles: actions.setPendingFiles,
     setIsAuditModalOpen: () => actions.toggleUIState('isAuditModalOpen'),
+    setIsDiffModalOpen: actions.setIsDiffModalOpen,
+    setActiveDiff: actions.setActiveDiff,
   };
 }

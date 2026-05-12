@@ -1,4 +1,4 @@
-import { OmegaNode, OverridePolicy, ModuleTemplate } from '../types/manifest';
+import { OmegaNode, OverridePolicy, CellTemplate } from '../types/manifest';
 
 /**
  * reorderChildren
@@ -49,11 +49,11 @@ export function calculateTargetIndex(
   
   for (let i = 0; i < otherSiblings.length; i++) {
     const sibling = otherSiblings[i];
-    const pos = sibling.layout?.pos?.[axis] || 0;
-    const size = sibling.layout?.size?.[sizeAxis] || 48;
+    const pos = (sibling.layout?.pos as unknown as Record<string, number> | undefined)?.[axis] || 0;
+    const size = (sibling.layout?.size as unknown as Record<string, number> | undefined)?.[sizeAxis] || 48;
     const midpoint = pos + size / 2;
 
-    if (pointerPos[axis] < midpoint) {
+    if (pointerPos[axis as 'x' | 'y'] < midpoint) {
       return i;
     }
   }
@@ -129,20 +129,21 @@ export function applySlotMappings(node: OmegaNode, mappings: Record<string, stri
 /**
  * congealSnapshot
  * Creates a "frozen" version of a template root with overrides applied and slots resolved.
- * This is the version that will be embedded in the .acepack.
- * Following Era 7.2.3 Portability Standards.
  */
-export function congealSnapshot(node: OmegaNode, template: ModuleTemplate): OmegaNode {
+export function congealSnapshot(node: OmegaNode, template: CellTemplate): OmegaNode {
   // 1. Deep clone the blueprint root
-  const blueprint = JSON.parse(JSON.stringify(template.root));
+  const blueprint = JSON.parse(JSON.stringify(template.baseNode || template.root)) as OmegaNode;
 
   // 2. Apply Genetic Overrides
-  const congealed = mergeWithOverrides(blueprint, node.overrides || {}, template.policy) as OmegaNode;
+  const congealed = mergeWithOverrides(blueprint as Record<string, unknown>, node.overrides || {}, template.policy || []) as OmegaNode;
   
   // 3. Resolve Slot Bindings permanently
   if (node.slotMappings) {
     applySlotMappings(congealed, node.slotMappings);
   }
 
-  return congealed as OmegaNode;
+  // 4. Preserve ID authority
+  congealed.id = node.id;
+
+  return congealed;
 }

@@ -66,11 +66,20 @@ export const useHistoryActions = ({
     addLog(`[HISTORY] Jumped to historical snapshot ${index}.`);
   }, [orchestrator, activeId, addLog, simulationBridge]);
 
-  const updateManifestWithHistory = useCallback((updates: Partial<OMEGA_Manifest>, label: string, forceHistory = false) => {
+  const updateManifestWithHistory = useCallback((
+    updates: Partial<OMEGA_Manifest> | ((prev: OMEGA_Manifest) => Partial<OMEGA_Manifest>), 
+    label: string, 
+    forceHistory = false
+  ) => {
+    // Get latest manifest from orchestrator if needed (Phase 10.1C Stale Closure Remediation)
+    const currentDoc = orchestrator.documentsById[activeId];
+    const baseManifest = currentDoc?.manifest || manifest;
+    const finalUpdates = typeof updates === 'function' ? updates(baseManifest) : updates;
+
     pushHistoryEntry(label, forceHistory);
-    orchestrator.updateDocument(activeId, { manifest: updates });
+    orchestrator.updateDocument(activeId, { manifest: finalUpdates });
     simulationBridge.scheduleStructuralSync(label);
-  }, [pushHistoryEntry, orchestrator, activeId, simulationBridge]);
+  }, [pushHistoryEntry, orchestrator, activeId, manifest, simulationBridge]);
 
   const compareWithHistory = useCallback((index: number): ManifestDiffResult | null => {
     const doc = orchestrator.documentsById[activeId];

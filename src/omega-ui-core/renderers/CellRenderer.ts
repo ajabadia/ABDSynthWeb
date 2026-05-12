@@ -37,6 +37,8 @@ export interface CellOptions {
   resolveAsset?: (ref: string | undefined) => string | undefined;
   manifest?: OMEGA_Manifest;
   activeTab?: string;
+  forceFrame?: number; // Phase 12 - Behavior Lab Support
+  recipe?: import('../types/assetBehavior').LayerRecipe; // Phase 12 - Genetic Composition Support
 }
 
 import type { ManifestEntity, OMEGA_Manifest, OmegaStyleNode, OMEGA_Asset } from '../types/manifest';
@@ -49,6 +51,7 @@ interface RendererExtraOptions {
   inherited: Record<string, unknown>;
   manifest?: OMEGA_Manifest;
   resolveAsset?: (id: string | undefined) => string | undefined;
+  forceFrame?: number;
 }
 
 /**
@@ -60,13 +63,14 @@ const COMP_RENDERER_MAP: Record<string, (item: ManifestEntity, props: Record<str
     const style = (item.presentation?.style as any) || {};
     return renderSequenceHTML({
       assetUrl: opt.assetUrl,
-      value: opt.runtimeValue,
+      value: opt.forceFrame !== undefined ? opt.forceFrame : opt.runtimeValue,
       frames: style.frames || 1,
       frameWidth: style.frameWidth || 48,
       frameHeight: style.frameHeight || 48,
       orientation: style.orientation || 'v',
       opacity: style.opacity !== undefined ? style.opacity : 1,
-      style
+      style,
+      isFrameIndex: opt.forceFrame !== undefined // Tell sequence renderer it is a frame index
     });
   },
   'graphic-fragment': (item, props, opt) => {
@@ -436,7 +440,15 @@ export class CellRenderer {
     let mainHTML = '';
     try {
       mainHTML = renderer 
-        ? renderer(item, commonProps as Record<string, unknown>, { assetUrl: assetUrl as string, assetDef, steps, runtimeValue, inherited: inherited as Record<string, unknown>, manifest })
+        ? renderer(item, commonProps as Record<string, unknown>, { 
+            assetUrl: assetUrl as string, 
+            assetDef, 
+            steps, 
+            runtimeValue, 
+            inherited: inherited as Record<string, unknown>, 
+            manifest,
+            forceFrame: options.forceFrame
+          })
         : `<div class="unsupported-renderer">NO RENDERER: ${compType}</div>`;
     } catch (err: unknown) {
       const error = err as Error;

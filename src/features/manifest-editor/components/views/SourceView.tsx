@@ -179,7 +179,7 @@ export function SourceView({
     };
   }, []);
 
-  // Handle Selection Highlight (Phase 6.2)
+  // Handle Selection Highlight (Phase 6.2 / 10.1C Refinement)
   useEffect(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
@@ -192,8 +192,10 @@ export function SourceView({
     if (!model) return;
 
     const content = model.getValue();
-    // Search for the ID in the JSON/YAML structure
-    const pattern = new RegExp(`"id"\\s*:\\s*"${selectedItemId}"`, 'g');
+    
+    // Robust Regex (Industrial Standard): Escape ID and search for both "id": "val" and id: "val"
+    const escapedId = selectedItemId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`"id"\\s*:\\s*"${escapedId}"`, 'g');
     const match = pattern.exec(content);
 
     if (match) {
@@ -202,12 +204,12 @@ export function SourceView({
       
       const range = new monaco.Range(
         startPos.lineNumber,
-        1, // Highlight whole line
+        1, 
         endPos.lineNumber,
         model.getLineMaxColumn(endPos.lineNumber)
       );
 
-      // Apply decoration
+      // Apply decoration collection (Aseptic Management)
       if (!decorationsRef.current) {
         decorationsRef.current = editor.createDecorationsCollection();
       }
@@ -219,15 +221,19 @@ export function SourceView({
             isWholeLine: true,
             className: 'omega-source-selection-highlight',
             linesDecorationsClassName: 'omega-source-selection-gutter',
-            minimap: { color: '#00f2ff55', position: 1 },
+            marginClassName: 'omega-source-selection-gutter',
+            minimap: { color: '#00f2ffaa', position: 1 },
+            stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
           },
         },
       ]);
 
-      // Reveal in center with a small delay to ensure rendering
-      setTimeout(() => {
+      // Reveal in center with industrial precision delay
+      const revealTimeout = setTimeout(() => {
         editor.revealRangeInCenterIfOutsideViewport(range, monaco.editor.ScrollType.Smooth);
-      }, 100);
+      }, 50);
+
+      return () => clearTimeout(revealTimeout);
     } else {
       decorationsRef.current?.clear();
     }

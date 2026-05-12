@@ -348,7 +348,8 @@ if ($Mode -eq "total") {
         $phase8Files = @(
             @{Path="src/features/manifest-editor/types/history.ts"; Expected=@("HistoryEntry","HistoryState")},
             @{Path="src/features/manifest-editor/hooks/useDocumentOrchestrator.ts"; Expected=@("UNDO_DOCUMENT","REDO_DOCUMENT","PUSH_HISTORY")},
-            @{Path="src/features/manifest-editor/hooks/useManifestEditor.ts"; Expected=@("pushHistoryEntry","Date.now","1000")},
+            @{Path="src/features/manifest-editor/hooks/useManifestEditor.ts"; Expected=@("pushHistoryEntry","useHistoryActions")},
+            @{Path="src/features/manifest-editor/hooks/useHistoryActions.ts"; Expected=@("Date.now","1000","undo","redo")},
             @{Path="src/features/manifest-editor/components/WorkbenchContainer.tsx"; Expected=@("keydown","metaKey","ctrlKey","isInputFocused")}
         )
 

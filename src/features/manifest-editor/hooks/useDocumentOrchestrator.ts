@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useReducer, useEffect, useRef } from 'react';
 import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 import { DocumentState } from '../types/document';
 import { IntegrityService } from '@/services/integrityService';
 import { HistoryEntry, INITIAL_HISTORY_STATE } from '../types/history';
@@ -22,7 +23,7 @@ type DocumentAction =
   | { type: 'UNDO_TO_INDEX'; id: string; index: number }
   | { type: 'PUSH_HISTORY'; id: string; entry: HistoryEntry };
 
-interface OrchestratorState {
+export interface OrchestratorState {
   documentsById: Record<string, DocumentState>;
   activeDocumentId: string;
 }
@@ -38,6 +39,44 @@ const createInitialDocument = (id: string, manifest: OMEGA_Manifest): DocumentSt
   isInitializing: true,
   history: INITIAL_HISTORY_STATE
 });
+
+/**
+ * Industrial Deep Merge for OMEGA Manifests (Phase 10.1C)
+ * Optimized for recursive UCA trees and legacy array preservation.
+ */
+function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
+  if (!source) return target;
+  if (!target) return source;
+  
+  // Industrial Rule: Arrays and Primitives are REPLACED
+  if (typeof source !== 'object' || Array.isArray(source)) return source;
+  if (typeof target !== 'object' || Array.isArray(target)) return source;
+
+  const result: Record<string, unknown> = { ...target };
+  
+  for (const key in source) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      const sourceValue = source[key];
+      const targetValue = target[key];
+
+      // CRITICAL: If the key is 'tree', we typically want to REPLACEMENT if it's a full tree update,
+      // but we allow deep merging if it's a partial node update. 
+      // However, our updateItem sends a FULL nextTree, so replacement is safer for 'tree' and 'controls'.
+      if (key === 'tree' || key === 'controls' || key === 'jacks') {
+        result[key] = sourceValue;
+        continue;
+      }
+
+      if (sourceValue && typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
+        result[key] = deepMerge((targetValue || {}) as Record<string, unknown>, sourceValue as Record<string, unknown>);
+      } else {
+        result[key] = sourceValue;
+      }
+    }
+  }
+  
+  return result;
+}
 
 function orchestratorReducer(state: OrchestratorState, action: DocumentAction): OrchestratorState {
   switch (action.type) {
@@ -63,21 +102,40 @@ function orchestratorReducer(state: OrchestratorState, action: DocumentAction): 
         activeDocumentId: nextActiveId
       };
     }
-    case 'UPDATE_DOCUMENT':
-      return {
-        ...state,
-        documentsById: {
-          ...state.documentsById,
-          [action.id]: {
-            ...state.documentsById[action.id],
-            ...action.updates,
-            // If manifest is updated, ensure we merge properly
-            manifest: action.updates.manifest 
-              ? { ...state.documentsById[action.id].manifest, ...action.updates.manifest }
-              : state.documentsById[action.id].manifest
+          case 'UPDATE_DOCUMENT': {
+            const doc = state.documentsById[action.id];
+            if (!doc) return state;
+
+            let nextManifest = action.updates.manifest 
+              ? deepMerge(doc.manifest as unknown as Record<string, unknown>, action.updates.manifest as unknown as Record<string, unknown>) as unknown as OMEGA_Manifest
+              : doc.manifest;
+
+            // ERA 7.2.3 - SELF-HEALING TREE (Phase 10.1C)
+            // If UCA is enabled but the update (or merge) resulted in a missing tree, 
+            // restore it from the old manifest or re-generate it with old tree as base.
+            if (nextManifest.ui?.useUCA !== false && !nextManifest.ui?.tree) {
+               console.warn(`[ORCHESTRATOR] Healing missing UCA tree for ${action.id}`);
+               nextManifest = {
+                 ...nextManifest,
+                 ui: {
+                   ...nextManifest.ui,
+                   tree: manifestToTree(nextManifest, doc.manifest.ui?.tree)
+                 }
+               };
+            }
+            
+            return {
+              ...state,
+              documentsById: {
+                ...state.documentsById,
+                [action.id]: {
+                  ...doc,
+                  ...action.updates,
+                  manifest: nextManifest
+                }
+              }
+            };
           }
-        }
-      };
     case 'SET_ACTIVE_DOCUMENT':
       if (state.activeDocumentId === action.id) return state;
       return { ...state, activeDocumentId: action.id };
@@ -273,6 +331,28 @@ const DEFAULT_MANIFEST: OMEGA_Manifest = {
       planes: ['MAIN'], 
       gridSnap: 5 
     },
+    useUCA: true,
+    tree: {
+      id: 'omega_root',
+      kind: 'rack',
+      role: 'root',
+      layout: {
+        pos: { x: 0, y: 0 },
+        size: { width: 140, height: 420 }
+      },
+      children: [
+        {
+          id: 'MAIN_FACE',
+          kind: 'face',
+          role: 'presentation',
+          layout: {
+            pos: { x: 0, y: 0 },
+            size: { width: 140, height: 420 }
+          },
+          children: []
+        }
+      ]
+    },
     ucaDebug: {
       enabled: false
     }
@@ -301,15 +381,25 @@ export const useDocumentOrchestrator = () => {
         const parsed = JSON.parse(stored);
         // Re-hydrate documents with isInitializing: true to trigger fresh hash check
         const hydratedDocs = Object.fromEntries(
-          Object.entries(parsed.documentsById).map(([id, doc]) => [
-            id, 
-            { 
-              ...(doc as DocumentState), 
-              isInitializing: true, 
-              lastStableHash: null,
-              history: INITIAL_HISTORY_STATE // History is volatile
+          Object.entries(parsed.documentsById).map(([id, doc]) => {
+            const d = doc as DocumentState;
+            // Migration: If UCA is enabled but tree is missing, hydrate it now
+            if (d.manifest.ui?.useUCA !== false && !d.manifest.ui?.tree) {
+              d.manifest.ui = {
+                ...d.manifest.ui,
+                tree: manifestToTree(d.manifest)
+              };
             }
-          ])
+            return [
+              id, 
+              { 
+                ...d, 
+                isInitializing: true, 
+                lastStableHash: null,
+                history: INITIAL_HISTORY_STATE 
+              }
+            ];
+          })
         );
         dispatch({ 
           type: 'HYDRATE_SESSION', 

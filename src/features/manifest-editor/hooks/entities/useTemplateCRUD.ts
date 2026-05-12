@@ -14,12 +14,13 @@ export const useTemplateCRUD = (
 ) => {
 
   const applyTemplate = useCallback((template: ModuleTemplate) => {
-    addLog(`[SYSTEM] Injecting Blueprint: ${template.label} (v${template.version})...`);
+    addLog(`[SYSTEM] Injecting Blueprint: ${template.label} (v${template.version || '1.0'})...`);
 
     // 1. Ensure the manifest supports UCA
     const currentTree = manifest.ui?.tree || {
       id: 'root',
       kind: 'rack',
+      role: 'structure',
       layout: { pos: { x: 0, y: 0 }, mode: 'absolute' },
       children: []
     };
@@ -28,17 +29,18 @@ export const useTemplateCRUD = (
     const newNode: OmegaNode = {
       id: `${template.id}_${Math.random().toString(36).substr(2, 4)}`,
       kind: 'container',
-      templateRef: template.id,
+      role: 'structure',
+      cellRef: template.id,
       layout: {
-        pos: { x: 10, y: 10 }, // Default offset
-        mode: template.root.layout?.mode || 'absolute'
+        pos: { x: 10, y: 10 }, 
+        mode: (template.baseNode || template.root)?.layout?.mode || 'absolute'
       },
       overrides: {},
       slotMappings: {}
     };
 
     // 3. Initialize required slot mappings with defaults if possible
-    template.slots.forEach(slot => {
+    (template.slots || []).forEach(slot => {
       if (newNode.slotMappings) {
         newNode.slotMappings[slot.id] = ''; // To be mapped by user
       }
@@ -50,9 +52,9 @@ export const useTemplateCRUD = (
       children: [...(currentTree.children || []), newNode]
     };
 
-    // 5. Update moduleTemplates registry if not already present
-    const updatedTemplates = {
-      ...(manifest.ui?.moduleTemplates || {}),
+    // 5. Update cellLibrary registry
+    const updatedLibrary = {
+      ...(manifest.ui?.cellLibrary || {}),
       [template.id]: template
     };
 
@@ -60,7 +62,8 @@ export const useTemplateCRUD = (
       ui: {
         ...manifest.ui,
         tree: updatedTree,
-        moduleTemplates: updatedTemplates
+        cellLibrary: updatedLibrary,
+        moduleTemplates: updatedLibrary // Keep for compat
       }
     }, `Apply Template: ${template.label}`);
 

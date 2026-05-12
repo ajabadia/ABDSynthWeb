@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PanInfo } from 'framer-motion';
-import { OmegaNode, OMEGA_Manifest, Position } from '@/omega-ui-core/types/manifest';
+import { OmegaNode, OMEGA_Manifest, Position, GridConfig } from '@/omega-ui-core/types/manifest';
 import { UCADebugContext } from '../ucaTypes';
 import { findParentInTree } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
 import { clampChildToParent, getParentRect, getNodeSize, snapToGrid } from '../../uca/spatialConstraints';
@@ -87,7 +87,7 @@ export function useUCADrag({
       const rawX = (node.layout?.pos?.x || 0) + info.offset.x;
       const rawY = (node.layout?.pos?.y || 0) + info.offset.y;
       
-      const gridConfig = manifest.ui.layout?.grid;
+      const gridConfig = manifest.ui.layout?.grid as GridConfig | undefined;
       const snappedPos = gridConfig?.enabled ? snapToGrid({ x: rawX, y: rawY }, gridConfig) : { x: rawX, y: rawY };
 
       let finalX = Math.round(snappedPos.x);

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Settings, HardDrive, Layers } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 import ColorTokenInput from '../../shared/ColorTokenInput';
 // Removed unused AssetSelector
@@ -23,14 +23,14 @@ export default function MasterHardwareGovernance({ manifest, onUpdate, resolveAs
       .catch(err => console.error("Error loading object library:", err));
   }, []);
 
-  const hardware = manifest.ui.hardware || { 
+  const hardware = (manifest.ui.hardware || { 
     screwCount: 4,
     screwMapping: [],
     screwOffset: 8,
     railStyle: 'industrial', 
     railColor: '#333333', 
     showRails: true 
-  };
+  }) as NonNullable<OMEGA_Manifest['ui']['hardware']>;
 
   const updateHardware = (updates: Partial<NonNullable<OMEGA_Manifest['ui']['hardware']>>) => {
     onUpdate({ ui: { ...manifest.ui, hardware: { ...hardware, ...updates } } });

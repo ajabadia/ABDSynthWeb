@@ -22,7 +22,7 @@ export default function FontSelector({
   category
 }: FontSelectorProps) {
   const { defaultFont } = useRackTokens(manifest);
-  const customFonts = manifest.ui.resources?.fonts?.map(f => f.name) || [];
+  const customFonts = manifest.ui.resources?.fonts?.map((f: { name: string }) => f.name) || [];
   const systemFontNames = OMEGA_OFFICIAL_FONTS.map(f => f.name);
   
   const typography = manifest.ui.typography;

@@ -72,7 +72,7 @@ export function findEditableItem(manifest: OMEGA_Manifest, id: string): { item: 
   }
 
   // 2. Try UCA deep search if it exists or use projection as fallback
-  const treeToSearch = manifest.ui?.tree || manifestToTree(manifest);
+  const treeToSearch = manifest.ui?.tree || manifestToTree(manifest, manifest.ui?.tree);
   if (treeToSearch) {
     const deepNode = findNodeInTree(treeToSearch, id);
     if (deepNode) {

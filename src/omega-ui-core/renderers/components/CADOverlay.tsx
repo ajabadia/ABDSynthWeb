@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { OmegaNode, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import { OmegaNode, OMEGA_Manifest, GridConfig } from '@/omega-ui-core/types/manifest';
 import { getParentRect, getNodeSize, snapToGrid, clampChildToParent } from '../../uca/spatialConstraints';
 
 interface CADOverlayProps {
@@ -30,7 +30,7 @@ export function CADOverlay({
   const rawX = (node.layout.pos?.x || 0) + (dragOffset?.x || 0);
   const rawY = (node.layout.pos?.y || 0) + (dragOffset?.y || 0);
   
-  const gridConfig = manifest.ui.layout?.grid;
+  const gridConfig = manifest.ui.layout?.grid as GridConfig | undefined;
   const snappedPos = gridConfig?.enabled ? snapToGrid({ x: rawX, y: rawY }, gridConfig) : { x: rawX, y: rawY };
 
   const clamped = clampChildToParent(

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Search, Zap, Layers, Package, Layout } from 'lucide-react';
 import { OMEGA_Manifest, BlueprintDefinition } from '@/omega-ui-core/types/manifest';
 import { adaptModuleTemplateToBlueprintDefinition } from '../../utils/blueprintUtils';
+import { INDUSTRIAL_TEMPLATES } from '../../constants/templates';
 
 interface BlueprintLibraryPanelProps {
   manifest: OMEGA_Manifest;
@@ -22,15 +23,26 @@ export default function BlueprintLibraryPanel({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  // Extract blueprints from manifest via canonical adapter
-  const blueprints = Object.values(manifest.ui?.moduleTemplates || {}).map(tmpl => {
+  // Extract blueprints from manifest and system registry
+  const systemBlueprints = INDUSTRIAL_TEMPLATES.map(tmpl => {
     try {
       return adaptModuleTemplateToBlueprintDefinition(tmpl);
     } catch (err) {
-      console.warn("[BLUEPRINT] Skipping invalid template:", tmpl.id, err);
+      console.warn("[BLUEPRINT] Skipping invalid system template:", tmpl.id, err);
       return null;
     }
-  }).filter((bp): bp is BlueprintDefinition => bp !== null);
+  });
+
+  const manifestBlueprints = Object.values(manifest.ui?.moduleTemplates || {}).map(tmpl => {
+    try {
+      return adaptModuleTemplateToBlueprintDefinition(tmpl);
+    } catch (err) {
+      console.warn("[BLUEPRINT] Skipping invalid manifest template:", tmpl.id, err);
+      return null;
+    }
+  });
+
+  const blueprints = [...systemBlueprints, ...manifestBlueprints].filter((bp): bp is BlueprintDefinition => bp !== null);
 
   const categories = ['all', 'voice', 'fx', 'mod', 'utility'];
 

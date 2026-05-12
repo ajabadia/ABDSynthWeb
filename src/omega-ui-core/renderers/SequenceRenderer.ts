@@ -19,6 +19,7 @@ export interface SequenceProps {
     padding?: number[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     style?: Record<string, any>;
+    isFrameIndex?: boolean; // If true, value is treated as literal frame index [0...N-1]
 }
 
 export const renderSequenceHTML = (props: SequenceProps): string => {
@@ -45,7 +46,7 @@ export const renderSequenceHTML = (props: SequenceProps): string => {
     // Polarity handling (Era 7.2.3 Industrial Logic)
     const effectiveValue = props.style?.polarity === 'inverted' ? (1 - value) : value;
 
-    const frameIndex = Math.round(effectiveValue * (frames - 1));
+    const frameIndex = props.isFrameIndex ? value : Math.round(effectiveValue * (frames - 1));
     const percent = frames > 1 ? (frameIndex / (frames - 1)) * 100 : 0;
 
     const backgroundPos = orientation === 'v' 

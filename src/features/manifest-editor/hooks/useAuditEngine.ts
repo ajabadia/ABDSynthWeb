@@ -1,77 +1,74 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import { ValidationService } from '@/services/validationService';
+import { STORAGE_KEYS } from '../constants/storage';
+import { structuralAuditor } from '../services/StructuralAuditor';
+import { ValidationIssue } from '@/types/validation';
 
-export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OmegaContract | null) => {
-  const [logs, setLogs] = useState<string[]>([]);
-
-  // Industrial Logging Engine (Aseptic Sync)
-  const addLog = useCallback((msg: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev.slice(-49), `[${timestamp}] ${msg}`]);
-  }, []);
+/**
+ * useAuditEngine (Phase 9.5+ - Final)
+ * Returns ValidationIssue[] for compatibility with useDeployment contract.
+ */
+export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OMEGA_Contract | null) => {
+  // Lazy initializer avoids setState in useEffect (no cascading renders)
+  const [logs, setLogs] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+    if (!stored) return [];
+    try {
+      return JSON.parse(stored) as string[];
+    } catch {
+      return [];
+    }
+  });
 
   const isInitialized = useRef(false);
- 
-  // Initial Boot Sequence (Client-only to avoid hydration mismatch)
+
+  // Persistence - Save logs
   useEffect(() => {
-    if (!isInitialized.current) {
-      addLog('OMEGA ERA 7 ENGINEERING CONSOLE READY');
-      addLog('Aseptic Protocol V7.1 Active');
+    if (logs.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(logs.slice(-100)));
+    }
+  }, [logs]);
+
+  // Logger API
+  const addLog = useCallback((msg: string) => {
+    const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+    const logEntry = `[${timestamp}] ${msg}`;
+    setLogs(prev => [...prev, logEntry].slice(-100));
+  }, []);
+
+  // Initial Certification Log
+  useEffect(() => {
+    if (!isInitialized.current && manifest) {
+      addLog(`SYSTEM_READY: Initializing audit for document ${manifest.id || 'anonymous'}`);
       isInitialized.current = true;
     }
-  }, [addLog]);
+  }, [manifest, addLog]);
 
-  const issues = useMemo(() => {
-    const baseIssues = ValidationService.validate(manifest);
-    
-    if (contract) {
-      if (manifest.id !== contract.id) {
-        baseIssues.push({
-          path: '/id',
-          message: 'Manifest ID does not match contract ID',
-          keyword: 'integrity',
-          severity: 'error'
-        });
-      }
+  // Diagnostic Aggregation — returns ValidationIssue[] for useDeployment compatibility
+  const issues = useMemo((): ValidationIssue[] => {
+    if (!manifest) return [];
 
-      const contractParamIds = (contract.parameters?.map(p => p.id?.toLowerCase()) || []);
-      const contractPortIds = (contract.ports?.map(p => p.id?.toLowerCase()) || []);
+    // A. Schema + Industrial Rules
+    const baseIssues = ValidationService.validate(manifest, contract as Parameters<typeof ValidationService.validate>[1]) || [];
 
-      manifest.ui?.controls?.forEach((ctrl: ManifestEntity, i: number) => {
-        const bindId = ctrl.bind?.toLowerCase();
-        if (bindId && !contractParamIds.includes(bindId)) {
-          baseIssues.push({
-            path: `/ui/controls/${i}/bind`,
-            message: `Binding error: '${ctrl.bind}' not found in contract.`,
-            keyword: 'binding',
-            severity: 'error'
-          });
-        }
-      });
+    // B. Semantic structural audit — mapped to ValidationIssue shape
+    const structuralResults = structuralAuditor.extractDiagnostics(manifest, { contract });
+    const structuralIssues: ValidationIssue[] = [
+      ...structuralResults.errors,
+      ...structuralResults.warnings,
+    ].map(d => ({
+      path: d.entityId || d.id,
+      message: d.message,
+      keyword: d.code || d.source,
+      severity: d.severity === 'error' ? 'error' : 'warning',
+    }));
 
-      manifest.ui?.jacks?.forEach((jack: ManifestEntity, i: number) => {
-        const bindId = jack.bind?.toLowerCase();
-        if (bindId && !contractPortIds.includes(bindId)) {
-          baseIssues.push({
-            path: `/ui/jacks/${i}/bind`,
-            message: `Jack '${jack.id}' is bound to non-existent stream/port '${jack.bind}'`,
-            keyword: 'binding',
-            severity: 'error'
-          });
-        }
-      });
-    }
-
-    return baseIssues;
+    return [...baseIssues, ...structuralIssues];
   }, [manifest, contract]);
 
-  return {
-    logs,
-    addLog,
-    issues
-  };
+  return { issues, logs, addLog, clearLogs: () => setLogs([]) };
 };

@@ -1,4 +1,4 @@
-import { OmegaNode } from '@/omega-ui-core/types/manifest';
+import { OmegaNode, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 /**
  * OMEGA Phase 9.4A - ID Manager Service
@@ -7,9 +7,17 @@ import { OmegaNode } from '@/omega-ui-core/types/manifest';
 export class IdManager {
   private usedIds: Set<string>;
 
-  constructor(root: OmegaNode) {
+  constructor(manifest: OMEGA_Manifest) {
     this.usedIds = new Set();
-    this.scanTree(root);
+    // 1. Scan Legacy Arrays
+    (manifest.ui?.controls || []).forEach(c => this.usedIds.add(c.id));
+    (manifest.ui?.jacks || []).forEach(j => this.usedIds.add(j.id));
+    (manifest.ui?.layout?.containers || []).forEach(c => this.usedIds.add(c.id));
+    
+    // 2. Scan UCA Tree
+    if (manifest.ui?.tree) {
+      this.scanTree(manifest.ui.tree);
+    }
   }
 
   /**

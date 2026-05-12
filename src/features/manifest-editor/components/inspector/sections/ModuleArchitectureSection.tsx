@@ -148,7 +148,7 @@ export default function ModuleArchitectureSection({
                 layout: { 
                   ...manifest.ui.layout, 
                   containers: manifest.ui.layout?.containers || [],
-                  grid: { ...(manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24 }), enabled: !manifest.ui.layout?.grid?.enabled } 
+                  grid: { ...(manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false }), enabled: !manifest.ui.layout?.grid?.enabled } 
                 } 
               } 
             })}

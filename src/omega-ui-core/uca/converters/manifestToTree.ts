@@ -4,11 +4,14 @@ import { OMEGA_Manifest, OmegaNode } from '../../types/manifest';
  * manifestToTree
  * Hydrates a recursive OmegaNode tree from flat manifest arrays.
  */
-export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
+export function manifestToTree(manifest: OMEGA_Manifest, existingTree?: OmegaNode): OmegaNode {
   const ui = manifest.ui;
   const containers = ui.layout?.containers || [];
   const controls = ui.controls || [];
   const jacks = ui.jacks || [];
+
+  // Try to recover MAIN_FACE from existing tree if available (Phase 10.1C)
+  const existingMainFace = existingTree?.children?.find(c => c.id === 'MAIN_FACE');
 
   // 1. Create the Root Rack
   const root: OmegaNode = {
@@ -16,8 +19,8 @@ export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
     kind: 'rack',
     role: 'root',
     layout: {
-      pos: { x: 0, y: 0 },
-      size: ui.dimensions
+      pos: existingTree?.layout?.pos || { x: 0, y: 0 },
+      size: existingTree?.layout?.size || ui.dimensions
     },
     children: []
   };
@@ -28,8 +31,8 @@ export function manifestToTree(manifest: OMEGA_Manifest): OmegaNode {
     kind: 'face',
     role: 'presentation',
     layout: {
-      pos: { x: 0, y: 0 },
-      size: ui.dimensions
+      pos: existingMainFace?.layout?.pos || { x: 0, y: 0 },
+      size: existingMainFace?.layout?.size || ui.dimensions
     },
     children: []
   };

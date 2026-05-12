@@ -10,6 +10,7 @@ import { CADOverlay } from './CADOverlay';
 import { GovernedOverlay } from './GovernedOverlay';
 import { UniversalRenderer } from '../UniversalRenderer';
 import { UCADebugContext } from '../ucaTypes';
+import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
 
 interface CellNodeProps {
   node: OmegaNode;
@@ -76,6 +77,10 @@ export function CellNode({
     resolveAsset
   });
 
+  const { cssVars } = useDesignTokens(manifest);
+
+  const isSelected = debugContext?.selectedId === node.id;
+
   return (
     <motion.div 
       id={`uca-${node.id}`}
@@ -91,8 +96,12 @@ export function CellNode({
         top: `${node.layout?.pos?.y || 0}px`,
         width: node.layout?.size?.width ? `${node.layout.size.width}px` : '48px', 
         height: node.layout?.size?.height ? `${node.layout.size.height}px` : '48px',
-        zIndex: node.layout?.zIndex || 0,
-        pointerEvents: debugContext?.enabled ? 'auto' : 'none'
+        zIndex: isSelected ? 100 : (node.layout?.zIndex || 0),
+        ...cssVars,
+        pointerEvents: debugContext?.enabled ? 'auto' : 'none',
+        outline: isSelected ? '2px solid #00f2ff' : 'none',
+        outlineOffset: '2px',
+        boxShadow: isSelected ? '0 0 15px rgba(0, 242, 255, 0.4)' : 'none'
       }}
     >
       <UCADebugHUD 

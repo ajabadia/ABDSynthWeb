@@ -10,10 +10,12 @@ describe('ucaInspectorAdapter', () => {
   const mockTree: OmegaNode = {
     id: 'rack_master',
     kind: 'rack',
+    layout: { pos: { x: 0, y: 0 } },
     children: [
       {
         id: 'main_face',
         kind: 'face',
+        layout: { pos: { x: 0, y: 0 } },
         children: [
           {
             id: 'container_vcf',
@@ -26,6 +28,7 @@ describe('ucaInspectorAdapter', () => {
                 cellRef: 'moog_knob_01',
                 bind: 'vcf.cutoff',
                 role: 'control',
+                layout: { pos: { x: 0, y: 0 } },
                 style: { color: 'red' }
               }
             ]

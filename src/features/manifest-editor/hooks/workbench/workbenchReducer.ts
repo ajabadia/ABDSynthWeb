@@ -37,6 +37,8 @@ export const createInitialState = (): WorkbenchState => ({
   isCellEditorOpen: false,
   uiTheme: "dark",
   pendingFiles: [],
+  isDiffModalOpen: false,
+  activeDiff: null,
 });
 
 const clampRatio = (ratio: number) => 
@@ -251,14 +253,38 @@ export function workbenchReducer(state: WorkbenchState, action: WorkbenchAction)
       };
     }
 
-    case "SET_LAYOUT_MODE":
+    case "SET_LAYOUT_MODE": {
+      const { mode } = action.payload;
+      const nextPanes = { ...state.panesById };
+
+      // SMART SPLIT: If going to vertical and secondary is empty, move 'tab-source' there
+      if (mode === "vertical" && nextPanes.secondary.tabIds.length === 0) {
+        if (nextPanes.primary.tabIds.includes("tab-source")) {
+           nextPanes.primary.tabIds = nextPanes.primary.tabIds.filter(id => id !== "tab-source");
+           nextPanes.primary = ensureActiveTab(nextPanes.primary);
+           
+           nextPanes.secondary.tabIds = ["tab-source"];
+           nextPanes.secondary.activeTabId = "tab-source";
+        }
+      }
+
+      // SMART COLLAPSE: If going back to single, move all secondary tabs to primary
+      if (mode === "single" && nextPanes.secondary.tabIds.length > 0) {
+        nextPanes.primary.tabIds = Array.from(new Set([...nextPanes.primary.tabIds, ...nextPanes.secondary.tabIds]));
+        nextPanes.secondary.tabIds = [];
+        nextPanes.secondary.activeTabId = null;
+        nextPanes.primary = ensureActiveTab(nextPanes.primary);
+      }
+
       return {
         ...state,
+        panesById: nextPanes,
         layout: {
           ...state.layout,
           mode: action.payload.mode,
         },
       };
+    }
 
     case "SET_LAYOUT_RATIO":
       return {
@@ -296,9 +322,10 @@ export function workbenchReducer(state: WorkbenchState, action: WorkbenchAction)
     }
 
     case "TOGGLE_UI_STATE": {
+      const { key, value } = action.payload;
       return {
         ...state,
-        [action.payload.key]: !state[action.payload.key]
+        [key]: value !== undefined ? value : !state[key]
       };
     }
 
@@ -312,6 +339,8 @@ export function workbenchReducer(state: WorkbenchState, action: WorkbenchAction)
       return { ...state, uiTheme: action.payload.theme };
     case "SET_PENDING_FILES":
       return { ...state, pendingFiles: action.payload.files };
+    case "SET_ACTIVE_DIFF":
+      return { ...state, activeDiff: action.payload.diff };
     case "HYDRATE_WORKBENCH":
       return { ...state, ...action.payload.state };
 

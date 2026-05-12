@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Download, Plus, Database, Cpu, Layers, Layout, Type, Settings2, Trash2, ChevronRight, ChevronUp, ChevronDown, Box } from 'lucide-react';
+import { X, Save, Download, Plus, Database, Cpu, Layers, Layout, Type, Settings2, Trash2, ChevronRight, ChevronUp, ChevronDown, Box, Activity } from 'lucide-react';
 import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
 import IndustrialGovernanceConsole from '../inspector/shared/IndustrialGovernanceConsole';
 import AttachmentTypeAnchor from '../inspector/attachments/AttachmentTypeAnchor';
@@ -11,19 +11,45 @@ import AttachmentTypePrecisionOffsets from '../inspector/attachments/AttachmentP
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 import { ManifestEntity, OMEGA_Manifest, ComponentType } from '@/types/manifest';
 import ThemePaletteGovernance from '../inspector/aesthetic/governance/ThemePaletteGovernance';
+import AssetBehaviorPresetSelector from '../lab/AssetBehaviorPresetSelector';
+import BehaviorMappingInspector from '../lab/BehaviorMappingInspector';
+import LayerRecipeEditor from '../lab/LayerRecipeEditor';
+import { AssetBehavior, LayerRecipe } from '@/omega-ui-core/types/assetBehavior';
+import { BehaviorResolver } from '@/omega-ui-core/uca/behaviorResolver';
+import AssetSelector from '../inspector/shared/AssetSelector';
 
 interface UniversalCellEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (cell: ManifestEntity) => void;
   resolveAsset?: (id: string | undefined) => string | undefined;
+  manifest?: OMEGA_Manifest;
 }
 
 export default function UniversalCellEditorModal({ 
-  isOpen, onClose, onSave, resolveAsset 
+  isOpen, onClose, onSave, resolveAsset, manifest 
 }: UniversalCellEditorModalProps) {
-  const [activeTab, setActiveTab] = useState<'fragments' | 'properties'>('fragments');
-  const [selectedFragmentId, setSelectedFragmentId] = useState<string>('host');
+  const [activeTab, setActiveTab] = useState<'fragments' | 'properties' | 'behavior' | 'recipes'>('fragments');
+  const [selectedFragmentId, setSelectedFragmentId] = React.useState<string>('host');
+  const [soloLayerId, setSoloLayerId] = React.useState<string | null>(null);
+  const [isAssetSelectorOpen, setIsAssetSelectorOpen] = React.useState(false);
+  const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
+
+  const [behavior, setBehavior] = useState<AssetBehavior>({
+    preset: 'rotary',
+    source: 'asset',
+    mapping: {
+      input: 'value',
+      mode: 'continuous',
+      polarity: 'normal'
+    }
+  });
+
+  const [recipe, setRecipe] = useState<LayerRecipe>({
+    id: 'new_recipe',
+    name: 'New Composite Recipe',
+    layers: []
+  });
   const [isTypeLocked, setIsTypeLocked] = useState(false);
   const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
   
@@ -216,20 +242,33 @@ export default function UniversalCellEditorModal({
     }
   };
 
+  const testValue = (cellData.presentation?.style as Record<string, unknown>)?.testValue as number ?? 0.75;
+  const resolved = BehaviorResolver.resolve(
+    testValue,
+    {
+      ...behavior,
+      frameCount: (behavior.mapping?.frameRange?.end || 0) - (behavior.mapping?.frameRange?.start || 0) + 1
+    }
+  );
+
   const previewHTML = React.useMemo(() => {
     try {
       return CellRenderer.renderCellHTML(cellData, {
         zoom: 2,
-        runtimeValue: (cellData.presentation?.style as unknown as Record<string, unknown>)?.testValue as number ?? 0.75,
+        runtimeValue: testValue,
+        forceFrame: resolved.frame, // Inject resolved frame into renderer
         steps: 128,
         skin: (mockManifest.ui as unknown as Record<string, unknown>).skin as string || 'standard',
         manifest: mockManifest,
-        resolveAsset: resolveAsset || ((id) => id)
+        resolveAsset: resolveAsset || ((id) => id),
+        recipe: soloLayerId 
+          ? { ...recipe, layers: recipe.layers.filter(l => l.id === soloLayerId) }
+          : recipe
       });
     } catch (e) {
       return `<div class="p-4 text-[8px] text-red-500 font-mono">RENDER_ERROR: ${e}</div>`;
     }
-  }, [cellData, mockManifest, resolveAsset]);
+  }, [cellData, mockManifest, resolveAsset, recipe, soloLayerId, testValue, resolved.frame]);
 
   const handleExport = () => {
     const exportData = {
@@ -248,7 +287,8 @@ export default function UniversalCellEditorModal({
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 md:p-12 overflow-hidden">
         {/* BACKDROP */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
@@ -284,11 +324,57 @@ export default function UniversalCellEditorModal({
                    <span className="text-[8px] font-black uppercase tracking-widest opacity-40">DNA Real-time View</span>
                 </div>
                 
-                <div className="flex-1 flex items-center justify-center relative bg-[radial-gradient(circle_at_center,_#111_0%,_transparent_70%)]">
+                <div className="flex-1 flex items-center justify-center relative bg-[radial-gradient(circle_at_center,_#111_0%,_transparent_70%)] group">
                    <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '16px 16px' }} />
-                   
-                   <div className="scale-[2.5] relative transition-transform duration-700">
-                      <div dangerouslySetInnerHTML={{ __html: previewHTML }} />
+                                      <div className={`scale-[2.5] relative transition-all duration-700 ${((cellData.presentation?.style as Record<string, unknown>)?.testValue !== 0.75) ? 'drop-shadow-[0_0_30px_rgba(0,242,255,0.2)]' : ''}`}>
+                       <div dangerouslySetInnerHTML={{ __html: previewHTML }} />
+                    </div>
+
+                   {/* SCRUBBING UI OVERLAY */}
+                   <div className="absolute bottom-4 left-4 right-4 bg-[#1a1a1b]/90 backdrop-blur-md border border-white/5 p-3 rounded-lg flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                      <div className="flex items-center justify-between">
+                          <span className="text-[6px] font-black uppercase tracking-widest text-accent flex items-center gap-1">
+                             <Activity className={`w-2.5 h-2.5 ${((cellData.presentation?.style as Record<string, unknown>)?.testValue !== 0.75) ? 'animate-pulse' : ''}`} /> Behavior Scrubber
+                          </span>
+                          <div className="flex items-center gap-3">
+                             <button 
+                                onClick={() => updateFragment('host', { testValue: 0.75 })}
+                                className="text-[6px] font-black uppercase text-white/20 hover:text-white/60 transition-colors"
+                                title="Reset Scrubber"
+                             >
+                                RESET
+                             </button>
+                             <span className="text-[7px] font-mono text-white/40 flex items-center gap-2">
+                                <input 
+                                   type="number" step="0.001" min="0" max="1"
+                                   value={((cellData.presentation?.style as Record<string, unknown>)?.testValue as number) ?? 0.75}
+                                   onChange={(e) => updateFragment('host', { testValue: parseFloat(e.target.value) })}
+                                   className="bg-transparent border-b border-white/10 text-white outline-none w-10 text-right focus:border-accent transition-all"
+                                />
+                                {(((((cellData.presentation?.style as Record<string, unknown>)?.testValue as number) ?? 0.75) * 100).toFixed(1))}%
+                             </span>
+                          </div>
+                      </div>
+                       <div className="relative w-full h-4 flex items-center group/scrub">
+                          {/* TICK MARKS BACKGROUND */}
+                          <div className="absolute inset-x-0 h-1 flex justify-between px-0.5 pointer-events-none opacity-20">
+                             {Array.from({ length: Math.min(20, (behavior.mapping?.frameRange?.end || 0) - (behavior.mapping?.frameRange?.start || 0) + 1) }).map((_, i) => (
+                                <div key={i} className="w-px h-full bg-white" />
+                             ))}
+                          </div>
+                          
+                          <input 
+                            type="range" min="0" max="1" 
+                            step={
+                              (behavior.preset === 'switch' || behavior.mapping?.mode === 'stepped') 
+                                ? 1 / Math.max(1, (behavior.mapping?.frameRange?.end || 1) - (behavior.mapping?.frameRange?.start || 0)) 
+                                : 0.001
+                            }
+                            value={((cellData.presentation?.style as Record<string, unknown>)?.testValue as number) ?? 0.75}
+                            onChange={(e) => updateFragment('host', { testValue: parseFloat(e.target.value) })}
+                            className="w-full h-1 bg-white/10 rounded-full appearance-none accent-accent cursor-pointer relative z-10"
+                          />
+                       </div>
                    </div>
                 </div>
 
@@ -362,22 +448,36 @@ export default function UniversalCellEditorModal({
                       </div>
                    </div>
 
-                   <div className={`flex items-center gap-1 bg-[#1a1a1b] p-1 rounded border border-[#333] transition-all self-start mt-8 ${!isTypeLocked ? 'opacity-30 pointer-events-none scale-95' : ''}`}>
-                      <button 
-                        disabled={!isTypeLocked}
-                        onClick={() => { setActiveTab('fragments'); setIsCommandCenterOpen(false); }}
-                        className={`px-4 py-1.5 rounded text-[8px] font-black uppercase transition-all ${activeTab === 'fragments' && !isCommandCenterOpen ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-white/40 hover:text-white/60'}`}
-                      >
-                         <Layers className="w-3 h-3 inline-block mr-2" /> Fragments
-                      </button>
-                      <button 
-                        disabled={!isTypeLocked}
-                        onClick={() => { setActiveTab('properties'); setIsCommandCenterOpen(false); }}
-                        className={`px-4 py-1.5 rounded text-[8px] font-black uppercase transition-all ${activeTab === 'properties' && !isCommandCenterOpen ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-white/40 hover:text-white/60'}`}
-                      >
-                         <Settings2 className="w-3 h-3 inline-block mr-2" /> Properties
-                      </button>
-                   </div>
+                      <div className={`flex items-center gap-1 bg-[#1a1a1b] p-1 rounded border border-[#333] transition-all self-start mt-8 ${!isTypeLocked ? 'opacity-30 pointer-events-none scale-95' : ''}`}>
+                         <button 
+                           disabled={!isTypeLocked}
+                           onClick={() => { setActiveTab('fragments'); setIsCommandCenterOpen(false); }}
+                           className={`px-4 py-1.5 rounded text-[8px] font-black uppercase transition-all ${activeTab === 'fragments' && !isCommandCenterOpen ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-white/40 hover:text-white/60'}`}
+                         >
+                            <Layers className="w-3 h-3 inline-block mr-2" /> Fragments
+                         </button>
+                         <button 
+                           disabled={!isTypeLocked}
+                           onClick={() => { setActiveTab('behavior'); setIsCommandCenterOpen(false); }}
+                           className={`px-4 py-1.5 rounded text-[8px] font-black uppercase transition-all ${activeTab === 'behavior' && !isCommandCenterOpen ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-white/40 hover:text-white/60'}`}
+                         >
+                            <Activity className="w-3 h-3 inline-block mr-2" /> Behavior
+                         </button>
+                         <button 
+                           disabled={!isTypeLocked}
+                           onClick={() => { setActiveTab('recipes'); setIsCommandCenterOpen(false); }}
+                           className={`px-4 py-1.5 rounded text-[8px] font-black uppercase transition-all ${activeTab === 'recipes' && !isCommandCenterOpen ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-white/40 hover:text-white/60'}`}
+                         >
+                            <Layers className="w-3 h-3 inline-block mr-2" /> Recipes
+                         </button>
+                         <button 
+                           disabled={!isTypeLocked}
+                           onClick={() => { setActiveTab('properties'); setIsCommandCenterOpen(false); }}
+                           className={`px-4 py-1.5 rounded text-[8px] font-black uppercase transition-all ${activeTab === 'properties' && !isCommandCenterOpen ? 'bg-accent text-black shadow-lg shadow-accent/20' : 'text-white/40 hover:text-white/60'}`}
+                         >
+                            <Settings2 className="w-3 h-3 inline-block mr-2" /> Properties
+                         </button>
+                      </div>
                 </div>
 
                 {/* CONTENT */}
@@ -407,7 +507,7 @@ export default function UniversalCellEditorModal({
                             </button>
                          </div>
                          <ThemePaletteGovernance 
-                            manifest={mockManifest}
+                            manifest={manifest || mockManifest}
                             onUpdate={(updates: Partial<OMEGA_Manifest>) => {
                                setMockManifest(prev => ({
                                   ...prev,
@@ -500,7 +600,52 @@ export default function UniversalCellEditorModal({
                             ))}
                          </div>
                       </div>
-                   ) : (
+                    ) : activeTab === 'behavior' ? (
+                      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                         <div className="flex items-center justify-between border-b border-[#222] pb-4">
+                            <div>
+                               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">Asset Behavior Lab</h3>
+                               <p className="text-[8px] font-bold uppercase opacity-30">Map interaction semantics to visual states.</p>
+                            </div>
+                         </div>
+
+                         <div className="space-y-8">
+                            <AssetBehaviorPresetSelector 
+                               value={behavior.preset}
+                               onChange={(p) => setBehavior(prev => ({ ...prev, preset: p }))}
+                            />
+                            
+                            <BehaviorMappingInspector 
+                               mapping={behavior.mapping!}
+                               resolvedFrame={resolved.frame}
+                               onChange={(updates) => setBehavior(prev => ({ 
+                                  ...prev, 
+                                  mapping: { ...prev.mapping!, ...updates } 
+                               }))}
+                            />
+                         </div>
+                      </div>
+                    ) : activeTab === 'recipes' ? (
+                      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                         <div className="flex items-center justify-between border-b border-[#222] pb-4">
+                            <div>
+                               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">Layer Recipe Builder</h3>
+                               <p className="text-[8px] font-bold uppercase opacity-30">Compose multi-asset controls with visual stacking.</p>
+                            </div>
+                         </div>
+
+                         <LayerRecipeEditor 
+                            recipe={recipe}
+                            onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+                            onSelectAsset={(layerId) => {
+                               setActiveLayerId(layerId);
+                               setIsAssetSelectorOpen(true);
+                            }}
+                            soloLayerId={soloLayerId}
+                            onSoloChange={setSoloLayerId}
+                         />
+                      </div>
+                    ) : (
                       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                          <div className="flex items-center justify-between border-b border-[#222] pb-4">
                             <div className="flex items-center gap-4">
@@ -540,7 +685,7 @@ export default function UniversalCellEditorModal({
                                type={selectedFragmentId === 'host' ? cellData.type as string : ((cellData.presentation.attachments || []).find(f => f.id === selectedFragmentId)?.type || 'label')}
                                values={selectedFragmentId === 'host' ? (cellData.presentation?.style || {}) : ((cellData.presentation.attachments || []).find(f => f.id === selectedFragmentId)?.style || {})}
                                onUpdate={(updates) => updateFragment(selectedFragmentId, updates)}
-                               manifest={mockManifest}
+                               manifest={manifest || mockManifest}
                                resolveAsset={resolveAsset || ((id) => id)}
                                onOpenConfig={() => setIsCommandCenterOpen(true)}
                                title={selectedFragmentId === 'host' ? 'Host Aesthetic Governance' : 'Fragment Aesthetic Governance'}
@@ -571,12 +716,25 @@ export default function UniversalCellEditorModal({
                 </div>
              </div>
 
-             <div className="flex gap-2">
-                <button onClick={handleExport} className="px-6 py-2 bg-[#1a1a1b] border border-[#333] rounded text-[9px] font-black uppercase hover:bg-[#222] flex items-center justify-center gap-2 transition-all">
-                   <Download className="w-3.5 h-3.5" /> Export DNA
-                </button>
+              <div className="flex gap-2">
+                 <button 
+                   onClick={() => {
+                      navigator.clipboard.writeText(JSON.stringify({ behavior, recipe }, null, 2));
+                   }}
+                   className="px-6 py-2 bg-[#1a1a1b] border border-[#333] rounded text-[9px] font-black uppercase hover:bg-[#222] flex items-center justify-center gap-2 transition-all"
+                   title="Copy DNA to Clipboard"
+                 >
+                    <Cpu className="w-3.5 h-3.5" /> Copy DNA
+                 </button>
+                 <button onClick={handleExport} className="px-6 py-2 bg-[#1a1a1b] border border-[#333] rounded text-[9px] font-black uppercase hover:bg-[#222] flex items-center justify-center gap-2 transition-all">
+                    <Download className="w-3.5 h-3.5" /> Export DNA
+                 </button>
                 <button 
-                  onClick={() => onSave(cellData)}
+                  onClick={() => onSave({
+                    ...cellData,
+                    assetBehavior: behavior, // Phase 12 - Genetic Behavior Inclusion
+                    recipe: recipe           // Phase 12 - Layer Composition Recipe
+                  } as ManifestEntity)}
                   className="px-8 py-2 bg-accent text-black rounded text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:brightness-110 shadow-[0_0_20px_rgba(0,242,255,0.2)] transition-all ml-4"
                 >
                    <Save className="w-3.5 h-3.5" /> Finalize Cell
@@ -585,6 +743,40 @@ export default function UniversalCellEditorModal({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+      </AnimatePresence>
+
+      {/* ASSET SELECTOR OVERLAY */}
+      {isAssetSelectorOpen && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="w-[800px] h-[600px] bg-[#111112] border border-[#333] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+               <div className="p-4 border-b border-[#222] flex items-center justify-between">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-accent">Select Layer Asset</h3>
+                  <button 
+                    onClick={() => setIsAssetSelectorOpen(false)}
+                    className="p-2 hover:bg-white/5 rounded-full transition-all"
+                  >
+                     <Plus className="w-4 h-4 rotate-45" />
+                  </button>
+               </div>
+               <div className="flex-1 overflow-hidden">
+                  <AssetSelector 
+                     manifest={manifest || mockManifest}
+                     onSelect={(assetId) => {
+                        if (activeLayerId && assetId) {
+                           setRecipe(prev => ({
+                              ...prev,
+                              layers: prev.layers.map(l => l.id === activeLayerId ? { ...l, assetId: assetId as string } : l)
+                           }));
+                        }
+                        setIsAssetSelectorOpen(false);
+                     }}
+                     resolveAsset={resolveAsset || ((id) => id)}
+                     restrictToSequences={true}
+                  />
+               </div>
+            </div>
+         </div>
+      )}
+    </>
   );
 }
