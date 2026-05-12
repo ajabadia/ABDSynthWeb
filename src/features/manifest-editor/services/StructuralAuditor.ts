@@ -1,11 +1,11 @@
+import { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
+import { DiagnosticSource, TabDiagnostics, createEmptyDiagnostics, DiagnosticContext } from '../types/diagnostics';
+
 /**
  * OMEGA ERA 7.2.3 - Structural Auditor
  * Semantic analysis of manifest integrity and coherence.
+ * Phase 15: Recursive UCA Tree Support.
  */
-
-import { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
-import { DiagnosticSource, TabDiagnostics, createEmptyDiagnostics, DiagnosticContext } from '../types/diagnostics';
-
 export class StructuralAuditor implements DiagnosticSource {
   id = 'structural-auditor';
   name = 'Structural';
@@ -14,6 +14,7 @@ export class StructuralAuditor implements DiagnosticSource {
     const results = createEmptyDiagnostics();
     const contract = context?.contract as OMEGA_Contract | null;
 
+    // 1. LEGACY PROJECTIONS (Controls & Jacks)
     const allEntities = [
       ...(manifest.ui.controls || []),
       ...(manifest.ui.jacks || [])
@@ -23,8 +24,9 @@ export class StructuralAuditor implements DiagnosticSource {
     const entityIds = new Set(allEntities.map(e => e.id));
     const paramIds = new Set(contract?.parameters?.map(p => p.id) || []);
     const portIds = new Set(contract?.ports?.map(p => p.id) || []);
+    const assetIds = new Set((manifest.resources.assets || []).map(a => a.id));
 
-    // 1. ID Collision Check
+    // A. ID Collision Check (Legacy)
     const idCounts = new Map<string, number>();
     [...containerIds, ...allEntities.map(e => e.id)].forEach(id => {
       idCounts.set(id, (idCounts.get(id) || 0) + 1);
@@ -43,9 +45,8 @@ export class StructuralAuditor implements DiagnosticSource {
       }
     });
 
-    // 2. Entity Validation
+    // B. Legacy Entity Validation
     allEntities.forEach(entity => {
-      // A. Broken Container Reference
       const containerId = entity.presentation?.container;
       if (containerId && !containerIds.has(containerId)) {
         results.errors.push({
@@ -58,7 +59,6 @@ export class StructuralAuditor implements DiagnosticSource {
         });
       }
 
-      // B. Broken Binding (Signal/Parameter)
       if (entity.bind && entity.bind !== 'none') {
         const isParam = paramIds.has(entity.bind);
         const isPort = portIds.has(entity.bind);
@@ -74,23 +74,153 @@ export class StructuralAuditor implements DiagnosticSource {
         }
       }
 
-      // C. Invalid Coordinates
-      if (entity.pos && (entity.pos.x < 0 || entity.pos.y < 0)) {
+      const assetId = entity.presentation?.asset;
+      if (assetId && assetId !== 'none' && !assetIds.has(assetId)) {
         results.warnings.push({
-          id: `invalid-pos-${entity.id}`,
+          id: `broken-asset-${entity.id}`,
           source: this.name,
-          message: `Entity '${entity.id}' has negative coordinates (${entity.pos.x}, ${entity.pos.y}).`,
+          message: `Missing Asset: Entity '${entity.id}' references unknown asset '${assetId}'.`,
           severity: 'warning',
-          code: 'INVALID_COORDS',
+          code: 'BROKEN_ASSET_REF',
           entityId: entity.id
         });
       }
     });
 
+    // 2. RECURSIVE UCA TREE AUDIT (Phase 15)
+    if (manifest.ui.tree && manifest.ui.useUCA) {
+      this.auditUCATree(manifest.ui.tree, manifest, results, paramIds, portIds, assetIds);
+    }
+
     // 3. Modulation Integrity & Circularity
+    this.auditModulations(manifest, entityIds, results);
+
+    // 4. Parameter & Range Integrity (Contract Audit)
+    if (contract?.parameters) {
+      contract.parameters.forEach(param => {
+        if (param.min >= param.max) {
+          results.errors.push({
+            id: `invalid-range-${param.id}`,
+            source: this.name,
+            message: `Invalid Range: Parameter '${param.id}' has min (${param.min}) >= max (${param.max}).`,
+            severity: 'error',
+            code: 'INVALID_PARAM_RANGE'
+          });
+        }
+        if (param.default < param.min || param.default > param.max) {
+          results.errors.push({
+            id: `invalid-default-${param.id}`,
+            source: this.name,
+            message: `Out of Bounds: Parameter '${param.id}' default (${param.default}) is outside [${param.min}, ${param.max}].`,
+            severity: 'error',
+            code: 'INVALID_PARAM_DEFAULT'
+          });
+        }
+      });
+    }
+
+    results.errorCount = results.errors.length;
+    results.warningCount = results.warnings.length;
+    results.infoCount = results.infos.length;
+
+    return results;
+  }
+
+  /**
+   * Recursive walk through the UCA tree.
+   */
+  private auditUCATree(
+    root: OmegaNode, 
+    manifest: OMEGA_Manifest, 
+    results: TabDiagnostics,
+    paramIds: Set<string>,
+    portIds: Set<string>,
+    assetIds: Set<string>
+  ) {
+    const visited = new Set<string>();
+    const cellLibrary = manifest.ui.cellLibrary || {};
+
+    const walk = (node: OmegaNode, depth: number) => {
+      if (depth > 32) {
+        results.errors.push({
+          id: `max-depth-${node.id}`,
+          source: this.name,
+          message: `UCA ERROR: Max recursion depth exceeded at node '${node.id}'.`,
+          severity: 'error',
+          code: 'MAX_DEPTH_EXCEEDED',
+          entityId: node.id
+        });
+        return;
+      }
+
+      if (visited.has(node.id)) {
+        results.errors.push({
+          id: `circular-tree-${node.id}`,
+          source: this.name,
+          message: `UCA ERROR: Circular reference detected at node '${node.id}'.`,
+          severity: 'error',
+          code: 'CIRCULAR_TREE_REF',
+          entityId: node.id
+        });
+        return;
+      }
+      visited.add(node.id);
+
+      // A. Template Reference Check
+      if (node.kind === 'cell' && node.cellRef) {
+        if (!cellLibrary[node.cellRef]) {
+          results.errors.push({
+            id: `broken-cellref-${node.id}`,
+            source: this.name,
+            message: `UCA ERROR: Cell '${node.id}' references unknown template '${node.cellRef}'.`,
+            severity: 'error',
+            code: 'BROKEN_CELL_REF',
+            entityId: node.id
+          });
+        }
+      }
+
+      // B. Bind Integrity
+      if (node.bind && node.bind !== 'none') {
+        const isParam = paramIds.has(node.bind);
+        const isPort = portIds.has(node.bind);
+        if (!isParam && !isPort) {
+          results.warnings.push({
+            id: `uca-broken-bind-${node.id}`,
+            source: this.name,
+            message: `UCA Warning: Node '${node.id}' binds to unknown target '${node.bind}'.`,
+            severity: 'warning',
+            code: 'BROKEN_BIND',
+            entityId: node.id
+          });
+        }
+      }
+
+      // C. Asset Integrity (Style Node)
+      const assetId = node.style?.asset;
+      if (assetId && assetId !== 'none' && !assetIds.has(assetId)) {
+        results.warnings.push({
+          id: `uca-broken-asset-${node.id}`,
+          source: this.name,
+          message: `UCA Missing Asset: Node '${node.id}' references unknown asset '${assetId}'.`,
+          severity: 'warning',
+          code: 'BROKEN_ASSET_REF',
+          entityId: node.id
+        });
+      }
+
+      // D. Recursive Step
+      if (node.children) {
+        node.children.forEach(child => walk(child, depth + 1));
+      }
+    };
+
+    walk(root, 0);
+  }
+
+  private auditModulations(manifest: OMEGA_Manifest, entityIds: Set<string>, results: TabDiagnostics) {
     const adjacencyList = new Map<string, string[]>();
     (manifest.modulations || []).forEach((mod, index) => {
-      // Basic connectivity checks
       if (!entityIds.has(mod.source)) {
         results.errors.push({
           id: `mod-source-${index}`,
@@ -110,7 +240,6 @@ export class StructuralAuditor implements DiagnosticSource {
         });
       }
 
-      // Build graph for circularity check
       if (entityIds.has(mod.source) && entityIds.has(mod.target)) {
         const targets = adjacencyList.get(mod.source) || [];
         targets.push(mod.target);
@@ -118,8 +247,7 @@ export class StructuralAuditor implements DiagnosticSource {
       }
     });
 
-    // 4. Circular Modulation Detection (Industrial 3-State DFS)
-    // States: 0 = Unvisited (White), 1 = Visiting (Gray), 2 = Visited (Black)
+    // Circular Modulation Detection (Industrial 3-State DFS)
     const states = new Map<string, number>();
     const pathStack: string[] = [];
 
@@ -130,14 +258,11 @@ export class StructuralAuditor implements DiagnosticSource {
       const targets = adjacencyList.get(nodeId) || [];
       for (const targetId of targets) {
         const targetState = states.get(targetId) || 0;
-        
         if (targetState === 1) {
-          // Cycle detected! Back-edge to a Gray node.
           const cycleStartIdx = pathStack.indexOf(targetId);
           const cyclePath = pathStack.slice(cycleStartIdx);
           return { cycle: [...cyclePath, targetId] };
         }
-        
         if (targetState === 0) {
           const result = findCycle(targetId);
           if (result) return result;
@@ -149,7 +274,6 @@ export class StructuralAuditor implements DiagnosticSource {
       return null;
     };
 
-    // Run DFS from each potential root
     const nodes = Array.from(entityIds);
     nodes.forEach(startNodeId => {
       if ((states.get(startNodeId) || 0) === 0) {
@@ -159,7 +283,7 @@ export class StructuralAuditor implements DiagnosticSource {
           results.errors.push({
             id: `circular-mod-${result.cycle[0]}`,
             source: this.name,
-            message: `CIRCULAR_MODULATION: Feedback loop detected: [${pathStr}]. This topology is unstable and blocked.`,
+            message: `CIRCULAR_MODULATION: Feedback loop detected: [${pathStr}].`,
             severity: 'error',
             code: 'CIRCULAR_MODULATION',
             entityId: result.cycle[0]
@@ -167,54 +291,6 @@ export class StructuralAuditor implements DiagnosticSource {
         }
       }
     });
-
-    // 5. Asset Resolution Audit
-    const assetIds = new Set((manifest.resources.assets || []).map(a => a.id));
-    allEntities.forEach(entity => {
-      const assetId = entity.presentation?.asset;
-      if (assetId && assetId !== 'none' && !assetIds.has(assetId)) {
-        results.warnings.push({
-          id: `broken-asset-${entity.id}`,
-          source: this.name,
-          message: `Missing Asset: Entity '${entity.id}' references unknown asset '${assetId}'.`,
-          severity: 'warning',
-          code: 'BROKEN_ASSET_REF',
-          entityId: entity.id
-        });
-      }
-    });
-
-    // 6. Parameter & Range Integrity (Contract Audit)
-    if (contract?.parameters) {
-      contract.parameters.forEach(param => {
-        // A. Inverted Range
-        if (param.min >= param.max) {
-          results.errors.push({
-            id: `invalid-range-${param.id}`,
-            source: this.name,
-            message: `Invalid Range: Parameter '${param.id}' has min (${param.min}) >= max (${param.max}).`,
-            severity: 'error',
-            code: 'INVALID_PARAM_RANGE'
-          });
-        }
-        // B. Default Out of Bounds
-        if (param.default < param.min || param.default > param.max) {
-          results.errors.push({
-            id: `invalid-default-${param.id}`,
-            source: this.name,
-            message: `Out of Bounds: Parameter '${param.id}' default (${param.default}) is outside [${param.min}, ${param.max}].`,
-            severity: 'error',
-            code: 'INVALID_PARAM_DEFAULT'
-          });
-        }
-      });
-    }
-
-    results.errorCount = results.errors.length;
-    results.warningCount = results.warnings.length;
-    results.infoCount = results.infos.length;
-
-    return results;
   }
 }
 

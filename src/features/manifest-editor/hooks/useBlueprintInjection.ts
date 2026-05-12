@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { 
   OMEGA_Manifest, 
   BlueprintDefinition,
@@ -9,8 +9,8 @@ import {
 import { 
   BlueprintInjectionRequest, 
   BlueprintInjectionResult 
-} from '../types/blueprint';
-import { BlueprintInjector } from '../utils/blueprintInjector';
+} from '@/omega-ui-core/types/blueprint';
+import { injectBlueprint } from '@/omega-ui-core/uca/ucaInjection';
 
 /**
  * OMEGA Phase 9.4A - Industrial Blueprint Injection Hook
@@ -27,8 +27,6 @@ export const useBlueprintInjection = (
   const [lastResult, setLastResult] = useState<BlueprintInjectionResult | null>(null);
   const [previewManifest, setPreviewManifest] = useState<OMEGA_Manifest | null>(null);
   const [placeholderValues, setPlaceholderValues] = useState<BlueprintPlaceholderValues>({});
-
-  const injector = useMemo(() => new BlueprintInjector(), []);
 
   /**
    * Dry-run for preview (Non-mutant)
@@ -51,20 +49,16 @@ export const useBlueprintInjection = (
       }
     };
 
-    const result = await injector.inject(manifest, blueprint, request);
+    const result = await injectBlueprint(manifest, blueprint, request);
     if (result.success && result.resultManifest) {
       setPreviewManifest(result.resultManifest);
     } else if (result.success && result.injectedSubtree) {
-      // If resultManifest is undefined because of dryRun logic in injector, 
-      // we might need to simulate the merge for the preview if injector doesn't return it.
-      // However, our injector.ts line 123 says: resultManifest: request.strategy.dryRun ? undefined : nextManifest
-      // We'll temporarily force dryRun: false for the INTERNAL preview manifest generation.
-      
+      // Generate preview by forcing dryRun: false internally
       const previewRequest = { ...request, strategy: { ...request.strategy, dryRun: false } };
-      const previewResult = await injector.inject(manifest, blueprint, previewRequest);
+      const previewResult = await injectBlueprint(manifest, blueprint, previewRequest);
       setPreviewManifest(previewResult.resultManifest || null);
     }
-  }, [manifest, injector]);
+  }, [manifest]);
 
   /**
    * Internal execution logic (Final Commit)
@@ -89,7 +83,7 @@ export const useBlueprintInjection = (
 
     addLog(`[SYSTEM] Committing Blueprint injection: ${blueprint.name}...`);
     
-    const result = await injector.inject(manifest, blueprint, request);
+    const result = await injectBlueprint(manifest, blueprint, request);
     setLastResult(result);
 
     if (!result.success) {
@@ -109,7 +103,7 @@ export const useBlueprintInjection = (
     setTargetParentId(null);
     setPreviewManifest(null);
     setPlaceholderValues({});
-  }, [manifest, updateManifest, addLog, injector]);
+  }, [manifest, updateManifest, addLog]);
 
   /**
    * Initiates the injection flow.

@@ -73,12 +73,16 @@ Authoring artifact with slots, placeholders, and structural intent.
 
 ---
 
-## Bridge Contract
+## Bridge Contract (Sovereign Engine)
 
-The `ucaBridge.ts` serves as the formal gateway for data transformation:
-- `blueprintToTree(blueprint, context) -> OmegaNode`: Compiles intent into structure.
-- `manifestToOmegaTree(manifest) -> OmegaNode`: Migrates legacy data into UCA.
-- `omegaTreeToManifest(tree) -> OMEGA_Manifest`: Serializes UCA into the manifest format.
+The `ucaBridge.ts` serves as the formal gateway for all data transformation. Since Phase 16 (**ADR-016**), it incorporates advanced materialization capabilities, ensuring a single path from blueprint to tree.
+
+- **`blueprintToTree(blueprint, context) -> CompilationResult`**: Compiles intent into structure with placeholder resolution (Literal & Arithmetic).
+- **`manifestToTree(manifest) -> OmegaNode`**: Migrates/formalizes manifest data into UCA.
+- **`treeToManifest(tree) -> Partial<OMEGA_Manifest['ui']>`**: Serializes UCA into the manifest format.
+
+### Sovereign Injection
+Since Phase 16, all mutation-based injection is orchestrated by `ucaInjection.ts`, which guarantees identity integrity (via `IdManager`) and deterministic signal binding (via `AutoWireResolver`).
 
 ---
 

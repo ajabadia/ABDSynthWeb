@@ -13,6 +13,7 @@ import TemplateGallery from './gallery/TemplateGallery';
 import { WorkbenchInspector } from './inspector/WorkbenchInspector';
 import WorkbenchPane from './workspace/WorkbenchPane';
 import { SplitDivider } from './workspace/SplitDivider';
+import CellStudioContainer from './lab/CellStudioContainer';
 
 // Hooks
 import { useWorkbenchShortcuts } from '@/features/manifest-editor/hooks/useWorkbenchShortcuts';
@@ -252,7 +253,13 @@ export default function WorkbenchContainer({
     (selectedItemId ? editor.findItem(selectedItemId) : manifest) || null
   , [selectedItemId, editor, manifest]);
 
+  const studioCell = useMemo(() => {
+    if (!state.studioMode.isOpen || !state.studioMode.cellId) return undefined;
+    return editor.findItem(state.studioMode.cellId) as ManifestEntity;
+  }, [state.studioMode.isOpen, state.studioMode.cellId, editor]);
+
   const handleDragRatio = useCallback((delta: number) => {
+// ... (lines truncated for brevity, but I will provide the full replacement block)
     actions.setLayoutRatio(state.layout.ratio + delta);
   }, [actions, state.layout.ratio]);
 
@@ -376,51 +383,73 @@ export default function WorkbenchContainer({
       )}
 
       <main className="flex-1 flex overflow-hidden">
-        
-        {/* LEFT WORKSPACE: PANES */}
-        <div className="flex-1 flex overflow-hidden relative">
-          {/* PRIMARY PANE */}
-          <div 
-            className="flex flex-col overflow-hidden" 
-            style={{ width: derived.isSplit ? `${state.layout.ratio * 100}%` : '100%' }}
-          >
-            {renderPane('primary')}
-          </div>
-
-          {/* SPLIT DIVIDER */}
-          {derived.isSplit && <SplitDivider onDrag={handleDragRatio} />}
-
-          {/* SECONDARY PANE (SPLIT) */}
-          {derived.isSplit && (
-            <div className="flex-1 border-l wb-outline flex flex-col overflow-hidden animate-in slide-in-from-right duration-500">
-              {renderPane('secondary')}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT WORKSPACE: DOCKED INSPECTOR */}
-        <div className="w-[340px] flex-shrink-0 border-l wb-outline flex flex-col bg-black/10 overflow-hidden">
-            <WorkbenchInspector 
-              isLiveMode={state.isLiveMode} uiTheme={state.uiTheme}
-              manifest={manifest as OMEGA_Manifest} selectedItem={selectedItem}
-              selectedItemId={selectedItemId} highlightPath={gps.highlightPath}
-              availableBinds={availableBinds} extraResources={editor.extraResources}
-              audit={auditResult}
-              onUpdateItem={editor.updateItem} onUpdateManifest={updateManifest}
-              onSelectItem={handleSelectItem} onAddEntity={handleAddEntity}
-              onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
-              onAddModulation={editor.addModulation} onRemoveModulation={editor.removeModulation}
-              onUpdateModulation={editor.updateModulation} onOpenModGrid={() => actions.toggleUIState('showModGrid')}
-              addContainer={editor.addContainer} updateContainer={editor.updateContainer}
-              removeContainer={editor.removeContainer} onHelp={(sectionId) => actions.setHelpState(true, sectionId)}
-              onRemoveResource={editor.handleRemoveResource}
+        {state.studioMode.isOpen ? (
+          <div className="flex-1 p-4 bg-black/20 animate-in fade-in zoom-in-95 duration-500">
+            <CellStudioContainer 
+              initialCell={studioCell}
+              manifest={manifest as OMEGA_Manifest}
               resolveAsset={editor.resolveAsset}
-              onTriggerUpload={triggerUpload}
-              onOpenConfig={onOpenGovernance || (() => actions.toggleUIState('isConfigModalOpen'))}
-              onOpenLibrary={() => setIsCellLibraryOpen(true)}
-              onSelectBlueprint={editor.blueprintInjection.startInjection}
+              onFreeze={(template) => {
+                editor.registerTemplate(template);
+                actions.setStudioMode(false);
+              }}
+              onSave={(updatedCell) => {
+                if (state.studioMode.cellId) {
+                  editor.updateItem(state.studioMode.cellId, updatedCell);
+                }
+                actions.setStudioMode(false);
+              }}
+              onClose={() => actions.setStudioMode(false)}
             />
-        </div>
+          </div>
+        ) : (
+          <>
+            {/* LEFT WORKSPACE: PANES */}
+            <div className="flex-1 flex overflow-hidden relative">
+              {/* PRIMARY PANE */}
+              <div 
+                className="flex flex-col overflow-hidden" 
+                style={{ width: derived.isSplit ? `${state.layout.ratio * 100}%` : '100%' }}
+              >
+                {renderPane('primary')}
+              </div>
+
+              {/* SPLIT DIVIDER */}
+              {derived.isSplit && <SplitDivider onDrag={handleDragRatio} />}
+
+              {/* SECONDARY PANE (SPLIT) */}
+              {derived.isSplit && (
+                <div className="flex-1 border-l wb-outline flex flex-col overflow-hidden animate-in slide-in-from-right duration-500">
+                  {renderPane('secondary')}
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT WORKSPACE: DOCKED INSPECTOR */}
+            <div className="w-[340px] flex-shrink-0 border-l wb-outline flex flex-col bg-black/10 overflow-hidden">
+                <WorkbenchInspector 
+                  isLiveMode={state.isLiveMode} uiTheme={state.uiTheme}
+                  manifest={manifest as OMEGA_Manifest} selectedItem={selectedItem}
+                  selectedItemId={selectedItemId} highlightPath={gps.highlightPath}
+                  availableBinds={availableBinds} extraResources={editor.extraResources}
+                  audit={auditResult}
+                  onUpdateItem={editor.updateItem} onUpdateManifest={updateManifest}
+                  onSelectItem={handleSelectItem} onAddEntity={handleAddEntity}
+                  onDuplicateItem={handleDuplicateItem} onRemoveItem={handleRemoveItem}
+                  onAddModulation={editor.addModulation} onRemoveModulation={editor.removeModulation}
+                  onUpdateModulation={editor.updateModulation} onOpenModGrid={() => actions.toggleUIState('showModGrid')}
+                  addContainer={editor.addContainer} updateContainer={editor.updateContainer}
+                  removeContainer={editor.removeContainer} onHelp={(sectionId) => actions.setHelpState(true, sectionId)}
+                  onRemoveResource={editor.handleRemoveResource}
+                  resolveAsset={editor.resolveAsset}
+                  onTriggerUpload={triggerUpload}
+                  onOpenConfig={onOpenGovernance || (() => actions.toggleUIState('isConfigModalOpen'))}
+                  onOpenLibrary={() => setIsCellLibraryOpen(true)}
+                  onSelectBlueprint={editor.blueprintInjection.startInjection}
+                />
+            </div>
+          </>
+        )}
 
         {state.showModGrid && (
           <ModulationGrid 

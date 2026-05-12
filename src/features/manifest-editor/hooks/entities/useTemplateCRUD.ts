@@ -13,6 +13,37 @@ export const useTemplateCRUD = (
   addLog: (msg: string) => void
 ) => {
 
+  const registerTemplate = useCallback((template: ModuleTemplate) => {
+    const nextLibrary = { ...(manifest.ui.cellLibrary || manifest.ui.moduleTemplates || {}) };
+    nextLibrary[template.id] = template;
+
+    updateManifest({
+      ui: {
+        ...manifest.ui,
+        cellLibrary: nextLibrary,
+        moduleTemplates: nextLibrary // Keep sync
+      }
+    }, `[DNA] Register Template: ${template.label}`);
+
+    addLog(`[DNA] Template '${template.label}' certified and registered in library.`);
+  }, [manifest, updateManifest, addLog]);
+
+  const removeTemplate = useCallback((id: string) => {
+    const nextLibrary = { ...(manifest.ui.cellLibrary || manifest.ui.moduleTemplates || {}) };
+    const label = nextLibrary[id]?.label || id;
+    delete nextLibrary[id];
+
+    updateManifest({
+      ui: {
+        ...manifest.ui,
+        cellLibrary: nextLibrary,
+        moduleTemplates: nextLibrary
+      }
+    }, `[DNA] Remove Template: ${label}`);
+
+    addLog(`[DNA] Template '${label}' removed from library.`);
+  }, [manifest, updateManifest, addLog]);
+
   const applyTemplate = useCallback((template: ModuleTemplate) => {
     addLog(`[SYSTEM] Injecting Blueprint: ${template.label} (v${template.version || '1.0'})...`);
 
@@ -28,8 +59,8 @@ export const useTemplateCRUD = (
     // 2. Create the Template Instance Node
     const newNode: OmegaNode = {
       id: `${template.id}_${Math.random().toString(36).substr(2, 4)}`,
-      kind: 'container',
-      role: 'structure',
+      kind: 'cell',
+      role: template.category || 'structure',
       cellRef: template.id,
       layout: {
         pos: { x: 10, y: 10 }, 
@@ -39,31 +70,22 @@ export const useTemplateCRUD = (
       slotMappings: {}
     };
 
-    // 3. Initialize required slot mappings with defaults if possible
+    // 3. Initialize required slot mappings
     (template.slots || []).forEach(slot => {
       if (newNode.slotMappings) {
-        newNode.slotMappings[slot.id] = ''; // To be mapped by user
+        newNode.slotMappings[slot.id] = ''; 
       }
     });
 
-    // 4. Update the tree (Aseptic Injection)
     const updatedTree = {
       ...currentTree,
       children: [...(currentTree.children || []), newNode]
     };
 
-    // 5. Update cellLibrary registry
-    const updatedLibrary = {
-      ...(manifest.ui?.cellLibrary || {}),
-      [template.id]: template
-    };
-
     updateManifest({
       ui: {
         ...manifest.ui,
-        tree: updatedTree,
-        cellLibrary: updatedLibrary,
-        moduleTemplates: updatedLibrary // Keep for compat
+        tree: updatedTree
       }
     }, `Apply Template: ${template.label}`);
 
@@ -71,6 +93,8 @@ export const useTemplateCRUD = (
   }, [manifest, updateManifest, addLog]);
 
   return {
+    registerTemplate,
+    removeTemplate,
     applyTemplate
   };
 };

@@ -35,6 +35,7 @@ export const createInitialState = (): WorkbenchState => ({
   isAboutModalOpen: false,
   isConfigModalOpen: false,
   isCellEditorOpen: false,
+  studioMode: { isOpen: false },
   uiTheme: "dark",
   pendingFiles: [],
   isDiffModalOpen: false,
@@ -326,6 +327,13 @@ export function workbenchReducer(state: WorkbenchState, action: WorkbenchAction)
       return {
         ...state,
         [key]: value !== undefined ? value : !state[key]
+      };
+    }
+
+    case "SET_STUDIO_MODE": {
+      return {
+        ...state,
+        studioMode: action.payload
       };
     }
 

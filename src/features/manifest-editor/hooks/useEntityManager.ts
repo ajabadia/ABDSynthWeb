@@ -3,6 +3,7 @@
 import { useEntityCRUD } from './entities/useEntityCRUD';
 import { useModulationCRUD } from './entities/useModulationCRUD';
 import { useLayoutCRUD } from './entities/useLayoutCRUD';
+import { useTemplateCRUD } from './entities/useTemplateCRUD';
 import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 /**
@@ -26,10 +27,14 @@ export const useEntityManager = (
   // 3. Layout CRUD (Containers)
   const layoutOps = useLayoutCRUD(manifest, updateManifest, addLog);
 
+  // 4. Template CRUD (Fase 15)
+  const templateOps = useTemplateCRUD(manifest, updateManifest, addLog);
+
   return {
     ...entityOps,
     pasteEntity: entityOps.pasteEntity,
     ...modulationOps,
-    ...layoutOps
+    ...layoutOps,
+    ...templateOps
   };
 };

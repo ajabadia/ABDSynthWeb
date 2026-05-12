@@ -48,6 +48,11 @@ export interface WorkbenchTabViewState {
   rackViewport?: RackViewportState;
 }
 
+export interface StudioModeState {
+  isOpen: boolean;
+  cellId?: string;
+}
+
 export interface WorkbenchState {
   tabsById: Record<string, WorkbenchTab>;
   panesById: Record<WorkbenchPaneId, WorkbenchPane>;
@@ -67,6 +72,7 @@ export interface WorkbenchState {
   isAboutModalOpen: boolean;
   isConfigModalOpen: boolean;
   isCellEditorOpen: boolean;
+  studioMode: StudioModeState; // Phase 15 - Isolated Studio
   uiTheme: "dark" | "light";
   pendingFiles: File[];
   
@@ -93,6 +99,7 @@ export type WorkbenchAction =
   | { type: "SET_EXPANDED_NODE_IDS"; payload: { nodeIds: string[] } }
   | { type: "CAPTURE_TAB_VIEW_STATE"; payload: { tabId: string; viewState: Partial<WorkbenchTabViewState> } }
   | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen' | 'isDiffModalOpen'>, value?: boolean } }
+  | { type: "SET_STUDIO_MODE"; payload: StudioModeState } // Phase 15 Action
   | { type: "SET_HELP_STATE"; payload: { isOpen: boolean; sectionId?: string } }
   | { type: "SET_UI_THEME"; payload: { theme: "light" | "dark" } }
   | { type: "SET_PENDING_FILES"; payload: { files: File[] } }

@@ -90,6 +90,9 @@ export function useWorkbenchState() {
         
       setIsDiffModalOpen: (open: boolean) =>
         dispatch({ type: "TOGGLE_UI_STATE", payload: { key: 'isDiffModalOpen', value: open } }),
+        
+      setStudioMode: (isOpen: boolean, cellId?: string) =>
+        dispatch({ type: "SET_STUDIO_MODE", payload: { isOpen, cellId } }),
     }),
     []
 );

@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-05-12T10:18:38.194Z",
+  "timestamp": "2026-05-12T11:50:11.422Z",
   "counts": {
     "high": 0,
-    "medium": 33,
-    "low": 50,
-    "total": 83
+    "medium": 29,
+    "low": 51,
+    "total": 80
   },
   "details": {
     "HIGH": [],
@@ -112,8 +112,8 @@
         "pattern": "ElementCatalog"
       },
       {
-        "file": "src\\features\\manifest-editor\\components\\modals\\UniversalCellEditorModal.tsx",
-        "line": 6,
+        "file": "src\\features\\manifest-editor\\components\\lab\\CellStudioContainer.tsx",
+        "line": 8,
         "content": "import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';",
         "pattern": "ElementCatalog"
       },
@@ -164,30 +164,6 @@
         "line": 79,
         "content": "throw new Error('Deployment failed at runtime');",
         "pattern": "throw new Error"
-      },
-      {
-        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
-        "line": 180,
-        "content": "if (def.required) throw new Error(`Missing required parameter: ${def.id}`);",
-        "pattern": "throw new Error"
-      },
-      {
-        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
-        "line": 225,
-        "content": "if (!tree) throw new Error('Manifest tree not found.');",
-        "pattern": "throw new Error"
-      },
-      {
-        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
-        "line": 73,
-        "content": "const compIssues = this.validateCompatibility(blueprint, parentNode || null);",
-        "pattern": "validate"
-      },
-      {
-        "file": "src\\features\\manifest-editor\\utils\\blueprintInjector.ts",
-        "line": 144,
-        "content": "private validateCompatibility(blueprint: BlueprintDefinition, parent: OmegaNode | null): BlueprintValidationIssue[] {",
-        "pattern": "validate"
       },
       {
         "file": "src\\features\\manifest-editor\\utils\\blueprintUtils.ts",
@@ -352,6 +328,12 @@
         "line": 380,
         "content": "allowedFragments: ['label', 'illustration']",
         "pattern": "allowedFragments"
+      },
+      {
+        "file": "src\\omega-ui-core\\uca\\ucaInjection.ts",
+        "line": 136,
+        "content": "if (!tree) throw new Error('Manifest tree not found.');",
+        "pattern": "throw new Error"
       },
       {
         "file": "src\\omega-ui-core\\uca\\ucaTemplateTest.ts",

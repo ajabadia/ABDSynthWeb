@@ -59,29 +59,121 @@ function applyOverridesToTree(node: OmegaNode, overrides: Record<string, unknown
   return nextNode;
 }
 
+export interface CompilationResult {
+  tree: OmegaNode;
+  errors: string[];
+  warnings: string[];
+  metadata: {
+    nodeCount: number;
+    unresolvedPlaceholders: string[];
+    missingTemplates: string[];
+    depth: number;
+  };
+}
+
+/**
+ * materializePlaceholders
+ * Industrial substitution engine for blueprints.
+ * Supports:
+ * 1. Literal Substitution: {{key}}
+ * 2. Arithmetic Expressions: {{x + 10}}, {{y * 2}}
+ */
+function materializePlaceholders(root: OmegaBlueprintNode, values: BlueprintPlaceholderValues): OmegaBlueprintNode {
+  let json = JSON.stringify(root);
+  
+  // 1. Literal Substitution
+  Object.entries(values).forEach(([key, value]) => {
+    const regex = new RegExp(`\\\\{\\\\{${key}\\\\s*\\\\}\\\\}`, 'g');
+    json = json.replace(regex, String(value));
+  });
+
+  // 2. Expression Evaluation (e.g. {{x + 10}})
+  const exprRegex = /\\{\\{\\s*([a-zA-Z0-9_]+)\\s*([\\+\\-\\*\\/])\\s*([0-9\\.]+)\\s*\\}\\}/g;
+  json = json.replace(exprRegex, (match, varName, op, valStr) => {
+    const baseVal = Number(values[varName]);
+    const modifier = Number(valStr);
+    if (isNaN(baseVal) || isNaN(modifier)) return match;
+    
+    switch(op) {
+      case '+': return String(baseVal + modifier);
+      case '-': return String(baseVal - modifier);
+      case '*': return String(baseVal * modifier);
+      case '/': return String(baseVal / modifier);
+      default: return match;
+    }
+  });
+
+  return JSON.parse(json);
+}
+
 /**
  * blueprintToTree
  * Compiles a declarative Blueprint into a concrete OmegaNode tree.
+ * Refactored for Phase 15/16 industrial reporting and unified materialization.
  */
 export function blueprintToTree(
   blueprint: BlueprintDefinition,
   options: {
     placeholders?: BlueprintPlaceholderValues;
     templates?: Record<string, CellTemplate>;
-    manifestOverrides?: Record<string, unknown>; 
+    manifestOverrides?: Record<string, unknown>;
+    targetParent?: OmegaNode | null; // For compatibility checks
+    strict?: boolean; // If true, missing placeholders are errors
   }
-): OmegaNode {
-  const resolvePlaceholders = (node: OmegaBlueprintNode): OmegaNode => {
-    let id = node.id;
-    if (id.startsWith('{{') && id.endsWith('}}')) {
+): CompilationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const unresolvedPlaceholders = new Set<string>();
+  const missingTemplates = new Set<string>();
+  let nodeCount = 0;
+  let maxDepth = 0;
+
+  // 0. Compatibility Check (Genetic Guard)
+  if (options.targetParent && blueprint.compatibility) {
+    const comp = blueprint.compatibility;
+    if (comp.allowedParentKinds && comp.allowedParentKinds.length > 0) {
+      if (!comp.allowedParentKinds.includes(options.targetParent.kind)) {
+        errors.push(`[UCA BRIDGE] Incompatible parent kind: '${options.targetParent.kind}'. Allowed: ${comp.allowedParentKinds.join(', ')}`);
+      }
+    }
+    if (comp.deniedParentKinds && comp.deniedParentKinds.includes(options.targetParent.kind)) {
+      errors.push(`[UCA BRIDGE] Explicitly denied parent kind: '${options.targetParent.kind}'`);
+    }
+  }
+
+  // 1. Materialize Placeholders (Preprocessing)
+  const materialBlueprintRoot = options.placeholders 
+    ? materializePlaceholders(blueprint.rootNode, options.placeholders)
+    : blueprint.rootNode;
+
+  const resolveNodes = (node: OmegaBlueprintNode, depth: number, visited: Set<string>): OmegaNode => {
+    nodeCount++;
+    maxDepth = Math.max(maxDepth, depth);
+
+    // Circular detection (Genetic Guard)
+    if (node.id && visited.has(node.id)) {
+      errors.push(`[UCA BRIDGE] Circular reference detected at node: ${node.id}`);
+      return { ...node, id: `${node.id}_ERR_CIRCULAR` } as unknown as OmegaNode;
+    }
+    const nextVisited = new Set(visited);
+    if (node.id) nextVisited.add(node.id);
+
+    const id = node.id;
+    // Check for leftover placeholders (if not materialized)
+    if (typeof id === 'string' && id.startsWith('{{') && id.endsWith('}}')) {
       const key = id.slice(2, -2);
-      id = String(options.placeholders?.[key] || id);
+      unresolvedPlaceholders.add(key);
+      if (options.strict) {
+        errors.push(`[UCA BRIDGE] Unresolved required placeholder: {{${key}}}`);
+      } else {
+        warnings.push(`[UCA BRIDGE] Unresolved placeholder: {{${key}}}`);
+      }
     }
 
     const materialNode: OmegaNode = {
       ...node,
       id,
-      children: node.children?.map(resolvePlaceholders) || []
+      children: node.children?.map(child => resolveNodes(child, depth + 1, nextVisited)) || []
     } as OmegaNode;
 
     // Template Expansion
@@ -93,17 +185,14 @@ export function blueprintToTree(
           ...materialNode,
           style: { ...template.baseNode.style, ...materialNode.style },
           layout: { ...template.baseNode.layout, ...materialNode.layout },
-          // Genetic Authority (Phase 11): 
-          // 1. Overrides & SlotMappings are merged (Blueprint + Template)
           overrides: { ...template.baseNode.overrides, ...materialNode.overrides },
           slotMappings: { ...template.baseNode.slotMappings, ...materialNode.slotMappings },
-          // 2. Deterministic Locking (If template OR instance is locked, the result is locked)
           locked: template.baseNode.locked || materialNode.locked || false,
-          // 3. Identification Stability
-          id: materialNode.id || template.baseNode.id
+          id: materialNode.id || template.baseNode.id,
         };
       } else {
-        console.warn(`[UCA BRIDGE] Missing template: ${materialNode.cellRef}. Generating Fallback.`);
+        missingTemplates.add(materialNode.cellRef);
+        errors.push(`[UCA BRIDGE] Missing template: ${materialNode.cellRef}`);
         materialNode.role = 'decor';
         materialNode.style = { ...materialNode.style, color: '#FF00FF', opacity: 0.5 };
       }
@@ -112,14 +201,24 @@ export function blueprintToTree(
     return materialNode;
   };
 
-  const compiledTree = resolvePlaceholders(blueprint.rootNode);
+  const compiledTree = resolveNodes(materialBlueprintRoot, 0, new Set());
 
   // Apply Authority Overrides if present
   const finalTree = options.manifestOverrides 
     ? applyOverridesToTree(compiledTree, options.manifestOverrides)
     : compiledTree;
 
-  return formalizeUCA(finalTree);
+  return {
+    tree: formalizeUCA(finalTree),
+    errors,
+    warnings,
+    metadata: {
+      nodeCount,
+      unresolvedPlaceholders: Array.from(unresolvedPlaceholders),
+      missingTemplates: Array.from(missingTemplates),
+      depth: maxDepth
+    }
+  };
 }
 
 /**
@@ -152,6 +251,6 @@ export function omegaTreeToManifest(tree: OmegaNode): Partial<OMEGA_Manifest['ui
   };
 }
 
-export { legacyMigrator as _internalLegacyMigrator };
-export { legacySerializer as _internalLegacySerializer };
+export { legacyMigrator as _rawManifestToTree };
+export { legacySerializer as _rawTreeToManifest };
 export { congealSnapshot } from './treeUtils';
