@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Hash } from 'lucide-react';
-import { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
+import type { OMEGA_Manifest, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
 
 import UnifiedGraphicGovernance from './aesthetic/UnifiedGraphicGovernance';
@@ -18,10 +18,10 @@ interface IndustrialGovernanceConsoleProps {
   values: Partial<OmegaStyleNode>;
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OmegaStyleNode>) => void;
-  resolveAsset?: (id: string | undefined) => string | undefined;
-  title?: string;
-  forcedCapabilities?: string[];
-  onOpenConfig?: () => void;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
+  title?: string | undefined;
+  forcedCapabilities?: string[] | undefined;
+  onOpenConfig?: (() => void) | undefined;
 }
 
 import { GOVERNANCE_DOMAINS } from './aesthetic/GovernanceRegistry';

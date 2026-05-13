@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 import { instruments } from '@/data/instruments';
 
 export default function sitemap(): MetadataRoute.Sitemap {

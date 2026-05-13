@@ -17,8 +17,17 @@ export interface OMEGA_Asset {
   id: string;
   url: string;      // asset://filename.png, data:image/... o path relativo
   type: 'image' | 'filmstrip' | 'svg';
-  frames?: number;  // Obligatorio para filmstrips
-  orientation?: 'v' | 'h'; // Orientación del filmstrip
+  frames?: number | undefined;  // Obligatorio para filmstrips
+  orientation?: 'v' | 'h' | undefined; // Orientación del filmstrip
+  path?: string | undefined; // Full physical path for library assets
+  defaultFrame?: number | undefined; // Default frame for preview
+  category?: string | undefined; // Grouping category
+}
+
+export interface OMEGA_Font {
+  name: string;
+  url?: string | undefined;
+  file?: string | undefined;
 }
 
 export type TabName = 'MAIN' | 'VOICE' | 'FX' | 'MOD' | 'EDIT' | 'MIDI' | 'ADVANCED' | string;
@@ -31,95 +40,153 @@ export interface Position {
 export interface Dimensions {
   width: number;
   height: number;
+  w?: number | undefined; // LEGACY SHIM
+  h?: number | undefined; // LEGACY SHIM
 }
 
-export interface Attachment {
-  type: AttachmentType;
-  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
-  offsetX: number;
-  offsetY: number;
-  variant: string;
-  text?: string;
-  role?: string;
-  bind?: string;
-  isCore?: boolean; // Era 7.2.3 Internal Metadata
-  fontSize?: number;
-  fontFamily?: string;
-  fontColor?: string;
-  style?: OmegaStyleNode; // [NEW] Era 7.2.3 Granular Styling
-  id: string; // Mandatory for fragment mapping
+export type SignalType = 'audio' | 'cv' | 'gate' | 'midi' | 'clock' | 'system' | string;
+export type PortDirection = 'in' | 'out';
+
+/**
+ * UCA PHASE 17 - UNIVERSAL SIGNAL PORT
+ * Formal behavioral contract for signal routing.
+ */
+export interface UCA_Port {
+  id: string;
+  direction: PortDirection;
+  signalType: SignalType;
+  label?: string | undefined;
+  bind?: string | undefined; // DSP Contract ID / Signal mapping
+  pos?: Position | undefined; // Optional for visual routing/cables
+  metadata?: Record<string, unknown> | undefined;
 }
 
 /**
- * ERA 7.2.3 - UNIFIED AESTHETIC NODE
- * Groups all visual-only properties to separate them from logic and layout.
+ * PHASE 18 - OMEGA LINK / MODULATION
+ * Explicit signal or modulation connection between paths.
+ */
+export interface OMEGA_Modulation {
+  id: string;
+  source: string; // Hierarchical path (e.g., osc_1/out)
+  target: string; // Hierarchical path (e.g., filter_1/in)
+  amount?: number | undefined;
+  type?: 'unipolar' | 'bipolar' | 'additive' | 'multiplicative' | string | undefined;
+  kind?: 'modulation' | 'audio' | 'cv' | string | undefined;
+}
+
+// Alias for structural links
+export type OmegaLink = OMEGA_Modulation;
+
+export interface Attachment {
+  id: string;
+  type: AttachmentType;
+  label: string;
+  pos: Position;
+  bind?: string | undefined;
+  role?: string | undefined;
+  style?: Partial<OmegaStyleNode> | undefined;
+  fontFamily?: string | undefined;
+  fontSize?: number | undefined;
+  fontColor?: string | undefined;
+  isCore?: boolean | undefined;
+  // Extended Industrial Metadata
+  position?: string | undefined; 
+  variant?: string | undefined;
+  text?: string | undefined;
+  offsetX?: number | undefined;
+  offsetY?: number | undefined;
+}
+
+export interface LightingGovernance {
+  shadowAngle?: number | undefined;
+  ambientIntensity?: number | undefined;
+  specularIntensity?: number | undefined;
+  surfaceGrain?: number | undefined;
+  globalBlur?: number | undefined;
+  opacity?: number | undefined;
+  [key: string]: unknown;
+}
+
+export interface HardwareGovernance {
+  variant?: string | undefined;
+  screwOffset?: number | undefined;
+  screwMapping?: string[] | undefined;
+  showRails?: boolean | undefined;
+  railColor?: string | undefined;
+  [key: string]: unknown;
+}
+
+export type FaceplateGovernance = string | {
+  asset?: string | undefined;
+  color?: string | undefined;
+  texture?: string | undefined;
+  [key: string]: unknown;
+};
+
+/**
+ * OmegaStyleNode: Modular aesthetic governance unit.
  */
 export interface OmegaStyleNode {
-  color?: string;
-  indicatorColor?: string;
-  glowColor?: string;
-  glassColor?: string;
-  font?: string;
-  fontSize?: number;
-  fontColor?: string;
-  opacity?: number;
-  intensity?: number;
-  rounding?: number;
-  shadow?: string;
-  shadowInner?: string;
-  blur?: number;
-  texture?: string;
-  borderWidth?: number;
-  padding?: number;
-  thickness?: number;     // Line/Cable thickness
-  alignment?: 'left' | 'center' | 'right';
-  zIndex?: number;
-  asset?: string;
-  fitting?: 'stretch' | 'cover' | 'contain' | 'tile' | 'center'; // Era 7.2.3 Image Fitting
-  material?: string;
-  spacing?: number;
-  labelX?: number; // Architectural Label Offsets
-  labelY?: number;
-  labelW?: number;
-  labelH?: number;
-  labelBg?: string;
-  labelRounding?: number;
-  labelPadding?: number;
-  // Industrial Filmstrip Metrics
-  frames?: number;
-  frameWidth?: number;
-  frameHeight?: number;
-  orientation?: 'v' | 'h';
-  width?: number;  // Explicit override for primitives
-  height?: number;
-  offsetX?: number; // Architectural Spatial Offsets
-  offsetY?: number;
-  // Animation & Sequence Metadata
-  graphicMode?: 'static' | 'sequence';
-  zeroAnchor?: number;
-  mode?: 'rotate' | 'sequence' | 'state' | string;
-  // UCA Phase 10.2 - Interaction Mode
-  mouseResponse?: 'rotary' | 'linear';
-  category?: string; // Asset-specific category (e.g. 'knob', 'slider')
-  polarity?: 'normal' | 'inverted'; // Mechanical polarity for assets
-  precision?: number; // Numerical precision for displays/logic
-  active?: boolean; // Generic active state for fragments
-  // Advanced Mechanicals
-  useSpecificRounding?: boolean;
-  roundingTL?: number;
-  roundingTR?: number;
-  roundingBL?: number;
-  roundingBR?: number;
-  tiling?: number;
-  // Technical Asset Metadata
-  id?: string;
-  name?: string;
-  path?: string;
-  defaultFrame?: number;
-  testValue?: number;
-  variant?: string;
-  backgroundAsset?: string;
-  [key: string]: unknown; // HARDENED from any
+  variant?: string | undefined;
+  color?: string | undefined;
+  indicatorColor?: string | undefined;
+  glowColor?: string | undefined;
+  glassColor?: string | undefined;
+  font?: string | undefined;
+  fontSize?: number | undefined;
+  fontColor?: string | undefined;
+  opacity?: number | undefined;
+  blur?: number | undefined;
+  texture?: string | undefined;
+  borderWidth?: number | undefined;
+  rounding?: number | undefined;
+  labelW?: number | undefined;
+  labelH?: number | undefined;
+  padding?: number | undefined;
+  thickness?: number | undefined;
+  alignment?: 'left' | 'center' | 'right' | undefined;
+  zIndex?: number | undefined;
+  asset?: string | undefined;
+  fitting?: 'stretch' | 'cover' | 'contain' | 'tile' | 'center' | undefined;
+  material?: string | undefined;
+  spacing?: number | undefined;
+  labelX?: number | undefined;
+  labelY?: number | undefined;
+  labelWidth?: number | undefined;
+  labelHeight?: number | undefined;
+  labelBg?: string | undefined;
+  labelRounding?: number | undefined;
+  labelPadding?: number | undefined;
+  frames?: number | undefined;
+  frameWidth?: number | undefined;
+  frameHeight?: number | undefined;
+  orientation?: 'v' | 'h' | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  offsetX?: number | undefined;
+  offsetY?: number | undefined;
+  graphicMode?: 'static' | 'sequence' | undefined;
+  zeroAnchor?: number | undefined;
+  mode?: 'rotate' | 'sequence' | 'state' | string | undefined;
+  mouseResponse?: 'rotary' | 'linear' | undefined;
+  category?: string | undefined;
+  polarity?: 'normal' | 'inverted' | undefined;
+  precision?: number | undefined;
+  active?: boolean | undefined;
+  useSpecificRounding?: boolean | undefined;
+  roundingTL?: number | undefined;
+  roundingTR?: number | undefined;
+  roundingBL?: number | undefined;
+  roundingBR?: number | undefined;
+  tiling?: number | undefined;
+  id?: string | undefined;
+  name?: string | undefined;
+  path?: string | undefined;
+  defaultFrame?: number | undefined;
+  testValue?: number | undefined;
+  variantOverride?: string | undefined;
+  backgroundAsset?: string | undefined;
+  [key: string]: unknown;
 }
 
 export interface StyleVariant {
@@ -128,49 +195,14 @@ export interface StyleVariant {
   aesthetics: Partial<OmegaStyleNode>;
 }
 
-export interface LibraryAsset {
-  id: string;
-  name: string;
-  path: string;
-  frames?: number;
-  orientation?: 'v' | 'h';
-  isFolder?: boolean;
-}
-
-export interface AssetRegistry {
-  statics?: LibraryAsset[];
-  sequences?: LibraryAsset[];
-  [key: string]: LibraryAsset[] | undefined;
-}
-
-export interface OMEGA_Contract {
-  omega_version: string;
-  id: string;
-  name?: string;
-  family?: string;
-  parameters: Array<{
-    id: string;
-    name: string;
-    min: number;
-    max: number;
-    default: number;
-    unit?: string;
-  }>;
-  ports: Array<{
-    id: string;
-    type: 'audio' | 'cv' | 'midi' | 'gate';
-    direction: 'input' | 'output';
-  }>;
-  firmwareHash?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export type ContainerSizeUnit = 'full' | '3/4' | '2/3' | '1/2' | '1/3' | '1/4';
-export type ContainerVariant = 'default' | 'header' | 'section' | 'panel' | 'inset' | 'minimal';
+export type ContainerSizeUnit = '1U' | '2U' | '3U' | '4U' | '5U' | '6U' | '7U' | '8U' | '100%' | string;
+export type ContainerVariant = 'industrial' | 'glass' | 'none' | string;
 
 export interface ContainerSize {
-  w: ContainerSizeUnit | number;
-  h: number;
+  width: ContainerSizeUnit | number;
+  height: number;
+  w?: number | undefined; 
+  h?: number | undefined; 
 }
 
 export interface LayoutContainer {
@@ -179,29 +211,28 @@ export interface LayoutContainer {
   pos: Position;
   size: ContainerSize;
   variant: ContainerVariant;
-  zIndex?: number;
-  labelPosition?: 'top' | 'bottom' | 'inside-top' | 'inside-bottom';
-  tab?: TabName | string; // Era 7.2.1 Architectural Plane
-  collapsed?: boolean;    // Era 7.2.3 Industrial Folding
-  // Visual Overrides (Era 7.2.3 recommends moving these to style node eventually)
-  asset?: string;         
-  color?: string;         
-  indicatorColor?: string; 
-  font?: string;          
-  fontSize?: number;
-  fontColor?: string;
-  rounding?: number;
-  borderWidth?: number;
-  thickness?: number;     
-  opacity?: number;
-  labelX?: number;        
-  labelY?: number;
-  labelW?: number;
-  labelH?: number;
-  labelBg?: string;
-  labelRounding?: number;
-  labelPadding?: number;
-  style?: OmegaStyleNode; // [NEW] Canonical style node for containers
+  zIndex?: number | undefined;
+  labelPosition?: 'top' | 'bottom' | 'inside-top' | 'inside-bottom' | undefined;
+  tab?: TabName | string | undefined;
+  collapsed?: boolean | undefined;
+  asset?: string | undefined;         
+  color?: string | undefined;         
+  indicatorColor?: string | undefined; 
+  font?: string | undefined;          
+  fontSize?: number | undefined;
+  fontColor?: string | undefined;
+  rounding?: number | undefined;
+  borderWidth?: number | undefined;
+  thickness?: number | undefined;     
+  opacity?: number | undefined;
+  labelX?: number | undefined;        
+  labelY?: number | undefined;
+  labelWidth?: number | undefined;
+  labelHeight?: number | undefined;
+  labelBg?: string | undefined;
+  labelRounding?: number | undefined;
+  labelPadding?: number | undefined;
+  style?: OmegaStyleNode | undefined;
 }
 
 export interface SelectOption {
@@ -215,358 +246,355 @@ export interface Presentation {
   variant: string;
   offsetX: number;
   offsetY: number;
-  container?: string;     // Era 7.2 Container mapping
-  colSpan?: number;       // Era 7.2.1 Grid span
-  rowSpan?: number;
-  asset?: string;         // ID del asset en el bloque de recursos
-  filmstrip_frame?: number; // Frame actual si es manual
+  container?: string | undefined;
+  colSpan?: number | undefined;
+  rowSpan?: number | undefined;
+  asset?: string | undefined;
+  filmstrip_frame?: number | undefined;
   attachments: Attachment[];
-  style?: OmegaStyleNode; // [NEW] Era 7.2.3 Modular Styling Node
-  scale?: 'S' | 'M' | 'L' | 'XL' | number; // [NEW] Era 7.2.3 Size Decoupling
-  precision?: number;
-  step?: number;
-  color?: string;
-  indicatorColor?: string;
-  glowColor?: string;
-  glassColor?: string;
-  options?: SelectOption[];
-  /** @deprecated Use precision instead */
-  ui_precision?: number;
+  style?: OmegaStyleNode | undefined;
+  scale?: 'S' | 'M' | 'L' | 'XL' | number | undefined;
+  size?: Dimensions | undefined;
+  precision?: number | undefined;
+  step?: number | undefined;
+  color?: string | undefined;
+  indicatorColor?: string | undefined;
+  glowColor?: string | undefined;
+  glassColor?: string | undefined;
+  options?: SelectOption[] | undefined;
+  ui_precision?: number | undefined;
   ui?: {
-    disabled?: boolean;
-    readOnly?: boolean;
-    hidden?: boolean;
+    disabled?: boolean | undefined;
+    readOnly?: boolean | undefined;
+    hidden?: boolean | undefined;
     [key: string]: boolean | undefined;
-  };
-  unit?: string;
-  size?: { w: number; h: number }; 
-  opacity?: number;
-  font?: string;
-  fontSize?: number; // [NEW] Era 7.2.3 Parity
-  fontColor?: string; // [NEW] Era 7.2.3 Parity
-  lookup?: string;
-  height?: number; // Physical prominence (protrusion/recess)
-  thickness?: number; // Line/Cable thickness
-  intensity?: number; // Light emission strength
-  rounding?: number; // Corner radius
-  alignment?: 'left' | 'center' | 'right'; // Content alignment
-  padding?: number; // Internal container spacing
-  texture?: string; // Procedural surface grain
-  // Industrial Filmstrip Metrics (Mirror StyleNode for direct access)
-  frames?: number;  
-  frameWidth?: number;
-  frameHeight?: number;
-  orientation?: 'v' | 'h';
-  fitting?: 'stretch' | 'cover' | 'contain' | 'tile' | 'center';
-  labelBg?: string;
-  labelX?: number;
-  labelY?: number;
-  labelW?: number;
-  labelH?: number;
-  labelRounding?: number;
-  labelPadding?: number;
+  } | undefined;
+  unit?: string | undefined;
+  opacity?: number | undefined;
+  font?: string | undefined;
+  fontSize?: number | undefined;
+  fontColor?: string | undefined;
+  lookup?: string | undefined;
+  height?: number | undefined;
+  thickness?: number | undefined;
+  intensity?: number | undefined;
+  rounding?: number | undefined;
+  alignment?: 'left' | 'center' | 'right' | undefined;
+  padding?: number | undefined;
+  texture?: string | undefined;
+  frames?: number | undefined;  
+  frameWidth?: number | undefined;
+  frameHeight?: number | undefined;
+  orientation?: 'v' | 'h' | undefined;
+  fitting?: 'stretch' | 'cover' | 'contain' | 'tile' | 'center' | undefined;
+  labelBg?: string | undefined;
+  labelX?: number | undefined;
+  labelY?: number | undefined;
+  labelWidth?: number | undefined;
+  labelHeight?: number | undefined;
+  labelRounding?: number | undefined;
+  labelPadding?: number | undefined;
 }
 
 export interface ManifestEntity {
   id: string;
-  type: string;
-  role: RegistryRole | string;
-  roles?: string[]; // Industrial multi-role support
-  bind: string;
-  label?: string;
-  pos: Position;
-  presentation: Presentation;
-  value_normalization?: string;
-  unit?: string;
-  // Library Extensions
-  category?: string;
-  name?: string;
-  description?: string;
-  path?: string;
-  isLocal?: boolean;
-}
-
-export interface ManifestMetadata {
-  name: string;
-  family: string;
-  author?: string;
-  version?: string;
-  authorEmail?: string;
-  status?: string;      // Industrial status (Stable, Alpha, etc.)
-  icon?: string;        // Era 7.2.3 Module icon
-  description?: string; // Module description
-  tags?: string[];
-  rack?: {
-    hp?: number;
-    height_mode?: 'standard' | 'compact' | 'full';
-    slot?: string;      // Legacy/Visual slot mapping
-    skin?: string;
-  };
-}
-
-export interface OMEGA_Modulation {
-  id: string;
-  source: string; // Entity ID (e.g., lfo_1)
-  target: string; // Entity ID (e.g., osc_freq)
-  amount: number; // 0.0 to 1.0
-  type?: 'unipolar' | 'bipolar' | 'additive' | 'multiplicative';
-}
-
-export interface OMEGA_Metric {
+  type: RegistryRole | string;
   label: string;
-  value: number;
-  color: string;
+  pos: Position;
+  size: Dimensions;
+  presentation?: Presentation | undefined;
+  meta?: Record<string, unknown> | undefined;
+  role?: string | undefined;
+  bind?: string | undefined;
+  unit?: string | undefined;
+  // Industrial Extensions
+  name?: string | undefined;
+  category?: string | undefined;
+  description?: string | undefined;
+  isLocal?: boolean | undefined;
+  path?: string | undefined;
+  assetBehavior?: import('./assetBehavior').AssetBehavior | undefined;
+  recipe?: import('./assetBehavior').LayerRecipe | undefined;
+}
+ 
+export interface OMEGA_Metric {
+  id?: string | undefined;
+  label: string;
+  value: number | string;
+  color?: string | undefined;
+  unit?: string | undefined;
+  status?: 'nominal' | 'warning' | 'critical' | undefined;
 }
 
-/**
- * UCA PHASE 10.2 - UNIVERSAL CELL ARCHITECTURE
- * The hierarchical tree is the canonical visual source of truth.
- */
-
-export type NodeKind = 
-  | 'rack' 
-  | 'face' 
-  | 'container' 
-  | 'cell' 
-  | 'asset-layer'
-  | 'group'
-  | string;
-
+export type NodeKind = 'container' | 'cell' | 'rack' | 'face' | 'port' | 'asset-layer' | 'layer' | 'group' | 'patch' | 'root';
 export type NodeRole = 
   | 'structure' 
-  | 'decor' 
-  | 'mechanical' 
-  | 'control' 
-  | 'telemetry' 
-  | 'io' 
-  | 'logic-group'
-  | 'root'
-  | 'presentation'
-  | string;
-
-export type CellKind = 
-  | 'decor' 
-  | 'mechanical' 
   | 'control' 
   | 'telemetry' 
   | 'io' 
   | 'container' 
   | 'composite'
+  | 'primitive'
   | string;
 
 export interface OmegaConstraints {
-  clampToParent?: boolean;   // Lock child inside parent bounding box
-  margin?: number;           // Safety margin in rack units
+  clampToParent?: boolean | undefined;
+  margin?: number | undefined;
 }
 
 export type LayoutMode = 'absolute' | 'stack-v' | 'stack-h';
 
-/**
- * OmegaNode: The concrete unit of visual composition.
- */
 export interface OmegaNode {
   id: string;
   kind: NodeKind;
-  role?: NodeRole;
-  cellRef?: string;  // Reference to a CellTemplate
-  bind?: string;     // DSP Contract ID / Signal mapping
+  role?: NodeRole | undefined;
+  cellRef?: string | undefined;
+  bind?: string | undefined;
   layout: {
     pos: Position;
-    size?: Dimensions;
-    transform?: string;
-    zIndex?: number;
-    mode?: LayoutMode;
-    gap?: number;
-    padding?: number;
-    align?: 'start' | 'center' | 'end' | 'stretch';
-    justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-around';
+    size?: Dimensions | undefined;
+    transform?: string | undefined;
+    zIndex?: number | undefined;
+    mode?: LayoutMode | undefined;
+    gap?: number | undefined;
+    padding?: number | undefined;
+    align?: 'start' | 'center' | 'end' | 'stretch' | undefined;
+    justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-around' | undefined;
   };
-  style?: OmegaStyleNode;
-  visible?: boolean;
-  locked?: boolean;
-  capabilities?: string[];
-  constraints?: OmegaConstraints;
-  children?: OmegaNode[];
-  // UCA EXTENSIONS
-  overrides?: Record<string, unknown>; // HARDENED
-  assetBehavior?: import('./assetBehavior').AssetBehavior;
-  slotMappings?: Record<string, string>;
-  snapshot?: OmegaNode;
-  templateRef?: string; // Legacy alias for cellRef
-  [key: string]: unknown; // HARDENED
+  style?: OmegaStyleNode | undefined;
+  visible?: boolean | undefined;
+  locked?: boolean | undefined;
+  children?: OmegaNode[] | undefined;
+  ports?: UCA_Port[] | undefined;
+  modulationTargets?: string[] | undefined;
+  signalPath?: string | undefined;
+  overrides?: Record<string, unknown> | undefined;
+  constraints?: OmegaConstraints | undefined;
+  slotMappings?: Record<string, string> | undefined;
+  templateRef?: string | undefined;
+  snapshot?: OmegaNode | undefined;
+  meta?: Record<string, unknown> | undefined;
 }
 
-// ALIASES FOR COMPATIBILITY
-export type OverrideMode = 'editable' | 'locked' | 'hidden';
+export interface ModuleTemplate {
+  id: string;
+  label: string;
+  category: 'primitive' | 'composite' | 'structure' | 'infrastructure' | 'signal' | 'io' | 'telemetry' | 'mechanical' | 'decor';
+  baseNode: OmegaNode;
+  policy?: OverridePolicy[] | undefined;
+  slots?: { id: string; label: string; [key: string]: unknown }[] | undefined;
+  metadata?: Record<string, unknown> | undefined;
+  compatibility?: Record<string, string> | undefined;
+  assetBehavior?: string | any | undefined;
+  recipe?: any | undefined;
+  family?: string | undefined;
+  description?: string | undefined;
+  version?: string | undefined;
+}
+
+export type CellTemplate = ModuleTemplate;
 
 export interface OverridePolicy {
   path: string;
-  mode: OverrideMode;
-  [key: string]: unknown;
+  mode: 'locked' | 'editable' | 'hidden';
 }
 
-/**
- * CellTemplate: Reusable catalog definition for a visual cell.
- */
-export interface CellTemplate {
+export type OverrideMode = 'locked' | 'editable' | 'hidden';
+
+export interface BlueprintPlaceholder {
   id: string;
   label: string;
-  category: CellKind;
-  family?: string; // Add family for gallery filtering
-  baseNode: OmegaNode; // The structural blueprint of the cell
-  root?: OmegaNode;    // [COMPAT] Legacy alias for baseNode
-  policy?: OverridePolicy[]; // HARDENED
-  version?: string;
-  slots?: Array<{ id: string; label: string; kind: string; required?: boolean; path?: string }>; // HARDENED
-  metadata?: Record<string, unknown>;
-  compatibility?: Record<string, unknown>; // HARDENED
-  description?: string;
-  placeholders?: BlueprintPlaceholderDefinition[]; // HARDENED
-  assetBehavior?: import('./assetBehavior').AssetBehavior;
-  recipe?: import('./assetBehavior').LayerRecipe; // Phase 12 Layer Composition
+  type: 'string' | 'number' | 'boolean' | 'selection' | 'color' | 'enumValue';
+  defaultValue: string | number | boolean;
+  options?: ({ label: string; value: string | number | boolean } | string | number | boolean)[] | undefined;
+  // Extended fields for Phase 20
+  required?: boolean | undefined;
+  hint?: string | undefined;
+  description?: string | undefined;
+  valueType?: 'string' | 'number' | 'boolean' | 'selection' | 'color' | 'enumValue' | undefined; // Alias
+  allowedValues?: ({ label: string; value: string | number | boolean } | string | number | boolean)[] | undefined; // Alias
 }
 
-export type ModuleTemplate = CellTemplate;
-export type CompatibilityStatus = 'compatible' | 'incompatible' | 'unknown';
-export type ValidationSeverity = 'info' | 'warning' | 'error';
-export type BlueprintPlaceholderValues = Record<string, unknown>; // HARDENED
-export type BlueprintInsertionMode = 'commit' | 'dry-run';
-export type IdCollisionStrategy = 'remap' | 'fail' | 'ignore';
-export type BlueprintAutoWirePolicy = { mode: string; [key: string]: unknown }; // HARDENED
-export type BlueprintAutoWireDecision = unknown; // HARDENED
-export type BlueprintCompatibility = Record<string, unknown>; // HARDENED
+export type BlueprintPlaceholderDefinition = BlueprintPlaceholder;
 
-/**
- * BlueprintDefinition: The declarative intent for module composition.
- */
+export interface BlueprintAutoWirePolicy {
+  mode: 'none' | 'smart' | 'aggressive' | 'strict';
+  targetSignals?: string[] | undefined;
+}
+
+export type BlueprintInsertionMode = 'commit' | 'preview' | 'dryRun';
+export type IdCollisionStrategy = 'remap' | 'error' | 'overwrite';
+export type CompatibilityStatus = 'compliant' | 'warning' | 'incompatible';
+export type ValidationSeverity = 'error' | 'warning' | 'info';
+
+export interface BlueprintAutoWireDecision {
+  nodeId: string;
+  targetId: string;
+  strategy: string;
+  status: 'created' | 'skipped' | 'failed' | 'bound';
+  reason?: string | undefined;
+  wireId?: string | undefined; // Optional for links
+}
+
+export type BlueprintPlaceholderValues = Record<string, string | number | boolean>;
+
+export interface BlueprintCompatibility {
+  allowedParentKinds?: NodeKind[] | undefined;
+  deniedParentKinds?: NodeKind[] | undefined;
+  suggestedRoles?: NodeRole[] | undefined;
+}
+
 export interface BlueprintDefinition {
   blueprintId: string;
   version: string;
   name: string;
-  description?: string;
-  origin: 'system' | 'user' | 'imported';
-  tags?: string[];
-  rootNode: OmegaBlueprintNode; // Allows placeholders
-  placeholders: BlueprintPlaceholderDefinition[];
-  compatibility: {
-    allowedParentKinds?: NodeKind[];
-    deniedParentKinds?: NodeKind[];
-    allowedPlanes?: string[];
-    singleton?: boolean;
-    minManifestVersion?: string;
-    [key: string]: unknown; // HARDENED
-  };
-  autoWirePolicy?: BlueprintAutoWirePolicy;
-  materializeSnapshot?: boolean;
-  templateId?: string;
-  [key: string]: unknown; // HARDENED
+  origin: 'user' | 'system' | 'library';
+  rootNode: OmegaBlueprintNode;
+  placeholders?: BlueprintPlaceholder[] | undefined;
+  compatibility?: BlueprintCompatibility | undefined;
+  description?: string | undefined;
+  templateId?: string | undefined;
+  autoWirePolicy?: BlueprintAutoWirePolicy | undefined;
+  materializeSnapshot?: boolean | undefined;
+  defaultOverridePolicy?: string | undefined;
 }
 
-export interface OmegaBlueprintNode extends Omit<OmegaNode, 'id' | 'children'> {
-  id: string; // Allows expressions like "{{placeholderId}}"
-  children?: OmegaBlueprintNode[];
-}
-
-export interface BlueprintPlaceholderDefinition {
+export interface OmegaBlueprintNode {
   id: string;
-  label: string;
-  valueType: 'string' | 'number' | 'boolean' | 'nodeId' | 'color' | 'enum' | 'enumValue';
-  defaultValue?: unknown;
-  required: boolean;
-  description?: string;
-  targetPath: string; // JSON Pointer or dot-notation
-  allowedValues?: unknown[]; // HARDENED
-  hint?: string;
+  kind: NodeKind;
+  role?: NodeRole | undefined;
+  layout?: {
+    pos: Position;
+    size?: Dimensions | undefined;
+    mode?: LayoutMode | undefined;
+  } | undefined;
+  style?: OmegaStyleNode | undefined;
+  children?: OmegaBlueprintNode[] | undefined;
+  ports?: UCA_Port[] | undefined;
+  cellRef?: string | undefined;
+  bind?: string | undefined;
+  modulationTargets?: string[] | undefined;
 }
 
 export interface GridConfig {
   enabled: boolean;
   spacingX: number;
   spacingY: number;
+  snapMode: 'center' | 'corner' | 'edge';
 }
 
-/**
- * OMEGA_Manifest: The final serialized editable instance.
- */
-export interface OMEGA_Manifest {
-  schemaVersion: string;
+export interface FontDefinition {
   id: string;
-  metadata: ManifestMetadata;
-  ui: {
-    dimensions: Dimensions;
-    /** @deprecated Projections of the tree model */
-    controls: ManifestEntity[];
-    /** @deprecated Projections of the tree model */
-    jacks: ManifestEntity[];
-    /** @deprecated Projections of the tree model */
-    layout?: {
-      containers: LayoutContainer[];
-      planes?: string[];
-      gridSnap?: number;
-      grid?: GridConfig; // Typed for CADOverlay
-      tabStyles?: Record<string, string>;
-      activeTab?: string;
-    };
-    
-    // CANONICAL UCA STATE (Phase 10.2)
-    tree?: OmegaNode; // Canonic hierarchical source of truth
-    useUCA?: boolean; // Feature flag for recursive rendering
-    cellLibrary?: Record<string, CellTemplate>; // Library of reusable visual cells
-    moduleTemplates?: Record<string, CellTemplate>; // [COMPAT] Alias for cellLibrary
-    
-    ucaDebug?: {
-      enabled: boolean;
-      showLabels?: boolean;
-      showCADOverlay?: boolean;
-      hideDecorative?: boolean;
-    };
-    
-    // GLOBAL AESTHETICS (Inherited by UCA nodes)
-    palette?: Record<string, string>;
-    colors?: Record<string, string>;
-    typography?: {
-      defaultFont?: string;
-      definitions?: { id: string; label: string; family: string }[];
-      [key: string]: unknown;
-    };
-    lighting?: {
-      shadowAngle?: number;
-      ambientIntensity?: number;
-      surfaceGrain?: number;
-      specularIntensity?: number;
-      opacity?: number;
-      globalBlur?: number;
-      [key: string]: unknown;
-    };
-    
-    // LEGACY UI GOVERNANCE (Restored for Editor Parity)
-    skin?: string;
-    skinMode?: 'standard' | 'custom' | string;
-    styles?: Record<string, StyleVariant[]>; 
-    faceplate?: string | Record<string, string>;
-    faceplateMode?: string;
-    hardware?: {
-      screwCount?: number;
-      screwMapping?: string[];
-      screwOffset?: number;
-      showRails?: boolean;
-      railStyle?: string;
-      railColor?: string;
-      variant?: string;
-    };
-    attachments?: Attachment[];
-    resources?: {
-       fonts?: { id?: string, name: string, url?: string, file?: string, family?: string }[];
-       [key: string]: unknown;
-    };
-    [key: string]: unknown; // HARDENED for extension
-  };
-  resources: {
-    wasm: string;
-    contract?: string;
-    assets?: OMEGA_Asset[];
-    [key: string]: unknown;
-  };
-  modulations?: OMEGA_Modulation[]; // Restored to root
-  [key: string]: unknown; 
+  label: string;
+  family: string;
+  weight?: string | number | undefined;
 }
+
+export interface TypographyConfig {
+  defaultFont?: string | undefined;
+  definitions?: FontDefinition[] | undefined;
+  [key: string]: unknown;
+}
+
+export interface OMEGA_Contract {
+  id: string;
+  label: string;
+  role: string;
+  ports: UCA_Port[];
+  omega_version?: string | undefined;
+  parameters?: Array<{
+    id: string;
+    name: string;
+    min: number;
+    max: number;
+    default: number;
+    unit?: string | undefined;
+  }> | undefined;
+}
+
+export interface UcaDebugConfig {
+  enabled: boolean;
+  showLabels: boolean;
+  hideDecorative: boolean;
+  showCADOverlay: boolean;
+  selectedId?: string | null | undefined;
+}
+
+export interface OMEGA_Manifest {
+  id?: string | undefined;
+  schemaVersion?: string | undefined;
+  nodes?: OmegaNode[] | undefined; // Canonical UCA Tree Root
+  metadata: ManifestMetadata;
+  resources: {
+    assets?: OMEGA_Asset[] | undefined;
+    styles?: Record<string, StyleVariant[] | undefined> | undefined;
+    extra?: ExtraResource[] | undefined;
+    fonts?: OMEGA_Font[] | undefined;
+    wasm?: unknown | undefined; // Legacy/Technical
+    contract?: OMEGA_Contract | undefined;
+  };
+  ui: {
+    skin?: string | undefined;
+    skinMode?: 'standard' | 'custom' | undefined;
+    dimensions?: { width: number; height: number } | undefined; // LEGACY
+    controls?: ManifestEntity[] | undefined; // LEGACY
+    jacks?: ManifestEntity[] | undefined; // LEGACY
+    layout?: {
+      width: number;
+      height: number;
+      zoom?: number | undefined;
+      grid?: GridConfig | undefined;
+      containers?: LayoutContainer[] | undefined; 
+      activeTab?: string | undefined; 
+      planes?: string[] | undefined;
+      tabStyles?: Record<string, unknown> | undefined;
+    } | undefined;
+    tree?: OmegaNode | undefined;
+    useUCA?: boolean | undefined;
+    ucaDebug?: UcaDebugConfig | undefined;
+    lighting?: LightingGovernance | undefined;
+    faceplate?: FaceplateGovernance | undefined;
+    hardware?: HardwareGovernance | undefined;
+    palette?: Record<string, string> | undefined;
+    colors?: Record<string, string> | undefined;
+    typography?: TypographyConfig | undefined;
+    styles?: Record<string, StyleVariant[]> | undefined;
+    attachments?: Attachment[] | undefined; // Added for VirtualRack compatibility
+  };
+  entities: ManifestEntity[];
+  links?: OMEGA_Modulation[] | undefined;
+  modulations?: OMEGA_Modulation[] | undefined;
+  moduleTemplates?: Record<string, ModuleTemplate> | undefined;
+  // Extra keys found in Partial usage
+  controls?: ManifestEntity[] | undefined;
+  jacks?: ManifestEntity[] | undefined;
+  layout?: OMEGA_Manifest['ui']['layout'];
+}
+
+export interface ManifestMetadata {
+  name: string;
+  version: string;
+  author?: string | undefined;
+  description?: string | undefined;
+  tags?: string[] | undefined;
+  created?: string | undefined;
+  modified?: string | undefined;
+  rack?: { 
+    width: number; 
+    height: number; 
+    hp?: number | undefined; 
+    depth?: number | undefined;
+    units?: '3U' | '1U' | string | undefined;
+    power?: { 
+      plus12?: number | undefined; 
+      minus12?: number | undefined; 
+      five?: number | undefined;
+    } | undefined;
+    height_mode?: 'compact' | 'expanded' | string | undefined;
+  } | undefined;
+  icon?: string | undefined;
+  family?: string | undefined;
+  status?: 'alpha' | 'beta' | 'stable' | 'industrial' | undefined;
+}
+
+export type LibraryAsset = OMEGA_Asset;

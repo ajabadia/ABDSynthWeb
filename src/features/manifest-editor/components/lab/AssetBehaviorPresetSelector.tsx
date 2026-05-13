@@ -1,12 +1,12 @@
 import React from 'react';
-import { AssetBehaviorPreset } from '@/omega-ui-core/types/assetBehavior';
+import type { AssetBehaviorPreset } from '@/omega-ui-core/types/assetBehavior';
 import { Cpu, RotateCcw, Sliders, ToggleLeft, CircleDot, Activity, Zap, Monitor, Layout } from 'lucide-react';
-
+ 
 interface AssetBehaviorPresetSelectorProps {
   value: AssetBehaviorPreset;
   onChange: (preset: AssetBehaviorPreset) => void;
 }
-
+ 
 const PRESETS: { id: AssetBehaviorPreset; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'rotary', label: 'Rotary Knob', icon: RotateCcw, description: 'Continuous 360 or limited rotation mapping.' },
   { id: 'slider', label: 'Linear Slider', icon: Sliders, description: 'Vertical or horizontal movement.' },
@@ -18,7 +18,7 @@ const PRESETS: { id: AssetBehaviorPreset; label: string; icon: React.ElementType
   { id: 'plate', label: 'Rack Plate', icon: Layout, description: 'Decorative panel surface (no behavior).' },
   { id: 'static', label: 'Static Decor', icon: Cpu, description: 'Simple non-interactive graphic asset.' },
 ];
-
+ 
 export default function AssetBehaviorPresetSelector({ value, onChange }: AssetBehaviorPresetSelectorProps) {
   return (
     <div className="space-y-4">

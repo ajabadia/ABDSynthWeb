@@ -1,7 +1,9 @@
+'use client';
+
 import React from 'react';
 
 interface ReorderIndicatorProps {
-  targetIndex: number | null;
+  targetIndex: number | null | undefined;
   mode: 'stack-v' | 'stack-h';
 }
 

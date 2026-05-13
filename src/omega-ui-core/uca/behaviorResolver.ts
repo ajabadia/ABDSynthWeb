@@ -1,4 +1,4 @@
-import { AssetBehavior, BehaviorMapping } from '../types/assetBehavior';
+import type { AssetBehavior, BehaviorMapping } from '../types/assetBehavior';
 
 /**
  * OMEGA Behavior Resolver - Phase 12

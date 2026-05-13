@@ -9,7 +9,7 @@ interface InspectorCollapsibleProps {
   subtitle?: string;
   icon?: React.ElementType | (() => React.ReactNode);
   children: React.ReactNode;
-  onHelp?: () => void;
+  onHelp?: ((id: string) => void) | undefined;
   defaultOpen?: boolean;
   defaultExpanded?: boolean; // Alias for defaultOpen to resolve TSC errors
   variant?: 'default' | 'minimal';
@@ -65,7 +65,7 @@ export default function InspectorCollapsible({
              <button 
                onClick={(e) => {
                  e.stopPropagation();
-                 onHelp();
+                 onHelp(title);
                }} 
                className="hover:text-primary transition-colors p-1"
              >

@@ -19,19 +19,20 @@ import CellStudioContainer from './lab/CellStudioContainer';
 import { useWorkbenchShortcuts } from '@/features/manifest-editor/hooks/useWorkbenchShortcuts';
 
 // Types
-import { ManifestEntity, ModuleTemplate, OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, ModuleTemplate, OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import { useManifestEditor } from '@/features/manifest-editor/hooks/useManifestEditor';
 import { useViewport } from '@/features/manifest-editor/hooks/useViewport';
 import { useAudit } from '@/features/manifest-editor/hooks/useAudit';
-import { useWorkbenchState, WorkbenchTabType, WorkbenchPaneId } from '@/features/manifest-editor/hooks/useWorkbenchState';
+import { useWorkbenchState, type WorkbenchTabType, type WorkbenchPaneId } from '@/features/manifest-editor/hooks/useWorkbenchState';
 import { useAuditNavigator } from '@/features/manifest-editor/hooks/useAuditNavigator';
 import { useWatchdog } from '@/features/manifest-editor/hooks/useWatchdog';
 import { adaptModuleTemplateToBlueprintDefinition } from '../utils/blueprintUtils';
 import { useDynamicFonts } from '@/features/manifest-editor/hooks/useDynamicFonts';
-import { TabDiagnostics, createEmptyDiagnostics, Diagnostic } from '../types/diagnostics';
+import type { TabDiagnostics, Diagnostic } from '../types/diagnostics';
+import { createEmptyDiagnostics } from '../types/diagnostics';
 import { mergeDiagnostics } from '../utils/diagnosticUtils';
 import { structuralAuditor } from '../services/StructuralAuditor';
-import { DocumentState } from '../types/document';
+import type { DocumentState } from '../types/document';
 
 // Services
 import { ContractService } from '@/services/contractService';
@@ -192,7 +193,9 @@ export default function WorkbenchContainer({
         ui: { 
           ...m.ui, 
           layout: { 
-            containers: m.ui?.layout?.containers || [],
+            width: manifest.ui?.layout?.width || 800,
+            height: manifest.ui?.layout?.height || 600,
+            containers: manifest.ui?.layout?.containers || [],
             ...m.ui?.layout, 
             activeTab: currentTabType as WorkbenchTabType
           } 
@@ -234,7 +237,6 @@ export default function WorkbenchContainer({
     const c = contract as OMEGA_Contract | null;
     if (!c) return [];
     return [
-      ...(c.parameters?.map((p: { id: string }) => p.id) || []),
       ...(c.ports?.map((p: { id: string }) => p.id) || [])
     ];
   }, [contract]);
@@ -246,12 +248,12 @@ export default function WorkbenchContainer({
   const handleAddFromLibrary = useCallback((dna: Record<string, unknown>) => {
     // Detect type based on dna
     const type: 'control' | 'jack' = dna.type === 'port' ? 'jack' : 'control';
-    editor.addEntity(type, dna as unknown as Partial<ManifestEntity>);
+    editor.addEntity(type, { ...dna, category: 'primitive' } as unknown as Partial<ManifestEntity>);
   }, [editor]);
 
   const selectedItem = useMemo(() => 
-    (selectedItemId ? editor.findItem(selectedItemId) : manifest) || null
-  , [selectedItemId, editor, manifest]);
+    (selectedItemId ? editor.findItem(selectedItemId) : state.selectedNodeId ? manifest.ui.controls?.find(c => c.id === state.selectedNodeId) || manifest.ui.jacks?.find(c => c.id === state.selectedNodeId) : manifest) || null
+  , [selectedItemId, state.selectedNodeId, editor, manifest]);
 
   const studioCell = useMemo(() => {
     if (!state.studioMode.isOpen || !state.studioMode.cellId) return undefined;
@@ -259,7 +261,6 @@ export default function WorkbenchContainer({
   }, [state.studioMode.isOpen, state.studioMode.cellId, editor]);
 
   const handleDragRatio = useCallback((delta: number) => {
-// ... (lines truncated for brevity, but I will provide the full replacement block)
     actions.setLayoutRatio(state.layout.ratio + delta);
   }, [actions, state.layout.ratio]);
 
@@ -465,7 +466,7 @@ export default function WorkbenchContainer({
         pendingFiles={state.pendingFiles}
         setPendingFiles={(files) => actions.setPendingFiles(files || [])}
         handleBulkUpload={editor.handleBulkUpload}
-        helpState={state.helpState}
+        helpState={{ isOpen: state.helpState.isOpen, sectionId: state.helpState.sectionId || '' }}
         closeHelp={() => actions.setHelpState(false)}
         isAuditModalOpen={state.isAuditModalOpen}
         setIsAuditModalOpen={() => actions.toggleUIState('isAuditModalOpen')}

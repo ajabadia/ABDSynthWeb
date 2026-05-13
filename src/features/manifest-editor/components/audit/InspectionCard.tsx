@@ -6,10 +6,10 @@ import {
   ShieldCheck, ShieldAlert, ShieldX, 
   Info, ArrowRight, Zap, Target, Layout
 } from 'lucide-react';
-import { ValidationIssue } from '@/types/validation';
+import type { Diagnostic } from '@/features/manifest-editor/types/diagnostics';
 
 interface InspectionCardProps {
-  issue: ValidationIssue;
+  issue: Diagnostic;
   onNavigate: (path: string) => void;
   onClose: () => void;
 }
@@ -40,8 +40,8 @@ export default function InspectionCard({ issue, onNavigate, onClose }: Inspectio
     return { label: 'Compliance', icon: Info, color: 'text-amber-400' };
   };
 
-  const category = getCategory(issue.keyword);
-  const recommendation = getRecommendation(issue.keyword);
+  const category = getCategory(issue.keyword || '');
+  const recommendation = getRecommendation(issue.keyword || '');
 
   return (
     <motion.div 
@@ -69,7 +69,7 @@ export default function InspectionCard({ issue, onNavigate, onClose }: Inspectio
                 <category.icon className="w-3 h-3" />
                 {category.label}
               </div>
-              <span className="text-[8px] font-mono wb-text-muted bg-white/5 px-2 py-0.5 rounded-full">{issue.path}</span>
+              <span className="text-[8px] font-mono wb-text-muted bg-white/5 px-2 py-0.5 rounded-full">{issue.path || 'structural'}</span>
             </div>
             <h4 className="text-xs font-bold text-white/90 leading-relaxed">{issue.message}</h4>
           </div>
@@ -87,7 +87,7 @@ export default function InspectionCard({ issue, onNavigate, onClose }: Inspectio
           <div className="flex justify-end">
             <button 
               onClick={() => {
-                onNavigate(issue.path);
+                onNavigate(issue.path || '');
                 onClose();
               }}
               className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary hover:text-white transition-colors group/btn"

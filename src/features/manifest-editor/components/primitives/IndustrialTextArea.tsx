@@ -6,16 +6,16 @@ export type IndustrialTextAreaProps = {
   value: string;
   onChange: (value: string) => void;
 
-  placeholder?: string;
-  disabled?: boolean;
-  readOnly?: boolean;
+  placeholder?: string | undefined;
+  disabled?: boolean | undefined;
+  readOnly?: boolean | undefined;
 
-  size?: "sm" | "md";
-  mono?: boolean;
-  className?: string;
+  size?: ("sm" | "md") | undefined;
+  mono?: boolean | undefined;
+  className?: string | undefined;
 
-  hasError?: boolean;
-  rows?: number;
+  hasError?: boolean | undefined;
+  rows?: number | undefined;
 };
 
 export function IndustrialTextArea(props: IndustrialTextAreaProps) {

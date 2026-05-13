@@ -3,9 +3,9 @@
 import { useManifestTransfer } from './io/useManifestTransfer';
 import { useWasmTransfer } from './io/useWasmTransfer';
 import { useBundleTransfer } from './io/useBundleTransfer';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
-import { ValidationIssue } from '@/types/validation';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
+import type { ValidationIssue } from '@/types/validation';
 
 /**
  * OMEGA File Operations (v7.2.3)

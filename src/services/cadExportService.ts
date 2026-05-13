@@ -2,7 +2,7 @@
  * OMEGA CAD Export Service (v7.2.3)
  * Generates technical industrial blueprints (SVG) from manifests.
  */
-import { OMEGA_Manifest } from '../types/manifest';
+import type { OMEGA_Manifest } from '../types/manifest';
 
 export interface CADOptions {
   skin: string;
@@ -39,7 +39,7 @@ export class CADExportService {
         <rect width="${rackWidthPx}" height="${rackHeightPx}" fill="${skinColor}" stroke="${accentColor}" stroke-width="1" rx="2" opacity="${silkscreenLayer ? 1 : 0.2}" />
         
         <!-- TECHNICAL HEADER -->
-        <text x="0" y="-40" fill="${accentColor}" font-family="monospace" font-size="12" font-weight="900">OMEGA CAD [ ${manifest.id.toUpperCase()} ]</text>
+        <text x="0" y="-40" fill="${accentColor}" font-family="monospace" font-size="12" font-weight="900">OMEGA CAD [ ${(manifest.id || 'anonymous').toUpperCase()} ]</text>
         <text x="0" y="-25" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="8">FORMAT: Era 7.2.3 Industrial | CALIBRATION: 1px = ${PIXELS_TO_MM}mm</text>
 
         ${silkscreenLayer ? `
@@ -48,8 +48,8 @@ export class CADExportService {
           const bgUrl = resolveAsset && c.asset ? resolveAsset(c.asset) : null;
           return `
           <g>
-            <rect x="${c.pos.x * 1.5}" y="${c.pos.y * 1.5}" width="${(typeof c.size.w === 'number' ? c.size.w : 100) * 1.5}" height="${c.size.h * 1.5}" fill="${c.color || 'rgba(255,255,255,0.02)'}" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" />
-            ${bgUrl ? `<image x="${c.pos.x * 1.5}" y="${c.pos.y * 1.5}" width="${(typeof c.size.w === 'number' ? c.size.w : 100) * 1.5}" height="${c.size.h * 1.5}" href="${bgUrl}" />` : ''}
+            <rect x="${c.pos.x * 1.5}" y="${c.pos.y * 1.5}" width="${(typeof c.size.w === 'number' ? c.size.w : 100) * 1.5}" height="${(typeof c.size.h === 'number' ? c.size.h : 100) * 1.5}" fill="${c.color || 'rgba(255,255,255,0.02)'}" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" />
+            ${bgUrl ? `<image x="${c.pos.x * 1.5}" y="${c.pos.y * 1.5}" width="${(typeof c.size.w === 'number' ? c.size.w : 100) * 1.5}" height="${(typeof c.size.h === 'number' ? c.size.h : 100) * 1.5}" href="${bgUrl}" />` : ''}
             <text x="${c.pos.x * 1.5 + 5}" y="${c.pos.y * 1.5 + 10}" fill="rgba(255,255,255,0.3)" font-family="monospace" font-size="7" font-weight="900">${c.label.toUpperCase()}</text>
           </g>`;
         }).join('')}
@@ -59,7 +59,7 @@ export class CADExportService {
         ${elements.map(e => {
           const ex = e.pos.x * 1.5;
           const ey = e.pos.y * 1.5;
-          const assetId = e.presentation.asset;
+          const assetId = e.presentation?.asset;
           const assetUrl = resolveAsset && assetId ? resolveAsset(assetId) : null;
           
           return `

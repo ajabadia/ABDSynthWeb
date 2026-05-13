@@ -1,5 +1,5 @@
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 
 /**
  * Phase 7.1 Multi-Document Contracts

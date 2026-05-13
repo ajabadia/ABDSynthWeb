@@ -1,9 +1,10 @@
-import AJV, { ErrorObject } from 'ajv';
+import AJV from 'ajv';
+import type { ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import era6Schema from '../../data/omega-schema.json';
 import era7Schema from '../../data/omega-schema-v7.json';
-import { ValidationIssue } from '../../types/validation';
-import { OMEGA_Manifest } from '../../omega-ui-core/types/manifest';
+import type { ValidationIssue } from '@/types/validation';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 const ajv = new AJV({ 
   allErrors: true,

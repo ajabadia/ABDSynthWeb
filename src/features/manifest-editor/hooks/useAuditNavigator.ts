@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 export const useAuditNavigator = (
   manifest: OMEGA_Manifest,

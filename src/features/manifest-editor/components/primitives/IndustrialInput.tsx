@@ -8,18 +8,18 @@ export type IndustrialInputProps = {
   value: string | number;
   onChange: (value: string) => void;
 
-  type?: "text" | "number" | "password";
-  placeholder?: string;
-  autoSelectOnFocus?: boolean;
-  disabled?: boolean;
-  readOnly?: boolean;
+  type?: ("text" | "number" | "password") | undefined;
+  placeholder?: string | undefined;
+  autoSelectOnFocus?: boolean | undefined;
+  disabled?: boolean | undefined;
+  readOnly?: boolean | undefined;
 
-  size?: IndustrialInputSize;
-  mono?: boolean;
-  align?: "left" | "center" | "right";
+  size?: IndustrialInputSize | undefined;
+  mono?: boolean | undefined;
+  align?: ("left" | "center" | "right") | undefined;
 
-  hasError?: boolean;
-  className?: string;
+  hasError?: boolean | undefined;
+  className?: string | undefined;
 };
 
 const baseStyles =

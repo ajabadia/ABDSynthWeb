@@ -1,4 +1,4 @@
-import { ManifestEntity, OmegaNode, NodeRole } from '../../types/manifest';
+import type { ManifestEntity, OmegaNode, NodeRole } from '../../types/manifest';
 
 /**
  * OMEGA UCA - Entity to Node Converter
@@ -8,13 +8,13 @@ export function entityToNode(entity: ManifestEntity): OmegaNode {
   return {
     id: entity.id,
     kind: 'cell',
-    role: entity.role as NodeRole || 'control',
-    bind: entity.bind,
+    role: (entity.role as NodeRole) || 'control',
+    bind: entity.bind || undefined,
     layout: {
       pos: { x: 0, y: 0 }, // Relative to its parent (usually 0 in isolation)
       size: entity.presentation?.size ? {
-        width: entity.presentation.size.w,
-        height: entity.presentation.size.h
+        width: entity.presentation.size.width,
+        height: entity.presentation.size.height
       } : undefined
     },
     style: {
@@ -28,7 +28,7 @@ export function entityToNode(entity: ManifestEntity): OmegaNode {
       id: a.id,
       kind: 'asset-layer',
       role: (a.role as NodeRole) || 'decor',
-      bind: a.bind,
+      bind: a.bind || undefined,
       layout: {
         pos: { x: a.offsetX, y: a.offsetY }
       },
@@ -38,6 +38,6 @@ export function entityToNode(entity: ManifestEntity): OmegaNode {
         fontSize: a.fontSize || a.style?.fontSize,
         fontColor: a.fontColor || a.style?.fontColor
       }
-    }))
+    })) as OmegaNode[]
   };
 }

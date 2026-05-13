@@ -1,4 +1,4 @@
-import { AestheticCapability } from "@/omega-ui-core/governance/ElementCatalog";
+import type { AestheticCapability } from "@/omega-ui-core/governance/ElementCatalog";
 
 export interface GovernanceDomain {
   id: string;

@@ -1,31 +1,31 @@
 "use client";
 
 import * as React from "react";
-import { Info, Lock, AlertTriangle, LucideIcon } from "lucide-react";
+import { Info, Lock, AlertTriangle, type LucideIcon } from "lucide-react";
 
 export type FieldStatus = "default" | "warning" | "error";
 
 export type IndustrialFieldProps = {
   label: string;
-  description?: string;
-  icon?: LucideIcon;
+  description?: string | undefined;
+  icon?: LucideIcon | undefined;
   children: React.ReactNode;
 
-  required?: boolean;
-  inlineLabel?: boolean;
-  className?: string;
+  required?: boolean | undefined;
+  inlineLabel?: boolean | undefined;
+  className?: string | undefined;
 
-  status?: FieldStatus;
-  errorMessage?: string;
-  warningMessage?: string;
+  status?: FieldStatus | undefined;
+  errorMessage?: string | undefined;
+  warningMessage?: string | undefined;
 
-  lockedByTemplate?: boolean;
-  lockedReason?: string;
+  lockedByTemplate?: boolean | undefined;
+  lockedReason?: string | undefined;
 
-  highlightKey?: string;
-  isHighlighted?: (key: string) => boolean;
+  highlightKey?: string | undefined;
+  isHighlighted?: ((key: string) => boolean) | undefined;
 
-  onHelp?: () => void;
+  onHelp?: (() => void) | undefined;
 };
 
 export function IndustrialField(props: IndustrialFieldProps) {

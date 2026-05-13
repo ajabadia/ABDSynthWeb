@@ -1,26 +1,26 @@
 'use client';
-
+ 
 import React from 'react';
-import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/types/manifest';
-
+import type { OMEGA_Manifest, OmegaNode } from '@/omega-ui-core/types/manifest';
+ 
 // Modular Sub-components
-import EntityIdentity from './identity/EntityIdentity';
-import ModuleSignature from './identity/ModuleSignature';
-import ModuleTaxonomy from './identity/ModuleTaxonomy';
-import ModuleMechanicalSpec from './identity/ModuleMechanicalSpec';
-import ModuleSkinSelector from './identity/ModuleSkinSelector';
-import ModulePlaneSelector from './identity/ModulePlaneSelector';
-
+import EntityIdentity from '@/features/manifest-editor/components/inspector/sections/identity/EntityIdentity';
+import ModuleSignature from '@/features/manifest-editor/components/inspector/sections/identity/ModuleSignature';
+import ModuleTaxonomy from '@/features/manifest-editor/components/inspector/sections/identity/ModuleTaxonomy';
+import ModuleMechanicalSpec from '@/features/manifest-editor/components/inspector/sections/identity/ModuleMechanicalSpec';
+import ModuleSkinSelector from '@/features/manifest-editor/components/inspector/sections/identity/ModuleSkinSelector';
+import ModulePlaneSelector from '@/features/manifest-editor/components/inspector/sections/identity/ModulePlaneSelector';
+ 
 interface IdentitySectionProps {
-  item: OMEGA_Manifest | ManifestEntity | OmegaNode;
-  onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity> | Partial<OmegaNode>) => void;
-  onHelp?: (sectionId?: string) => void;
-  rootManifest?: OMEGA_Manifest;
-  rootTree?: OmegaNode;
-  highlightPath?: string | null;
+  item: OMEGA_Manifest | OmegaNode;
+  onUpdate: (updates: Partial<OMEGA_Manifest> | Partial<OmegaNode>) => void;
+  onHelp?: ((sectionId: string) => void) | undefined;
+  rootManifest?: OMEGA_Manifest | undefined;
+  rootTree?: OmegaNode | undefined;
+  highlightPath?: (string | null) | undefined;
   resolveAsset: (id: string | undefined) => string | undefined;
 }
-
+ 
 export default function IdentitySection({ 
   item, 
   onUpdate, 
@@ -32,11 +32,11 @@ export default function IdentitySection({
 }: IdentitySectionProps) {
   const isModule = 'metadata' in item;
   const isHighlighted = (key: string) => !!highlightPath?.includes(key);
-
+ 
   if (!isModule) {
     return (
       <EntityIdentity 
-        entity={item as ManifestEntity | OmegaNode} 
+        entity={item as OmegaNode} 
         rootManifest={rootManifest} 
         rootTree={rootTree}
         onUpdate={(u) => onUpdate(u)} 
@@ -45,9 +45,9 @@ export default function IdentitySection({
       />
     );
   }
-
+ 
   const manifest = item as OMEGA_Manifest;
-
+ 
   return (
     <div className="space-y-10 pt-2 pb-10">
       <ModuleSignature 
@@ -57,12 +57,12 @@ export default function IdentitySection({
         isHighlighted={isHighlighted} 
         resolveAsset={resolveAsset}
       />
-
+ 
       <ModuleSkinSelector 
         manifest={manifest} 
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 
       />
-
+ 
       <ModulePlaneSelector 
         manifest={manifest}
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)}
@@ -73,7 +73,7 @@ export default function IdentitySection({
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 
         isHighlighted={isHighlighted} 
       />
-
+ 
       <ModuleMechanicalSpec 
         manifest={manifest} 
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 

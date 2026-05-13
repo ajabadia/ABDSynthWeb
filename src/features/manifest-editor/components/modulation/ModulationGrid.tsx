@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { OMEGA_Manifest, OMEGA_Modulation } from '@/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Modulation } from '@/types/manifest';
 
 import { ModulationCell } from './ModulationCell';
  

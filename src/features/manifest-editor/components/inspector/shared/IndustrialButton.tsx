@@ -1,16 +1,16 @@
 'use client';
 
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface IndustrialButtonProps {
   label: string;
-  icon?: LucideIcon;
-  onClick: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'xs' | 'sm' | 'md';
-  className?: string;
-  title?: string;
+  icon?: LucideIcon | undefined;
+  onClick?: (() => void) | undefined;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | undefined;
+  size?: 'xs' | 'sm' | 'md' | undefined;
+  className?: string | undefined;
+  title?: string | undefined;
 }
 
 /**

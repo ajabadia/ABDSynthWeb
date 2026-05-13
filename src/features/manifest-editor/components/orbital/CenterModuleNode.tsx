@@ -2,12 +2,11 @@
  
 import React from 'react';
 import { motion } from 'framer-motion';
-import { OMEGA_Manifest } from '@/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 
 interface CenterModuleNodeProps {
   manifest: OMEGA_Manifest;
-  contract: OmegaContract | null;
+  contract: OMEGA_Contract | null;
   onSelectItem: (id: string | null) => void;
 }
 

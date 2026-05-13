@@ -1,5 +1,6 @@
-import { OMEGA_Manifest, StyleVariant } from '@/omega-ui-core/types/manifest';
-import { ElementCategory, OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
+import type { OMEGA_Manifest, StyleVariant } from '@/omega-ui-core/types/manifest';
+import type { ElementCategory } from '@/omega-ui-core/governance/ElementCatalog';
+import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
 
 /**
  * Detects all element types (knob, jack, container, etc.) currently instantiated in the manifest.
@@ -48,7 +49,7 @@ export function getUsedResources(manifest: OMEGA_Manifest) {
   
   // Hardware assets
   if (manifest.ui.hardware?.screwMapping) {
-    manifest.ui.hardware.screwMapping.forEach(asset => {
+    (((manifest.ui as unknown) as { hardware?: { screwMapping?: string[] } }).hardware?.screwMapping || []).forEach((asset: string) => {
       if (asset) usedAssets.add(asset);
     });
   }

@@ -1,23 +1,22 @@
 'use client';
 
 import React from 'react';
-import { PanInfo } from 'framer-motion';
-import { OmegaNode, OMEGA_Manifest, Position, GridConfig } from '@/omega-ui-core/types/manifest';
-import { UCADebugContext } from '../ucaTypes';
-import { findParentInTree } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
+import type { PanInfo } from 'framer-motion';
+import type { OmegaNode, OMEGA_Manifest, Position, GridConfig } from '../../types/manifest';
+import type { UCADebugContext } from '../ucaTypes';
 import { clampChildToParent, getParentRect, getNodeSize, snapToGrid } from '../../uca/spatialConstraints';
 
-import { calculateTargetIndex } from '../../uca/treeUtils';
+import { calculateTargetIndex, findParentInTree } from '../../uca/treeUtils';
 
 interface UseUCADragProps {
   node: OmegaNode;
   manifest: OMEGA_Manifest;
-  debugContext?: UCADebugContext;
+  debugContext?: UCADebugContext | undefined;
   worldPos: Position;
   labelRef: React.RefObject<HTMLSpanElement | null>;
   localLabelRef: React.RefObject<HTMLSpanElement | null>;
-  isLayoutGoverned?: boolean;
-  parentNode?: OmegaNode | null;
+  isLayoutGoverned?: boolean | undefined;
+  parentNode?: OmegaNode | null | undefined;
 }
 
 export function useUCADrag({
@@ -72,7 +71,7 @@ export function useUCADrag({
 
     if (wasGoverned) {
       if (finalTargetIndex !== null && parentNode && debugContext?.onUpdateNode) {
-        const currentIndex = parentNode.children?.findIndex(c => c.id === node.id);
+        const currentIndex = parentNode.children?.findIndex((c: OmegaNode) => c.id === node.id);
         if (currentIndex !== undefined && currentIndex !== -1 && currentIndex !== finalTargetIndex) {
           // Reorder persistence (Phase 4.4.3)
           debugContext.onUpdateNode(parentNode.id, {
@@ -93,13 +92,14 @@ export function useUCADrag({
       let finalX = Math.round(snappedPos.x);
       let finalY = Math.round(snappedPos.y);
 
-      if (node.constraints?.clampToParent && manifest.ui?.tree) {
-        const parent = findParentInTree(manifest.ui.tree, node.id);
+      const tree = manifest.ui?.tree;
+      if (node.constraints?.clampToParent && tree) {
+        const parent = findParentInTree(tree, node.id);
         if (parent) {
           const parentRect = getParentRect(parent, manifest);
           const size = getNodeSize(node);
           const clamped = clampChildToParent(
-            { x: snappedPos.x, y: snappedPos.y, w: size.w, h: size.h },
+            { x: snappedPos.x, y: snappedPos.y, width: size.width, height: size.height },
             parentRect,
             node.constraints.margin || 0
           );

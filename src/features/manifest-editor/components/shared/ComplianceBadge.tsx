@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, ShieldAlert, Award } from 'lucide-react';
-import { AuditResult } from '@/services/auditService';
+import type { AuditResult } from '@/services/auditService';
 
 interface ComplianceBadgeProps {
   audit: AuditResult;
@@ -37,16 +37,26 @@ const STATUS_CONFIG = {
   }
 };
  
+import { observabilityService } from '@/services/observabilityService';
+
 export function ComplianceBadge({ audit, onClick }: ComplianceBadgeProps) {
   const { score, status } = audit;
-  const config = STATUS_CONFIG[status] || STATUS_CONFIG.DRAFT;
+  const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.DRAFT;
+  const [health, setHealth] = React.useState(observabilityService.getHealthReport());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setHealth(observabilityService.getHealthReport());
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <motion.button
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-1.5 rounded-sm border ${config.bg} ${config.border} transition-all group relative overflow-hidden`}
+      className={`flex items-center gap-4 px-3 py-1.5 rounded-sm border ${config.bg} ${config.border} transition-all group relative overflow-hidden`}
     >
       {config.pulse && (
         <motion.div 
@@ -65,7 +75,7 @@ export function ComplianceBadge({ audit, onClick }: ComplianceBadgeProps) {
           {config.label}
         </span>
         <div className="flex items-center gap-2 mt-0.5">
-          <div className="h-1 w-16 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-1 w-12 bg-white/5 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${score}%` }}
@@ -76,6 +86,17 @@ export function ComplianceBadge({ audit, onClick }: ComplianceBadgeProps) {
             {score}
           </span>
         </div>
+      </div>
+
+      {/* PHASE 20.5: LIVE TELEMETRY BRIDGE */}
+      <div className="flex items-center gap-3 pl-3 border-l border-white/10 h-6">
+        <div className="flex flex-col items-end leading-none">
+          <span className="text-[6px] text-white/40 font-black uppercase tracking-wider">Bridge Latency</span>
+          <span className={`text-[8px] font-mono font-bold ${health.lastLatencyMs > 200 ? 'text-amber-400' : 'text-primary/60'}`}>
+            {health.lastLatencyMs}ms
+          </span>
+        </div>
+        <div className={`w-1.5 h-1.5 rounded-full ${health.failureCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-green-500/50'}`} title={`Failures: ${health.failureCount}`} />
       </div>
     </motion.button>
   );

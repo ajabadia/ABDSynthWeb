@@ -4,7 +4,7 @@ import { useDocumentOrchestrator } from './useDocumentOrchestrator';
 import { useAuditEngine } from './useAuditEngine';
 import { useEntityManager } from './useEntityManager';
 import { useFileOps } from './useFileOps';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { useAssetManager } from './useAssetManager';
 import { useSimulationBridge } from './useSimulationBridge';
 import { useBlueprintInjection } from './useBlueprintInjection';
@@ -35,7 +35,7 @@ export const useManifestEditor = () => {
   const simulationBridge = useSimulationBridge(
     activeId,
     manifest,
-    contract,
+    contract as any,
     !!wasmBuffer,
     orchestrator.flushPendingHash,
     orchestrator.captureStableSnapshot
@@ -60,7 +60,7 @@ export const useManifestEditor = () => {
 
   // 3.3. Clipboard Actions
   const clipboard = useClipboardActions({
-    findItem: entities.findItem,
+    findItem: entities.findItem as any,
     pasteEntity: entities.pasteEntity,
     addLog
   });
@@ -68,7 +68,7 @@ export const useManifestEditor = () => {
   // 3.4. Deployment & HIL Bridge
   const deployment = useDeployment({
     manifest,
-    contract,
+    contract: contract as any,
     issues,
     addLog,
     captureStableSnapshot: () => orchestrator.captureStableSnapshot(activeId),
@@ -83,7 +83,7 @@ export const useManifestEditor = () => {
   const fileOps = useFileOps(
     manifest, 
     (u) => orchestrator.updateDocument(activeId, { manifest: typeof u === 'function' ? u(manifest) : u }),
-    (u) => orchestrator.updateDocument(activeId, { contract: typeof u === 'function' ? u(contract) : u }),
+    (u: any) => orchestrator.updateDocument(activeId, { contract: typeof u === 'function' ? u(contract) : u }),
     (u) => orchestrator.updateDocument(activeId, { wasmBuffer: typeof u === 'function' ? u(wasmBuffer) : u }),
     wasmBuffer, 
     (u) => orchestrator.updateDocument(activeId, { extraResources: typeof u === 'function' ? u(extraResources) : u }),
@@ -132,6 +132,12 @@ export const useManifestEditor = () => {
     handleMergeEntries: history.handleMergeEntries,
     reset,
     captureStableSnapshot: () => orchestrator.captureStableSnapshot(activeId),
+    startTransaction: (label: string) => orchestrator.startTransaction(activeId, label),
+    commitTransaction: () => {
+      orchestrator.commitTransaction(activeId);
+      simulationBridge.scheduleStructuralSync('Commit Transaction');
+    },
+    abortTransaction: () => orchestrator.abortTransaction(activeId),
     
     // Entity Actions
     ...entities,

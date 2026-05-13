@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Font } from '@/omega-ui-core/types/manifest';
  
 /**
  * OMEGA Dynamic Font Loader Hook
@@ -9,7 +9,7 @@ import { OMEGA_Manifest } from '@/types/manifest';
  */
 export function useDynamicFonts(manifest: OMEGA_Manifest, resolveAsset?: (path: string) => string | undefined) {
   useEffect(() => {
-    const fonts = manifest.ui.resources?.fonts || [];
+    const fonts = manifest.resources?.fonts || [];
     if (fonts.length === 0) return;
  
     const styleId = 'omega-dynamic-fonts';
@@ -21,7 +21,7 @@ export function useDynamicFonts(manifest: OMEGA_Manifest, resolveAsset?: (path: 
       document.head.appendChild(styleTag);
     }
  
-    const fontRules = fonts.map(font => {
+    const fontRules = fonts.map((font: OMEGA_Font) => {
       const fontFile = font.url || font.file || '';
       const url = resolveAsset ? resolveAsset(fontFile) : fontFile;
       if (!url) return '';
@@ -43,5 +43,5 @@ export function useDynamicFonts(manifest: OMEGA_Manifest, resolveAsset?: (path: 
       // We don't necessarily want to remove the style on every re-render, 
       // but if the component unmounts we might want to clean up.
     };
-  }, [manifest.ui.resources?.fonts, resolveAsset]);
+  }, [manifest.resources?.fonts, resolveAsset]);
 }

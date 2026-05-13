@@ -1,31 +1,47 @@
 'use client';
-
+ 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import { OMEGA_Manifest } from '@/types/manifest';
-import { AuditResult } from '@/services/auditService';
-import { OmegaContract } from '@/services/wasmLoader';
-
+ 
+import type { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { AuditResult } from '@/services/auditService';
+ 
 import { CenterModuleNode } from '../orbital/CenterModuleNode';
 import { OrbitalNode } from '../orbital/OrbitalNode';
- 
+  
 interface NodeCanvasProps {
   manifest: OMEGA_Manifest;
-  contract: OmegaContract | null;
+  contract: OMEGA_Contract | null;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
   audit: AuditResult;
 }
  
+/**
+ * NodeCanvas (Era 7.2.3 - Orbital Mode)
+ * Driven by the Canonical UCA Tree.
+ */
 export default function NodeCanvas({ manifest, contract, selectedItemId, onSelectItem, audit }: NodeCanvasProps) {
-  const isV7 = manifest?.schemaVersion?.startsWith('7');
+  const isV7 = !!manifest?.schemaVersion?.startsWith('7');
+  
+  // FLATTEN TREE FOR ORBITAL LAYOUT
   const items = useMemo(() => {
-    return [
-      ...(manifest?.ui?.controls || []),
-      ...(manifest?.ui?.jacks || [])
-    ];
-  }, [manifest]);
+    const tree = manifest.ui?.tree;
+    if (!tree) return [];
+    
+    const entities: OmegaNode[] = [];
+    const traverse = (node: OmegaNode) => {
+      if (node.kind === 'cell') {
+        entities.push(node);
+      }
+      if (node.children) {
+        node.children.forEach(traverse);
+      }
+    };
+    
+    traverse(tree);
+    return entities;
+  }, [manifest.ui?.tree]);
   
   return (
     <div className="w-full h-full relative flex items-center justify-center overflow-hidden" onClick={() => onSelectItem(null)}>
@@ -70,9 +86,9 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
       </div>
  
       <div className="absolute bottom-8 left-8 text-[9px] font-mono wb-text-muted uppercase tracking-widest leading-relaxed">
-        Engine: OMEGA v7.0<br />
+        Engine: OMEGA v7.2.3 (Sovereign)<br />
         Mode: Orbital Hub<br />
-        Status: {items.length} Elements Online
+        Status: {items.length} Canonical Elements Online
       </div>
     </div>
   );

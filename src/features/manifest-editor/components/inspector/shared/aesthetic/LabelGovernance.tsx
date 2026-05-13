@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Move, Maximize, Box } from 'lucide-react';
-import { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
+import type { OMEGA_Manifest, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import SmartColorPicker from '../SmartColorPicker';
 
 interface LabelGovernanceProps {
@@ -55,8 +55,8 @@ export default function LabelGovernance({ values, capabilities, manifest, onChan
             </label>
             <input 
               type="number"
-              value={values.labelW || 0}
-              onChange={(e) => onChange({ labelW: parseInt(e.target.value) })}
+              value={values.labelWidth || 0}
+              onChange={(e) => onChange({ labelWidth: parseInt(e.target.value) })}
               className="w-full wb-surface-inset border wb-outline rounded-xs px-2 py-1.5 text-[8px] font-mono wb-text outline-none focus:border-accent/40 text-center"
               placeholder="Auto"
             />
@@ -67,8 +67,8 @@ export default function LabelGovernance({ values, capabilities, manifest, onChan
             </label>
             <input 
               type="number"
-              value={values.labelH || 0}
-              onChange={(e) => onChange({ labelH: parseInt(e.target.value) })}
+              value={values.labelHeight || 0}
+              onChange={(e) => onChange({ labelHeight: parseInt(e.target.value) })}
               className="w-full wb-surface-inset border wb-outline rounded-xs px-2 py-1.5 text-[8px] font-mono wb-text outline-none focus:border-accent/40 text-center"
               placeholder="Auto"
             />

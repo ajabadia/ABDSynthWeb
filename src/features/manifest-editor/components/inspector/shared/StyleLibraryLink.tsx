@@ -7,7 +7,7 @@ interface StyleLibraryLinkProps {
   type: string;
   styleId: string;
   styleLabel: string;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function StyleLibraryLink({ type, styleId, styleLabel, setActiveSection }: StyleLibraryLinkProps) {

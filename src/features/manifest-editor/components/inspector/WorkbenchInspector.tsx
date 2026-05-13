@@ -5,8 +5,8 @@ import React from 'react';
 // import { motion, AnimatePresence } from 'framer-motion';
 import PropertyPanel from './PropertyPanel';
 import BlueprintLibraryPanel from './BlueprintLibraryPanel';
-import { OMEGA_Manifest, LayoutContainer, ManifestEntity, OMEGA_Modulation, ExtraResource, OmegaNode, BlueprintDefinition } from '@/omega-ui-core/types/manifest';
-import { AuditResult } from '@/services/auditService';
+import type { OMEGA_Manifest, LayoutContainer, ManifestEntity, OMEGA_Modulation, ExtraResource, OmegaNode, BlueprintDefinition } from '@/omega-ui-core/types/manifest';
+import type { AuditResult } from '@/features/manifest-editor/types/diagnostics';
 import { Zap, FileText } from 'lucide-react';
 
 interface WorkbenchInspectorProps {
@@ -33,13 +33,13 @@ interface WorkbenchInspectorProps {
   addContainer: (c?: Partial<LayoutContainer>) => void;
   updateContainer: (id: string, updates: Partial<LayoutContainer>) => void;
   removeContainer: (id: string) => void;
-  onHelp: (sectionId?: string) => void;
+  onHelp: (sectionId?: string | undefined) => void;
   onRemoveResource: (name: string) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
   onTriggerUpload: (id: string) => void;
-  onOpenConfig?: () => void;
-  onOpenLibrary?: () => void;
-  onSelectBlueprint?: (blueprint: BlueprintDefinition) => void;
+  onOpenConfig?: (() => void) | undefined;
+  onOpenLibrary?: (() => void) | undefined;
+  onSelectBlueprint?: ((blueprint: BlueprintDefinition) => void) | undefined;
 }
 
 export function WorkbenchInspector({
@@ -77,7 +77,7 @@ export function WorkbenchInspector({
   // ASEPTIC HANDLERS
   const handleUpdate = (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity> | Partial<OmegaNode>) => {
     if (selectedItemId) {
-      onUpdateItem(selectedItemId, updates);
+      onUpdateItem(selectedItemId, updates as unknown as Partial<OmegaNode>);
       if (updates.id && updates.id !== selectedItemId) {
         onSelectItem(updates.id);
       }

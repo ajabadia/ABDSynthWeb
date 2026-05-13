@@ -3,7 +3,7 @@
  * Canonical source for materials, textures, and global visual tokens.
  */
 
-import { OmegaStyleNode } from '@/omega-ui-core/types/manifest';
+import type { OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 
 export interface OMEGA_Material {
   id: string;

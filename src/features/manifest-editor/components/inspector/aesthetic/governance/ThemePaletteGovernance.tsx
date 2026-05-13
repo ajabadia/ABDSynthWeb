@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Palette } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OMEGA_Manifest } from '@/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 import SmartColorPicker from '../../shared/SmartColorPicker';
 
@@ -27,11 +27,21 @@ export default function ThemePaletteGovernance({ manifest, onUpdate }: ThemePale
   const colors = manifest.ui.colors || { accent: '#00f2ff', weak: '#555555', surface: '#1a1c1e', text: '#ffffff' };
 
   const updatePalette = (key: string, value: string) => {
-    onUpdate({ ui: { ...manifest.ui, palette: { ...palette, [key]: value } } });
+    onUpdate({ 
+      ui: { 
+        ...manifest.ui, 
+        palette: { ...palette, [key]: value } as OMEGA_Manifest['ui']['palette']
+      } 
+    });
   };
 
   const updateColor = (key: string, value: string) => {
-    onUpdate({ ui: { ...manifest.ui, colors: { ...colors, [key]: value } } });
+    onUpdate({ 
+      ui: { 
+        ...manifest.ui, 
+        colors: { ...colors, [key]: value } as OMEGA_Manifest['ui']['colors']
+      } 
+    });
   };
 
   return (

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Sun, CornerRightDown } from 'lucide-react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
 

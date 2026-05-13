@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Move, Maximize2, Type, Layers } from 'lucide-react';
-import { LayoutContainer, ContainerSizeUnit, OMEGA_Manifest } from '@/types/manifest';
+import type { LayoutContainer, ContainerSizeUnit, OMEGA_Manifest } from '@/types/manifest';
 import TabSelector from '../shared/TabSelector';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
@@ -11,7 +11,7 @@ interface ContainerFormProps {
   onUpdate: (id: string, updates: Partial<LayoutContainer>) => void;
   manifest: OMEGA_Manifest;
   resolveAsset: (id: string | undefined) => string | undefined;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function ContainerForm({ container, onUpdate, manifest, setActiveSection }: Omit<ContainerFormProps, 'resolveAsset'>) {
@@ -35,8 +35,7 @@ export default function ContainerForm({ container, onUpdate, manifest, setActive
               <button
                 key={s.id}
                 onClick={() => onUpdate(container.id, { 
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  variant: s.id as any,
+                  variant: s.id,
                   // Purge local overrides to force style library inheritance
                   color: undefined,
                   indicatorColor: undefined,
@@ -47,7 +46,7 @@ export default function ContainerForm({ container, onUpdate, manifest, setActive
                   fontSize: undefined,
                   fontColor: undefined,
                   font: undefined
-                })}
+                } as Partial<LayoutContainer>)}
                 className={`py-2 px-3 rounded-xs border text-[9px] font-black uppercase transition-all text-left flex items-center justify-between ${currentStyleId === s.id ? 'border-primary bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,240,255,0.1)]' : 'wb-surface-subtle wb-outline wb-text-muted hover:wb-text'}`}
               >
                 <span>{s.label}</span>
@@ -101,10 +100,10 @@ export default function ContainerForm({ container, onUpdate, manifest, setActive
            </div>
            <div className="flex gap-2">
               <select 
-                value={typeof container.size.w === 'string' ? container.size.w : 'custom'} 
+                value={typeof container.size.width === 'string' ? container.size.width : 'custom'} 
                 onChange={(e) => {
                   const val = e.target.value;
-                  onUpdate(container.id, { size: { ...container.size, w: val === 'custom' ? 100 : val as ContainerSizeUnit } });
+                  onUpdate(container.id, { size: { ...container.size, width: val === 'custom' ? 100 : val as ContainerSizeUnit } });
                 }}
                 className="flex-1 bg-black/40 border border-outline/10 rounded-xs px-2 py-1 text-[9px] font-bold text-primary outline-none"
               >
@@ -115,8 +114,8 @@ export default function ContainerForm({ container, onUpdate, manifest, setActive
                  <span className="text-[7px] font-bold opacity-30 w-4">H</span>
                  <input 
                    type="number" 
-                   value={container.size.h} 
-                   onChange={(e) => onUpdate(container.id, { size: { ...container.size, h: parseInt(e.target.value) } })}
+                   value={container.size.height} 
+                   onChange={(e) => onUpdate(container.id, { size: { ...container.size, height: parseInt(e.target.value) } })}
                    className="bg-transparent text-[9px] font-mono text-primary w-full outline-none" 
                  />
               </div>

@@ -1,4 +1,4 @@
-import { 
+import type { 
   OMEGA_Manifest, 
   OmegaNode, 
   CompatibilityStatus, 
@@ -8,7 +8,7 @@ import {
   IdCollisionStrategy,
   BlueprintAutoWirePolicy,
   BlueprintAutoWireDecision
-} from './manifest';
+} from './manifest.js';
 
 /**
  * OMEGA Phase 9.4A - Blueprint Injector Operative Types
@@ -19,9 +19,9 @@ export interface BlueprintInsertionStrategy {
   /** Dónde insertar en el árbol UCA. Si null → raíz. */
   targetParentNodeId: string | null;
   /** Slot del padre donde encajar */
-  targetSlotId?: string | null;
+  targetSlotId?: string | null | undefined;
   /** Posición dentro del slot */
-  insertAtIndex?: number;
+  insertAtIndex?: number | undefined;
   /** Cómo resolver colisiones de IDs */
   idCollisionStrategy: IdCollisionStrategy;
   /** Si true, no modifica el manifiesto real (solo previsualización) */
@@ -29,7 +29,7 @@ export interface BlueprintInsertionStrategy {
   /** Si true, fuerza remapeo de todos los IDs. RECOMENDADO: true. */
   forceIdRemap: boolean;
   /** Sobreescritura de la política de auto-wiring */
-  autoWireOverride?: Partial<BlueprintAutoWirePolicy>;
+  autoWireOverride?: Partial<BlueprintAutoWirePolicy> | undefined;
 }
 
 export interface BlueprintInjectionRequest {
@@ -38,16 +38,16 @@ export interface BlueprintInjectionRequest {
   strategy: BlueprintInsertionStrategy;
   mode: BlueprintInsertionMode;
   manifestId: string;
-  triggeredBy?: string;
+  triggeredBy?: string | undefined;
 }
 
 export interface BlueprintValidationIssue {
   severity: ValidationSeverity;
   code: string;
   message: string;
-  affectedPath?: string;
-  affectedNodeId?: string;
-  suggestion?: string;
+  affectedPath?: string | undefined;
+  affectedNodeId?: string | undefined;
+  suggestion?: string | undefined;
 }
 
 export interface BlueprintInjectionReport {
@@ -62,19 +62,19 @@ export interface BlueprintInjectionReport {
   autoWireDecisions: BlueprintAutoWireDecision[];
   insertedNodeIds: string[];
   createdWireIds: string[];
-  materializedSnapshot?: Record<string, unknown>;
+  materializedSnapshot?: Record<string, unknown> | undefined;
   durationMs: number;
 }
 
 export interface BlueprintInjectionResult {
   success: boolean;
   mode: BlueprintInsertionMode;
-  resultManifest?: OMEGA_Manifest;
-  injectedSubtree?: OmegaNode;
+  resultManifest?: OMEGA_Manifest | undefined;
+  injectedSubtree?: OmegaNode | undefined;
   report: BlueprintInjectionReport;
   fatalError?: {
     code: string;
     message: string;
-    cause?: unknown;
-  };
+    cause?: unknown | undefined;
+  } | undefined;
 }

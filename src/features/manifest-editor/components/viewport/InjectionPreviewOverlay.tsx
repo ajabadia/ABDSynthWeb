@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { UniversalRenderer } from '@/omega-ui-core/renderers/UniversalRenderer';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 
 interface InjectionPreviewOverlayProps {
   previewManifest: OMEGA_Manifest;
-  resolveAsset?: (ref: string | undefined) => string | undefined;
+  resolveAsset?: ((ref: string | undefined) => (string | undefined)) | undefined;
 }
 
 /**
@@ -25,7 +25,7 @@ export const InjectionPreviewOverlay: React.FC<InjectionPreviewOverlayProps> = (
       <UniversalRenderer 
         node={previewManifest.ui.tree || manifestToTree(previewManifest)} 
         manifest={previewManifest} 
-        catalog={previewManifest.ui.cellLibrary || {}}
+        catalog={previewManifest.moduleTemplates || {}}
         resolveAsset={resolveAsset}
         debugContext={{
           enabled: true,

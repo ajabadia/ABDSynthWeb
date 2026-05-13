@@ -11,7 +11,7 @@ interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", isLoading, children, ...props }, ref) => {
+  ({ className, variant = "primary", size = "md", isLoading, children, style, ...props }, ref) => {
     const variants = {
       primary: "bg-primary text-background hover:brightness-110 cyan-bloom",
       secondary: "bg-surface text-foreground hover:bg-zinc-800",
@@ -35,6 +35,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           sizes[size],
           className
         )}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        style={style as any}
         {...props}
       >
         {isLoading ? (

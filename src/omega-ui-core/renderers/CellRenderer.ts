@@ -2,7 +2,7 @@
  * ⚠️ OMEGA UI CORE — MASTER ENGINE (Era 7.2.3)
  * ---------------------------------------------------------------------------
  * This is the SINGLE SOURCE OF TRUTH for OMEGA rendering.
- * It handles both architectural structures and primitive controls.
+ * It handles both architectural structures and primitive controls natively.
  * ---------------------------------------------------------------------------
  */
 
@@ -19,7 +19,8 @@ import { renderTerminalHTML } from './TerminalRenderer';
 import { renderIllustrationHTML } from './IllustrationRenderer';
 import { renderSequenceHTML } from './SequenceRenderer';
 import { AttachmentRenderer } from './AttachmentRenderer';
-
+import type { OmegaNode, OMEGA_Manifest, OmegaStyleNode, OMEGA_Asset, StyleVariant, Attachment } from '../types/manifest';
+ 
 import { parseVariant } from './utils/VariantParser';
 import { getComponentRadius } from './utils/CellMetrics';
 import { renderAttachmentStackHTML } from './utils/AttachmentStack';
@@ -31,121 +32,133 @@ export interface CellOptions {
   zoom: number;
   runtimeValue: number;
   steps: number;
-  isSelected?: boolean;
-  isLiveMode?: boolean;
-  isError?: boolean;
-  resolveAsset?: (ref: string | undefined) => string | undefined;
-  manifest?: OMEGA_Manifest;
-  activeTab?: string;
-  forceFrame?: number; // Phase 12 - Behavior Lab Support
-  recipe?: import('../types/assetBehavior').LayerRecipe; // Phase 12 - Genetic Composition Support
+  isSelected?: boolean | undefined;
+  isLiveMode?: boolean | undefined;
+  isError?: boolean | undefined;
+  resolveAsset?: ((ref: string | undefined) => string | undefined) | undefined;
+  manifest?: OMEGA_Manifest | undefined;
+  activeTab?: string | undefined;
+  forceFrame?: number | undefined; 
+  recipe?: import('../types/assetBehavior.js').LayerRecipe | undefined; 
 }
 
-import type { ManifestEntity, OMEGA_Manifest, OmegaStyleNode, OMEGA_Asset } from '../types/manifest';
 
 interface RendererExtraOptions {
-  assetUrl?: string;
-  assetDef?: OMEGA_Asset;
+  assetUrl?: string | undefined;
+  assetDef?: OMEGA_Asset | undefined;
   steps: number;
   runtimeValue: number;
   inherited: Record<string, unknown>;
-  manifest?: OMEGA_Manifest;
-  resolveAsset?: (id: string | undefined) => string | undefined;
-  forceFrame?: number;
+  manifest?: OMEGA_Manifest | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
+  forceFrame?: number | undefined;
 }
 
 /**
  * Registry of primitive renderers for industrial dispatching.
  */
-const COMP_RENDERER_MAP: Record<string, (item: ManifestEntity, props: Record<string, unknown>, options: RendererExtraOptions) => string> = {
-  'sequence-layer': (item, props, opt) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const style = (item.presentation?.style as any) || {};
+const COMP_RENDERER_MAP: Record<string, (node: OmegaNode, props: Record<string, unknown>, options: RendererExtraOptions) => string> = {
+  'sequence-layer': (node, props, opt) => {
+    const style = (node.style as Record<string, unknown>) || {};
+    const frames = (style.frames as number) || 1;
+    const frameWidth = (style.frameWidth as number) || 48;
+    const frameHeight = (style.frameHeight as number) || 48;
+    const orientation = (style.orientation as 'v' | 'h') || 'v';
+    const opacity = style.opacity !== undefined ? (style.opacity as number) : 1;
+
     return renderSequenceHTML({
       assetUrl: opt.assetUrl,
       value: opt.forceFrame !== undefined ? opt.forceFrame : opt.runtimeValue,
-      frames: style.frames || 1,
-      frameWidth: style.frameWidth || 48,
-      frameHeight: style.frameHeight || 48,
-      orientation: style.orientation || 'v',
-      opacity: style.opacity !== undefined ? style.opacity : 1,
+      frames,
+      frameWidth,
+      frameHeight,
+      orientation,
+      opacity,
       style,
-      isFrameIndex: opt.forceFrame !== undefined // Tell sequence renderer it is a frame index
+      isFrameIndex: opt.forceFrame !== undefined 
     });
   },
-  'graphic-fragment': (item, props, opt) => {
+  'graphic-fragment': (node, props, opt) => {
     return AttachmentRenderer.renderAttachmentHTML({
       type: 'graphic-fragment',
-      variant: item.presentation?.variant || 'A_default',
-      text: item.label || '',
+      variant: node.style?.variant || 'A_default',
+      text: (node.meta?.label as string) || node.id || '',
       value: opt.runtimeValue,
       steps: opt.steps,
-      style: item.presentation?.style,
+      style: node.style,
       manifest: opt.manifest,
       resolveAsset: opt.resolveAsset
     });
   },
-  'knob': (item, props, opt) => {
+  'knob': (node, props, opt) => {
     const isCustom = opt.manifest?.ui?.skinMode === 'custom';
-    const style = item.presentation?.style || {};
+    const style = node.style || {};
     
     // Explicitly resolve both channels separately
     const resolvedIndicator = isCustom ? ColorResolver.resolve(style.indicatorColor, opt.manifest) : undefined;
-    const resolvedMain = isCustom ? ColorResolver.resolve(style.color || item.presentation?.color, opt.manifest) : undefined;
+    const resolvedMain = isCustom ? ColorResolver.resolve(style.color, opt.manifest) : undefined;
 
     return renderKnobHTML({ 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(props as any), 
+      ...props, 
+      size: (props.size as string) || 'A',
+      colorId: node.style?.variant || 'cyan',
+      value: opt.runtimeValue,
       assetUrl: opt.assetUrl, 
       frames: opt.assetDef?.frames, 
       orientation: opt.assetDef?.orientation,
       // NO FALLBACK to main color here. If resolvedIndicator is transparent, the marker should be transparent.
       explicitMarkerColor: resolvedIndicator, 
       style: { ...style, color: resolvedMain, indicatorColor: resolvedIndicator },
-      inheritedFont: isCustom ? (style.font || item.presentation?.font || opt.inherited.font) : opt.inherited.font,
-      inheritedColor: opt.inherited.color,
-      inheritedSize: opt.inherited.size
+      inheritedFont: isCustom ? (style.font || (opt.inherited.font as string | undefined)) : (opt.inherited.font as string | undefined),
+      inheritedColor: opt.inherited.color as string | undefined,
+      inheritedSize: opt.inherited.size as number | undefined
     });
   },
-  'port': (item, props, opt) => {
+  'port': (node, props, opt) => {
     const isCustom = opt.manifest?.ui?.skinMode === 'custom';
     return renderPortHTML({ 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(props as any), 
-      label: item.label || '', 
-      explicitColor: item.presentation?.variant,
-      customSignalColor: isCustom ? ColorResolver.resolve(item.presentation?.style?.color || item.presentation?.color, opt.manifest) : undefined,
-      style: item.presentation?.style,
-      inheritedFont: isCustom ? (item.presentation?.style?.font || item.presentation?.font || opt.inherited.font) : opt.inherited.font,
-      inheritedColor: opt.inherited.color,
-      inheritedSize: opt.inherited.size
+      ...props, 
+      size: (props.size as string) || 'A',
+      colorId: node.style?.variant || 'cyan',
+      value: opt.runtimeValue,
+      label: (node.meta?.label as string) || node.id || '', 
+      explicitColor: node.style?.variant,
+      customSignalColor: isCustom ? ColorResolver.resolve(node.style?.color, opt.manifest) : undefined,
+      style: node.style,
+      inheritedFont: isCustom ? (node.style?.font || (opt.inherited.font as string | undefined)) : (opt.inherited.font as string | undefined),
+      inheritedColor: opt.inherited.color as string | undefined,
+      inheritedSize: opt.inherited.size as number | undefined
     });
   },
-  'led': (item, props, opt) => {
+  'led': (node, props, opt) => {
     const isCustom = opt.manifest?.ui?.skinMode === 'custom';
     return renderLedHTML({ 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(props as any),
-      explicitColor: isCustom ? ColorResolver.resolve(item.presentation?.style?.color || item.presentation?.color, opt.manifest) : undefined
+      ...props, 
+      size: (props.size as string) || 'A',
+      colorId: node.style?.variant || 'cyan',
+      value: opt.runtimeValue,
+      explicitColor: isCustom ? ColorResolver.resolve(node.style?.color, opt.manifest) : undefined
     });
   },
-  'display': (item, props, opt) => {
-    const variant = item.presentation?.variant || '';
+  'display': (node, props, opt) => {
+    const variant = node.style?.variant || '';
     const mode = variant.includes('lcd') ? 'lcd' : (variant.includes('led') ? 'led' : 'oled');
     const isCustom = opt.manifest?.ui?.skinMode === 'custom';
     return renderDisplayHTML({ 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(props as any), 
+      ...props, 
+      size: (props.size as string) || 'A',
+      colorId: node.style?.variant || 'cyan',
+      value: opt.runtimeValue,
       mode, 
       steps: opt.steps,
-      explicitTextColor: isCustom ? ColorResolver.resolve(item.presentation?.style?.color || item.presentation?.color, opt.manifest as OMEGA_Manifest) : undefined,
-      explicitGlassColor: isCustom ? ColorResolver.resolve(item.presentation?.style?.glassColor || (item.presentation as unknown as Record<string, unknown>)?.glassColor as string, opt.manifest as OMEGA_Manifest) : undefined,
-      inheritedFont: isCustom ? (item.presentation?.style?.font || item.presentation?.font || opt.inherited.font) : opt.inherited.font,
-      inheritedColor: opt.inherited.color,
-      inheritedSize: opt.inherited.size
+      explicitTextColor: isCustom ? ColorResolver.resolve(node.style?.color, opt.manifest) : undefined,
+      explicitGlassColor: isCustom ? ColorResolver.resolve(node.style?.glassColor, opt.manifest) : undefined,
+      inheritedFont: isCustom ? (node.style?.font || (opt.inherited.font as string | undefined)) : (opt.inherited.font as string | undefined),
+      inheritedColor: opt.inherited.color as string | undefined,
+      inheritedSize: opt.inherited.size as number | undefined
     });
   },
-  'slider-v': (item, props, opt) => renderSliderHTML({ 
+  'slider-v': (node, props, opt) => renderSliderHTML({ 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...(props as any), 
     type: 'slider-v', 
@@ -154,7 +167,7 @@ const COMP_RENDERER_MAP: Record<string, (item: ManifestEntity, props: Record<str
     frames: opt.assetDef?.frames,
     orientation: opt.assetDef?.orientation
   }),
-  'slider-h': (item, props, opt) => renderSliderHTML({ 
+  'slider-h': (node, props, opt) => renderSliderHTML({ 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...(props as any), 
     type: 'slider-h', 
@@ -163,30 +176,35 @@ const COMP_RENDERER_MAP: Record<string, (item: ManifestEntity, props: Record<str
     frames: opt.assetDef?.frames,
     orientation: opt.assetDef?.orientation
   }),
-  'switch': (item, props, opt) => renderSwitchHTML({ 
+  'switch': (node, props, opt) => renderSwitchHTML({ 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...(props as any), 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...(opt.inherited as any)
   }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'button': (item, props, opt) => renderStepperHTML({ ...(props as any), type: 'button', text: item.label || '', ...(opt.inherited as any) }),
+  'button': (node, props, opt) => renderStepperHTML({ ...(props as any), type: 'button', text: (node.meta?.label as string) || node.id || '', ...(opt.inherited as any) }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'push': (item, props, opt) => renderStepperHTML({ ...(props as any), type: 'push', text: item.label || '', ...(opt.inherited as any) }),
+  'push': (node, props, opt) => renderStepperHTML({ ...(props as any), type: 'push', text: (node.meta?.label as string) || node.id || '', ...(opt.inherited as any) }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'stepper': (item, props, opt) => renderStepperHTML({ ...(props as any), type: 'stepper', text: item.label || '', ...(opt.inherited as any) }),
+  'stepper': (node, props, opt) => renderStepperHTML({ ...(props as any), type: 'stepper', text: (node.meta?.label as string) || node.id || '', ...(opt.inherited as any) }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'select': (item, props, opt) => renderSelectHTML({ ...(props as any), options: item.presentation?.options || [], ...(opt.inherited as any) }),
+  'select': (node, props, opt) => renderSelectHTML({ ...(props as any), options: node.meta?.options || (node.style as any)?.options || [], ...(opt.inherited as any) }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'scope': (item, props, opt) => renderScopeHTML({ ...(props as any), ...(opt.inherited as any) }),
+  'scope': (node, props, opt) => renderScopeHTML({ ...(props as any), ...(opt.inherited as any) }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'terminal': (item, props, opt) => renderTerminalHTML({ ...(props as any), ...(opt.inherited as any) }),
-  'illustration': (item, props, opt) => renderIllustrationHTML({ assetUrl: opt.assetUrl, size: item.presentation?.size || { w: 40, h: 40 }, variant: item.presentation?.variant || 'contain', id: item.id }),
-  'label': (item, props, opt) => AttachmentRenderer.renderAttachmentHTML({
+  'terminal': (node, props, opt) => renderTerminalHTML({ ...(props as any), ...(opt.inherited as any) }),
+  'illustration': (node, props, opt) => renderIllustrationHTML({ 
+    assetUrl: opt.assetUrl, 
+    size: (node.style?.width && node.style?.height) ? { width: node.style.width, height: node.style.height } : { width: 40, height: 40 }, 
+    variant: node.style?.variant || 'contain', 
+    id: node.id 
+  }),
+  'label': (node, props, opt) => AttachmentRenderer.renderAttachmentHTML({
     type: 'label',
-    variant: item.presentation?.variant || 'default',
-    text: item.label || '',
-    style: props.style,
+    variant: node.style?.variant || 'default',
+    text: (node.meta?.label as string) || node.id || '',
+    style: props.style as Partial<OmegaStyleNode> | undefined,
     manifest: opt.manifest,
     inherited: opt.inherited
   })
@@ -197,19 +215,19 @@ export class CellRenderer {
    * RACK CHASSIS RENDERER (Internal)
    * Handles the main module frame and canonical screw positioning.
    */
-  private static renderRackHTML(entity: ManifestEntity, options: CellOptions): string {
+  private static renderRackHTML(node: OmegaNode, options: CellOptions): string {
     const { manifest, resolveAsset, activeTab = 'MAIN' } = options;
-    const presentation = entity.presentation || {};
-    const variant = presentation.variant || 'default';
+    const style = node.style || {};
+    const variant = style.variant || 'default';
     
     // Resolve the style for this specific tab if mapping exists
     const tabStyleId = manifest?.ui?.layout?.tabStyles?.[activeTab];
     const targetStyleId = tabStyleId || variant;
 
     const rackStyles = manifest?.ui?.styles?.rack || [];
-    const libStyle = rackStyles.find((s) => s.id === targetStyleId) || { aesthetics: {} as Partial<OmegaStyleNode> };
+    const libStyle = rackStyles.find((s: StyleVariant) => s.id === targetStyleId) || { aesthetics: {} as Partial<OmegaStyleNode> };
     const genetics = libStyle.aesthetics || {};
-    const aesthetics = presentation.style || {};
+    const aesthetics = style as OmegaStyleNode;
 
     const bgColor = ColorResolver.resolve(aesthetics.color || genetics.color || 'chassis', manifest);
     
@@ -229,37 +247,38 @@ export class CellRenderer {
       const url = resolveAsset ? resolveAsset(assetId) : undefined;
       if (!url) return '';
       
-      let size = '100% 100%';
+      let bgSize = '100% 100%';
       let repeat = 'no-repeat';
       const position = 'center';
 
       switch(fitting) {
-        case 'cover':   size = 'cover'; break;
-        case 'contain': size = 'contain'; break;
-        case 'tile':    size = 'auto'; repeat = 'repeat'; break;
-        case 'center':  size = 'auto'; break;
+        case 'cover':   bgSize = 'cover'; break;
+        case 'contain': bgSize = 'contain'; break;
+        case 'tile':    bgSize = 'auto'; repeat = 'repeat'; break;
+        case 'center':  bgSize = 'auto'; break;
       }
       
-      return `background-image: url('${url}') !important; background-size: ${size} !important; background-repeat: ${repeat} !important; background-position: ${position} !important;`;
+      return `background-image: url('${url}') !important; background-size: ${bgSize} !important; background-repeat: ${repeat} !important; background-position: ${position} !important;`;
     };
 
-    const faceplateMode = manifest?.ui?.faceplateMode || 'stretch';
+    const faceplateMode = (manifest?.ui?.faceplate as Record<string, unknown>)?.mode as string || 'stretch';
     const bgStyles = resolveBackgroundCSS(bgAsset, faceplateMode);
 
     const rounding = aesthetics.rounding ?? genetics.rounding ?? 0;
     const borderWidth = aesthetics.borderWidth ?? genetics.borderWidth ?? 0;
 
-    //    const screwStyles = manifest?.ui?.styles?.['mounting-screw'] || [];
-    const screwFragment = presentation.attachments?.find((a) => a.type === 'knob' && a.variant === 'rack-screw');
+    const attachments = ((style as Record<string, unknown>)?.attachments as any[]) || [];
+    const screwFragment = attachments?.find((a: Attachment) => a.type === 'knob' && a.variant === 'rack-screw');
     
     const sAesthetics = (screwFragment?.style || {}) as OmegaStyleNode;
-    const screwStyles = manifest?.ui?.styles?.['rack-screw'] || [];
-    const sGenetics = screwStyles.find((s) => s.id === (screwFragment?.variant || 'default'))?.aesthetics || {};
+    const rackScrewStyles = manifest?.ui?.styles?.['rack-screw'] || [];
+    const sGenetics = rackScrewStyles.find((s) => s.id === (screwFragment?.variant || 'default'))?.aesthetics || {};
     
+    const hardware = (manifest?.ui?.hardware || {}) as Record<string, unknown>;
     const screwSpacing = sAesthetics.spacing ?? sGenetics.spacing ?? 8;
-    const screwCount = manifest?.ui?.hardware?.screwCount ?? 4;
-    const screwMapping = manifest?.ui?.hardware?.screwMapping || [];
-    const masterScrewOffset = manifest?.ui?.hardware?.screwOffset;
+    const screwCount = (hardware.screwCount as number) ?? 4;
+    const screwMapping = (hardware.screwMapping as string[]) || [];
+    const masterScrewOffset = hardware.screwOffset as number | undefined;
     const finalScrewSpacing = masterScrewOffset !== undefined ? masterScrewOffset : screwSpacing;
 
     // Define standard positions based on count
@@ -283,7 +302,7 @@ export class CellRenderer {
     const renderScrew = (pos: typeof positions[0], idx: number) => {
       // Resolve style for this specific position
       const posStyleId = screwMapping[idx];
-      const posLibStyle = manifest?.ui?.styles?.['mounting-screw']?.find((s) => s.id === posStyleId);
+      const posLibStyle = manifest?.ui?.styles?.['mounting-screw']?.find((s: StyleVariant) => s.id === posStyleId);
       const posAesthetics = posLibStyle?.aesthetics || {};
       
       const sColor = ColorResolver.resolve(posAesthetics.color || sAesthetics.color || sGenetics.color || 'hardware', manifest);
@@ -341,17 +360,17 @@ export class CellRenderer {
    * ARCHITECTURAL RENDERER (Internal)
    * Handles Containers, Groups and Plates.
    */
-  private static renderContainerHTML(entity: ManifestEntity, options: CellOptions): string {
+  private static renderContainerHTML(node: OmegaNode, options: CellOptions): string {
     const { manifest, resolveAsset, isSelected, isError } = options;
-    const presentation = entity.presentation || {};
-    const aesthetics = presentation.style || {};
-    const variant = presentation.variant || 'default';
+    const style = node.style || {};
+    const aesthetics = style as OmegaStyleNode;
+    const variant = aesthetics.variant || 'default';
     
     const libStyles = manifest?.ui?.styles?.container || [];
     const libStyle = libStyles.find((s) => s.id === variant) || { aesthetics: {} as Partial<OmegaStyleNode> };
     const genetics = libStyle.aesthetics || {};
 
-    const label = entity.label || 'LABEL';
+    const label = (node.meta?.label as string) || node.id || 'LABEL';
 
     // Resolved Chromatics
     const bgColor = ColorResolver.resolve(aesthetics.color || genetics.color, manifest);
@@ -395,44 +414,44 @@ export class CellRenderer {
   /**
    * MASTER DISPATCHER
    */
-  static renderCellHTML(item: ManifestEntity, options: CellOptions): string {
+  static renderCellHTML(node: OmegaNode, options: CellOptions): string {
     const { runtimeValue, steps, isSelected, resolveAsset, manifest } = options;
-    const compType = item.presentation?.component || 'knob';
+    const compType = node.cellRef || node.kind || 'knob';
     
     // 1. RACK BRANCH
     if (compType === 'rack') {
-      return this.renderRackHTML(item, options);
+      return this.renderRackHTML(node, options);
     }
 
     // 2. ARCHITECTURAL BRANCH
-    const isArchitectural = compType === 'container' || compType === 'group';
+    const isArchitectural = compType === 'container' || compType === 'group' || compType === 'face';
     if (isArchitectural) {
       return `
         <div class="architectural-cell" style="width: 100%; height: 100%; position: relative;">
-          ${this.renderContainerHTML(item, options)}
+          ${this.renderContainerHTML(node, options)}
         </div>
       `.trim();
     }
 
     // 2. PRIMITIVE BRANCH
-    const variant = item.presentation?.variant || 'B_cyan';
+    const variant = node.style?.variant || 'B_cyan';
     const parsed = parseVariant(variant);
-    const size = (item.presentation?.scale as string) || parsed.size;
+    const size = (node.style?.scale as string) || parsed.size;
     const colorId = parsed.colorId;
-    const compRadius = getComponentRadius(item);
+    const compRadius = getComponentRadius(node);
     
     // ERA 7.2.3 - AESTHETIC RESOLUTION
-    const rawStyle = item.presentation?.style || {};
+    const rawStyle = node.style || {};
     const resolvedStyle = ColorResolver.resolveStyle(rawStyle, manifest);
     
-    const assetId = resolvedStyle.asset || item.presentation?.asset;
+    const assetId = resolvedStyle.asset || node.style?.asset;
     const assetDef = manifest?.resources?.assets?.find((a) => a.id === assetId);
     const assetUrl = resolveAsset ? resolveAsset(assetId) : assetId;
     
-    const inherited = getInheritedTypography(item.type as string, manifest);
+    const inherited = getInheritedTypography(node.kind as string, manifest);
     
     const commonProps = { 
-      size, colorId, value: runtimeValue, id: item.id,
+      size, colorId, value: runtimeValue, id: node.id,
       isSelected: !!isSelected, isMain: true, style: resolvedStyle
     };
 
@@ -440,7 +459,7 @@ export class CellRenderer {
     let mainHTML = '';
     try {
       mainHTML = renderer 
-        ? renderer(item, commonProps as Record<string, unknown>, { 
+        ? renderer(node, commonProps as Record<string, unknown>, { 
             assetUrl: assetUrl as string, 
             assetDef, 
             steps, 
@@ -452,7 +471,7 @@ export class CellRenderer {
         : `<div class="unsupported-renderer">NO RENDERER: ${compType}</div>`;
     } catch (err: unknown) {
       const error = err as Error;
-      console.error(`[CELL RENDERER] Fatal error in primitive ${item.presentation?.component}:`, error);
+      console.error(`[CELL RENDERER] Fatal error in primitive ${compType}:`, error);
       mainHTML = `
         <div class="renderer-error" style="color: #ff3300; font-family: monospace; font-size: 8px; border: 1px solid #ff3300; padding: 4px; background: rgba(255,51,0,0.1);">
           ERROR: ${error.message}
@@ -460,11 +479,11 @@ export class CellRenderer {
       `;
     }
 
-    const attachments = item.presentation?.attachments || [];
+    const attachments = ((node.style as Record<string, unknown>)?.attachments as Attachment[]) || [];
     const stackOptions = { runtimeValue, steps, inherited, manifest, resolveAsset };
 
-    const cellOffsetX = (item.presentation?.offsetX || 0) * 1.5;
-    const cellOffsetY = (item.presentation?.offsetY || 0) * 1.5;
+    const cellOffsetX = ((node.style as Record<string, unknown>)?.offsetX as number || 0) * 1.5;
+    const cellOffsetY = ((node.style as Record<string, unknown>)?.offsetY as number || 0) * 1.5;
 
     const containerWidth = resolvedStyle.width !== undefined ? resolvedStyle.width : (compRadius * 2 * 1.5);
     const containerHeight = resolvedStyle.height !== undefined ? resolvedStyle.height : (compRadius * 2 * 1.5);

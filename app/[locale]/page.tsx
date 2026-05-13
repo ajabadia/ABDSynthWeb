@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { Button } from "@/components/ui/Button";
 import { Link } from "@/i18n/routing";
 import { GlassPanel } from "@/components/ui/GlassPanel";

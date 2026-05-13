@@ -2,25 +2,25 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { OmegaNode, OMEGA_Manifest, CellTemplate } from '@/omega-ui-core/types/manifest';
+import type { OmegaNode, OMEGA_Manifest, CellTemplate } from '../../types/manifest';
 import { useUCADrag } from '../hooks/useUCADrag';
 import { UCADebugHUD } from './UCADebugHUD';
 import { CADOverlay } from './CADOverlay';
 import { GovernedOverlay } from './GovernedOverlay';
 import { UniversalRenderer } from '../UniversalRenderer';
-import { UCADebugContext } from '../ucaTypes';
-import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
+import type { UCADebugContext } from '../ucaTypes';
+import { useDesignTokens } from '../../hooks/useDesignTokens';
 
 interface StructuralNodeProps {
   node: OmegaNode;
   manifest: OMEGA_Manifest;
   depth: number;
   catalog: Record<string, CellTemplate>;
-  resolveAsset?: (id: string | undefined) => string | undefined;
-  debugContext?: UCADebugContext;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
+  debugContext?: UCADebugContext | undefined;
   worldPos: { x: number, y: number };
   isLayoutGoverned: boolean;
-  parentNode?: OmegaNode | null;
+  parentNode?: OmegaNode | null | undefined;
   handleDebugClick: (e: React.MouseEvent) => void;
 }
 
@@ -58,7 +58,7 @@ export function StructuralNode({
       id={`uca-${node.id}`}
       className={`uca-node uca-${node.kind} group`}
       onClick={handleDebugClick}
-      drag={debugContext?.enabled && node.kind !== 'rack'}
+      drag={(debugContext?.enabled && node.kind !== 'rack') || false}
       dragMomentum={false}
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}

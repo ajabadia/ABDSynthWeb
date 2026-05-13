@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { type OnMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 
-import { TabDiagnostics } from '../../types/diagnostics';
+import type { TabDiagnostics } from '../../types/diagnostics';
 import { mapMonacoMarkers } from '../../utils/diagnosticUtils';
 
 interface SourceViewProps {

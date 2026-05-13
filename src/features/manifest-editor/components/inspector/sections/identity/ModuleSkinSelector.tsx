@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { Palette } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { OMEGA_THEMES } from '@/constants/manifest-editor/themes';
-import InspectorCollapsible from '../../shared/InspectorCollapsible';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
 
 interface ModuleSkinSelectorProps {
   manifest: OMEGA_Manifest;
@@ -39,13 +39,20 @@ export default function ModuleSkinSelector({ manifest, onUpdate }: ModuleSkinSel
                     typography: { 
                       ...manifest.ui.typography,
                       ...theme.ui.typography 
+                    },
+                    layout: {
+                      width: manifest.ui?.layout?.width ?? 800,
+                      height: manifest.ui?.layout?.height ?? 600,
+                      ...manifest.ui?.layout,
+                      containers: manifest.ui?.layout?.containers || []
                     }
                   },
                   metadata: {
                     ...manifest.metadata,
                     rack: {
-                      ...manifest.metadata.rack,
-                      skin: theme.ui.skin
+                      width: manifest.metadata.rack?.width ?? 0,
+                      height: manifest.metadata.rack?.height ?? 0,
+                      ...manifest.metadata.rack
                     }
                   }
                 });

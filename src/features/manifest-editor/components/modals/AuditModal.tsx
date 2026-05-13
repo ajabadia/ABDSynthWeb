@@ -3,8 +3,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShieldCheck, ShieldAlert, ShieldX, Download } from 'lucide-react';
-import { AuditResult, AuditService } from '@/services/auditService';
-import { OMEGA_Manifest } from '@/types/manifest';
+import { AuditService } from '@/services/auditService';
+import type { AuditResult } from '@/services/auditService';
+import type { OMEGA_Manifest } from '@/types/manifest';
 
 // Modular Sub-components
 import AuditSummary from '../audit/AuditSummary';
@@ -32,7 +33,7 @@ export default function AuditModal({ isOpen, onClose, onNavigate, audit, manifes
     AuditService.downloadCertificationReport(manifest, audit);
   };
  
-  const statusConfig = STATUS_CONFIG[audit.status] || STATUS_CONFIG.DRAFT;
+  const statusConfig = STATUS_CONFIG[audit.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.DRAFT;
 
   return (
     <AnimatePresence>

@@ -1,44 +1,50 @@
 'use client';
  
 import React from 'react';
-import { Palette } from 'lucide-react';
-import KnobProperties from '../primitives/KnobProperties';
-import LedProperties from '../primitives/LedProperties';
-import PortProperties from '../primitives/PortProperties';
-import SliderProperties from '../primitives/SliderProperties';
-import DisplayProperties from '../primitives/DisplayProperties';
-import SwitchProperties from '../primitives/SwitchProperties';
-import SelectProperties from '../primitives/SelectProperties';
-import IllustrationProperties from '../primitives/IllustrationProperties';
+import { Palette, Shield, Box, Terminal } from 'lucide-react';
+import KnobProperties from '@/features/manifest-editor/components/inspector/primitives/KnobProperties';
+import LedProperties from '@/features/manifest-editor/components/inspector/primitives/LedProperties';
+import PortProperties from '@/features/manifest-editor/components/inspector/primitives/PortProperties';
+import SliderProperties from '@/features/manifest-editor/components/inspector/primitives/SliderProperties';
+import DisplayProperties from '@/features/manifest-editor/components/inspector/primitives/DisplayProperties';
+import SwitchProperties from '@/features/manifest-editor/components/inspector/primitives/SwitchProperties';
+import SelectProperties from '@/features/manifest-editor/components/inspector/primitives/SelectProperties';
+import IllustrationProperties from '@/features/manifest-editor/components/inspector/primitives/IllustrationProperties';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
-import SourceCodeView from '../shared/SourceCodeView';
-import { Shield, Box, Terminal } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
+import SourceCodeView from '@/features/manifest-editor/components/inspector/shared/SourceCodeView';
+import type { ManifestEntity, OMEGA_Manifest, LayoutContainer, OmegaNode, Presentation } from '@/omega-ui-core/types/manifest';
 import { buildInspectorPatch } from '@/features/manifest-editor/hooks/entities/ucaInspectorModel';
-import InspectorCollapsible from '../shared/InspectorCollapsible';
-import IndustrialGovernanceConsole from '../shared/IndustrialGovernanceConsole';
+import { adaptNodeToManifestEntity } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
+import IndustrialGovernanceConsole from '@/features/manifest-editor/components/inspector/shared/IndustrialGovernanceConsole';
  
 interface AestheticSectionProps {
-  item: ManifestEntity;
+  item: OmegaNode;
   manifest: OMEGA_Manifest;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
-  onHelp?: (sectionId?: string) => void;
-  containers?: LayoutContainer[];
-  highlightPath?: string | null;
+  onUpdate: (updates: Partial<OmegaNode>) => void;
+  onHelp?: ((sectionId: string) => void) | undefined;
+  containers?: LayoutContainer[] | undefined;
+  highlightPath?: (string | null) | undefined;
   resolveAsset: (id: string | undefined) => string | undefined;
-  onOpenConfig?: () => void;
-  setActiveSection?: (s: string) => void;
+  onOpenConfig?: (() => void) | undefined;
+  setActiveSection?: ((s: string) => void) | undefined;
 }
  
-export default function AestheticSection({ item, manifest, onUpdate, resolveAsset, setActiveSection, onOpenConfig: handleOpenConfig }: AestheticSectionProps) {
+export default function AestheticSection({ item: node, manifest, onUpdate, onHelp, containers, highlightPath, resolveAsset, onOpenConfig: handleOpenConfig, setActiveSection }: AestheticSectionProps) {
+  const item = adaptNodeToManifestEntity(node);
+  const onLegacyUpdate = (u: Partial<ManifestEntity>) => {
+    // This is a bridge: in Phase 19 we should eventually move to native OmegaNode updates
+    onUpdate(u as unknown as Partial<OmegaNode>);
+  };
+
   const [showSource, setShowSource] = React.useState(false);
-  const isUCA = 'kind' in item;
-  const componentType = isUCA ? (item as unknown as OmegaNode).cellRef || (item as unknown as OmegaNode).kind || 'knob' : (item.presentation?.component || 'knob');
+  const isUCA = 'kind' in node;
+  const componentType = isUCA ? node.cellRef || node.kind || 'knob' : (item.presentation?.component || 'knob');
   const elementDef = getElementDefinition(componentType);
 
   // Governance Filter: Dynamically check if this component has ANY aesthetic capabilities defined in the Catalog
   const hasAesthetics = (elementDef?.capabilities?.length || 0) > 0;
- 
+  
   const renderSpecializedEditor = () => {
     if (!hasAesthetics && elementDef) {
         return (
@@ -51,7 +57,7 @@ export default function AestheticSection({ item, manifest, onUpdate, resolveAsse
         );
     }
 
-    const commonProps = { item, manifest, onUpdate, setActiveSection, resolveAsset };
+    const commonProps = { item, manifest, onUpdate: onLegacyUpdate, setActiveSection, resolveAsset };
 
     switch (componentType) {
       case 'knob': return <KnobProperties {...commonProps} resolveAsset={resolveAsset} />;
@@ -121,18 +127,19 @@ export default function AestheticSection({ item, manifest, onUpdate, resolveAsse
           <div className="pt-4 border-t border-outline/5 space-y-4">
              <IndustrialGovernanceConsole 
                type={componentType}
-               values={isUCA ? (item as unknown as OmegaNode).style || {} : item.presentation?.style || {}}
+               values={isUCA ? (node.style || {}) as Record<string, unknown> : item.presentation?.style || {}}
                manifest={manifest}
                onUpdate={(updates) => {
                  if (isUCA) {
-                   onUpdate(buildInspectorPatch(item as unknown as OmegaNode, { style: updates }));
+                   onUpdate(buildInspectorPatch(node, { style: updates }));
                  } else {
-                   onUpdate({ 
-                     presentation: { 
-                       ...item.presentation, 
-                       style: { ...(item.presentation?.style || {}), ...updates } 
-                     } 
-                   });
+                    if (!item.presentation) return;
+                    onLegacyUpdate({ 
+                      presentation: { 
+                        ...item.presentation, 
+                        style: { ...(item.presentation?.style || {}), ...updates } 
+                      } as Presentation
+                    });
                  }
                }}
                resolveAsset={resolveAsset}

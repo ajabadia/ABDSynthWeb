@@ -19,7 +19,7 @@ import { HeroBackground } from "@/components/ui/HeroBackground";
 import { RenderShowcase } from "@/components/ui/RenderShowcase";
 import fs from "fs/promises";
 import path from "path";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string, id: string }> }): Promise<Metadata> {
   const { id, locale } = await params;

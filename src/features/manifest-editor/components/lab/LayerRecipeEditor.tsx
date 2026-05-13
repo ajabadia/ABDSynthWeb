@@ -1,19 +1,19 @@
 import React from 'react';
-import { LayerRecipe, LayerRecipeItem } from '@/omega-ui-core/types/assetBehavior';
+import type { LayerRecipe, LayerRecipeItem } from '@/omega-ui-core/types/assetBehavior';
 import { Target, Layers, Eye, EyeOff, Lock, Unlock, ChevronUp, ChevronDown, Trash2, Image as ImageIcon, Plus } from 'lucide-react';
-
+ 
 interface LayerRecipeEditorProps {
   recipe: LayerRecipe;
   onChange: (updates: Partial<LayerRecipe>) => void;
   onSelectAsset: (layerId: string) => void;
-  soloLayerId: string | null;
-  onSoloChange: (id: string | null) => void;
+  soloLayerId?: (string | null) | undefined;
+  onSoloChange?: ((id: string | null) => void) | undefined;
 }
-
+ 
 export default function LayerRecipeEditor({ 
   recipe, onChange, onSelectAsset, soloLayerId, onSoloChange 
 }: LayerRecipeEditorProps) {
-
+ 
   const addLayer = () => {
     const newLayer: LayerRecipeItem = {
       id: `layer_${Date.now()}`,
@@ -27,22 +27,22 @@ export default function LayerRecipeEditor({
     };
     onChange({ layers: [...recipe.layers, newLayer] });
   };
-
+ 
   const updateLayer = (id: string, updates: Partial<LayerRecipeItem>) => {
     onChange({
       layers: recipe.layers.map(l => l.id === id ? { ...l, ...updates } : l)
     });
   };
-
+ 
   const removeLayer = (id: string) => {
     onChange({ layers: recipe.layers.filter(l => l.id !== id) });
   };
-
+ 
   const moveLayer = (index: number, direction: 'up' | 'down') => {
     const newLayers = [...recipe.layers];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newLayers.length) return;
-
+ 
     const [moved] = newLayers.splice(index, 1);
     newLayers.splice(targetIndex, 0, moved);
     
@@ -51,7 +51,7 @@ export default function LayerRecipeEditor({
       layers: newLayers.map((l, i) => ({ ...l, zIndex: i }))
     });
   };
-
+ 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
@@ -66,14 +66,14 @@ export default function LayerRecipeEditor({
           <Plus className="w-3 h-3" /> Add Layer
         </button>
       </div>
-
+ 
       <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
         {recipe.layers.length === 0 && (
           <div className="p-8 border border-dashed border-[#333] rounded-lg text-center">
             <p className="text-[8px] font-bold uppercase opacity-30">No layers defined in recipe.</p>
           </div>
         )}
-
+ 
         {recipe.layers.map((layer, index) => (
           <div 
             key={layer.id}
@@ -96,7 +96,7 @@ export default function LayerRecipeEditor({
                 <ChevronDown className="w-3 h-3" />
               </button>
             </div>
-
+ 
             {/* LAYER ICON / VISIBILITY */}
             <div className="flex flex-col items-center gap-2">
               <button 
@@ -106,7 +106,7 @@ export default function LayerRecipeEditor({
                 {layer.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
               </button>
               <button 
-                onClick={() => onSoloChange(soloLayerId === layer.id ? null : layer.id)}
+                onClick={() => onSoloChange?.(soloLayerId === layer.id ? null : layer.id)}
                 className={`p-1.5 rounded-full transition-all ${soloLayerId === layer.id ? 'text-accent bg-accent/20 font-black' : 'text-white/20 hover:text-accent/40'}`}
                 title="Solo Layer"
               >
@@ -119,7 +119,7 @@ export default function LayerRecipeEditor({
                 {layer.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
               </button>
             </div>
-
+ 
             {/* LAYER DETAILS */}
             <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ export default function LayerRecipeEditor({
                   {layer.assetId ? layer.assetId.split('/').pop() : 'Select Asset'}
                 </button>
               </div>
-
+ 
               <div className="flex items-center gap-4">
                 <div className="flex-1 flex items-center gap-2">
                   <span className="text-[6px] font-black uppercase opacity-30">Opacity</span>
@@ -175,7 +175,7 @@ export default function LayerRecipeEditor({
                   <span className="text-[6px] font-black uppercase opacity-30">Blend</span>
                   <select 
                     value={layer.blendMode ?? 'normal'}
-                    onChange={(e) => updateLayer(layer.id, { blendMode: e.target.value as LayerRecipeItem['blendMode'] })}
+                    onChange={(e) => updateLayer(layer.id, { blendMode: e.target.value as 'normal' | 'multiply' | 'screen' | 'overlay' })}
                     className="flex-1 bg-[#0a0a0b] border border-[#222] rounded px-2 py-0.5 text-[7px] font-black uppercase text-white/40 outline-none"
                   >
                     <option value="normal">Normal</option>
@@ -186,7 +186,7 @@ export default function LayerRecipeEditor({
                 </div>
               </div>
             </div>
-
+ 
             {/* DELETE */}
             <button 
               onClick={() => removeLayer(layer.id)}

@@ -7,20 +7,18 @@
  */
 
 import { ColorResolver } from '../utils/ColorResolver';
+import type { OMEGA_Manifest, OmegaStyleNode } from '../types/manifest';
 
 export interface AttachmentProps {
     type: 'label' | 'led' | 'graphic' | 'graphic-fragment' | 'knob' | 'port' | 'slider-v' | 'slider-h' | 'switch' | 'push' | 'stepper' | 'path' | 'display';
-    variant?: string;
-    text?: string;
-    value?: number;
-    steps?: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    style?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    manifest?: any;
-    resolveAsset?: (id: string | undefined) => string | undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inherited?: any;
+    variant?: string | undefined;
+    text?: string | undefined;
+    value?: number | undefined;
+    steps?: number | undefined;
+    style?: Partial<OmegaStyleNode> | undefined; 
+    manifest?: OMEGA_Manifest | undefined;
+    resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
+    inherited?: Record<string, unknown> | undefined;
 }
 
 export const AttachmentRenderer = {

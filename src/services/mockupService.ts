@@ -2,7 +2,7 @@
  * OMEGA Studio Mockup Service (v7.2.3)
  * Prepares high-fidelity visual descriptions for photorealistic renders.
  */
-import { OMEGA_Manifest } from '../types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 export class MockupService {
   static generateRenderPrompt(manifest: OMEGA_Manifest): string {

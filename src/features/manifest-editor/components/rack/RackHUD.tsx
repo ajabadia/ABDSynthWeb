@@ -3,7 +3,7 @@
 import React from 'react';
 import { Settings2, PlayCircle } from 'lucide-react';
 
-import { ManifestEntity, TabName } from '@/types/manifest';
+import type { ManifestEntity, TabName } from '@/types/manifest';
 
 interface RackHUDProps {
   isLiveMode: boolean;

@@ -1,5 +1,5 @@
 'use client';
-
+ 
 import React, { useState, useEffect } from 'react';
 import { 
   Database, Cpu, Layers, Layout, 
@@ -7,29 +7,29 @@ import {
 } from 'lucide-react';
 import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
-import { ManifestEntity, OMEGA_Manifest, ComponentType, AttachmentType } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, ComponentType, AttachmentType, CellTemplate, Attachment, Presentation, OmegaNode } from '@/omega-ui-core/types/manifest';
 import ThemePaletteGovernance from '../inspector/aesthetic/governance/ThemePaletteGovernance';
 import IndustrialGovernanceConsole from '../inspector/shared/IndustrialGovernanceConsole';
 import AttachmentTypePrecisionOffsets from '../inspector/attachments/AttachmentPrecisionOffsets';
 import AssetBehaviorPresetSelector from './AssetBehaviorPresetSelector';
 import BehaviorMappingInspector from './BehaviorMappingInspector';
 import LayerRecipeEditor from './LayerRecipeEditor';
-import { AssetBehavior, LayerRecipe } from '@/omega-ui-core/types/assetBehavior';
+import type { AssetBehavior, LayerRecipe } from '@/omega-ui-core/types/assetBehavior';
 import { BehaviorResolver } from '@/omega-ui-core/uca/behaviorResolver';
 import AssetSelector from '../inspector/shared/AssetSelector';
 import { entityToNode } from '@/omega-ui-core/uca/converters/entityToNode';
-import { CellTemplate } from '@/omega-ui-core/types/manifest';
 
+ 
 interface CellStudioContainerProps {
-  initialCell?: ManifestEntity;
-  manifest?: OMEGA_Manifest;
-  resolveAsset?: (id: string | undefined) => string | undefined;
+  initialCell?: ManifestEntity | undefined;
+  manifest?: OMEGA_Manifest | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
   onSave: (cell: ManifestEntity) => void;
-  onFreeze?: (template: CellTemplate) => void;
-  onClose?: () => void;
-  isModal?: boolean;
+  onFreeze?: ((template: CellTemplate) => void) | undefined;
+  onClose?: (() => void) | undefined;
+  isModal?: boolean | undefined;
 }
-
+ 
 export default function CellStudioContainer({
   initialCell,
   manifest,
@@ -46,8 +46,8 @@ export default function CellStudioContainer({
   const [activeLayerId, setActiveLayerId] = useState<string | null>(null);
   const [isTypeLocked, setIsTypeLocked] = useState(!!initialCell);
   const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
-
-  const [behavior, setBehavior] = useState<AssetBehavior>((initialCell as unknown as { assetBehavior: AssetBehavior })?.assetBehavior || {
+ 
+  const [behavior, setBehavior] = useState<AssetBehavior>(initialCell?.assetBehavior || {
     preset: 'rotary',
     source: 'asset',
     mapping: {
@@ -56,13 +56,13 @@ export default function CellStudioContainer({
       polarity: 'normal'
     }
   });
-
-  const [recipe, setRecipe] = useState<LayerRecipe>((initialCell as unknown as { recipe: LayerRecipe })?.recipe || {
+ 
+  const [recipe, setRecipe] = useState<LayerRecipe>(initialCell?.recipe || {
     id: 'new_recipe',
     name: 'New Composite Recipe',
     layers: []
   });
-
+ 
   const [cellData, setCellData] = useState<ManifestEntity>(initialCell || {
     id: 'new_cell',
     type: 'knob',
@@ -70,6 +70,7 @@ export default function CellStudioContainer({
     bind: 'param_id',
     label: 'New Universal Cell',
     pos: { x: 0, y: 0 },
+    size: { width: 48, height: 48 },
     presentation: {
       tab: 'MAIN',
       component: 'knob',
@@ -85,9 +86,9 @@ export default function CellStudioContainer({
       attachments: []
     }
   });
-
+ 
   const [description] = useState('');
-
+ 
   // MOCK MANIFEST FOR RENDERER (Era 7.2.3 Industrial Palette)
   const [mockManifest, setMockManifest] = useState<OMEGA_Manifest>(manifest || {
     schemaVersion: '1.0.0',
@@ -97,7 +98,7 @@ export default function CellStudioContainer({
       dimensions: { width: 100, height: 100 },
       controls: [],
       jacks: [],
-      layout: { containers: [], planes: ['MAIN'], tabStyles: {} },
+      layout: { width: 100, height: 100, containers: [], planes: ['MAIN'], tabStyles: {} },
       styles: {},
       skinMode: 'custom',
       palette: {
@@ -107,22 +108,28 @@ export default function CellStudioContainer({
       },
       colors: { accent: '#00f2ff', surface: '#121416', text: '#ffffff', weak: '#555555' }
     },
-    resources: { wasm: 'internal', assets: [] }
+    resources: { wasm: 'internal', assets: [] },
+    entities: []
   });
-
+ 
   useEffect(() => {
-    if (cellData.type !== cellData.presentation.component) {
+    if (cellData.presentation && cellData.type !== cellData.presentation.component) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCellData(prev => ({
         ...prev,
         presentation: {
+          tab: 'MAIN',
+          variant: 'standard',
+          offsetX: 0,
+          offsetY: 0,
+          attachments: [],
           ...prev.presentation,
           component: prev.type as ComponentType
         }
       }));
     }
-  }, [cellData.type, cellData.presentation.component]);
-
+  }, [cellData.type, cellData.presentation?.component, cellData.presentation]);
+ 
   const addFragment = (type: string) => {
     setIsTypeLocked(true);
     const newFragment = {
@@ -138,57 +145,80 @@ export default function CellStudioContainer({
     setCellData(prev => ({
       ...prev,
       presentation: {
+        tab: prev.presentation?.tab || 'MAIN',
+        component: prev.presentation?.component || (prev.type as ComponentType) || 'knob',
+        variant: prev.presentation?.variant || 'standard',
+        offsetX: prev.presentation?.offsetX || 0,
+        offsetY: prev.presentation?.offsetY || 0,
         ...prev.presentation,
-        attachments: [...(prev.presentation?.attachments || []), newFragment as unknown as ManifestEntity['presentation']['attachments'][0]]
-      }
+        attachments: [...(prev.presentation?.attachments || []), newFragment as unknown as Attachment]
+      } as Presentation
     }));
     setSelectedFragmentId(newFragment.id);
     setActiveTab('properties');
   };
-
+ 
   const removeFragment = (id: string) => {
     setCellData(prev => ({
       ...prev,
       presentation: {
+        tab: prev.presentation?.tab || 'MAIN',
+        component: prev.presentation?.component || (prev.type as ComponentType) || 'knob',
+        variant: prev.presentation?.variant || 'standard',
+        offsetX: prev.presentation?.offsetX || 0,
+        offsetY: prev.presentation?.offsetY || 0,
         ...prev.presentation,
         attachments: (prev.presentation?.attachments || []).filter((a) => a.id !== id)
-      }
+      } as Presentation
     }));
     if (selectedFragmentId === id) setSelectedFragmentId('host');
   };
-
+ 
   const moveFragment = (id: string, direction: 'up' | 'down') => {
-    const attachments = [...(cellData.presentation.attachments || [])];
+    const attachments = [...(cellData.presentation?.attachments || [])];
     const index = attachments.findIndex(a => a.id === id);
     if (index === -1) return;
-
+ 
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= attachments.length) return;
-
+ 
     const [moved] = attachments.splice(index, 1);
     attachments.splice(newIndex, 0, moved);
-
+ 
     setCellData(prev => ({
       ...prev,
-      presentation: { ...prev.presentation, attachments }
+      presentation: { 
+        tab: prev.presentation?.tab || 'MAIN',
+        component: prev.presentation?.component || (prev.type as ComponentType) || 'knob',
+        variant: prev.presentation?.variant || 'standard',
+        offsetX: prev.presentation?.offsetX || 0,
+        offsetY: prev.presentation?.offsetY || 0,
+        ...prev.presentation, 
+        attachments 
+      } as Presentation
     }));
   };
-
+ 
   const updateFragment = (id: string, updates: Record<string, unknown>) => {
     if (id === 'host') {
       setCellData(prev => ({
         ...prev,
         presentation: {
+          tab: prev.presentation?.tab || 'MAIN',
+          component: prev.presentation?.component || (prev.type as ComponentType) || 'knob',
+          variant: prev.presentation?.variant || 'standard',
+          offsetX: prev.presentation?.offsetX || 0,
+          offsetY: prev.presentation?.offsetY || 0,
           ...prev.presentation,
           style: { ...(prev.presentation?.style || {}), ...updates }
-        }
+        } as Presentation
       }));
     } else {
       const styleKeys = [
         'color', 'indicatorColor', 'glowColor', 'glassColor', 'font', 'fontSize', 
         'fontColor', 'opacity', 'intensity', 'rounding', 'shadow', 'blur', 'texture'
       ];
-
+ 
       setCellData(prev => {
         const attachments = (prev.presentation?.attachments || []).map((a) => {
           if (a.id !== id) return a;
@@ -204,20 +234,31 @@ export default function CellStudioContainer({
           }
           return newAttachment;
         });
-        return { ...prev, presentation: { ...prev.presentation, attachments } };
+        return { 
+          ...prev, 
+          presentation: { 
+            tab: prev.presentation?.tab || 'MAIN',
+            component: prev.presentation?.component || (prev.type as ComponentType) || 'knob',
+            variant: prev.presentation?.variant || 'standard',
+            offsetX: prev.presentation?.offsetX || 0,
+            offsetY: prev.presentation?.offsetY || 0,
+            ...prev.presentation, 
+            attachments 
+          } as Presentation 
+        };
       });
     }
   };
-
+ 
   const testValue = (cellData.presentation?.style as Record<string, unknown>)?.testValue as number ?? 0.75;
   const resolved = BehaviorResolver.resolve(testValue, {
     ...behavior,
     frameCount: (behavior.mapping?.frameRange?.end || 0) - (behavior.mapping?.frameRange?.start || 0) + 1
   });
-
+ 
   const previewHTML = React.useMemo(() => {
     try {
-      return CellRenderer.renderCellHTML(cellData, {
+      return CellRenderer.renderCellHTML(entityToNode(cellData), {
         zoom: 2.5,
         runtimeValue: testValue,
         forceFrame: resolved.frame,
@@ -233,7 +274,7 @@ export default function CellStudioContainer({
       return `<div class="p-4 text-[8px] text-red-500 font-mono">RENDER_ERROR: ${e}</div>`;
     }
   }, [cellData, mockManifest, resolveAsset, recipe, soloLayerId, testValue, resolved.frame]);
-
+ 
   const handleExport = () => {
     const exportData = {
       ...cellData,
@@ -249,19 +290,23 @@ export default function CellStudioContainer({
     a.download = `omega_cell_${cellData.type}_${(cellData.label || 'unnamed').toLowerCase().replace(/\s+/g, '_')}.json`;
     a.click();
   };
-
+ 
   const handleFreeze = () => {
     const dna = entityToNode(cellData);
     const template: CellTemplate = {
       id: cellData.id,
       label: cellData.label || 'Unnamed DNA',
-      category: cellData.role || 'control',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      category: (cellData.role as any) || 'control',
       baseNode: dna,
-      assetBehavior: behavior,
-      recipe: recipe,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      assetBehavior: behavior as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recipe: recipe as any,
       version: '1.0.0',
       description: description || 'Certified UCA Cell Template'
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
     
     if (onFreeze) {
       onFreeze(template);
@@ -275,7 +320,7 @@ export default function CellStudioContainer({
       a.click();
     }
   };
-
+ 
   return (
     <div className={`flex flex-col h-full bg-[#0c0c0d] overflow-hidden text-[#a0a0a0] ${isModal ? '' : 'rounded-lg border border-[#222]'}`}>
       {/* HEADER (ASEPTIC STRIP) */}
@@ -298,7 +343,7 @@ export default function CellStudioContainer({
           </button>
         )}
       </div>
-
+ 
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT: PREVIEW STRIP */}
         <div className="w-96 border-r border-[#222] bg-[#080809] flex flex-col relative overflow-hidden">
@@ -311,7 +356,7 @@ export default function CellStudioContainer({
             <div className={`scale-[1.2] relative transition-all duration-700 ${testValue !== 0.75 ? 'drop-shadow-[0_0_30px_rgba(0,242,255,0.2)]' : ''}`}>
               <div dangerouslySetInnerHTML={{ __html: previewHTML }} />
             </div>
-
+ 
             {/* SCRUBBING UI */}
             <div className="absolute bottom-4 left-4 right-4 bg-[#1a1a1b]/90 backdrop-blur-md border border-white/5 p-3 rounded-lg flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
               <div className="flex items-center justify-between">
@@ -332,7 +377,7 @@ export default function CellStudioContainer({
             </div>
           </div>
         </div>
-
+ 
         {/* CENTER: WORKSPACE */}
         <div className="flex-1 flex flex-col bg-[#0c0c0d] overflow-hidden">
           <div className="p-6 border-b border-[#222] bg-[#111112]/50 flex items-center justify-between gap-8">
@@ -362,7 +407,7 @@ export default function CellStudioContainer({
                 </div>
               </div>
             </div>
-
+ 
             <div className="flex items-center gap-1 bg-[#1a1a1b] p-1 rounded border border-[#333]">
               {[
                 { id: 'fragments', icon: Layers, label: 'Fragments' },
@@ -380,7 +425,7 @@ export default function CellStudioContainer({
               ))}
             </div>
           </div>
-
+ 
           <div className="flex-1 overflow-y-auto p-6">
             {isCommandCenterOpen ? (
               <ThemePaletteGovernance 
@@ -412,7 +457,7 @@ export default function CellStudioContainer({
                       <p className="text-[7px] font-bold uppercase opacity-30">Surface & Body</p>
                     </div>
                   </div>
-                  {(cellData.presentation.attachments || []).map(frag => (
+                  {(cellData.presentation?.attachments || []).map(frag => (
                     <div 
                       key={frag.id}
                       onClick={() => { setSelectedFragmentId(frag.id); setActiveTab('properties'); }}
@@ -449,8 +494,8 @@ export default function CellStudioContainer({
             ) : (
               <div className="max-w-4xl mx-auto space-y-8">
                 <IndustrialGovernanceConsole 
-                  type={selectedFragmentId === 'host' ? cellData.type as string : ((cellData.presentation.attachments || []).find(f => f.id === selectedFragmentId)?.type || 'label')}
-                  values={selectedFragmentId === 'host' ? (cellData.presentation?.style || {}) : ((cellData.presentation.attachments || []).find(f => f.id === selectedFragmentId)?.style || {})}
+                  type={selectedFragmentId === 'host' ? cellData.type as string : ((cellData.presentation?.attachments || []).find(f => f.id === selectedFragmentId)?.type || 'label')}
+                  values={selectedFragmentId === 'host' ? (cellData.presentation?.style || {}) : ((cellData.presentation?.attachments || []).find(f => f.id === selectedFragmentId)?.style || {})}
                   onUpdate={(updates) => updateFragment(selectedFragmentId, updates)}
                   manifest={mockManifest} resolveAsset={resolveAsset || ((id) => id)}
                   onOpenConfig={() => setIsCommandCenterOpen(true)}
@@ -458,15 +503,15 @@ export default function CellStudioContainer({
                 />
                 {selectedFragmentId !== 'host' && (
                   <AttachmentTypePrecisionOffsets 
-                    offsetX={(cellData.presentation.attachments || []).find(f => f.id === selectedFragmentId)?.offsetX || 0}
-                    offsetY={(cellData.presentation.attachments || []).find(f => f.id === selectedFragmentId)?.offsetY || 0}
+                    offsetX={(cellData.presentation?.attachments || []).find(f => f.id === selectedFragmentId)?.offsetX || 0}
+                    offsetY={(cellData.presentation?.attachments || []).find(f => f.id === selectedFragmentId)?.offsetY || 0}
                     onUpdate={(updates) => updateFragment(selectedFragmentId, updates)}
                   />
                 )}
               </div>
             )}
           </div>
-
+ 
           <div className="p-4 border-t border-[#222] bg-[#111112] flex items-center justify-end gap-2">
             <button onClick={() => navigator.clipboard.writeText(JSON.stringify({ behavior, recipe }, null, 2))} className="px-6 py-2 bg-[#1a1a1b] border border-[#333] rounded text-[9px] font-black uppercase">Copy DNA</button>
             <button onClick={handleExport} className="px-6 py-2 bg-[#1a1a1b] border border-[#333] rounded text-[9px] font-black uppercase">Export Entity</button>
@@ -477,31 +522,33 @@ export default function CellStudioContainer({
           </div>
         </div>
       </div>
-
+ 
       {/* ASSET SELECTOR OVERLAY */}
       {isAssetSelectorOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
-          <div className="w-[800px] h-[600px] bg-[#111112] border border-[#333] rounded-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-[#222] flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-accent">Select Layer Asset</h3>
-              <button onClick={() => setIsAssetSelectorOpen(false)}><X className="w-4 h-4" /></button>
-            </div>
-            <div className="flex-1">
-              <AssetSelector 
-                manifest={mockManifest} resolveAsset={resolveAsset || ((id) => id)} restrictToSequences={true}
-                onSelect={(assetId) => {
-                  if (activeLayerId && assetId) {
-                    setRecipe(prev => ({
-                      ...prev,
-                      layers: prev.layers.map(l => l.id === activeLayerId ? { ...l, assetId: assetId as string } : l)
-                    }));
-                  }
-                  setIsAssetSelectorOpen(false);
-                }}
-              />
+        <>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
+            <div className="w-[800px] h-[600px] bg-[#111112] border border-[#333] rounded-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-[#222] flex items-center justify-between">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-accent">Select Layer Asset</h3>
+                <button onClick={() => setIsAssetSelectorOpen(false)}><X className="w-4 h-4" /></button>
+              </div>
+              <div className="flex-1">
+                <AssetSelector 
+                  manifest={mockManifest} resolveAsset={resolveAsset || ((id) => id)} restrictToSequences={true}
+                  onSelect={(assetId) => {
+                    if (activeLayerId && assetId) {
+                      setRecipe(prev => ({
+                        ...prev,
+                        layers: prev.layers.map(l => l.id === activeLayerId ? { ...l, assetId: assetId as string } : l)
+                      }));
+                    }
+                    setIsAssetSelectorOpen(false);
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

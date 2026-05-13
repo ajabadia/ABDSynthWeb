@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Palette } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest, Presentation } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
  
 interface KnobPropertiesProps {
@@ -10,14 +10,14 @@ interface KnobPropertiesProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
  
 export default function KnobProperties({ item, manifest, onUpdate, setActiveSection }: KnobPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const knobStyles = manifest.ui.styles?.['knob'] || [];
   const currentStyleId = pres.variant || 'default';
-  const currentStyle = knobStyles.find(s => s.id === currentStyleId) || { id: 'default', label: 'Default Knob Style' };
+  const currentStyle = knobStyles.find((s: { id: string; label: string }) => s.id === currentStyleId) || { id: 'default', label: 'Default Knob Style' };
  
   const updateStyle = (styleId: string, aesthetics: Partial<Presentation> = {}) => {
     onUpdate({ 
@@ -40,7 +40,8 @@ export default function KnobProperties({ item, manifest, onUpdate, setActiveSect
         
         {knobStyles.length > 0 ? (
           <div className="grid grid-cols-1 gap-1.5">
-            {knobStyles.map(s => (
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {knobStyles.map((s: any) => (
               <button
                 key={s.id}
                 onClick={() => updateStyle(s.id, s.aesthetics)}

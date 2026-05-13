@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BlueprintDefinition, BlueprintPlaceholderDefinition, BlueprintPlaceholderValues } from '@/omega-ui-core/types/manifest';
+import type { BlueprintDefinition, BlueprintPlaceholderDefinition, BlueprintPlaceholderValues } from '@/omega-ui-core/types/manifest';
 
 interface BlueprintPromptDialogProps {
   isOpen: boolean;
   onClose: () => void;
   blueprint: BlueprintDefinition | null;
   onConfirm: (values: BlueprintPlaceholderValues) => void;
-  onUpdatePlaceholder?: (id: string, value: string | number | boolean) => void;
+  onUpdatePlaceholder?: ((id: string, value: string | number | boolean) => void) | undefined;
 }
 
 /**
@@ -26,7 +26,7 @@ export default function BlueprintPromptDialog({
   const [values, setValues] = useState<BlueprintPlaceholderValues>(() => {
     if (!blueprint) return {};
     const initial: BlueprintPlaceholderValues = {};
-    blueprint.placeholders.forEach(p => {
+    (blueprint.placeholders || []).forEach(p => {
       if (p.defaultValue !== undefined) {
         initial[p.id] = p.defaultValue;
       }
@@ -38,7 +38,7 @@ export default function BlueprintPromptDialog({
 
   const handleConfirm = () => {
     // Validate required fields
-    const missing = blueprint.placeholders.filter(p => p.required && (values[p.id] === undefined || values[p.id] === ''));
+    const missing = (blueprint.placeholders || []).filter(p => p.required && (values[p.id] === undefined || values[p.id] === ''));
     if (missing.length > 0) {
       alert(`Missing required parameters: ${missing.map(p => p.label).join(', ')}`);
       return;
@@ -62,8 +62,8 @@ export default function BlueprintPromptDialog({
             value={String(value)}
             onChange={(e) => updateValue(p.id, e.target.value)}
           >
-            {p.allowedValues?.map(opt => (
-              <option key={String(opt)} value={String(opt)}>{String(opt)}</option>
+            {(p.allowedValues || []).map((opt: { label: string; value: string | number | boolean } | string | number | boolean) => (
+              <option key={String(typeof opt === 'object' ? opt.value : opt)} value={String(typeof opt === 'object' ? opt.value : opt)}>{String(typeof opt === 'object' ? opt.label : opt)}</option>
             ))}
           </select>
         );
@@ -152,7 +152,7 @@ export default function BlueprintPromptDialog({
               )}
 
               <div className="space-y-6 pt-2">
-                {blueprint.placeholders.map((p) => (
+                {(blueprint.placeholders || []).map((p) => (
                   <div key={p.id} className="space-y-2">
                     <div className="flex justify-between items-baseline">
                       <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">

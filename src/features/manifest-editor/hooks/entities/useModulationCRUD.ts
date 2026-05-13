@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest, OMEGA_Modulation } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Modulation } from '@/omega-ui-core/types/manifest';
 
 export const useModulationCRUD = (
   setManifest: (updater: OMEGA_Manifest | ((prev: OMEGA_Manifest) => OMEGA_Manifest), label?: string) => void

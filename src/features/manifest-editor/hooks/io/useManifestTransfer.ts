@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react';
 import yaml from 'js-yaml';
-import { OMEGA_Manifest, ManifestEntity, ComponentType, AttachmentType, Attachment } from '@/omega-ui-core/types/manifest';
-import { ValidationIssue } from '@/types/validation';
+import type { OMEGA_Manifest, ManifestEntity, ComponentType, AttachmentType, Attachment, Dimensions, Position } from '@/omega-ui-core/types/manifest';
+import type { ValidationIssue } from '@/types/validation';
 import { purgeUnusedStyles } from '@/features/manifest-editor/utils/governanceUtils';
 
 export const useManifestTransfer = (
@@ -23,7 +23,8 @@ export const useManifestTransfer = (
       if (!parsed || typeof parsed !== 'object') throw new Error("Invalid manifest format.");
 
       if (!parsed.ui) parsed.ui = { dimensions: { width: 120, height: 420 }, controls: [], jacks: [] };
-      if (!parsed.metadata) parsed.metadata = { name: parsed.name || "Unnamed Module", family: "utility" };
+      if (!parsed.metadata) ((parsed as unknown) as OMEGA_Manifest).metadata = { name: ((parsed as unknown) as { name?: string }).name || "Unnamed Module", version: "0.1.0", family: "utility" };
+      if (parsed.metadata && !parsed.metadata.version) parsed.metadata.version = "0.1.0";
       
       const getNum = (v: unknown) => {
         const n = parseFloat(String(v));
@@ -51,9 +52,6 @@ export const useManifestTransfer = (
             ui_precision?: number;
           };
         };
-        const rawPos = c.pos || {};
-        const x = getNum(rawPos.x);
-        const y = getNum(rawPos.y);
         const defaultRole = defaultTab === 'PATCHING' ? 'stream' : 'control';
 
         return {
@@ -61,8 +59,9 @@ export const useManifestTransfer = (
           type: String(c.type || (defaultTab === 'PATCHING' ? 'port' : 'knob')).toLowerCase(),
           role: String(c.role || defaultRole),
           bind: String(c.bind || ''),
-          label: c.label,
-          pos: { x, y },
+          label: String(c.label || ''),
+          pos: { x: ((cRaw as unknown) as { pos?: Position }).pos?.x || 0, y: ((cRaw as unknown) as { pos?: Position }).pos?.y || 0 },
+          size: ((cRaw as unknown) as { size?: Dimensions }).size || { width: 48, height: 48 },
           presentation: {
             tab: String(c.presentation?.tab || (defaultTab === 'PATCHING' ? 'MAIN' : defaultTab)),
             variant: String(c.presentation?.variant || 'B_cyan'),
@@ -83,6 +82,8 @@ export const useManifestTransfer = (
               return {
                 id: `att_${idx}_${Math.random().toString(36).substr(2, 4)}`,
                 type: String(att.type || 'label') as AttachmentType,
+                label: String(att.text || att.type || 'attachment'),
+                pos: { x: 0, y: 0 },
                 position: String(att.position || 'bottom') as Attachment['position'],
                 offsetX: getNum(att.offsetX),
                 offsetY: getNum(att.offsetY),
@@ -102,6 +103,7 @@ export const useManifestTransfer = (
         metadata: {
           name: String(parsed.metadata?.name || parsed.name),
           family: String(parsed.metadata?.family || 'utility').toLowerCase(),
+          version: String(parsed.metadata?.version || '0.1.0'),
           author: parsed.metadata?.author,
           tags: parsed.metadata?.tags || [],
           rack: parsed.metadata?.rack
@@ -111,18 +113,25 @@ export const useManifestTransfer = (
             width: getNum(parsed.ui.dimensions?.width) || 120, 
             height: getNum(parsed.ui.dimensions?.height) || 420 
           },
-          controls: normalize(parsed.ui.controls, 'MAIN'),
-          jacks: normalize(parsed.ui.jacks, 'MAIN'),
+          controls: normalize(parsed.ui.controls || [], 'MAIN'),
+          jacks: normalize(parsed.ui.jacks || [], 'MAIN'),
           skin: parsed.ui.skin || 'industrial',
-          layout: parsed.ui.layout || { containers: [], gridSnap: 5 },
+          layout: {
+            width: 800,
+            height: 600,
+            containers: ((parsed.ui as unknown) as OMEGA_Manifest['ui'])?.layout?.containers || [],
+            ...((parsed.ui as unknown) as OMEGA_Manifest['ui'])?.layout
+          } as OMEGA_Manifest['ui']['layout'],
           // UCA Persistence (Phase 10.2)
           tree: parsed.ui.tree,
           useUCA: parsed.ui.useUCA ?? true 
         },
         resources: {
-          wasm: String(parsed.resources?.wasm || 'module.wasm'),
-          contract: parsed.resources?.contract
-        },
+          ...parsed.resources,
+          wasm: (parsed.resources as Record<string, unknown> | undefined)?.wasm || (parsed.resources as Record<string, unknown> | undefined)?.contract
+        } as OMEGA_Manifest['resources'],
+        entities: normalize(parsed.ui?.controls || parsed.controls || [], 'MAIN'),
+        links: parsed.links || [],
         modulations: parsed.modulations || []
       };
 
@@ -160,7 +169,7 @@ export const useManifestTransfer = (
   const exportCADBlueprint = useCallback(async () => {
     const { CADExportService } = await import('@/services/cadExportService');
     const svg = CADExportService.generateSVGBlueprint(manifest, {
-      skin: manifest.ui.skin || 'industrial',
+      skin: manifest.ui?.skin || 'industrial',
       drillLayer: false,
       silkscreenLayer: true,
       dimensions: true

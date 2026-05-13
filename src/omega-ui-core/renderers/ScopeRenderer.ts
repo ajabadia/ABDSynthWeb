@@ -6,16 +6,16 @@
 export interface ScopeProps {
   variant: string;
   bind: string;
-  size: { w: number; h: number };
-  color?: string;
+  size: { width: number; height: number };
+  color?: string | undefined;
   font?: string | undefined;
 }
 
 export function renderScopeHTML(props: ScopeProps): string {
   const { variant, bind, size, color = 'var(--scope-color, #00ff88)' } = props;
   const zoom = 1.5;
-  const w = size.w * zoom;
-  const h = size.h * zoom;
+  const w = size.width * zoom;
+  const h = size.height * zoom;
 
   return `
     <div class="scope-display variant-${variant}" 

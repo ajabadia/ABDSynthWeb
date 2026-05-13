@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import yaml from 'js-yaml';
 
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 export const useSourceEditor = (
   manifest: OMEGA_Manifest,

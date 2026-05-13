@@ -2,32 +2,31 @@
  
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
-import { AuditResult } from '@/services/auditService';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OmegaNode, OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { AuditResult } from '@/services/auditService';
 
 interface OrbitalNodeProps {
-  item: ManifestEntity;
+  item: OmegaNode;
   index: number;
   total: number;
-  manifest: OMEGA_Manifest;
-  contract: OmegaContract | null;
+  contract: OMEGA_Contract | null;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
   audit: AuditResult;
   isV7: boolean;
+  manifest: OMEGA_Manifest;
 }
 
 export function OrbitalNode({ 
   item, 
   index, 
   total, 
-  manifest, 
   contract, 
   selectedItemId, 
   onSelectItem, 
   audit,
-  isV7 
+  isV7,
+  manifest
 }: OrbitalNodeProps) {
   const angle = (index / total) * (2 * Math.PI);
   const radius = 180;
@@ -36,13 +35,13 @@ export function OrbitalNode({
 
   // Mapping Check (Case-Insensitive)
   const bindId = (isV7 ? item.bind : item.id)?.toLowerCase();
-  const isJack = isV7 && manifest?.ui?.jacks?.some((j: ManifestEntity) => j.id === item.id);
+  const isJack = isV7 && (item.role === 'port' || item.cellRef === 'port');
   
   const inContract = isJack
     ? contract?.ports?.some((p: { id: string }) => p.id.toLowerCase() === bindId)
     : contract?.parameters?.some((p: { id: string }) => p.id.toLowerCase() === bindId);
 
-  const itemIssues = audit?.issues?.filter((i) => i.path.includes(item.id) || i.message.includes(`'${item.id}'`)) || [];
+  const itemIssues = audit?.issues?.filter((i) => (i.path ?? '').includes(item.id) || i.message.includes(`'${item.id}'`)) || [];
   const hasError = itemIssues.length > 0;
 
   return (
@@ -71,14 +70,14 @@ export function OrbitalNode({
         ${selectedItemId === item.id ? (isJack ? 'scale-110 border-accent ring-2 ring-accent/20 bg-accent/20' : 'scale-110 border-primary ring-2 ring-primary/20 bg-primary/20') : (hasError ? 'bg-red-500/20 border-red-500 hover:bg-red-500/40' : (isJack ? 'wb-surface border-accent/30 hover:border-accent hover:orange-bloom' : 'wb-surface border-primary/30 hover:border-primary hover:cyan-bloom'))}
       `}>
         <span className={`text-[8px] font-bold uppercase tracking-tighter text-center px-1 ${!hasError ? (isJack ? 'text-accent/70' : 'text-primary/70') : 'text-red-200'}`}>
-          {(item.label || item.id).substring(0, 4)}
+          {((item.meta?.label as string) || item.id).substring(0, 4)}
         </span>
 
         {/* Tooltip on hover */}
         <div className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap bg-surface border border-outline p-2 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl min-w-[120px]">
-           <div className="text-[9px] font-bold text-foreground uppercase border-b border-outline/20 pb-1 mb-1">{item.label || item.id}</div>
+           <div className="text-[9px] font-bold text-foreground uppercase border-b border-outline/20 pb-1 mb-1">{(item.meta?.label as string) || item.id}</div>
            <div className="text-[7px] text-foreground/40 uppercase">
-             {isV7 ? `Bind: ${item.bind || 'UNBOUND'}` : `Type: ${item.type}`}
+             {isV7 ? `Bind: ${item.bind || 'UNBOUND'}` : `Type: ${item.cellRef}`}
            </div>
            {isV7 && (
               <div className={`text-[6px] font-bold mt-1 ${inContract ? 'text-green-400' : 'text-red-400'}`}>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useReducer } from "react";
-import { 
+import { useCallback, useMemo, useReducer, useRef, useEffect, useState } from "react";
+import type { 
   WorkbenchState, 
   WorkbenchPaneId, 
   WorkbenchLayoutMode, 
@@ -10,6 +10,10 @@ import {
 } from "../types/workbench";
 import { workbenchReducer, createInitialState } from "./workbench/workbenchReducer";
 import { useWorkbenchPersistence } from "./workbench/useWorkbenchPersistence";
+import { OmegaRPCBridge } from "@/services/rpc/omegaRPCBridge";
+import type { SnapshotParams, SyncStatus, DeltaPatch } from "@/services/rpc/rpcTypes";
+import type { OMEGA_Manifest } from "@/omega-ui-core/types/manifest";
+import type { ManifestDiffResult } from "../types/diff";
 
 // Re-export types for backward compatibility
 export * from "../types/workbench";
@@ -17,6 +21,7 @@ export * from "../types/workbench";
 /**
  * OMEGA ERA 7.2.3 - WORKBENCH STATE ORCHESTRATOR
  * Industrial state engine for multi-pane, multi-tab manifest authoring.
+ * Integrated with Phase 17.4 Live RPC Bridge.
  */
 export function useWorkbenchState() {
   const [state, dispatch] = useReducer(
@@ -25,10 +30,27 @@ export function useWorkbenchState() {
     () => createInitialState()
   );
 
-  // 1. Persistence & Hydration (Offloaded)
+  // 1. RPC Bridge Orchestration (Phase 17.4)
+  // We use a ref to keep the transport layer stable and separate from UI renders.
+  const bridgeRef = useRef<OmegaRPCBridge | null>(null);
+  const [rpcStatus, setRpcStatus] = useState<SyncStatus>('disconnected');
+
+  useEffect(() => {
+    // Only initialize bridge if Live Mode is active (Aseptic Activation)
+    if (state.isLiveMode && !bridgeRef.current) {
+      bridgeRef.current = new OmegaRPCBridge();
+      bridgeRef.current.connect((status) => {
+        setRpcStatus(status);
+      });
+    } else if (!state.isLiveMode && bridgeRef.current) {
+      // Logic for bridge shutdown if needed, though usually we keep it warm
+    }
+  }, [state.isLiveMode]);
+
+  // 2. Persistence & Hydration (Offloaded)
   useWorkbenchPersistence(state, dispatch);
 
-  // 2. Action Dispatchers
+  // 3. Action Dispatchers
   const actions = useMemo(
     () => ({
       openTab: (input: OpenTabInput) =>
@@ -85,7 +107,7 @@ export function useWorkbenchState() {
       setIsLiveMode: () =>
         dispatch({ type: "TOGGLE_UI_STATE", payload: { key: 'isLiveMode' } }),
         
-      setActiveDiff: (diff: import("../types/diff").ManifestDiffResult | null) =>
+      setActiveDiff: (diff: ManifestDiffResult | null) =>
         dispatch({ type: "SET_ACTIVE_DIFF", payload: { diff } }),
         
       setIsDiffModalOpen: (open: boolean) =>
@@ -93,11 +115,29 @@ export function useWorkbenchState() {
         
       setStudioMode: (isOpen: boolean, cellId?: string) =>
         dispatch({ type: "SET_STUDIO_MODE", payload: { isOpen, cellId } }),
+
+      // PHASE 17.4 - RPC ORCHESTRATION ACTIONS
+      rpc: {
+        applyDelta: (patch: DeltaPatch) => {
+          if (state.isLiveMode) {
+            bridgeRef.current?.applyDelta(patch);
+          }
+        },
+        syncSnapshot: (params: SnapshotParams, manifest: OMEGA_Manifest) => {
+          bridgeRef.current?.syncSnapshot(params, manifest);
+        },
+        requestHealth: () => {
+          // Internal call via bridge
+        },
+        resync: () => {
+          // Manual trigger
+        }
+      }
     }),
-    []
+    [state.isLiveMode]
 );
 
-  // 3. Derived State (Selectors)
+  // 4. Derived State (Selectors)
   const derived = useMemo(() => {
     const primaryActiveTabId = state.panesById.primary.activeTabId;
     const secondaryActiveTabId = state.panesById.secondary.activeTabId;
@@ -106,16 +146,17 @@ export function useWorkbenchState() {
       primaryActiveTab: primaryActiveTabId ? state.tabsById[primaryActiveTabId] : null,
       secondaryActiveTab: secondaryActiveTabId ? state.tabsById[secondaryActiveTabId] : null,
       focusedTabId: state.panesById[state.focusedPaneId].activeTabId,
-      isSplit: state.layout.mode !== "single"
+      isSplit: state.layout.mode !== "single",
+      rpcStatus // Exported for UI Badge integration
     };
-  }, [state]);
+  }, [state, rpcStatus]);
 
   const getTabViewState = useCallback(
     (tabId: string) => state.tabViewState[tabId] ?? null,
     [state.tabViewState]
   );
 
-  // 4. API Export
+  // 5. API Export
   return {
     state,
     actions,

@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { OmegaStyleNode } from '@/types/manifest';
+import type { OmegaStyleNode } from '@/types/manifest';
 
 interface PrecisionGovernanceProps {
   values: Partial<OmegaStyleNode>;

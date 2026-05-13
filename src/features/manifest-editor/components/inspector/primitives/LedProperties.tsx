@@ -1,20 +1,20 @@
 import React from 'react';
 import { Maximize, Circle } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface LedPropertiesProps {
   item: ManifestEntity;
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function LedProperties({ item, manifest, onUpdate, setActiveSection }: LedPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const currentVariant = pres.variant || 'A_cyan';
   const ledStyles = manifest.ui.styles?.['led'] || [];
-  const currentStyle = ledStyles.find(s => s.id === currentVariant) || { id: currentVariant, label: 'Standard LED' };
+  const currentStyle = ledStyles.find(s => s.id === currentVariant) || { id: currentVariant as string, label: 'Standard LED' };
 
   // Helper to manage complex variants (e.g. "B_red_3mm")
   const getExtraParam = (paramName: string) => {

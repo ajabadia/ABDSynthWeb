@@ -1,36 +1,36 @@
 'use client';
- 
+  
 import React, { useState } from 'react';
 import { Layout, Settings2, Zap, Move, Image } from 'lucide-react';
-import { OMEGA_Manifest, LayoutContainer, OMEGA_Modulation, ExtraResource } from '@/types/manifest';
-import ContainerSection from './ContainerSection';
-import EntityListSection from './EntityListSection';
-import ModulationSection from './ModulationSection';
-import ResourceSection from './ResourceSection';
-import TreeSection from './TreeSection';
- 
+import type { OMEGA_Manifest, LayoutContainer, OMEGA_Modulation, ExtraResource, UcaDebugConfig, GridConfig } from '@/omega-ui-core/types/manifest';
+import ContainerSection from '@/features/manifest-editor/components/inspector/sections/ContainerSection';
+import EntityListSection from '@/features/manifest-editor/components/inspector/sections/EntityListSection';
+import ModulationSection from '@/features/manifest-editor/components/inspector/sections/ModulationSection';
+import ResourceSection from '@/features/manifest-editor/components/inspector/sections/ResourceSection';
+import TreeSection from '@/features/manifest-editor/components/inspector/sections/TreeSection';
+  
 interface ModuleArchitectureSectionProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
-  addContainer: (c?: Partial<LayoutContainer>) => void;
+  addContainer: (c?: Partial<LayoutContainer> | undefined) => void;
   updateContainer: (id: string, updates: Partial<LayoutContainer>) => void;
   removeContainer: (id: string) => void;
   onSelectItem: (id: string | null) => void;
   onAddEntity: (type: 'control' | 'jack') => void;
   onDuplicateItem: (id: string) => void;
-  onRemoveItem: (id: string) => void;
   onAddModulation: (mod: OMEGA_Modulation) => void;
   onRemoveModulation: (id: string) => void;
   onUpdateModulation: (id: string, updates: Partial<OMEGA_Modulation>) => void;
   onOpenModGrid: () => void;
-  extraResources?: ExtraResource[];
-  onTriggerUpload?: () => void;
-  onRemoveResource?: (name: string) => void;
-  highlightPath?: string | null;
-  setActiveSection?: (sectionId: string) => void;
-  onOpenLibrary?: () => void;
+  extraResources?: ExtraResource[] | undefined;
+  onTriggerUpload?: (() => void) | undefined;
+  onRemoveResource?: ((name: string) => void) | undefined;
+  highlightPath?: (string | null) | undefined;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
+  onOpenLibrary?: (() => void) | undefined;
+  onRemoveItem: (id: string) => void;
 }
- 
+  
 export default function ModuleArchitectureSection({
   manifest,
   addContainer,
@@ -52,7 +52,7 @@ export default function ModuleArchitectureSection({
   setActiveSection
 }: ModuleArchitectureSectionProps) {
   const [activeSubTab, setActiveSubTab] = useState<'infra' | 'controls' | 'ports' | 'routing' | 'assets' | 'tree'>('infra');
- 
+  
   const subTabs = [
     ...(manifest.ui?.useUCA !== false ? [{ id: 'tree' as const, label: 'Hierarchy', icon: Layout, color: 'text-purple-400' }] : []),
     { id: 'infra' as const, label: 'Infrastructure', icon: Layout, color: 'text-accent' },
@@ -61,7 +61,7 @@ export default function ModuleArchitectureSection({
     { id: 'routing' as const, label: 'Routing', icon: Move, color: 'text-blue-400' },
     { id: 'assets' as const, label: 'Assets', icon: Image, color: 'text-purple-400' },
   ];
- 
+  
   return (
     <div className="flex flex-col h-full">
       {/* LEGACY FALLBACK TOGGLE */}
@@ -93,7 +93,18 @@ export default function ModuleArchitectureSection({
               <span className="text-[6px] text-purple-500/60 font-medium">Visual overlay and node selection</span>
             </div>
             <button
-              onClick={() => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: !manifest.ui.ucaDebug?.enabled } } })}
+              onClick={() => onUpdate({ 
+                ui: { 
+                  ...manifest.ui, 
+                  ucaDebug: { 
+                    enabled: !manifest.ui.ucaDebug?.enabled,
+                    showLabels: manifest.ui.ucaDebug?.showLabels ?? true,
+                    hideDecorative: manifest.ui.ucaDebug?.hideDecorative ?? false,
+                    showCADOverlay: manifest.ui.ucaDebug?.showCADOverlay ?? false,
+                    selectedId: manifest.ui.ucaDebug?.selectedId
+                  } as UcaDebugConfig
+                } 
+              })}
               className={`px-3 py-1 text-[8px] font-black uppercase rounded-full border transition-all ${
                 manifest.ui.ucaDebug?.enabled 
                   ? 'bg-purple-500 border-purple-500 text-black' 
@@ -109,7 +120,18 @@ export default function ModuleArchitectureSection({
                 <input 
                   type="checkbox" 
                   checked={manifest.ui.ucaDebug?.showLabels !== false} 
-                  onChange={(e) => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: manifest.ui.ucaDebug?.enabled || false, showLabels: e.target.checked } } })}
+                  onChange={(e) => onUpdate({ 
+                    ui: { 
+                      ...manifest.ui, 
+                      ucaDebug: { 
+                        enabled: manifest.ui.ucaDebug?.enabled || false, 
+                        showLabels: e.target.checked,
+                        hideDecorative: manifest.ui.ucaDebug?.hideDecorative ?? false,
+                        showCADOverlay: manifest.ui.ucaDebug?.showCADOverlay ?? false,
+                        selectedId: manifest.ui.ucaDebug?.selectedId
+                      } as UcaDebugConfig
+                    } 
+                  })}
                   className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
                 /> Show Boundaries
               </label>
@@ -117,7 +139,18 @@ export default function ModuleArchitectureSection({
                 <input 
                   type="checkbox" 
                   checked={manifest.ui.ucaDebug?.hideDecorative || false} 
-                  onChange={(e) => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: manifest.ui.ucaDebug?.enabled || false, hideDecorative: e.target.checked } } })}
+                  onChange={(e) => onUpdate({ 
+                    ui: { 
+                      ...manifest.ui, 
+                      ucaDebug: { 
+                        enabled: manifest.ui.ucaDebug?.enabled || false, 
+                        hideDecorative: e.target.checked,
+                        showLabels: manifest.ui.ucaDebug?.showLabels ?? true,
+                        showCADOverlay: manifest.ui.ucaDebug?.showCADOverlay ?? false,
+                        selectedId: manifest.ui.ucaDebug?.selectedId
+                      } as UcaDebugConfig
+                    } 
+                  })}
                   className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
                 /> Hide Decorative
               </label>
@@ -125,7 +158,18 @@ export default function ModuleArchitectureSection({
                 <input 
                   type="checkbox" 
                   checked={manifest.ui.ucaDebug?.showCADOverlay || false} 
-                  onChange={(e) => onUpdate({ ui: { ...manifest.ui, ucaDebug: { ...manifest.ui.ucaDebug, enabled: manifest.ui.ucaDebug?.enabled || false, showCADOverlay: e.target.checked } } })}
+                  onChange={(e) => onUpdate({ 
+                    ui: { 
+                      ...manifest.ui, 
+                      ucaDebug: { 
+                        enabled: manifest.ui.ucaDebug?.enabled || false, 
+                        showCADOverlay: e.target.checked,
+                        showLabels: manifest.ui.ucaDebug?.showLabels ?? true,
+                        hideDecorative: manifest.ui.ucaDebug?.hideDecorative ?? false,
+                        selectedId: manifest.ui.ucaDebug?.selectedId
+                      } as UcaDebugConfig
+                    } 
+                  })}
                   className="accent-purple-500 w-2.5 h-2.5 bg-black/50 border-purple-500/30 rounded-sm"
                 /> Show CAD Layout
               </label>
@@ -147,8 +191,15 @@ export default function ModuleArchitectureSection({
                 ...manifest.ui, 
                 layout: { 
                   ...manifest.ui.layout, 
+                  width: manifest.ui.layout?.width ?? 800,
+                  height: manifest.ui.layout?.height ?? 600,
                   containers: manifest.ui.layout?.containers || [],
-                  grid: { ...(manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false }), enabled: !manifest.ui.layout?.grid?.enabled } 
+                  grid: { 
+                    enabled: !manifest.ui.layout?.grid?.enabled,
+                    spacingX: manifest.ui.layout?.grid?.spacingX ?? 24,
+                    spacingY: manifest.ui.layout?.grid?.spacingY ?? 24,
+                    snapMode: manifest.ui.layout?.grid?.snapMode ?? 'center'
+                  } as GridConfig
                 } 
               } 
             })}
@@ -169,8 +220,23 @@ export default function ModuleArchitectureSection({
                   type="number" 
                   value={manifest.ui.layout?.grid?.spacingX || 24}
                   onChange={(e) => {
-                    const grid = manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false };
-                    onUpdate({ ui: { ...manifest.ui, layout: { ...manifest.ui.layout, containers: manifest.ui.layout?.containers || [], grid: { ...grid, spacingX: parseInt(e.target.value) || 1 } } } });
+                    const grid = manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false, snapMode: 'center' };
+                    onUpdate({ 
+                      ui: { 
+                        ...manifest.ui, 
+                        layout: { 
+                          ...manifest.ui.layout, 
+                          width: manifest.ui.layout?.width ?? 800,
+                          height: manifest.ui.layout?.height ?? 600,
+                          containers: manifest.ui.layout?.containers || [], 
+                          grid: { 
+                            ...grid, 
+                            spacingX: parseInt(e.target.value) || 1,
+                            snapMode: grid.snapMode ?? 'center'
+                          } as GridConfig
+                        } 
+                      } 
+                    });
                   }}
                   className="w-8 bg-black/40 border border-emerald-500/20 rounded-sm px-1 text-[8px] outline-none focus:border-emerald-500/50"
                 />
@@ -181,8 +247,23 @@ export default function ModuleArchitectureSection({
                   type="number" 
                   value={manifest.ui.layout?.grid?.spacingY || 24}
                   onChange={(e) => {
-                    const grid = manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false };
-                    onUpdate({ ui: { ...manifest.ui, layout: { ...manifest.ui.layout, containers: manifest.ui.layout?.containers || [], grid: { ...grid, spacingY: parseInt(e.target.value) || 1 } } } });
+                    const grid = manifest.ui.layout?.grid || { spacingX: 24, spacingY: 24, enabled: false, snapMode: 'center' };
+                    onUpdate({ 
+                      ui: { 
+                        ...manifest.ui, 
+                        layout: { 
+                          ...manifest.ui.layout, 
+                          width: manifest.ui.layout?.width ?? 800,
+                          height: manifest.ui.layout?.height ?? 600,
+                          containers: manifest.ui.layout?.containers || [], 
+                          grid: { 
+                            ...grid, 
+                            spacingY: parseInt(e.target.value) || 1,
+                            snapMode: grid.snapMode ?? 'center'
+                          } as GridConfig
+                        } 
+                      } 
+                    });
                   }}
                   className="w-8 bg-black/40 border border-emerald-500/20 rounded-sm px-1 text-[8px] outline-none focus:border-emerald-500/50"
                 />
@@ -208,7 +289,7 @@ export default function ModuleArchitectureSection({
           </button>
         ))}
       </div>
- 
+  
       {/* CONTENT AREA */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
         {activeSubTab === 'tree' && manifest.ui?.useUCA !== false && (
@@ -226,8 +307,8 @@ export default function ModuleArchitectureSection({
             onAdd={addContainer} 
             onUpdate={updateContainer} 
             onRemove={removeContainer} 
-            highlightPath={highlightPath} 
-            setActiveSection={setActiveSection}
+            highlightPath={highlightPath || undefined} 
+            setActiveSection={setActiveSection as (s: string) => void}
           />
         )}
         
@@ -243,7 +324,7 @@ export default function ModuleArchitectureSection({
             manifest={manifest} 
           />
         )}
- 
+  
         {activeSubTab === 'ports' && (
           <EntityListSection 
             items={manifest.ui?.jacks || []} 
@@ -256,7 +337,7 @@ export default function ModuleArchitectureSection({
             manifest={manifest} 
           />
         )}
- 
+  
         {activeSubTab === 'routing' && (
           <ModulationSection 
             manifest={manifest} 
@@ -266,10 +347,10 @@ export default function ModuleArchitectureSection({
             onOpenModGrid={onOpenModGrid} 
           />
         )}
- 
-        {activeSubTab === 'assets' && extraResources && (
+  
+        {activeSubTab === 'assets' && (
           <ResourceSection 
-            resources={extraResources} 
+            resources={extraResources || []} 
             onTriggerUpload={onTriggerUpload || (() => {})} 
             onRemove={onRemoveResource || (() => {})} 
           />

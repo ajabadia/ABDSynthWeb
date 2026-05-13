@@ -1,4 +1,4 @@
-import { OmegaNode } from '../types/manifest';
+import type { OmegaNode } from '../types/manifest';
 import { getNodeSize } from './spatialConstraints';
 
 /**
@@ -46,9 +46,9 @@ export function resolveLayout(node: OmegaNode, providedSize?: { width: number; h
   const childrenSizes = nestedResolvedChildren.map(c => getNodeSize(c));
 
   if (mode === 'stack-v') {
-    totalContentSize = childrenSizes.reduce((acc, s) => acc + s.h, 0) + (Math.max(0, childrenSizes.length - 1) * gap);
+    totalContentSize = childrenSizes.reduce((acc, s) => acc + s.height, 0) + (Math.max(0, childrenSizes.length - 1) * gap);
   } else if (mode === 'stack-h') {
-    totalContentSize = childrenSizes.reduce((acc, s) => acc + s.w, 0) + (Math.max(0, childrenSizes.length - 1) * gap);
+    totalContentSize = childrenSizes.reduce((acc, s) => acc + s.width, 0) + (Math.max(0, childrenSizes.length - 1) * gap);
   }
 
   // 3. Justify & Align Parameters
@@ -66,7 +66,7 @@ export function resolveLayout(node: OmegaNode, providedSize?: { width: number; h
     cursor = containerSize - padding - totalContentSize;
   } else if (justify === 'space-between' && nestedResolvedChildren.length > 1) {
     const containerSize = mode === 'stack-v' ? containerHeight : containerWidth;
-    const totalChildrenSize = childrenSizes.reduce((acc, s) => acc + (mode === 'stack-v' ? s.h : s.w), 0);
+    const totalChildrenSize = childrenSizes.reduce((acc, s) => acc + (mode === 'stack-v' ? s.height : s.width), 0);
     effectiveGap = Math.max(0, (containerSize - 2 * padding - totalChildrenSize) / (nestedResolvedChildren.length - 1));
     cursor = padding;
   }
@@ -74,34 +74,36 @@ export function resolveLayout(node: OmegaNode, providedSize?: { width: number; h
   // 4. Apply Stacking Logic (Era 7.2.3 Declarative)
   const stackedChildren = nestedResolvedChildren.map((child, index) => {
     const size = childrenSizes[index];
+    if (!size) return child; // Hardened null check
+
     let resolvedPos = { x: 0, y: 0 };
-    const resolvedSize = { ...child.layout?.size || { width: size.w, height: size.h } };
+    const resolvedSize = { ...child.layout?.size || { width: size.width, height: size.height } };
     let needsReResolve = false;
 
     if (mode === 'stack-v') {
       let x = padding;
-      if (align === 'center') x = padding + (containerWidth - 2 * padding - size.w) / 2;
-      else if (align === 'end') x = containerWidth - padding - size.w;
+      if (align === 'center') x = padding + (containerWidth - 2 * padding - size.width) / 2;
+      else if (align === 'end') x = containerWidth - padding - size.width;
       else if (align === 'stretch') {
         x = padding;
         resolvedSize.width = Math.max(0, containerWidth - 2 * padding);
-        if (resolvedSize.width !== size.w) needsReResolve = true;
+        if (resolvedSize.width !== size.width) needsReResolve = true;
       }
 
       resolvedPos = { x, y: cursor };
-      cursor += size.h + effectiveGap;
+      cursor += size.height + effectiveGap;
     } else if (mode === 'stack-h') {
       let y = padding;
-      if (align === 'center') y = padding + (containerHeight - 2 * padding - size.h) / 2;
-      else if (align === 'end') y = containerHeight - padding - size.h;
+      if (align === 'center') y = padding + (containerHeight - 2 * padding - size.height) / 2;
+      else if (align === 'end') y = containerHeight - padding - size.height;
       else if (align === 'stretch') {
         y = padding;
         resolvedSize.height = Math.max(0, containerHeight - 2 * padding);
-        if (resolvedSize.height !== size.h) needsReResolve = true;
+        if (resolvedSize.height !== size.height) needsReResolve = true;
       }
 
       resolvedPos = { x: cursor, y };
-      cursor += size.w + effectiveGap;
+      cursor += size.width + effectiveGap;
     }
 
     // Re-resolve if size was forced by parent (Stretch)

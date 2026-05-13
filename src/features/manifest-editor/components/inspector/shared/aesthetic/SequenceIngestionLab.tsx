@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ArrowRight, ArrowDown, MoveUp, MoveDown, Check, AlertCircle, RefreshCw } from 'lucide-react';
 
-import { OmegaStyleNode } from '@/types/manifest';
+import type { OmegaStyleNode } from '@/types/manifest';
 
 interface SequenceIngestionLabProps {
   files: File[];
   onComplete: (stitchedBlob: Blob, metadata: Partial<OmegaStyleNode>) => void;
-  onCancel: () => void;
+  onCancel: (() => void) | undefined;
 }
 
 export default function SequenceIngestionLab({ files, onComplete, onCancel }: SequenceIngestionLabProps) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { OMEGA_Manifest, ManifestEntity } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity } from '@/omega-ui-core/types/manifest';
 
 export const useModuleMetrics = (manifest: OMEGA_Manifest) => {
   return useMemo(() => {

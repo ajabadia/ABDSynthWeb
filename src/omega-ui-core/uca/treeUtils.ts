@@ -1,4 +1,4 @@
-import { OmegaNode, OverridePolicy, CellTemplate } from '../types/manifest';
+import type { OmegaNode, ModuleTemplate, OverridePolicy } from '../types/manifest';
 
 /**
  * reorderChildren
@@ -11,18 +11,28 @@ export function moveChildInTree(root: OmegaNode, parentId: string, nodeId: strin
     if (currentIndex === -1) return root;
 
     const [item] = children.splice(currentIndex, 1);
-    children.splice(targetIndex, 0, item);
+    if (item) {
+      children.splice(targetIndex, 0, item);
+    }
 
     return {
       ...root,
-      children
+      children: children.map(c => ({
+        ...c,
+        style: {
+          color: c.style?.color || undefined,
+          indicatorColor: c.style?.indicatorColor || undefined,
+          rounding: c.style?.rounding || undefined,
+          borderWidth: c.style?.borderWidth || undefined
+        }
+      }))
     };
   }
 
   if (root.children) {
     return {
       ...root,
-      children: root.children.map(c => moveChildInTree(c, parentId, nodeId, targetIndex))
+      children: root.children.map((c: OmegaNode) => moveChildInTree(c, parentId, nodeId, targetIndex))
     };
   }
 
@@ -49,6 +59,7 @@ export function calculateTargetIndex(
   
   for (let i = 0; i < otherSiblings.length; i++) {
     const sibling = otherSiblings[i];
+    if (!sibling) continue;
     const pos = (sibling.layout?.pos as unknown as Record<string, number> | undefined)?.[axis] || 0;
     const size = (sibling.layout?.size as unknown as Record<string, number> | undefined)?.[sizeAxis] || 48;
     const midpoint = pos + size / 2;
@@ -104,25 +115,25 @@ function setPathValue(obj: Record<string, unknown>, path: string, value: unknown
   let current = obj;
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
+    if (part === undefined) continue;
     if (!current[part] || typeof current[part] !== 'object') {
       current[part] = {};
     }
     current = current[part] as Record<string, unknown>;
   }
-  current[parts[parts.length - 1]] = value;
+  const lastPart = parts[parts.length - 1];
+  if (lastPart !== undefined) {
+    current[lastPart] = value;
+  }
 }
 
-/**
- * applySlotMappings
- * Recursively replaces logical slot IDs with concrete bindings.
- */
 export function applySlotMappings(node: OmegaNode, mappings: Record<string, string>) {
   if (node.bind && mappings[node.bind]) {
-    node.bind = mappings[node.bind];
+    node.bind = mappings[node.bind] || undefined;
   }
   
   if (node.children) {
-    node.children.forEach(child => applySlotMappings(child, mappings));
+    node.children.forEach((child: OmegaNode) => applySlotMappings(child, mappings));
   }
 }
 
@@ -130,12 +141,12 @@ export function applySlotMappings(node: OmegaNode, mappings: Record<string, stri
  * congealSnapshot
  * Creates a "frozen" version of a template root with overrides applied and slots resolved.
  */
-export function congealSnapshot(node: OmegaNode, template: CellTemplate): OmegaNode {
+export function congealSnapshot(node: OmegaNode, template: ModuleTemplate): OmegaNode {
   // 1. Deep clone the blueprint root
-  const blueprint = JSON.parse(JSON.stringify(template.baseNode || template.root)) as OmegaNode;
+  const blueprint = JSON.parse(JSON.stringify(template.baseNode)) as OmegaNode;
 
   // 2. Apply Genetic Overrides
-  const congealed = mergeWithOverrides(blueprint as Record<string, unknown>, node.overrides || {}, template.policy || []) as OmegaNode;
+  const congealed = mergeWithOverrides(blueprint as unknown as Record<string, unknown>, node.overrides || {}, template.policy || []) as OmegaNode;
   
   // 3. Resolve Slot Bindings permanently
   if (node.slotMappings) {
@@ -146,4 +157,70 @@ export function congealSnapshot(node: OmegaNode, template: CellTemplate): OmegaN
   congealed.id = node.id;
 
   return congealed;
+}
+/**
+ * findNodeInTree
+ * Performs a deep DFS search in the UCA tree.
+ */
+export function findNodeInTree(root: OmegaNode, id: string): OmegaNode | undefined {
+  if (root.id === id) return root;
+
+  if (root.children) {
+    for (const child of root.children) {
+      const found = findNodeInTree(child, id);
+      if (found) return found;
+    }
+  }
+  
+  return undefined;
+}
+
+/**
+ * findParentInTree
+ * Finds the parent node of a target node ID.
+ */
+export function findParentInTree(root: OmegaNode, targetId: string): OmegaNode | undefined {
+  if (!root.children) return undefined;
+  
+  if (root.children.some((c: OmegaNode) => c.id === targetId)) return root;
+  
+  for (const child of root.children) {
+    const found = findParentInTree(child, targetId);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
+ * calculateWorldPosition
+ * Recursively sums local offsets to find the absolute rack position.
+ */
+export function calculateWorldPosition(root: OmegaNode, targetId: string, currentOffset: { x: number, y: number } = { x: 0, y: 0 }): { x: number, y: number } | undefined {
+  const absoluteX = currentOffset.x + (root.layout?.pos?.x || 0);
+  const absoluteY = currentOffset.y + (root.layout?.pos?.y || 0);
+
+  if (root.id === targetId) {
+    return { x: absoluteX, y: absoluteY };
+  }
+
+  if (root.children) {
+    for (const child of root.children) {
+      const found = calculateWorldPosition(child, targetId, { x: absoluteX, y: absoluteY });
+      if (found) return found;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * getAllIdsInTree
+ * Helper to collect all IDs for collision detection.
+ */
+export function getAllIdsInTree(root: OmegaNode): string[] {
+  const ids = [root.id];
+  if (root.children) {
+    root.children.forEach((c: OmegaNode) => ids.push(...getAllIdsInTree(c)));
+  }
+  return ids;
 }

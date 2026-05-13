@@ -2,7 +2,7 @@
  * OMEGA Contract Service (v7.2.3)
  * Handles generation of technical contracts (enums, schema IDs) from manifests.
  */
-import { OMEGA_Manifest } from '../types/manifest';
+import type { OMEGA_Manifest } from '../types/manifest';
 
 export class ContractService {
   /**

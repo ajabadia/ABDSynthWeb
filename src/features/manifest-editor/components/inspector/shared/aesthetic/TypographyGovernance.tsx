@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
-import { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
+import type { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
 
 interface TypographyGovernanceProps {
   values: Partial<OmegaStyleNode>;

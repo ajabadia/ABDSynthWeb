@@ -3,14 +3,14 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, GitCompare, History } from 'lucide-react';
-import { ManifestDiffResult, DiffEntry } from '../../types/diff';
+import type { ManifestDiffResult, DiffEntry } from '../../types/diff';
 import { ManifestDiffViewer } from '../inspector/ManifestDiffViewer';
 
 interface ManifestDiffModalProps {
   isOpen: boolean;
   onClose: () => void;
   diff: ManifestDiffResult | null;
-  onMergeEntries?: (entries: DiffEntry[]) => void;
+  onMergeEntries?: ((entries: DiffEntry[]) => void) | undefined;
 }
 
 /**

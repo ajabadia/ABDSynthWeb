@@ -1,9 +1,8 @@
-'use client';
-
-import { useCallback, Dispatch, SetStateAction } from 'react';
+import { useCallback } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import yaml from 'js-yaml';
-import { OMEGA_Manifest, OmegaNode, CellTemplate } from '@/omega-ui-core/types/manifest';
-import { ValidationIssue } from '@/types/validation';
+import type { OMEGA_Manifest, OmegaNode, CellTemplate } from '@/omega-ui-core/types/manifest';
+import type { ValidationIssue } from '@/types/validation';
 import { purgeUnusedStyles, getUsedResources } from '@/features/manifest-editor/utils/governanceUtils';
 import { congealSnapshot } from '@/omega-ui-core/uca/ucaBridge';
 
@@ -38,7 +37,7 @@ export const useBundleTransfer = (
     const internalProcess = (node: OmegaNode) => {
       if (node.cellRef && templates[node.cellRef]) {
         addLog(`[SYSTEM] Congealing snapshot for node: ${node.id} (Template: ${node.cellRef})`);
-        node.snapshot = congealSnapshot(node, templates[node.cellRef]);
+        node.snapshot = congealSnapshot(node, templates[node.cellRef] as CellTemplate);
       }
       
       if (node.children) {
@@ -84,8 +83,17 @@ export const useBundleTransfer = (
         // Auto-Register in manifest for immediate selector visibility
         setManifest((prev: OMEGA_Manifest) => ({
           ...prev,
-          resources: {
+          size: { width: 48, height: 48 },
+          presentation: {
             ...prev.resources,
+            metadata: {
+              name: prev.metadata?.name || 'Imported Module',
+              version: prev.metadata?.version || '0.1.0',
+              family: prev.metadata?.family || 'utility',
+              author: prev.metadata?.author,
+              tags: prev.metadata?.tags || [],
+              rack: prev.metadata?.rack
+            },
             assets: [
               ...(prev.resources?.assets?.filter((a: { id: string }) => a.id !== assetId) || []),
               { 
@@ -133,7 +141,7 @@ export const useBundleTransfer = (
       
       // [Phase 5.1] Automated Portability Audit: Congeal Snapshots
       if (asepticManifest.ui?.tree) {
-        processSnapshots(asepticManifest.ui.tree, asepticManifest.ui.cellLibrary || {});
+        processSnapshots(asepticManifest.ui.tree, (asepticManifest.moduleTemplates as Record<string, CellTemplate>) || {});
       }
 
       const yamlContent = yaml.dump(asepticManifest, { indent: 2, lineWidth: -1 });

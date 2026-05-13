@@ -3,12 +3,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { ManifestEntity } from '@/types/manifest';
+import type { OmegaNode } from '@/types/manifest';
 
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 
 interface CellPreviewProps {
-  item: ManifestEntity;
+  item: OmegaNode;
   skin?: string;
   resolveAsset?: (id: string | undefined) => string | undefined;
 }

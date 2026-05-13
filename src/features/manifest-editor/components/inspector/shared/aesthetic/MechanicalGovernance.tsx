@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CircleDot, Sun, Layers, Shield, Square } from 'lucide-react';
-import { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
+import type { OMEGA_Manifest, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import SmartColorPicker from '../SmartColorPicker';
 
 interface MechanicalGovernanceProps {

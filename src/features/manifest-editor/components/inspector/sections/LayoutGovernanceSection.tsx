@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Layout, ArrowDown, ArrowRight, MousePointer2 } from 'lucide-react';
-import { OmegaNode, LayoutMode } from '@/types/manifest';
+import type { OmegaNode, LayoutMode } from '@/types/manifest';
 import InspectorCollapsible from '../shared/InspectorCollapsible';
 
 interface LayoutGovernanceSectionProps {

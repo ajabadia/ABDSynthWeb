@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { OMEGA_Manifest, ManifestEntity, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, OmegaStyleNode, StyleVariant } from '@/omega-ui-core/types/manifest';
 import { DESIGN_TOKENS } from '../constants/design-tokens';
 
 export type DesignTokenOverrides = {
@@ -83,7 +83,7 @@ export function useDesignTokens(manifest: OMEGA_Manifest, entityOrOverrides?: Ma
   // Font resolver
   const resolveFont = useCallback((fontIdOrCategory: string) => {
     const typography = ui.typography || {};
-    const definition = typography.definitions?.find(d => d.id === fontIdOrCategory);
+    const definition = typography.definitions?.find((d: { id: string; family: string }) => d.id === fontIdOrCategory);
     if (definition?.family) return definition.family;
     return (typography as Record<string, unknown>).defaultFont as string || 'Inter';
   }, [ui.typography]);
@@ -94,7 +94,7 @@ export function useDesignTokens(manifest: OMEGA_Manifest, entityOrOverrides?: Ma
     const lookupKey = entity.presentation?.component || entity.type || 'container';
     const variant = entity.presentation?.variant || 'default';
     const libStyles = ui.styles?.[lookupKey] || [];
-    const found = libStyles.find(s => s.id === variant);
+    const found = libStyles.find((s: StyleVariant) => s.id === variant);
     if (!found) return null;
     return { ...found.aesthetics, aesthetics: found.aesthetics };
   }, [entity, ui.styles]);

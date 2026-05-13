@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ManifestEntity, Attachment, AttachmentType } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, Attachment, AttachmentType } from '@/omega-ui-core/types/manifest';
 
 export const useAttachmentsLogic = (item: ManifestEntity, onUpdate: (updates: Partial<ManifestEntity>) => void) => {
   const [expandedIdx, setExpandedIdx] = useState<number | string | null>('core');
@@ -11,6 +11,8 @@ export const useAttachmentsLogic = (item: ManifestEntity, onUpdate: (updates: Pa
     id: 'core',
     isCore: true,
     type: (item.presentation?.component || (item.role === 'mod_target' ? 'port' : 'knob')) as AttachmentType,
+    label: item.label || 'CORE',
+    pos: item.pos || { x: 0, y: 0 },
     position: 'center',
     variant: item.presentation?.variant || 'B_cyan',
     bind: item.bind,
@@ -22,25 +24,27 @@ export const useAttachmentsLogic = (item: ManifestEntity, onUpdate: (updates: Pa
     const newAtt: Attachment = { 
       id: `att_${Math.random().toString(36).substring(2, 9)}`,
       type: 'label', 
+      label: 'NEW',
+      pos: { x: 0, y: 0 },
       position: 'bottom', 
       offsetY: 0, 
       offsetX: 0, 
       variant: 'B_cyan' 
     };
     const nextAtts = [...attachments, newAtt];
-    onUpdate({ presentation: { ...item.presentation, attachments: nextAtts } });
+    onUpdate({ presentation: { ...item.presentation!, attachments: nextAtts } });
     setExpandedIdx(nextAtts.length - 1);
   };
 
   const removeAttachment = (idx: number) => {
-    onUpdate({ presentation: { ...item.presentation, attachments: attachments.filter((_, i) => i !== idx) } });
+    onUpdate({ presentation: { ...item.presentation!, attachments: attachments.filter((_, i) => i !== idx) } });
     if (expandedIdx === idx) setExpandedIdx(null);
   };
 
   const updateAttachment = (idx: number | string, updates: Partial<Attachment>) => {
     if (idx === 'core') {
       const rootUpdates: Partial<ManifestEntity> = {};
-      const presUpdates = { ...item.presentation };
+      const presUpdates = { ...item.presentation! };
 
       if (updates.variant !== undefined) presUpdates.variant = updates.variant;
       if (updates.type !== undefined) presUpdates.component = updates.type;
@@ -52,7 +56,7 @@ export const useAttachmentsLogic = (item: ManifestEntity, onUpdate: (updates: Pa
     } else {
       const newAtts = [...attachments];
       newAtts[idx as number] = { ...newAtts[idx as number], ...updates };
-      onUpdate({ presentation: { ...item.presentation, attachments: newAtts } });
+      onUpdate({ presentation: { ...item.presentation!, attachments: newAtts } });
     }
   };
 

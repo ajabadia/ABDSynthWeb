@@ -1,4 +1,4 @@
-import { WorkbenchTab } from "../types/workbench";
+import type { WorkbenchTab } from "../types/workbench";
 
 export const DEFAULT_TABS: WorkbenchTab[] = [
   { id: "tab-orbital", type: "orbital", title: "Orbital", persistent: true, closable: false, payload: { documentId: 'primary' } },

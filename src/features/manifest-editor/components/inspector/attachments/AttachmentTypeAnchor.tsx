@@ -3,7 +3,7 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
 
-import { Attachment, AttachmentType } from '@/types/manifest';
+import type { Attachment, AttachmentType } from '@/types/manifest';
 import { OMEGA_ELEMENT_CATALOG, getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
 
 interface AttachmentTypeAnchorProps {

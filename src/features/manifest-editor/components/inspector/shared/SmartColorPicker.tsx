@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Palette, ChevronDown, ChevronUp } from 'lucide-react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { ColorResolver } from '@/omega-ui-core/utils/ColorResolver';
 import { useRackTokens } from '@/features/manifest-editor/hooks/useRackTokens';
 

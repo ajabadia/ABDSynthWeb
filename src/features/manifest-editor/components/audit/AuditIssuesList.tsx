@@ -5,7 +5,7 @@ import {
   FileText, CheckCircle2 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { AuditResult } from '@/services/auditService';
+import type { AuditResult, AuditIssue } from '@/features/manifest-editor/types/diagnostics';
 
 // Modular Sub-components
 import InspectionCard from './InspectionCard';
@@ -58,8 +58,8 @@ export default function AuditIssuesList({ audit, onNavigate, onClose }: AuditIss
           </div>
         ) : (
           <div className="space-y-12">
-            {categories.map(cat => {
-              const catIssues = audit.issues.filter(i => cat.keywords.includes(i.keyword));
+            {categories.map((cat: { label: string; key: string; keywords: string[] }) => {
+              const catIssues = audit.issues.filter((i: AuditIssue) => i.code && cat.keywords.some(k => i.code?.includes(k)));
               if (catIssues.length === 0) return null;
 
               return (
@@ -85,7 +85,7 @@ export default function AuditIssuesList({ audit, onNavigate, onClose }: AuditIss
 
             {/* UNKNOWN OR OTHER ISSUES */}
             {(() => {
-              const otherIssues = audit.issues.filter(i => !categories.some(c => c.keywords.includes(i.keyword)));
+              const otherIssues = audit.issues.filter((i: AuditIssue) => !categories.some(c => i.code && c.keywords.some(k => i.code?.includes(k))));
               if (otherIssues.length === 0) return null;
               return (
                 <div className="space-y-4 opacity-60">

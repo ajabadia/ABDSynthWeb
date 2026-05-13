@@ -3,21 +3,21 @@
 import React from 'react';
 import { ToggleLeft, Palette } from 'lucide-react';
 
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface SwitchPropertiesProps {
   item: ManifestEntity;
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function SwitchProperties({ item, manifest, onUpdate, setActiveSection }: SwitchPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const currentVariant = pres.variant || 'toggle_grey';
   const switchStyles = manifest.ui.styles?.[pres.component || 'switch'] || [];
-  const currentStyle = switchStyles.find(s => s.id === currentVariant) || { id: currentVariant, label: 'Standard Switch' };
+  const currentStyle = switchStyles.find(s => s.id === currentVariant) || { id: currentVariant as string, label: 'Standard Switch' };
 
   const parseVariant = (v: string) => {
     const parts = v.split('_');

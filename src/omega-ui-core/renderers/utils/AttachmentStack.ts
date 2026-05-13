@@ -11,8 +11,8 @@ export interface StackOptions {
   runtimeValue: number;
   steps: number;
   inherited?: { font?: string | undefined; size?: number | undefined; color?: string | undefined } | undefined;
-  manifest?: OMEGA_Manifest;
-  resolveAsset?: (id: string | undefined) => string | undefined;
+  manifest?: OMEGA_Manifest | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
 }
  
 export function renderAttachmentStackHTML(
@@ -42,7 +42,7 @@ export function renderAttachmentStackHTML(
       },
       inherited,
       manifest: options.manifest,
-      resolveAsset
+      resolveAsset: resolveAsset || undefined
     });
  
     // Apply manual offsets from manifest if present (1.5x scaling)

@@ -2,30 +2,30 @@
  
 import React from 'react';
 import { Box } from 'lucide-react';
-import { ManifestEntity } from '@/types/manifest';
-import { BindingField } from '../logic/BindingField';
-import { RoleSelector } from '../logic/RoleSelector';
-import { ProtocolFields } from '../logic/ProtocolFields';
-import InspectorCollapsible from '../shared/InspectorCollapsible';
+import type { OmegaNode } from '@/omega-ui-core/types/manifest';
+import { BindingField } from '@/features/manifest-editor/components/inspector/logic/BindingField';
+import { RoleSelector } from '@/features/manifest-editor/components/inspector/logic/RoleSelector';
+import { ProtocolFields } from '@/features/manifest-editor/components/inspector/logic/ProtocolFields';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
  
 import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
  
 interface LogicSectionProps {
-  item: ManifestEntity;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
-  availableBinds?: string[];
-  onHelp?: (sectionId?: string) => void;
-  highlightPath?: string | null;
+  item: OmegaNode;
+  onUpdate: (updates: Partial<OmegaNode>) => void;
+  availableBinds?: string[] | undefined;
+  onHelp?: ((sectionId: string) => void) | undefined;
+  highlightPath?: (string | null) | undefined;
 }
  
 const EXTENDED_ROLES = ['control', 'input', 'output', 'telemetry', 'expert', 'stream', 'mod_source', 'mod_target'];
  
 export default function LogicSection({ item, onUpdate, availableBinds = [], onHelp, highlightPath }: LogicSectionProps) {
-  const currentType = item.presentation?.component || 'knob';
-  const isHighlighted = (key: string) => highlightPath?.includes(key);
+  const currentType = item.cellRef || item.kind || 'knob';
+  const isHighlighted = (key: string) => !!highlightPath?.includes(key);
  
   const updateType = (type: string) => {
-    onUpdate({ presentation: { ...item.presentation, component: type } });
+    onUpdate({ cellRef: type });
   };
  
   return (

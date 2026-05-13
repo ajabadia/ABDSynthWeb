@@ -1,4 +1,4 @@
-import { Instrument } from "./types";
+import type { Instrument } from "./types";
 
 export const junio601: Instrument = {
   id: "abd-junio-601",

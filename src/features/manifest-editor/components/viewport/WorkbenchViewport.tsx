@@ -3,17 +3,17 @@ import NodeCanvas from './NodeCanvas';
 import VirtualRack from './VirtualRack';
 import SourceViewer from './SourceViewer';
 import ViewportControls from './ViewportControls';
-import { OMEGA_Manifest, ManifestEntity, LayoutContainer } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
-import { AuditResult } from '@/services/auditService';
+import type { OMEGA_Manifest, ManifestEntity, LayoutContainer, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
+import type { AuditResult } from '@/services/auditService';
 
 import { HistoryPanel } from '../inspector/HistoryPanel';
-import { HistoryEntry } from '../../hooks/useDocumentOrchestrator';
+import type { HistoryEntry } from '../../hooks/useDocumentOrchestrator';
 
 interface WorkbenchViewportProps {
   viewMode: 'orbital' | 'rack' | 'source' | 'history';
   manifest: OMEGA_Manifest;
-  contract: OmegaContract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
   updateItem: (id: string, updates: Partial<ManifestEntity>) => void;
@@ -104,7 +104,8 @@ export function WorkbenchViewport({
           <ViewWrapper id="orbital" zoom={zoom} pan={pan}>
             <NodeCanvas 
               manifest={manifest} 
-              contract={contract} 
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              contract={contract as any} 
               selectedItemId={selectedItemId} 
               onSelectItem={onSelectItem} 
               audit={auditResult} 

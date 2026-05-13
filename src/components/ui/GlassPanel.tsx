@@ -10,7 +10,7 @@ interface GlassPanelProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
 }
 
 const GlassPanel = React.forwardRef<HTMLDivElement, GlassPanelProps>(
-  ({ className, hoverEffect = false, accent = false, children, ...props }, ref) => {
+  ({ className, hoverEffect = false, accent = false, children, style, ...props }, ref) => {
     return (
       <motion.div
         ref={ref}
@@ -20,6 +20,8 @@ const GlassPanel = React.forwardRef<HTMLDivElement, GlassPanelProps>(
           accent && "border-l-2 border-l-primary",
           className
         )}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        style={style as any}
         {...props}
       >
         {children}

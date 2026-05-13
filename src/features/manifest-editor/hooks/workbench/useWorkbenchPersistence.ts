@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from "react";
-import { WorkbenchState, WorkbenchAction, WorkbenchTab, WorkbenchPane } from "../../types/workbench";
+import type { WorkbenchState, WorkbenchAction, WorkbenchTab, WorkbenchPane } from "../../types/workbench";
 import { STORAGE_KEYS } from "../../constants/storage";
 import { DEFAULT_TABS } from "../../constants/workbench";
 import { createInitialState } from "./workbenchReducer";

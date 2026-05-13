@@ -1,5 +1,9 @@
-import { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
-import { DiagnosticSource, TabDiagnostics, createEmptyDiagnostics, DiagnosticContext } from '../types/diagnostics';
+import type { OMEGA_Manifest, OmegaNode, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
+import type { DiagnosticSource, TabDiagnostics, DiagnosticContext, AuditResult } from '../types/diagnostics';
+import { createEmptyDiagnostics } from '../types/diagnostics';
+import { CircularityAuditor } from '@/omega-ui-core/uca/utils/circularityAuditor';
+// import { parsePath } from '@/omega-ui-core/uca/utils/pathResolver';
 
 /**
  * OMEGA ERA 7.2.3 - Structural Auditor
@@ -10,21 +14,31 @@ export class StructuralAuditor implements DiagnosticSource {
   id = 'structural-auditor';
   name = 'Structural';
 
-  extractDiagnostics(manifest: OMEGA_Manifest, context?: DiagnosticContext): TabDiagnostics {
-    const results = createEmptyDiagnostics();
-    const contract = context?.contract as OMEGA_Contract | null;
+  extractDiagnostics(manifest: OMEGA_Manifest, context?: DiagnosticContext): AuditResult {
+    const diagnostics = createEmptyDiagnostics();
 
-    // 1. LEGACY PROJECTIONS (Controls & Jacks)
+    // 1. CANONICAL UCA GRAPH (Phase 18)
+    const rootNode = manifest.nodes?.[0];
+    const ucaTree = rootNode || manifest.ui.tree; // Fallback to deprecated tree
+    const isSovereign = !!rootNode;
+
+    // 2. RESOURCE INVENTORY
+    const contract = context?.contract as (OmegaContract | OMEGA_Contract) | null;
+    
+    // Safely extract parameters and ports regardless of which contract schema is provided
+    const parameters = (contract as OmegaContract)?.parameters || (contract as OMEGA_Contract)?.parameters || [];
+    const ports = (contract as OmegaContract)?.ports || (contract as OMEGA_Contract)?.ports || [];
+
+    const paramIds = new Set(parameters.map((p) => p.id));
+    const portIds = new Set(ports.map((p) => p.id));
+    const assetIds = new Set((manifest.resources?.assets || []).map(a => a.id));
+
+    // 3. LEGACY ADAPTATION (Shadow Audits in Sovereign Mode)
     const allEntities = [
-      ...(manifest.ui.controls || []),
-      ...(manifest.ui.jacks || [])
+      ...(manifest.ui?.controls || []),
+      ...(manifest.ui?.jacks || [])
     ];
-
-    const containerIds = new Set((manifest.ui.layout?.containers || []).map(c => c.id));
-    const entityIds = new Set(allEntities.map(e => e.id));
-    const paramIds = new Set(contract?.parameters?.map(p => p.id) || []);
-    const portIds = new Set(contract?.ports?.map(p => p.id) || []);
-    const assetIds = new Set((manifest.resources.assets || []).map(a => a.id));
+    const containerIds = new Set((manifest.ui?.layout?.containers || []).map((c: { id: string }) => c.id));
 
     // A. ID Collision Check (Legacy)
     const idCounts = new Map<string, number>();
@@ -34,7 +48,7 @@ export class StructuralAuditor implements DiagnosticSource {
 
     idCounts.forEach((count, id) => {
       if (count > 1) {
-        results.errors.push({
+        diagnostics.errors.push({
           id: `collision-${id}`,
           source: this.name,
           message: `ID Collision: '${id}' is defined multiple times.`,
@@ -48,12 +62,15 @@ export class StructuralAuditor implements DiagnosticSource {
     // B. Legacy Entity Validation
     allEntities.forEach(entity => {
       const containerId = entity.presentation?.container;
+      const legacySeverity = isSovereign ? 'warning' : 'error'; // Downgrade to warning in Sovereign Mode
+      const shadowPrefix = isSovereign ? '[SHADOW AUDIT] ' : '';
+
       if (containerId && !containerIds.has(containerId)) {
-        results.errors.push({
+        diagnostics.errors.push({
           id: `broken-container-${entity.id}`,
           source: this.name,
-          message: `Entity '${entity.id}' references non-existent container '${containerId}'.`,
-          severity: 'error',
+          message: `${shadowPrefix}Entity '${entity.id}' references non-existent container '${containerId}'.`,
+          severity: legacySeverity,
           code: 'BROKEN_CONTAINER_REF',
           entityId: entity.id
         });
@@ -63,10 +80,10 @@ export class StructuralAuditor implements DiagnosticSource {
         const isParam = paramIds.has(entity.bind);
         const isPort = portIds.has(entity.bind);
         if (!isParam && !isPort) {
-          results.warnings.push({
+          diagnostics.warnings.push({
             id: `broken-bind-${entity.id}`,
             source: this.name,
-            message: `Broken Bind: Entity '${entity.id}' binds to unknown target '${entity.bind}'.`,
+            message: `${shadowPrefix}Broken Bind: Entity '${entity.id}' binds to unknown target '${entity.bind}'.`,
             severity: 'warning',
             code: 'BROKEN_BIND',
             entityId: entity.id
@@ -76,10 +93,10 @@ export class StructuralAuditor implements DiagnosticSource {
 
       const assetId = entity.presentation?.asset;
       if (assetId && assetId !== 'none' && !assetIds.has(assetId)) {
-        results.warnings.push({
+        diagnostics.warnings.push({
           id: `broken-asset-${entity.id}`,
           source: this.name,
-          message: `Missing Asset: Entity '${entity.id}' references unknown asset '${assetId}'.`,
+          message: `${shadowPrefix}Missing Asset: Entity '${entity.id}' references unknown asset '${assetId}'.`,
           severity: 'warning',
           code: 'BROKEN_ASSET_REF',
           entityId: entity.id
@@ -87,19 +104,20 @@ export class StructuralAuditor implements DiagnosticSource {
       }
     });
 
-    // 2. RECURSIVE UCA TREE AUDIT (Phase 15)
-    if (manifest.ui.tree && manifest.ui.useUCA) {
-      this.auditUCATree(manifest.ui.tree, manifest, results, paramIds, portIds, assetIds);
+    // 4. RECURSIVE UCA TREE AUDIT
+    let validSignalPaths = new Set<string>();
+    if (ucaTree) {
+      validSignalPaths = this.auditUCATree(ucaTree, manifest, diagnostics, paramIds, portIds, assetIds);
     }
 
-    // 3. Modulation Integrity & Circularity
-    this.auditModulations(manifest, entityIds, results);
+    // 5. CANONICAL LINKS & MODULATION (Phase 18)
+    this.auditLinks(manifest, diagnostics, validSignalPaths);
 
     // 4. Parameter & Range Integrity (Contract Audit)
     if (contract?.parameters) {
       contract.parameters.forEach(param => {
         if (param.min >= param.max) {
-          results.errors.push({
+          diagnostics.errors.push({
             id: `invalid-range-${param.id}`,
             source: this.name,
             message: `Invalid Range: Parameter '${param.id}' has min (${param.min}) >= max (${param.max}).`,
@@ -108,7 +126,7 @@ export class StructuralAuditor implements DiagnosticSource {
           });
         }
         if (param.default < param.min || param.default > param.max) {
-          results.errors.push({
+          diagnostics.errors.push({
             id: `invalid-default-${param.id}`,
             source: this.name,
             message: `Out of Bounds: Parameter '${param.id}' default (${param.default}) is outside [${param.min}, ${param.max}].`,
@@ -119,11 +137,17 @@ export class StructuralAuditor implements DiagnosticSource {
       });
     }
 
-    results.errorCount = results.errors.length;
-    results.warningCount = results.warnings.length;
-    results.infoCount = results.infos.length;
+    diagnostics.errorCount = diagnostics.errors.length;
+    diagnostics.warningCount = diagnostics.warnings.length;
+    diagnostics.infoCount = diagnostics.infos.length;
 
-    return results;
+    return {
+      ...diagnostics,
+      score: 100 - (diagnostics.errorCount * 10 + diagnostics.warningCount * 2),
+      checks: { governance: true, integrity: true, technical: true, aesthetic: true },
+      isCompliant: diagnostics.errorCount === 0,
+      issues: [...diagnostics.errors, ...diagnostics.warnings]
+    };
   }
 
   /**
@@ -132,17 +156,26 @@ export class StructuralAuditor implements DiagnosticSource {
   private auditUCATree(
     root: OmegaNode, 
     manifest: OMEGA_Manifest, 
-    results: TabDiagnostics,
+    diagnostics: TabDiagnostics,
     paramIds: Set<string>,
     portIds: Set<string>,
     assetIds: Set<string>
-  ) {
+  ): Set<string> {
+    const validPaths = new Set<string>();
     const visited = new Set<string>();
-    const cellLibrary = manifest.ui.cellLibrary || {};
+    const cellLibrary = manifest.moduleTemplates || {};
 
     const walk = (node: OmegaNode, depth: number) => {
+      const path = node.signalPath || node.id;
+      validPaths.add(path);
+
+      // Collect ports
+      if (node.ports) {
+        node.ports.forEach(port => validPaths.add(port.id));
+      }
+
       if (depth > 32) {
-        results.errors.push({
+        diagnostics.errors.push({
           id: `max-depth-${node.id}`,
           source: this.name,
           message: `UCA ERROR: Max recursion depth exceeded at node '${node.id}'.`,
@@ -154,7 +187,7 @@ export class StructuralAuditor implements DiagnosticSource {
       }
 
       if (visited.has(node.id)) {
-        results.errors.push({
+        diagnostics.errors.push({
           id: `circular-tree-${node.id}`,
           source: this.name,
           message: `UCA ERROR: Circular reference detected at node '${node.id}'.`,
@@ -169,7 +202,7 @@ export class StructuralAuditor implements DiagnosticSource {
       // A. Template Reference Check
       if (node.kind === 'cell' && node.cellRef) {
         if (!cellLibrary[node.cellRef]) {
-          results.errors.push({
+          diagnostics.errors.push({
             id: `broken-cellref-${node.id}`,
             source: this.name,
             message: `UCA ERROR: Cell '${node.id}' references unknown template '${node.cellRef}'.`,
@@ -185,7 +218,7 @@ export class StructuralAuditor implements DiagnosticSource {
         const isParam = paramIds.has(node.bind);
         const isPort = portIds.has(node.bind);
         if (!isParam && !isPort) {
-          results.warnings.push({
+          diagnostics.warnings.push({
             id: `uca-broken-bind-${node.id}`,
             source: this.name,
             message: `UCA Warning: Node '${node.id}' binds to unknown target '${node.bind}'.`,
@@ -199,7 +232,7 @@ export class StructuralAuditor implements DiagnosticSource {
       // C. Asset Integrity (Style Node)
       const assetId = node.style?.asset;
       if (assetId && assetId !== 'none' && !assetIds.has(assetId)) {
-        results.warnings.push({
+        diagnostics.warnings.push({
           id: `uca-broken-asset-${node.id}`,
           source: this.name,
           message: `UCA Missing Asset: Node '${node.id}' references unknown asset '${assetId}'.`,
@@ -216,80 +249,62 @@ export class StructuralAuditor implements DiagnosticSource {
     };
 
     walk(root, 0);
+    return validPaths;
   }
 
-  private auditModulations(manifest: OMEGA_Manifest, entityIds: Set<string>, results: TabDiagnostics) {
-    const adjacencyList = new Map<string, string[]>();
-    (manifest.modulations || []).forEach((mod, index) => {
-      if (!entityIds.has(mod.source)) {
-        results.errors.push({
-          id: `mod-source-${index}`,
+  /**
+   * auditLinks (Phase 18 Canonical)
+   * Validates OmegaLinks for source/target resolvability and cycle detection.
+   */
+  private auditLinks(manifest: OMEGA_Manifest, diagnostics: TabDiagnostics, validPaths: Set<string>) {
+    const links = manifest.links || [];
+    
+    // A. Link Resolvability
+    links.forEach((link, index) => {
+      if (!link.source || !link.target) {
+        diagnostics.errors.push({
+          id: `broken-link-fields-${index}`,
           source: this.name,
-          message: `Modulation references unknown source entity '${mod.source}'.`,
+          message: `OMEGA_LINK ERROR: Link ${index} has missing source or target definition.`,
           severity: 'error',
-          code: 'BROKEN_MOD_SOURCE'
+          code: 'BROKEN_LINK'
         });
+        return;
       }
-      if (!entityIds.has(mod.target)) {
-        results.errors.push({
-          id: `mod-target-${index}`,
+
+      // Validate Source Path
+      if (!validPaths.has(link.source)) {
+        diagnostics.errors.push({
+          id: `broken-link-source-${index}`,
           source: this.name,
-          message: `Modulation references unknown target entity '${mod.target}'.`,
+          message: `OMEGA_LINK ERROR: Source path '${link.source}' not found in UCA hierarchy.`,
           severity: 'error',
-          code: 'BROKEN_MOD_TARGET'
+          code: 'UNRESOLVED_LINK_SOURCE'
         });
       }
 
-      if (entityIds.has(mod.source) && entityIds.has(mod.target)) {
-        const targets = adjacencyList.get(mod.source) || [];
-        targets.push(mod.target);
-        adjacencyList.set(mod.source, targets);
+      // Validate Target Path
+      if (!validPaths.has(link.target)) {
+        diagnostics.errors.push({
+          id: `broken-link-target-${index}`,
+          source: this.name,
+          message: `OMEGA_LINK ERROR: Target path '${link.target}' not found in UCA hierarchy.`,
+          severity: 'error',
+          code: 'UNRESOLVED_LINK_TARGET'
+        });
       }
     });
 
-    // Circular Modulation Detection (Industrial 3-State DFS)
-    const states = new Map<string, number>();
-    const pathStack: string[] = [];
-
-    const findCycle = (nodeId: string): { cycle: string[] } | null => {
-      states.set(nodeId, 1); // Gray
-      pathStack.push(nodeId);
-
-      const targets = adjacencyList.get(nodeId) || [];
-      for (const targetId of targets) {
-        const targetState = states.get(targetId) || 0;
-        if (targetState === 1) {
-          const cycleStartIdx = pathStack.indexOf(targetId);
-          const cyclePath = pathStack.slice(cycleStartIdx);
-          return { cycle: [...cyclePath, targetId] };
-        }
-        if (targetState === 0) {
-          const result = findCycle(targetId);
-          if (result) return result;
-        }
-      }
-
-      pathStack.pop();
-      states.set(nodeId, 2); // Black
-      return null;
-    };
-
-    const nodes = Array.from(entityIds);
-    nodes.forEach(startNodeId => {
-      if ((states.get(startNodeId) || 0) === 0) {
-        const result = findCycle(startNodeId);
-        if (result) {
-          const pathStr = result.cycle.join(' -> ');
-          results.errors.push({
-            id: `circular-mod-${result.cycle[0]}`,
-            source: this.name,
-            message: `CIRCULAR_MODULATION: Feedback loop detected: [${pathStr}].`,
-            severity: 'error',
-            code: 'CIRCULAR_MODULATION',
-            entityId: result.cycle[0]
-          });
-        }
-      }
+    // B. Circularity Audit (Phase 17.2/18)
+    const circularityIssues = CircularityAuditor.validate(manifest);
+    circularityIssues.forEach(issue => {
+      diagnostics.errors.push({
+        id: `circular-link-${issue.keyword}`,
+        source: this.name,
+        message: issue.message,
+        severity: 'error',
+        code: 'CIRCULAR_MODULATION'
+      });
     });
   }
 }

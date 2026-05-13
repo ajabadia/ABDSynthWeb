@@ -1,4 +1,4 @@
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 /**
  * OMEGA History Engine (v8.0.0)

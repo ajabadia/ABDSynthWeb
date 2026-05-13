@@ -1,23 +1,23 @@
 'use client';
-
+ 
 import React from 'react';
 import { Tag } from 'lucide-react';
-import { OMEGA_Manifest, ManifestMetadata } from '@/types/manifest';
-import InspectorCollapsible from '../../shared/InspectorCollapsible';
-
+import type { OMEGA_Manifest, ManifestMetadata } from '@/omega-ui-core/types/manifest';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
+ 
 interface ModuleTaxonomyProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
-  isHighlighted: (key: string) => boolean | undefined;
+  isHighlighted: (key: string) => boolean;
 }
-
+ 
 export default function ModuleTaxonomy({ manifest, onUpdate, isHighlighted }: ModuleTaxonomyProps) {
   const metadata = manifest.metadata;
-
+ 
   const updateMetadata = (field: keyof ManifestMetadata, value: unknown) => {
     onUpdate({ metadata: { ...metadata, [field]: value } } as Partial<OMEGA_Manifest>);
   };
-
+ 
   return (
     <InspectorCollapsible title="Module Taxonomy" icon={Tag}>
       <div className="space-y-4 pt-2">
@@ -42,7 +42,7 @@ export default function ModuleTaxonomy({ manifest, onUpdate, isHighlighted }: Mo
             />
           </div>
         </div>
-
+ 
         <div className="space-y-1.5">
           <label className="text-[8px] font-bold wb-text-muted uppercase ml-1">Industrial Tags (Comma separated)</label>
           <input 

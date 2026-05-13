@@ -3,7 +3,7 @@
  * Physical dimensions and geometric mapping for industrial components.
  */
  
-import type { ManifestEntity } from '../../types/manifest';
+import type { OmegaNode } from '../../types/manifest';
 import { parseVariant } from './VariantParser';
  
 const RADIUS_MAP: Record<string, Record<string, number>> = {
@@ -17,9 +17,10 @@ const RADIUS_MAP: Record<string, Record<string, number>> = {
   select: { A: 12, B: 12, C: 12, D: 12 }
 };
  
-export function getComponentRadius(item: ManifestEntity): number {
-  const { size } = parseVariant(item.presentation?.variant);
-  const comp = item.presentation?.component || 'knob';
+export function getComponentRadius(node: OmegaNode): number {
+  const variantStr = node.style?.variant || 'default';
+  const { size } = parseVariant(variantStr);
+  const comp = node.cellRef || node.kind || 'knob';
   const typeKey = comp.includes('slider') ? 'slider' : comp;
   
   const sizeMap = RADIUS_MAP[typeKey] || RADIUS_MAP.knob;

@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 import { ValidationService } from '@/services/validationService';
 import { STORAGE_KEYS } from '../constants/storage';
 import { structuralAuditor } from '../services/StructuralAuditor';
-import { ValidationIssue } from '@/types/validation';
+import type { ValidationIssue } from '@/types/validation';
 
 /**
  * useAuditEngine (Phase 9.5+ - Final)
  * Returns ValidationIssue[] for compatibility with useDeployment contract.
  */
-export const useAuditEngine = (manifest: OMEGA_Manifest, contract: OMEGA_Contract | null) => {
+export const useAuditEngine = (manifest: OMEGA_Manifest, contract: (OmegaContract | OMEGA_Contract) | null) => {
   // Lazy initializer avoids setState in useEffect (no cascading renders)
   const [logs, setLogs] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];

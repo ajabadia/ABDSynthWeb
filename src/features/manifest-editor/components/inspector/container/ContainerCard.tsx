@@ -3,7 +3,7 @@
 import React from 'react';
 import { ChevronDown, ChevronRight, Maximize, Minimize2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutContainer, OMEGA_Manifest } from '@/types/manifest';
+import type { LayoutContainer, OMEGA_Manifest } from '@/types/manifest';
 import ContainerForm from './ContainerForm';
 
 interface ContainerCardProps {
@@ -13,7 +13,7 @@ interface ContainerCardProps {
   onUpdate: (id: string, updates: Partial<LayoutContainer>) => void;
   onRemove: (id: string) => void;
   manifest: OMEGA_Manifest;
-  setActiveSection?: (s: string) => void;
+  setActiveSection?: ((s: string) => void) | undefined;
 }
 
 export default function ContainerCard({

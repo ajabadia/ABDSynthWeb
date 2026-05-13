@@ -1,14 +1,11 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { OMEGA_Manifest, ManifestEntity, Attachment, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
-import { AuditResult } from '@/services/auditService';
+import type { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { AuditResult } from '@/services/auditService';
 
 // Modular Components & Hooks
-import { RackContainer } from '../rack/RackContainer';
-import { RackEntity } from '../rack/RackEntity';
 import { SignalInjector } from '../rack/SignalInjector';
-import { ModulationCables } from '../rack/ModulationCables';
 import { RackHUD } from '../rack/RackHUD';
 import { useRackSimulation } from '@/features/manifest-editor/hooks/rack/useRackSimulation';
 import { useRackLayout } from '@/features/manifest-editor/hooks/rack/useRackLayout';
@@ -26,8 +23,8 @@ interface VirtualRackProps {
   isLiveMode: boolean;
   setIsLiveMode: (val: boolean) => void;
   audit: AuditResult;
-  resolveAsset?: (ref: string | undefined) => string | undefined;
-  pushParameterUpdate?: (id: string, value: number) => void;
+  resolveAsset?: ((ref: string | undefined) => string | undefined) | undefined;
+  pushParameterUpdate?: ((id: string, value: number) => void) | undefined;
   previewManifest?: OMEGA_Manifest | null;
 }
  
@@ -56,29 +53,29 @@ export default function VirtualRack({
   const [activePlane, setActivePlane] = React.useState('MAIN');
   
   // ASEPTIC LAYOUT & SIMULATION
-  const manifestTab = activePlane;
-  const { width, height, allElements, visibleElements, containers } = useRackLayout(manifest, manifestTab);
+  const { width, height, allElements, visibleElements, containers } = useRackLayout(manifest);
   const { runtimeValues, activeContainers, activeInjectorPort, setActiveInjectorPort } = useRackSimulation(allElements, isLiveMode, pushParameterUpdate);
 
   // RACK MASTER ENTITY (Era 7.2.3 Architectural Host)
-  const rackEntity: ManifestEntity = {
+  const rackNode: OmegaNode = {
     id: 'RACK_MASTER',
-    type: 'rack',
-    pos: { x: 0, y: 0 },
-    bind: 'none',
+    kind: 'rack',
     role: 'infrastructure',
-    presentation: {
-      component: 'rack',
-      variant: 'default',
-      style: (manifest.ui as Record<string, unknown>)?.style as unknown as OmegaStyleNode,
-      attachments: (manifest.ui?.attachments || []) as unknown as Attachment[],
-      tab: 'MAIN',
-      offsetX: 0,
-      offsetY: 0
+    cellRef: 'rack',
+    layout: {
+      pos: { x: 0, y: 0 },
+      size: { width: manifest.ui?.dimensions?.width || 800, height: manifest.ui?.dimensions?.height || 400 }
+    },
+    meta: {
+      label: 'Master Rack Chassis'
+    },
+    style: {
+      ...((manifest.ui as Record<string, unknown>)?.style || {}),
+      attachments: (manifest.ui as Record<string, unknown>)?.attachments || []
     }
   };
 
-  const rackHTML = CellRenderer.renderCellHTML(rackEntity, {
+  const rackHTML = CellRenderer.renderCellHTML(rackNode, {
     skin,
     zoom: 1.0,
     runtimeValue: 0,
@@ -120,25 +117,23 @@ export default function VirtualRack({
         />
 
         {/* UCA NATIVE ENGINE (Recursive Tree) */}
-        {manifest.ui?.useUCA !== false && (
-          <div className="absolute inset-0 uca-native-layer">
-            <UniversalRenderer 
-              node={manifest.ui.tree || manifestToTree(manifest, manifest.ui?.tree)} 
-              manifest={manifest} 
-              catalog={manifest.ui.cellLibrary || {}}
-              resolveAsset={resolveAsset}
-              debugContext={{
-                enabled: manifest.ui.ucaDebug?.enabled || false,
-                showLabels: manifest.ui.ucaDebug?.showLabels !== false,
-                hideDecorative: manifest.ui.ucaDebug?.hideDecorative || false,
-                showCADOverlay: manifest.ui.ucaDebug?.showCADOverlay || false,
-                selectedId: selectedItemId,
-                onSelect: onSelectItem,
-                onUpdateNode: onUpdateItem
-              }}
-            />
-          </div>
-        )}
+        <div className="absolute inset-0 uca-native-layer">
+          <UniversalRenderer 
+            node={manifest.ui.tree || manifestToTree(manifest, manifest.ui?.tree)} 
+            manifest={manifest} 
+            catalog={manifest.moduleTemplates || {}}
+            resolveAsset={resolveAsset}
+            debugContext={{
+              enabled: manifest.ui?.ucaDebug?.enabled || false,
+              showLabels: manifest.ui?.ucaDebug?.showLabels !== false,
+              hideDecorative: manifest.ui?.ucaDebug?.hideDecorative || false,
+              showCADOverlay: manifest.ui?.ucaDebug?.showCADOverlay || false,
+              selectedId: selectedItemId,
+              onSelect: onSelectItem,
+              onUpdateNode: onUpdateItem
+            }}
+          />
+        </div>
 
         {/* BLUEPRINT STUDIO GHOST LAYER (Phase 11) */}
         {previewManifest && (
@@ -146,39 +141,6 @@ export default function VirtualRack({
             previewManifest={previewManifest} 
             resolveAsset={resolveAsset} 
           />
-        )}
-
-        {/* LEGACY PIPELINE FALLBACK (Flat Arrays) */}
-        {manifest.ui?.useUCA === false && (
-          <>
-            {/* ARCHITECTURAL PLANES */}
-            {containers.filter(c => (c.tab || 'MAIN') === activePlane).map((c) => (
-              <RackContainer 
-                key={c.id} 
-                container={c} 
-                isSelected={allElements.some(e => e.id === selectedItemId && e.presentation?.container === c.id)} 
-                activeContainers={activeContainers} 
-                audit={audit} 
-                skin={skin} 
-                rackWidthPx={width}
-                resolveAsset={resolveAsset}
-                manifest={manifest}
-              />
-            ))}
-    
-            <ModulationCables manifest={manifest} allElements={allElements} activeTab={activePlane} />
-    
-            {/* ENTITIES LAYER */}
-            {visibleElements.map((item) => (
-              <RackEntity 
-                key={item.id} item={item} rackRef={rackRef} zoom={zoom} isLiveMode={isLiveMode} 
-                selectedItemId={selectedItemId} onSelectItem={onSelectItem} onUpdateItem={onUpdateItem} 
-                runtimeValue={runtimeValues[item.id] || 0} steps={item.presentation?.component === 'select' ? 16 : 100} 
-                onPortClick={setActiveInjectorPort} audit={audit} skin={skin} 
-                resolveAsset={resolveAsset} manifest={manifest}
-              />
-            ))}
-          </>
         )}
 
         {activeInjectorPort && <SignalInjector portId={activeInjectorPort} onClose={() => setActiveInjectorPort(null)} />}

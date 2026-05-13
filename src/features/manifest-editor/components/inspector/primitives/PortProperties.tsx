@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Palette } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest, Presentation } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
  
 interface PortPropertiesProps {
@@ -10,16 +10,17 @@ interface PortPropertiesProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
  
 export default function PortProperties({ item, manifest, onUpdate, setActiveSection }: PortPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const portStyles = manifest.ui.styles?.['port'] || [];
   const currentStyleId = pres.variant || 'default';
   const currentStyle = portStyles.find(s => s.id === currentStyleId) || { id: 'default', label: 'Default Port Style' };
  
-  const updateStyle = (styleId: string, aesthetics: Partial<Presentation> = {}) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateStyle = (styleId: string, aesthetics: any = {}) => {
     onUpdate({ 
       presentation: { 
         ...pres, 
@@ -43,7 +44,8 @@ export default function PortProperties({ item, manifest, onUpdate, setActiveSect
             {portStyles.map(s => (
               <button
                 key={s.id}
-                onClick={() => updateStyle(s.id, s.aesthetics)}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onClick={() => updateStyle(s.id, s.aesthetics as any)}
                 className={`group py-2.5 px-4 rounded-xs border text-[10px] font-black uppercase transition-all text-left flex items-center justify-between ${currentStyleId === s.id ? 'border-primary bg-primary/20 text-primary shadow-[0_0_20px_rgba(0,240,255,0.1)]' : 'wb-surface-subtle wb-outline wb-text-muted hover:wb-text hover:border-primary/30'}`}
               >
                 <div className="flex items-center gap-3">

@@ -1,5 +1,5 @@
-import { OMEGA_Manifest, ManifestEntity, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
-import { DiffEntry, ManifestDiffResult, DiffEntityKind } from '../types/diff';
+import type { OMEGA_Manifest, ManifestEntity, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { DiffEntry, ManifestDiffResult, DiffEntityKind } from '../types/diff';
 import { regenerateEntityId, cloneAndRegenerateNodeIds } from './idManagement';
 
 /**
@@ -111,8 +111,8 @@ function compareEntities(
             fieldPath: path,
             before: baseVal,
             after: targetVal,
-            description: `Changed ${path} from '${baseVal}' to '${targetVal}'`,
-            parentContainerId: targetItem.presentation?.container
+            description: `Property '${path}' changed: ${baseVal} -> ${targetVal}`,
+            parentContainerId: targetItem.presentation?.container || ''
           });
         }
       });
@@ -155,7 +155,7 @@ function compareContainers(
   targetList.forEach(targetC => {
     const baseC = baseMap.get(targetC.id);
     if (baseC) {
-      const fields = ['label', 'variant', 'tab', 'pos.x', 'pos.y', 'size.w', 'size.h'];
+      const fields = ['label', 'variant', 'tab', 'pos.x', 'pos.y', 'size.width', 'size.height'];
       fields.forEach(path => {
         const v1 = getDeepValue(baseC, path);
         const v2 = getDeepValue(targetC, path);
@@ -194,7 +194,7 @@ export const applyDiffEntry = (
   // Deep clone to ensure immutability
   const next = structuredClone(manifest);
   
-  if (!next.ui) next.ui = { dimensions: { width: 800, height: 600 }, controls: [], jacks: [] };
+  if (!next.ui) next.ui = { dimensions: { width: 800, height: 600 }, controls: [], jacks: [], layout: { width: 800, height: 600, containers: [], planes: [] } };
 
   switch (entry.changeType) {
     case 'added': {
@@ -202,7 +202,7 @@ export const applyDiffEntry = (
       
       if (entry.entityKind === 'container') {
         const container = entry.after as LayoutContainer;
-        if (!next.ui.layout) next.ui.layout = { containers: [] };
+        if (!next.ui.layout) next.ui.layout = { width: 800, height: 600, containers: [], planes: [] };
         if (!next.ui.layout.containers) next.ui.layout.containers = [];
         
         // Prevent duplication if ID exists
@@ -211,13 +211,16 @@ export const applyDiffEntry = (
         }
       } else {
         const entity = entry.after as ManifestEntity;
-        const list = entry.entityKind === 'control' ? next.ui.controls : next.ui.jacks;
+        const list = entry.entityKind === 'control' ? (next.ui.controls || []) : (next.ui.jacks || []);
+        
+        if (entry.entityKind === 'control') next.ui.controls = list;
+        else next.ui.jacks = list;
         
         // Guard: Check parent container dependency
         if (entity.presentation?.container) {
-          const containerExists = next.ui.layout?.containers?.some(c => c.id === entity.presentation.container);
+          const containerExists = next.ui.layout?.containers?.some(c => c.id === entity.presentation?.container);
           if (!containerExists) {
-            console.warn(`[MERGE] Blocked: Container ${entity.presentation.container} missing for entity ${entity.id}`);
+            console.warn(`[MERGE] Blocked: Container ${entity.presentation?.container} missing for entity ${entity.id}`);
             return next; // Fail-safe: don't add if parent is missing
           }
         }
@@ -250,9 +253,9 @@ export const applyDiffEntry = (
         }
       } else {
         if (entry.entityKind === 'control') {
-          next.ui.controls = next.ui.controls.filter(e => e.id !== entry.entityId);
+          next.ui.controls = (next.ui.controls || []).filter(e => e.id !== entry.entityId);
         } else {
-          next.ui.jacks = next.ui.jacks.filter(e => e.id !== entry.entityId);
+          next.ui.jacks = (next.ui.jacks || []).filter(e => e.id !== entry.entityId);
         }
       }
       break;
@@ -267,7 +270,7 @@ export const applyDiffEntry = (
           setDeepValue(container as unknown as Record<string, unknown>, entry.fieldPath, entry.after);
         }
       } else {
-        const list = entry.entityKind === 'control' ? next.ui.controls : next.ui.jacks;
+        const list = entry.entityKind === 'control' ? (next.ui.controls || []) : (next.ui.jacks || []);
         const entity = list.find(e => e.id === entry.entityId);
         if (entity) {
           setDeepValue(entity as unknown as Record<string, unknown>, entry.fieldPath, entry.after);

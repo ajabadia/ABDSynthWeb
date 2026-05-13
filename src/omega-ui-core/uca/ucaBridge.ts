@@ -3,7 +3,7 @@
  * Formal Compilation Pipeline & Materialization Engine.
  */
 
-import { 
+import type { 
   OMEGA_Manifest, 
   OmegaNode, 
   BlueprintDefinition, 
@@ -13,6 +13,7 @@ import {
 } from '../types/manifest';
 import { manifestToTree as legacyMigrator } from './converters/manifestToTree';
 import { treeToManifest as legacySerializer } from './converters/treeToManifest';
+import { resolvePath, normalizeModulationTarget } from './utils/pathResolver';
 
 /**
  * formalizeUCA (Internal Gateway)
@@ -133,7 +134,7 @@ export function blueprintToTree(
     const comp = blueprint.compatibility;
     if (comp.allowedParentKinds && comp.allowedParentKinds.length > 0) {
       if (!comp.allowedParentKinds.includes(options.targetParent.kind)) {
-        errors.push(`[UCA BRIDGE] Incompatible parent kind: '${options.targetParent.kind}'. Allowed: ${comp.allowedParentKinds.join(', ')}`);
+        errors.push(`[UCA BRIDGE] Incompatible parent kind: '${options.targetParent.kind}'. Allowed: ${comp.allowedParentKinds?.join(', ') || ''}`);
       }
     }
     if (comp.deniedParentKinds && comp.deniedParentKinds.includes(options.targetParent.kind)) {
@@ -146,22 +147,30 @@ export function blueprintToTree(
     ? materializePlaceholders(blueprint.rootNode, options.placeholders)
     : blueprint.rootNode;
 
-  const resolveNodes = (node: OmegaBlueprintNode, depth: number, visited: Set<string>): OmegaNode => {
+  /**
+   * resolveNodes
+   * Recursive expansion with hierarchical identity prefixing via PathResolver.
+   */
+  const resolveNodes = (node: OmegaBlueprintNode, depth: number, visited: Set<string>, parentPath?: string): OmegaNode => {
     nodeCount++;
     maxDepth = Math.max(maxDepth, depth);
 
+    const localId = node.id || 'anonymous_node';
+    
+    // Unified Hierarchical Identity (Phase 17.3)
+    const id = resolvePath(localId, parentPath);
+
     // Circular detection (Genetic Guard)
-    if (node.id && visited.has(node.id)) {
-      errors.push(`[UCA BRIDGE] Circular reference detected at node: ${node.id}`);
-      return { ...node, id: `${node.id}_ERR_CIRCULAR` } as unknown as OmegaNode;
+    if (visited.has(id)) {
+      errors.push(`[UCA BRIDGE] Circular reference detected at node: ${id}`);
+      return { ...node, id: `${id}_ERR_CIRCULAR` } as unknown as OmegaNode;
     }
     const nextVisited = new Set(visited);
-    if (node.id) nextVisited.add(node.id);
+    nextVisited.add(id);
 
-    const id = node.id;
     // Check for leftover placeholders (if not materialized)
-    if (typeof id === 'string' && id.startsWith('{{') && id.endsWith('}}')) {
-      const key = id.slice(2, -2);
+    if (typeof localId === 'string' && localId.startsWith('{{') && localId.endsWith('}}')) {
+      const key = localId.slice(2, -2);
       unresolvedPlaceholders.add(key);
       if (options.strict) {
         errors.push(`[UCA BRIDGE] Unresolved required placeholder: {{${key}}}`);
@@ -173,7 +182,16 @@ export function blueprintToTree(
     const materialNode: OmegaNode = {
       ...node,
       id,
-      children: node.children?.map(child => resolveNodes(child, depth + 1, nextVisited)) || []
+      signalPath: id, // Canonical hierarchical path
+      ports: node.ports?.map(port => ({
+        ...port,
+        // Deterministic Port IDs: Prefix with Full Node Path
+        id: resolvePath(port.id, id)
+      })),
+      modulationTargets: node.modulationTargets?.map((target: string) => 
+        normalizeModulationTarget(target, id)
+      ) || [],
+      children: node.children?.map(child => resolveNodes(child, depth + 1, nextVisited, id)) || []
     } as OmegaNode;
 
     // Template Expansion
@@ -188,7 +206,19 @@ export function blueprintToTree(
           overrides: { ...template.baseNode.overrides, ...materialNode.overrides },
           slotMappings: { ...template.baseNode.slotMappings, ...materialNode.slotMappings },
           locked: template.baseNode.locked || materialNode.locked || false,
-          id: materialNode.id || template.baseNode.id,
+          id: (materialNode.id || template.baseNode.id) as string,
+          signalPath: materialNode.signalPath || template.baseNode.signalPath || id,
+          ports: [
+            ...(template.baseNode.ports?.map(p => ({
+              ...p,
+              id: resolvePath(p.id, id)
+            })) || []),
+            ...(materialNode.ports || [])
+          ].filter((p, i, self) => i === self.findLastIndex(other => other.id === p.id)),
+          modulationTargets: [
+            ...(template.baseNode.modulationTargets?.map(t => normalizeModulationTarget(t, id)) || []),
+            ...(materialNode.modulationTargets?.map(t => normalizeModulationTarget(t, id)) || [])
+          ].filter((t, i, self) => i === self.findLastIndex(other => other === t))
         };
       } else {
         missingTemplates.add(materialNode.cellRef);
@@ -226,9 +256,17 @@ export function blueprintToTree(
  * Legacy Migration Bridge.
  */
 export function manifestToOmegaTree(manifest: OMEGA_Manifest, existingTree?: OmegaNode): OmegaNode {
+  // 1. Canonical Source (Phase 18)
+  if (manifest.nodes && manifest.nodes.length > 0 && manifest.nodes[0]) {
+    return formalizeUCA(manifest.nodes[0]);
+  }
+  
+  // 2. Transitory UCA (Phase 10.2)
   if (manifest.ui.tree && manifest.ui.useUCA) {
     return formalizeUCA(manifest.ui.tree);
   }
+  
+  // 3. Legacy Migration
   return legacyMigrator(manifest, existingTree);
 }
 
@@ -240,15 +278,19 @@ export { omegaTreeToManifest as treeToManifest };
 
 /**
  * omegaTreeToManifest
- * Serialization Bridge.
+ * Serialization Bridge (Canonical).
  */
-export function omegaTreeToManifest(tree: OmegaNode): Partial<OMEGA_Manifest['ui']> {
+export function omegaTreeToManifest(tree: OmegaNode): Partial<OMEGA_Manifest> {
   const legacyProjections = legacySerializer(tree);
   return {
-    ...legacyProjections,
-    tree,
-    useUCA: true
-  };
+    nodes: [tree], // Canonical root
+    ui: {
+      ...legacyProjections,
+      tree, // [DEPRECATED] Keep for transient compatibility
+      useUCA: true,
+      dimensions: undefined // Explicitly handle dimensions to satisfy strict checks if needed
+    }
+  } as Partial<OMEGA_Manifest>;
 }
 
 export { legacyMigrator as _rawManifestToTree };

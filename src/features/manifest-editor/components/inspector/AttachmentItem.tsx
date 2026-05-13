@@ -6,7 +6,7 @@ import AttachmentLogicFields from './attachments/AttachmentLogicFields';
 import AttachmentPrecisionOffsets from './attachments/AttachmentPrecisionOffsets';
 import IndustrialGovernanceConsole from './shared/IndustrialGovernanceConsole';
 
-import { Attachment, OMEGA_Manifest } from '@/types/manifest';
+import type { Attachment, OMEGA_Manifest } from '@/types/manifest';
 
 interface AttachmentItemProps {
   att: Attachment;
@@ -14,7 +14,7 @@ interface AttachmentItemProps {
   hostType: string;
   availableBinds: string[];
   onUpdate: (updates: Partial<Attachment>) => void;
-  onOpenConfig?: () => void;
+  onOpenConfig?: (() => void) | undefined;
 }
 
 export default function AttachmentItem({ att, manifest, hostType, availableBinds, onUpdate, onOpenConfig }: AttachmentItemProps) {
@@ -25,7 +25,7 @@ export default function AttachmentItem({ att, manifest, hostType, availableBinds
       <AttachmentTypeAnchor 
         type={att.type} 
         hostType={hostType}
-        position={att.position} 
+        position={(att.position as 'top' | 'bottom' | 'left' | 'right' | 'center') || 'center'} 
         isCore={isCore} 
         onUpdate={onUpdate} 
       />
@@ -40,10 +40,9 @@ export default function AttachmentItem({ att, manifest, hostType, availableBinds
         <div className="border-t border-outline/10 pt-4">
           <IndustrialGovernanceConsole 
             type={att.type}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            values={att as any}
+            values={att.style || {}}
             manifest={manifest}
-            onUpdate={onUpdate}
+            onUpdate={(updates) => onUpdate({ style: { ...(att.style || {}), ...updates } })}
             onOpenConfig={onOpenConfig}
             title={`${att.type.toUpperCase()} Aesthetic Governance`}
           />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest, LayoutContainer } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, LayoutContainer } from '@/omega-ui-core/types/manifest';
 
 export const useLayoutCRUD = (
   manifest: OMEGA_Manifest,
@@ -15,41 +15,37 @@ export const useLayoutCRUD = (
       id,
       label: 'New Section',
       pos: { x: 0, y: 0 },
-      size: { w: 'full', h: 100 },
+      size: { width: 200, height: 100 },
       variant: 'default'
     };
 
-    const nextLayout = {
-      ...(manifest.ui.layout || { containers: [], gridSnap: 5 }),
-      containers: [...(manifest.ui.layout?.containers || []), newContainer]
-    };
-
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } }, `Add Container: ${id}`);
+    const nextLayout = { ...manifest.ui.layout, width: manifest.ui.layout?.width || 800, height: manifest.ui.layout?.height || 600, containers: [...(manifest.ui.layout?.containers || []), newContainer] };
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout as OMEGA_Manifest['ui']['layout'] } }, `Add Container: ${id}`);
     addLog(`Added new layout container: ${id}`);
     return id;
   }, [manifest, updateManifest, addLog]);
 
   const updateContainer = useCallback((id: string, updates: Partial<LayoutContainer>) => {
-    const nextContainers = manifest.ui.layout?.containers.map(c => c.id === id ? { ...c, ...updates } : c) || [];
+    const nextContainers = manifest.ui.layout?.containers?.map(c => c.id === id ? { ...c, ...updates } : c) || [];
     const nextLayout = {
-      ...(manifest.ui.layout || { containers: [], gridSnap: 5 }),
+      width: manifest.ui.layout?.width || 800,
+      height: manifest.ui.layout?.height || 600,
+      ...(manifest.ui.layout || {}),
       containers: nextContainers
     };
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } }, `Update Container: ${id}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout as any } }, `Update Container: ${id}`);
   }, [manifest, updateManifest]);
 
   const removeContainer = useCallback((id: string) => {
-    const nextContainers = manifest.ui.layout?.containers.filter(c => c.id !== id) || [];
-    const nextLayout = {
-      ...(manifest.ui.layout || { containers: [], gridSnap: 5 }),
-      containers: nextContainers
-    };
+    const nextContainers = manifest.ui.layout?.containers?.filter(c => c.id !== id) || [];
     
     // Also clear references in items
-    const nextControls = manifest.ui.controls.map(c => c.presentation?.container === id ? { ...c, presentation: { ...c.presentation, container: undefined } } : c);
-    const nextJacks = manifest.ui.jacks.map(j => j.presentation?.container === id ? { ...j, presentation: { ...j.presentation, container: undefined } } : j);
+    const nextControls = (manifest.ui?.controls || []).map(c => c.presentation?.container === id ? { ...c, presentation: { ...c.presentation, container: undefined } } : c);
+    const nextJacks = (manifest.ui?.jacks || []).map(j => j.presentation?.container === id ? { ...j, presentation: { ...j.presentation, container: undefined } } : j);
 
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout, controls: nextControls, jacks: nextJacks } }, `Remove Container: ${id}`);
+    const nextLayout = { ...manifest.ui.layout, width: manifest.ui.layout?.width || 800, height: manifest.ui.layout?.height || 600, containers: nextContainers };
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout as OMEGA_Manifest['ui']['layout'], controls: nextControls, jacks: nextJacks } }, `Remove Container: ${id}`);
     addLog(`Removed container: ${id}`);
   }, [manifest, updateManifest, addLog]);
 

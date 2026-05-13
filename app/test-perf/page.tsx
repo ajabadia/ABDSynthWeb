@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { IntegrityService } from '@/services/integrityService';
 import { mergeDiagnostics } from '@/features/manifest-editor/utils/diagnosticUtils';
 import { structuralAuditor } from '@/features/manifest-editor/services/StructuralAuditor';
-import { OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity } from '@/omega-ui-core/types/manifest';
 
 /**
  * Helper to generate a large manifest for stress testing.
@@ -13,15 +13,17 @@ function generateTestManifest(controlCount: number): OMEGA_Manifest {
   const controls: ManifestEntity[] = [];
   for (let i = 0; i < controlCount; i++) {
     controls.push({
-      id: `ctrl_${i}`,
+      id: `cell-${i}`,
       type: 'knob',
+      label: `Knob ${i}`,
       role: 'control',
-      bind: `param_${i % 10}`, // Reuse some binds to test collision/structural logic
-      pos: { x: (i % 10) * 50, y: Math.floor(i / 10) * 60 },
+      bind: `param-${i}`,
+      pos: { x: (i % 10) * 80, y: Math.floor(i / 10) * 80 },
+      size: { width: 60, height: 60 },
       presentation: {
         tab: 'MAIN',
         component: 'knob',
-        variant: 'default',
+        variant: 'cyan',
         offsetX: 0,
         offsetY: 0,
         attachments: []
@@ -30,25 +32,30 @@ function generateTestManifest(controlCount: number): OMEGA_Manifest {
   }
 
   return {
-    schemaVersion: '7.2.3',
-    id: 'perf-test-manifest',
+    schemaVersion: '7.1',
+    id: 'perf-test',
     metadata: {
-      name: 'Perf Test',
-      family: 'Stress',
-      author: 'Benchmark'
+      name: 'Performance Test',
+      family: 'test',
+      author: 'system'
     },
     ui: {
-      dimensions: { width: 800, height: 600 },
+      dimensions: { width: 800, height: 800 },
       controls,
       jacks: [],
       layout: {
+        width: 800,
+        height: 800,
         containers: []
       }
     },
     resources: {
-      wasm: 'dummy.wasm'
-    }
-  } as OMEGA_Manifest;
+      assets: [],
+      styles: {}
+    },
+    entities: controls,
+    modulations: []
+  } as unknown as OMEGA_Manifest;
 }
 
 export default function PerfPage() {

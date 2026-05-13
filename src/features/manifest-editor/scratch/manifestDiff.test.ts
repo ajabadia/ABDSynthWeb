@@ -1,5 +1,5 @@
 import { calculateManifestDiff } from '../utils/manifestDiff';
-import { OMEGA_Manifest, ManifestEntity, LayoutContainer } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, LayoutContainer } from '@/omega-ui-core/types/manifest';
 
 /**
  * Phase 9.2 - Unit Tests for Manifest Diff Engine
@@ -16,17 +16,18 @@ const createMockEntity = (id: string, label: string): ManifestEntity => ({
     tab: 'MAIN',
     component: 'knob',
     variant: 'industrial',
-    offsetX: 0,
     offsetY: 0,
+    offsetX: 0,
     attachments: []
-  }
+  },
+  size: { width: 48, height: 48 }
 });
 
 const createMockContainer = (id: string): LayoutContainer => ({
   id,
   label: 'Container',
   pos: { x: 0, y: 0 },
-  size: { w: 100, h: 100 },
+  size: { width: 100, height: 100 },
   variant: 'default',
   tab: 'MAIN'
 });
@@ -34,13 +35,16 @@ const createMockContainer = (id: string): LayoutContainer => ({
 const BASE_MANIFEST: OMEGA_Manifest = {
   id: 'test-v1',
   schemaVersion: '7.2.3',
-  metadata: { name: 'Test', family: 'Test' },
+  entities: [],
+  metadata: { name: 'Test', family: 'Test', version: '1.0.0' },
   resources: { wasm: 'test.wasm' },
   ui: {
     dimensions: { width: 800, height: 600 },
     controls: [createMockEntity('knob_1', 'Frequency')],
     jacks: [],
     layout: {
+      width: 800,
+      height: 600,
       planes: ['MAIN'],
       containers: [createMockContainer('rack_A')]
     }
@@ -60,7 +64,7 @@ export const runDiffTests = () => {
     ui: {
       ...BASE_MANIFEST.ui!,
       controls: [
-        ...BASE_MANIFEST.ui!.controls,
+        ...(BASE_MANIFEST.ui!.controls || []),
         createMockEntity('knob_2', 'Resonance')
       ]
     }
@@ -75,7 +79,7 @@ export const runDiffTests = () => {
     ui: {
       ...BASE_MANIFEST.ui!,
       controls: [
-        { ...BASE_MANIFEST.ui!.controls[0], label: 'Cutoff' }
+        { ...(BASE_MANIFEST.ui!.controls?.[0] || createMockEntity('knob_1', 'Frequency')), label: 'Cutoff' }
       ]
     }
   };
@@ -102,7 +106,7 @@ export const runDiffTests = () => {
     ui: {
       ...BASE_MANIFEST.ui!,
       controls: [
-        { ...BASE_MANIFEST.ui!.controls[0], pos: { x: 100, y: 100 } }
+        { ...(BASE_MANIFEST.ui!.controls?.[0] || createMockEntity('knob_1', 'Frequency')), pos: { x: 100, y: 100 } }
       ]
     }
   };

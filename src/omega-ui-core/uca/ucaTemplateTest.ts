@@ -1,5 +1,6 @@
-import { resolveNodeSemantics, ResolutionContext } from './ucaSemantics';
-import { OmegaNode, ModuleTemplate } from '../types/manifest';
+import type { ResolutionContext } from './ucaSemantics.js';
+import { resolveNodeSemantics } from './ucaSemantics.js';
+import type { OmegaNode, ModuleTemplate } from '../types/manifest.js';
 
 console.log('--- STARTING UCA TEMPLATE RESOLUTION TEST (Phase 5) ---');
 
@@ -71,17 +72,17 @@ const resolved = resolveNodeSemantics(instance, ctx);
 
 console.log('\n[Resolution Results]');
 console.log('ID:', resolved.id);
-console.log('Template Root ID:', resolved.children?.[0].id); // Should be generated/prefixed
+console.log('Template Root ID:', resolved.children?.[0]?.id); // Should be generated/prefixed
 
 // Verify Overrides
 console.log('\n[Override Enforcement]');
 console.log('Root Color (Expected #f00):', resolved.style?.color);
-console.log('Child 0 Color (Expected #0f0):', resolved.children?.[0].style?.color);
+console.log('Child 0 Color (Expected #0f0):', resolved.children?.[0]?.style?.color);
 console.log('Layout Mode (Expected stack-v, LOCKED):', resolved.layout?.mode);
 
 // Verify Slot Mapping
 console.log('\n[Slot Mapping Resolution]');
-console.log('Child 0 Binding (Expected vcf_1.cutoff):', resolved.children?.[0].bind);
+console.log('Child 0 Binding (Expected vcf_1.cutoff):', resolved.children?.[0]?.bind);
 
 // Verify Portability (Snapshot)
 const snapshotInstance: OmegaNode = {
@@ -94,7 +95,7 @@ const snapshotInstance: OmegaNode = {
 
 const resolvedSnapshot = resolveNodeSemantics(snapshotInstance, { catalog: {} });
 console.log('\n[Portability Test (Snapshot)]');
-console.log('Snapshot Child Binding (Expected cutoff_binding):', resolvedSnapshot.children?.[0].bind);
+console.log('Snapshot Child Binding (Expected cutoff_binding):', resolvedSnapshot.children?.[0]?.bind);
 
 // 5. Legacy Compatibility Test (templateRef alias)
 const legacyInstance: OmegaNode = {

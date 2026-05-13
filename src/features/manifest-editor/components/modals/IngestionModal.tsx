@@ -3,7 +3,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ScrollText, X, AlertTriangle, ChevronRight } from 'lucide-react';
-import { useIngestionLogic, IngestionFile } from '@/features/manifest-editor/hooks/useIngestionLogic';
+import { useIngestionLogic } from '@/features/manifest-editor/hooks/useIngestionLogic';
+import type { IngestionFile } from '@/features/manifest-editor/hooks/useIngestionLogic';
 import IngestionFileList from '../ingestion/IngestionFileList';
 
 interface IngestionModalProps {

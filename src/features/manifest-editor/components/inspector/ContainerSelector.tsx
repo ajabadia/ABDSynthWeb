@@ -2,9 +2,9 @@
  
 import React from 'react';
 import { Layout, Box } from 'lucide-react';
-import { ManifestEntity, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
 import { getInspectorModel, buildInspectorPatch } from '@/features/manifest-editor/hooks/entities/ucaInspectorModel';
-import InspectorCollapsible from './shared/InspectorCollapsible';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
  
 interface ContainerSelectorProps {
   item: ManifestEntity | OmegaNode;
@@ -20,7 +20,7 @@ interface ContainerSelectorProps {
  * Handles architectural mapping between entities and layout containers.
  */
 export default function ContainerSelector({ item, onUpdate, containers, onHelp, highlightPath, rootTree }: ContainerSelectorProps) {
-  const model = getInspectorModel(item, rootTree);
+  const model = getInspectorModel(item as OmegaNode, rootTree);
   
   return (
     <InspectorCollapsible 
@@ -32,7 +32,7 @@ export default function ContainerSelector({ item, onUpdate, containers, onHelp, 
         <div className="relative group">
           <select 
             value={model.container || ''} 
-            onChange={(e) => onUpdate(buildInspectorPatch(item, { container: e.target.value || undefined }))}
+            onChange={(e) => onUpdate(buildInspectorPatch(item as OmegaNode, { container: e.target.value || undefined }))}
             className={`w-full bg-black/20 border ${(!model.container || highlightPath?.includes('container')) ? 'border-amber-500 ring-1 ring-amber-500' : 'wb-outline'} rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-primary/40 transition-all appearance-none cursor-pointer [color-scheme:dark]`}
           >
             <option value="" disabled>-- SELECT MANDATORY CONTAINER --</option>

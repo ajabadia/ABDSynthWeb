@@ -1,10 +1,8 @@
 'use client';
 
-import { 
+import type { 
   ModuleTemplate, 
   BlueprintDefinition, 
-  OmegaNode,
-  BlueprintPlaceholderDefinition,
   BlueprintCompatibility,
   BlueprintAutoWirePolicy
 } from '@/omega-ui-core/types/manifest';
@@ -17,14 +15,14 @@ import {
 
 export function adaptModuleTemplateToBlueprintDefinition(template: ModuleTemplate): BlueprintDefinition {
   // 1. Structural Validation (Strict Mapping)
-  if (!template.id || !template.root) {
-    throw new Error(`[BLUEPRINT] Invalid ModuleTemplate: Missing ID or Root Node.`);
+  if (!template.id || !template.baseNode) {
+    throw new Error(`[BLUEPRINT] Invalid ModuleTemplate: Missing ID or Base Node.`);
   }
 
   // 2. Default Compatibility (if missing)
   const compatibility: BlueprintCompatibility = template.compatibility || {
     allowedParentKinds: ['rack', 'container', 'group', 'face'],
-    deniedParentKinds: ['leaf_module']
+    deniedParentKinds: ['cell']
   };
 
   // 3. Default Auto-wiring (if missing)
@@ -40,12 +38,12 @@ export function adaptModuleTemplateToBlueprintDefinition(template: ModuleTemplat
     description: template.description || 'Industrial OMEGA architecture blueprint.',
     origin: 'system',
     templateId: template.id,
-    rootNode: template.root as OmegaNode,
-    placeholders: (template.placeholders || []) as BlueprintPlaceholderDefinition[],
+    rootNode: template.baseNode, 
+    placeholders: [], // ModuleTemplates typically don't have placeholders in this version
     compatibility,
     autoWirePolicy,
-    materializeSnapshot: false, // Default for 9.4A
-    defaultOverridePolicy: 'extendable' // Default governance
+    materializeSnapshot: false,
+    defaultOverridePolicy: 'extendable'
   };
 }
 

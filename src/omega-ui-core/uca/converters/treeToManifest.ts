@@ -1,4 +1,4 @@
-import { OMEGA_Manifest, OmegaNode, LayoutContainer, ManifestEntity } from '../../types/manifest';
+import type { OMEGA_Manifest, OmegaNode, LayoutContainer, ManifestEntity } from '../../types/manifest';
 
 /**
  * treeToManifest
@@ -16,15 +16,17 @@ export function treeToManifest(root: OmegaNode): Partial<OMEGA_Manifest['ui']> {
         label: node.id,
         pos: node.layout?.pos || { x: 0, y: 0 },
         size: { 
-          w: node.layout?.size?.width || 'full', 
-          h: node.layout?.size?.height || 100 
+          width: node.layout?.size?.width || 'full',
+          height: node.layout?.size?.height || 100,
+          w: typeof node.layout?.size?.width === 'number' ? node.layout.size.width : undefined, 
+          h: typeof node.layout?.size?.height === 'number' ? node.layout.size.height : undefined
         },
         variant: 'default',
         zIndex: node.layout?.zIndex,
         color: node.style?.color,
         indicatorColor: node.style?.indicatorColor,
-        rounding: node.style?.rounding,
-        borderWidth: node.style?.borderWidth,
+        rounding: node.style?.rounding as number | undefined,
+        borderWidth: node.style?.borderWidth as number | undefined,
         tab: parentFace || 'MAIN'
       });
     } else if (node.kind === 'cell') {
@@ -35,7 +37,9 @@ export function treeToManifest(root: OmegaNode): Partial<OMEGA_Manifest['ui']> {
         type: node.cellRef || 'knob',
         role: node.role || (isJack ? 'port' : 'control'),
         bind: node.bind || 'none',
+        label: node.id,
         pos: node.layout?.pos || { x: 0, y: 0 },
+        size: node.layout?.size || { width: 48, height: 48 },
         presentation: {
           component: node.cellRef || 'knob',
           variant: 'default',
@@ -48,7 +52,7 @@ export function treeToManifest(root: OmegaNode): Partial<OMEGA_Manifest['ui']> {
             ...node.style,
             ...(node.layout?.zIndex !== undefined ? { zIndex: node.layout.zIndex } : {})
           },
-          size: node.layout?.size ? { w: node.layout.size.width, h: node.layout.size.height } : undefined
+          size: node.layout?.size ? { width: node.layout.size.width, height: node.layout.size.height } : { width: 48, height: 48 }
         }
       };
 
@@ -77,6 +81,8 @@ export function treeToManifest(root: OmegaNode): Partial<OMEGA_Manifest['ui']> {
 
   return {
     layout: {
+      width: 1000,
+      height: 500,
       containers,
       planes: ['MAIN']
     },

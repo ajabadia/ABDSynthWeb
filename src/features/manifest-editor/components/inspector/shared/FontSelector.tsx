@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Type } from 'lucide-react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { OMEGA_OFFICIAL_FONTS } from '@/omega-ui-core/typography/registry';
 import { useRackTokens } from '@/features/manifest-editor/hooks/useRackTokens';
 
@@ -22,7 +22,7 @@ export default function FontSelector({
   category
 }: FontSelectorProps) {
   const { defaultFont } = useRackTokens(manifest);
-  const customFonts = manifest.ui.resources?.fonts?.map((f: { name: string }) => f.name) || [];
+  const customFonts = manifest.resources?.fonts?.map((f: { name: string }) => f.name) || [];
   const systemFontNames = OMEGA_OFFICIAL_FONTS.map(f => f.name);
   
   const typography = manifest.ui.typography;
@@ -50,7 +50,7 @@ export default function FontSelector({
           </optgroup>
           {customFonts.length > 0 && (
             <optgroup label="Module Resources" className="bg-black text-accent">
-              {customFonts.map(font => (
+              {customFonts.map((font: string) => (
                 <option key={font} value={font}>{font}</option>
               ))}
             </optgroup>

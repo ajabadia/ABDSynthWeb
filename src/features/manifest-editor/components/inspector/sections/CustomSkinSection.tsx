@@ -1,31 +1,31 @@
 'use client';
-
+ 
 import React from 'react';
 import { Layers, Box, Settings, ExternalLink, ShieldCheck } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import ModuleStyleLibrary from '../aesthetic/styles/ModuleStyleLibrary';
-
+ 
 interface CustomSkinSectionProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
   activeRackTab: string;
-  onOpenConfig?: () => void;
+  onOpenConfig?: (() => void) | undefined;
 }
-
+ 
 type CustomSubTab = 'globals' | 'elements';
-
+ 
 export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, activeRackTab, onOpenConfig }: CustomSkinSectionProps) {
   const [activeTab, setActiveTab] = React.useState<CustomSubTab>('elements');
-
+ 
   const tabs: { id: CustomSubTab; label: string; icon: React.ElementType; color: string }[] = [
     { id: 'globals', label: 'Globals', icon: Box, color: 'text-accent' },
     { id: 'elements', label: 'Elements Library', icon: Layers, color: 'text-purple-400' },
   ];
-
+ 
   const palette = (manifest.ui?.palette || {}) as Record<string, string | undefined>;
   const typography = manifest.ui?.typography || {};
-
+ 
   return (
     <div className="space-y-6">
       {/* SUB-NAVIGATION */}
@@ -49,7 +49,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
           </button>
         ))}
       </div>
-
+ 
       {/* CONTENT AREA */}
       <div className="animate-in fade-in slide-in-from-right-2 duration-300">
         {activeTab === 'globals' && (
@@ -69,7 +69,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
                 <p className="text-[8px] wb-text-muted leading-relaxed uppercase font-bold">
                    Centralized governance for module-wide foundations. Switch to the command center to modify the core identity.
                 </p>
-
+ 
                 <button 
                   onClick={onOpenConfig}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-accent text-black text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all shadow-[0_0_15px_rgba(0,240,255,0.2)] group"
@@ -78,14 +78,14 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
                   Enter Command Center
                 </button>
              </div>
-
+ 
              {/* 2. READ-ONLY ARCHITECTURAL SUMMARY */}
              <div className="space-y-3 px-1">
                 <div className="flex items-center gap-2 mb-2">
                    <ShieldCheck className="w-3 h-3 text-primary" />
                    <span className="text-[8px] font-black uppercase tracking-widest text-primary/60">Module State Summary</span>
                 </div>
-
+ 
                 {/* Palette Summary */}
                 <div className="p-3 bg-black/20 border wb-outline rounded-xs flex items-center justify-between">
                    <div className="flex flex-col gap-0.5">
@@ -103,7 +103,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
                        ))}
                     </div>
                 </div>
-
+ 
                 {/* Typography Summary */}
                 <div className="p-3 bg-black/20 border wb-outline rounded-xs flex items-center justify-between">
                    <div className="flex flex-col gap-0.5">
@@ -117,7 +117,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
                       <span className="text-[6px] wb-text-muted uppercase font-bold tracking-widest">Master Family</span>
                    </div>
                 </div>
-
+ 
                 {/* Physics Summary */}
                 <div className="p-3 bg-black/20 border wb-outline rounded-xs flex items-center justify-between">
                    <div className="flex flex-col gap-0.5">
@@ -129,7 +129,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
                       <span className="text-[6px] font-black uppercase text-primary">Simulated</span>
                    </div>
                 </div>
-
+ 
                 {/* Hardware Summary */}
                 <div className="p-3 bg-black/20 border wb-outline rounded-xs flex items-center justify-between">
                    <div className="flex flex-col gap-0.5">
@@ -141,7 +141,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
              </div>
           </div>
         )}
-
+ 
         {activeTab === 'elements' && (
           <ModuleStyleLibrary 
             manifest={manifest} 
@@ -152,7 +152,7 @@ export default function CustomSkinSection({ manifest, onUpdate, resolveAsset, ac
           />
         )}
       </div>
-
+ 
       {/* FOOTER GOVERNANCE INFO */}
       <div className="p-4 border border-dashed wb-outline rounded-xs bg-black/20">
          <p className="text-[7px] wb-text-muted font-bold uppercase tracking-tighter leading-tight italic">

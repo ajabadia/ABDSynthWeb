@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Minus, Edit2, AlertCircle, Hash, Box, Check, Zap } from 'lucide-react';
-import { ManifestDiffResult, DiffEntry } from '../../types/diff';
+import type { ManifestDiffResult, DiffEntry } from '../../types/diff';
 
 interface ManifestDiffViewerProps {
   diff: ManifestDiffResult | null;

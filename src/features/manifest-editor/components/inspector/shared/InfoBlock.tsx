@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Info, LucideIcon } from 'lucide-react';
+import { Info, type LucideIcon } from 'lucide-react';
 
 interface InfoBlockProps {
   title: string;

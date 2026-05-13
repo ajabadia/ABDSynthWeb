@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Layers } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
-import InspectorCollapsible from '../../shared/InspectorCollapsible';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
 
 interface ModulePlaneSelectorProps {
   manifest: OMEGA_Manifest;
@@ -28,8 +28,10 @@ export default function ModulePlaneSelector({ manifest, onUpdate }: ModulePlaneS
                     ui: {
                       ...manifest.ui,
                       layout: {
-                        containers: manifest.ui?.layout?.containers || [],
+                        width: manifest.ui?.layout?.width ?? 800,
+                        height: manifest.ui?.layout?.height ?? 600,
                         ...manifest.ui?.layout,
+                        containers: manifest.ui?.layout?.containers || [],
                         activeTab: plane
                       }
                     }

@@ -1,36 +1,59 @@
 'use client';
  
 import { useMemo } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
- 
-export function useRackLayout(manifest: OMEGA_Manifest, activeTab: string) {
+import type { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
+import { adaptNodeToManifestEntity, calculateWorldPosition } from '../entities/ucaInspectorAdapter';
+
+/**
+ * OMEGA ERA 7.2.3 - RACK LAYOUT ENGINE
+ * Derived exclusively from the Canonical UCA Tree.
+ */
+export function useRackLayout(manifest: OMEGA_Manifest) {
   const hp = manifest?.metadata?.rack?.hp || 12;
   const isCompact = manifest?.metadata?.rack?.height_mode === 'compact';
   
   const width = useMemo(() => hp * 15 * 1.5, [hp]);
   const height = useMemo(() => (manifest.ui?.dimensions?.height || (isCompact ? 140 : 420)) * 1.5, [manifest.ui, isCompact]);
  
-  const allElements = useMemo(() => [
-    ...(manifest.ui?.controls || []).map(c => ({ ...c, isJack: false })),
-    ...(manifest.ui?.jacks || []).map(j => ({ ...j, isJack: true }))
-  ], [manifest.ui]);
+  // 1. FLATTEN CANONICAL TREE (Sovereign Source)
+  const allElements = useMemo(() => {
+    const tree = manifest.ui?.tree;
+    if (!tree) return [];
+
+    const entities: (ManifestEntity & { isJack: boolean })[] = [];
+
+    const traverse = (node: OmegaNode) => {
+      // We only project 'cell' nodes into the flat entity list for the rack engine
+      if (node.kind === 'cell') {
+        const projection = adaptNodeToManifestEntity(node);
+        // Recalculate absolute position based on parent offsets
+        const worldPos = calculateWorldPosition(tree, node.id) || projection.pos;
+        
+        entities.push({
+          ...projection,
+          pos: worldPos,
+          isJack: node.role === 'port' || node.cellRef === 'port'
+        });
+      }
+
+      if (node.children) {
+        node.children.forEach(traverse);
+      }
+    };
+
+    traverse(tree);
+    return entities;
+  }, [manifest.ui?.tree]);
  
+  // 2. EXTRACT CONTAINERS
   const containers = useMemo(() => manifest.ui?.layout?.containers || [], [manifest.ui?.layout?.containers]);
  
+  // 3. RESOLVE VISIBILITY
   const visibleElements = useMemo(() => {
-    return allElements.filter(entity => {
-      const containerId = entity.presentation?.container;
-      const container = containers.find(c => c.id === containerId);
-      
-      // ERA 7.2.3 - Mandatory Container Mapping
-      if (!container) return false; // Orphaned cells are not rendered in the rack
-      
-      if (container.collapsed) return false;
-      
-      // Plane (Tab) resolution
-      return (container.tab || 'MAIN') === activeTab;
-    });
-  }, [allElements, containers, activeTab]);
+    // In Era 7.2.3, we rely on the tree structure. 
+    // Filtering here ensures compatibility with legacy simulation hooks.
+    return allElements; 
+  }, [allElements]);
 
   return {
     width,

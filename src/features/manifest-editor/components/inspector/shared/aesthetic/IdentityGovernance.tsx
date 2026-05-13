@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { Fingerprint, Settings2 } from 'lucide-react';
-import { AestheticCapability, OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
-import { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
+import type { AestheticCapability } from '@/omega-ui-core/governance/ElementCatalog';
+import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
+import type { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
 import AssetSelector from '../AssetSelector';
 import FittingGovernance from './FittingGovernance';
 import InspectorCollapsible from '../InspectorCollapsible';

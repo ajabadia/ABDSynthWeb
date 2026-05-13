@@ -3,18 +3,18 @@
  * Single Source of Truth for Slider HTML Structure.
  */
  
- import { OmegaStyleNode } from '../types/manifest';
+ import type { OmegaStyleNode } from '../types/manifest';
  
  export interface SliderProps {
    type: 'slider-v' | 'slider-h';
    size: string;      // A, B, C, D
    colorId: string;   // cyan, orange, etc.
    value: number;     // 0.0 to 1.0
-   id?: string;       // Canonical ID
+   id?: string | undefined;       // Canonical ID
    inheritedFont?: string | undefined;
    inheritedSize?: number | undefined;
    inheritedColor?: string | undefined;
-   style?: OmegaStyleNode; // [NEW] Era 7.2.3 Granular Style Node
+   style?: OmegaStyleNode | undefined; // [NEW] Era 7.2.3 Granular Style Node
    assetUrl?: string | undefined;
    frames?: number | undefined;
    orientation?: 'v' | 'h' | undefined;

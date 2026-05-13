@@ -3,22 +3,22 @@
  * Single Source of Truth for Port HTML Structure.
  */
  
-import { OmegaStyleNode } from '../types/manifest';
+import type { OmegaStyleNode } from '../types/manifest';
 
 export interface PortProps {
   size: string;          // A, B, C, D
   colorId: string;       // Default color from variant (cyan, accent, etc.)
   value: number;         // Signal value 0.0 to 1.0
-  isSelected?: boolean;
-  isMain?: boolean;
-  id?: string;           // Canonical ID for data attributes
-  label?: string;        // For color inference
-  explicitColor?: string; // Explicit color from manifest (B_cyan, neon_amber)
+  isSelected?: boolean | undefined;
+  isMain?: boolean | undefined;
+  id?: string | undefined;           // Canonical ID for data attributes
+  label?: string | undefined;        // For color inference
+  explicitColor?: string | undefined; // Explicit color from manifest (B_cyan, neon_amber)
   inheritedFont?: string | undefined;
   inheritedSize?: number | undefined;
   inheritedColor?: string | undefined;
-  customSignalColor?: string; // Era 7.2.3 Custom Mode
-  style?: OmegaStyleNode; // [NEW] Era 7.2.3 Granular Style Node
+  customSignalColor?: string | undefined; // Era 7.2.3 Custom Mode
+  style?: OmegaStyleNode | undefined; // [NEW] Era 7.2.3 Granular Style Node
 }
 
 /**

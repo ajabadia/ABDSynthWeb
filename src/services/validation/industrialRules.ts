@@ -1,15 +1,16 @@
-import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '../../omega-ui-core/types/manifest';
-import { ValidationIssue } from '../../types/validation';
-import { OmegaContract } from '../wasmLoader';
+import type { OMEGA_Manifest, ManifestEntity, OmegaNode, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { ValidationIssue } from '@/types/validation';
+import type { OmegaContract } from '../wasmLoader';
+import { CircularityAuditor } from '@/omega-ui-core/uca/utils/circularityAuditor';
 
 export class IndustrialRules {
-  static validate(manifest: OMEGA_Manifest, contract: OmegaContract | null): ValidationIssue[] {
+  static validate(manifest: OMEGA_Manifest, contract: (OmegaContract | OMEGA_Contract) | null): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
     if (!manifest.schemaVersion?.startsWith('7')) return issues;
 
     const hp = manifest.metadata?.rack?.hp || 12;
     const rackWidth = hp * 15;
-    const rackHeight = manifest.ui.dimensions?.height || 420;
+    const rackHeight = manifest.metadata?.rack?.height || manifest.ui.layout?.height || 420;
     
     const containers = manifest.ui.layout?.containers || [];
     const activePlanes = manifest.ui.layout?.planes || ['MAIN'];
@@ -153,9 +154,12 @@ export class IndustrialRules {
       const component = (entity as ManifestEntity).presentation?.component || (entity as OmegaNode).cellRef;
       const role = (entity as ManifestEntity).role || (entity as OmegaNode).role;
       const isIndicator = role === 'telemetry' || component === 'led' || component === 'display';
-      const entityAny = entity as unknown as { type?: string; unit?: string };
-      const isMidiOrString = entityAny.type === 'string' || manifest.metadata?.family === 'midi';
-      if (!entityAny.unit && role !== 'output' && !isIndicator && !isMidiOrString) {
+      
+      const entityType = isUCA ? (entity as OmegaNode).kind : (entity as ManifestEntity).type;
+      const entityUnit = isUCA ? undefined : (entity as ManifestEntity).unit;
+      
+      const isMidiOrString = entityType === 'string' || manifest.metadata?.family === 'midi';
+      if (!entityUnit && role !== 'output' && !isIndicator && !isMidiOrString && !isUCA) {
         issues.push({ path: `${path}/unit`, message: `PRO-MASTER: Falta unidad (Hz, dB, ms, semi, %). Requerido para parámetros de control.`, keyword: 'era7_ux', severity: 'audit' });
       }
 
@@ -168,8 +172,8 @@ export class IndustrialRules {
       if (contract && entity.bind) {
         const cleanBind = String(entity.bind).trim().toLowerCase();
         const allBinds = [
-          ...(contract.parameters?.map(p => String(p.id).trim().toLowerCase()) || []),
-          ...(contract.ports?.map(p => String(p.id).trim().toLowerCase()) || [])
+          ...(contract.parameters?.map((p: { id: string }) => String(p.id).trim().toLowerCase()) || []),
+          ...(contract.ports?.map((p: { id: string }) => String(p.id).trim().toLowerCase()) || [])
         ];
         
         if (!allBinds.includes(cleanBind)) {
@@ -191,6 +195,10 @@ export class IndustrialRules {
       (manifest.ui?.controls || []).forEach((e, idx) => validateEntity(e, `/ui/controls/${idx}`));
       (manifest.ui?.jacks || []).forEach((e, idx) => validateEntity(e, `/ui/jacks/${idx}`));
     }
+
+    // PHASE 17.2 - MODULATION CIRCULARITY AUDIT
+    const circularityIssues = CircularityAuditor.validate(manifest);
+    issues.push(...circularityIssues);
 
     return issues;
   }

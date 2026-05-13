@@ -1,6 +1,6 @@
-import { OMEGA_Manifest } from '../types/manifest';
-import { OmegaContract } from './wasmLoader';
-import { ValidationIssue } from '../types/validation';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from './wasmLoader';
+import type { ValidationIssue } from '@/types/validation';
 import { SchemaValidator } from './validation/schemaValidator';
 import { IndustrialRules } from './validation/industrialRules';
 
@@ -8,7 +8,7 @@ export class ValidationService {
   /**
    * Orchestrates the complete validation pipeline (Schema + Industrial Rules).
    */
-  static validate(manifest: OMEGA_Manifest, contract: OmegaContract | null = null): ValidationIssue[] {
+  static validate(manifest: OMEGA_Manifest, contract: (OmegaContract | OMEGA_Contract) | null = null): ValidationIssue[] {
     // 1. Technical Schema Validation (AJV)
     const schemaIssues = SchemaValidator.validate(manifest);
     

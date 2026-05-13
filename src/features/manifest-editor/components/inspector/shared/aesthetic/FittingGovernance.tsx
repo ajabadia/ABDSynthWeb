@@ -3,7 +3,7 @@
 import React from 'react';
 import { Maximize2, Minimize2, Move, LayoutGrid, Square } from 'lucide-react';
 
-import { OmegaStyleNode } from '@/types/manifest';
+import type { OmegaStyleNode } from '@/types/manifest';
 
 interface FittingGovernanceProps {
   value?: OmegaStyleNode['fitting'];

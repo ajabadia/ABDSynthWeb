@@ -1,7 +1,7 @@
 'use client';
 
-import { OmegaContract } from '@/services/wasmLoader';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
+import type { OMEGA_Manifest } from '@/types/manifest';
 import ModuleHub from './ModuleHub';
 
 interface WorkbenchSidebarProps {

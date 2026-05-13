@@ -1,4 +1,4 @@
-import { OmegaNode, OMEGA_Manifest } from '../types/manifest';
+import type { OmegaNode, OMEGA_Manifest } from '../types/manifest';
  
 /**
  * OMEGA ERA 7.2.3 - SPATIAL GOVERNANCE
@@ -8,8 +8,8 @@ import { OmegaNode, OMEGA_Manifest } from '../types/manifest';
 export interface Rect {
   x: number;
   y: number;
-  w: number;
-  h: number;
+  width: number;
+  height: number;
 }
 
 export interface GridConfig {
@@ -39,9 +39,9 @@ export function snapToGrid(pos: { x: number; y: number }, config: GridConfig): {
 export function clampChildToParent(child: Rect, parent: Rect, margin = 0): { x: number; y: number } {
   // Calculate valid range for child position
   const minX = margin;
-  const maxX = parent.w - margin - child.w;
+  const maxX = parent.width - margin - child.width;
   const minY = margin;
-  const maxY = parent.h - margin - child.h;
+  const maxY = parent.height - margin - child.height;
 
   // Clamp position
   return {
@@ -59,8 +59,8 @@ export function getParentRect(parent: OmegaNode, manifest: OMEGA_Manifest): Rect
     return {
       x: 0,
       y: 0,
-      w: manifest.ui?.dimensions?.width || 1200,
-      h: manifest.ui?.dimensions?.height || 800
+      width: manifest.ui?.dimensions?.width || 1200,
+      height: manifest.ui?.dimensions?.height || 800
     };
   }
 
@@ -68,8 +68,8 @@ export function getParentRect(parent: OmegaNode, manifest: OMEGA_Manifest): Rect
   return {
     x: 0,
     y: 0,
-    w: parent.layout?.size?.width || 400, // Fallback to safe defaults
-    h: parent.layout?.size?.height || 300
+    width: parent.layout?.size?.width || 400, // Fallback to safe defaults
+    height: parent.layout?.size?.height || 300
   };
 }
 
@@ -77,9 +77,9 @@ export function getParentRect(parent: OmegaNode, manifest: OMEGA_Manifest): Rect
  * getNodeSize
  * Resolves the size of a node, with fallbacks for cells.
  */
-export function getNodeSize(node: OmegaNode): { w: number; h: number } {
+export function getNodeSize(node: OmegaNode): { width: number; height: number } {
   return {
-    w: node.layout?.size?.width || 48,
-    h: node.layout?.size?.height || 48
+    width: node.layout?.size?.width || 48,
+    height: node.layout?.size?.height || 48
   };
 }

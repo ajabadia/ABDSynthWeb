@@ -2,7 +2,7 @@
  * OMEGA Integrity Service (v7.2.3)
  * Provides cryptographic hashing for manifest firmware integrity checks.
  */
-import { OMEGA_Manifest } from '../types/manifest';
+import type { OMEGA_Manifest } from '../types/manifest';
 
 export class IntegrityService {
   /**

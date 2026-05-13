@@ -3,7 +3,7 @@
 import React from 'react';
 import { Box } from 'lucide-react';
 
-import { Attachment } from '@/types/manifest';
+import type { Attachment } from '@/types/manifest';
 
 interface AttachmentVariantSpecProps {
   variant: string;

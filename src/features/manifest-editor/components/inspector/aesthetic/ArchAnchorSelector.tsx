@@ -2,13 +2,13 @@
 
 import React from 'react';
 import { Layout, Info, Box } from 'lucide-react';
-import { ManifestEntity, LayoutContainer } from '@/types/manifest';
+import type { ManifestEntity, LayoutContainer, Presentation } from '@/omega-ui-core/types/manifest';
 
 interface ArchAnchorSelectorProps {
   item: ManifestEntity;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   containers: LayoutContainer[];
-  onHelp?: (id: string) => void;
+  onHelp?: ((id: string) => void) | undefined;
   highlightPath?: string | null;
 }
 
@@ -31,12 +31,15 @@ export default function ArchAnchorSelector({ item, onUpdate, containers, onHelp,
         <div className="relative group">
           <select 
             value={item.presentation?.container || ''} 
-            onChange={(e) => onUpdate({ 
-              presentation: { 
-                ...item.presentation, 
-                container: e.target.value || undefined
-              } 
-            })}
+            onChange={(e) => {
+              if (!item.presentation) return;
+              onUpdate({ 
+                presentation: { 
+                  ...item.presentation, 
+                  container: e.target.value || undefined
+                } as Presentation
+              });
+            }}
             className={`w-full bg-black/5 border ${highlightPath?.includes('container') ? 'border-amber-500 ring-1 ring-amber-500 animate-pulse' : 'wb-outline'} rounded-xs px-3 py-3 text-[10px] font-black text-primary outline-none focus:border-accent/40 transition-all appearance-none cursor-pointer [color-scheme:dark]`}
           >
             <option value="">NO CONTAINER (UNBOUND)</option>

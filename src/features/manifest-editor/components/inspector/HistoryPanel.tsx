@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { History, GitCompare, RotateCcw, Clock } from 'lucide-react';
-import { HistoryEntry } from '../../types/history';
+import type { HistoryEntry } from '../../types/history';
 
 interface HistoryPanelProps {
   past: HistoryEntry[];

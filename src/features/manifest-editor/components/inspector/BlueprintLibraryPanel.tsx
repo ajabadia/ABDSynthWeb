@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Zap, Layers, Package, Layout } from 'lucide-react';
-import { OMEGA_Manifest, BlueprintDefinition } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, BlueprintDefinition } from '@/omega-ui-core/types/manifest.js';
 import { adaptModuleTemplateToBlueprintDefinition } from '../../utils/blueprintUtils';
 import { INDUSTRIAL_TEMPLATES } from '../../constants/templates';
 
@@ -33,7 +33,7 @@ export default function BlueprintLibraryPanel({
     }
   });
 
-  const manifestBlueprints = Object.values(manifest.ui?.moduleTemplates || {}).map(tmpl => {
+  const manifestBlueprints = Object.values(manifest.moduleTemplates || {}).map(tmpl => {
     try {
       return adaptModuleTemplateToBlueprintDefinition(tmpl);
     } catch (err) {
@@ -117,7 +117,7 @@ export default function BlueprintLibraryPanel({
                 <div className="px-1.5 py-0.5 bg-[#1a1a1a] border border-[#222] rounded text-[8px] font-bold text-gray-600 uppercase">
                   {bp.origin}
                 </div>
-                {bp.placeholders.length > 0 && (
+                {bp.placeholders && bp.placeholders.length > 0 && (
                   <div className="flex items-center gap-1 text-[8px] font-bold text-blue-500/60 uppercase">
                     <Layers className="w-2.5 h-2.5" />
                     {bp.placeholders.length} Params

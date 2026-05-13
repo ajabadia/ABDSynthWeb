@@ -57,10 +57,48 @@ Este documento detalla el estado actual de industrialización y los próximos pa
 - [x] **Certification of Pillars**: Formal verification of Freeze-as-Template, Dynamic Injection, and `.acepack` export.
 
 ---
-## 🔮 Futuro: Fase 17 - Advanced Signal Propagation & Cross-Module Modulation
-- [ ] **Cross-Module Modulation**: Implement high-fidelity circularity detection and recursive modulation mapping.
-- [ ] **WebView2 Embedding**: Integración directa en el binario de OMEGA.
-- [ ] **Live RPC Bridge**: Comunicación directa con el motor de C++ mediante `OmegaRPC`.
+## ✅ Fase 17: Advanced Signal Propagation & Cross-Module Modulation (Completado)
+- [x] **Phase 17.1: UCA Signal Port Expansion**: Formalización de puertos semánticos (In/Out) y modulation targets en el núcleo de UCA. Materialización determinista con direccionamiento basado en rutas (`node/port`).
+- [x] **Phase 17.2: Robust Circularity Audit**: Implementación de `CircularityAuditor` para detección de bucles de modulación (SCC) en fase de auditoría.
+- [x] **Phase 17.3: Recursive Modulation Mapping**: Jerarquía de IDs (`voice/osc/freq`) y direccionamiento multinivel para parámetros anidados.
+- [x] **Phase 17.4: Live RPC Bridge & WebView2**: Integración de `OmegaRPCBridge` (JSON-RPC 2.0) con soporte para `sessionId`, `seq` y estados de sincronización (`in-sync`, `degraded`).
 
 ---
-*OMEGA — Engineering Standard V8.2 — Industrial Governance ERA 7.2.3 — Roadmap Updated 2026-05-12*
+## ✅ Fase 18: Canonical UCA Contract & Sovereign Governance (Completado)
+- [x] **Phase 18.1: Sovereign Graph Integration**: `nodes` y `links` como ciudadanos de primera clase en la raíz del manifiesto.
+- [x] **Phase 18.2: Hardened Structural Audit**: Refactor de `StructuralAuditor` con soporte para "Sovereign Mode" y "Shadow Audits" legacy (ADR-018).
+- [x] **Phase 18.3: Deep Link Validation**: Integración de `PathResolver` y `CircularityAuditor` para validación transaccional de `OmegaLinks`.
+- [x] **Phase 18.4: Organic Migration Implementation**: Despliegue del patrón *Strangler Fig* para migración incremental de la flota legacy.
+- [x] **Phase 18.5: Runtime Certification**: Validación final del core endurecido en el motor de `ABDOmega` y demolición de los arrays legacy (`controls`, `jacks`) en Inspector, Clipboard y Orchestrator.
+
+---
+## ✅ Fase 19: Native OmegaNode Rendering (Completado)
+**Objetivo:** Eliminar la dependencia de proyecciones momentáneas en tiempo de render y hacer que `omega-ui-core` consuma `OmegaNode` nativamente como fuente de verdad para la representación visual.
+
+- [x] **Phase 19.1: Core Renderers UCA Migration**: Refactorizar los renderers atómicos y orquestadores para recibir e interpretar `OmegaNode` directamente.
+- [x] **Phase 19.2: Viewport & Canvas Sovereignty**: Renderizado del árbol canónico sin un modelo plano subyacente.
+- [x] **Phase 19.3: Legacy Render Cleanup**: Retiro de dependencias residuales de `ManifestEntity`.
+- [x] **Phase 19.4: Render Certification**: Validación de estabilidad y coherencia con el contrato UCA.
+
+---
+## ✅ Fase 20: Native Audio Runtime Integration (Completado)
+**Objetivo:** Establecer una conexión soberana entre el árbol canónico `OmegaNode` y el motor de audio C++/WASM.
+- [x] **Phase 20.1: Sovereign Audio Bridge**: Migración de `wasmRuntime` a consumidor nativo de UCA.
+- [x] **Phase 20.2: Deterministic Parameter Binding**: Direccionamiento jerárquico (HPA) estable.
+- [x] **Phase 20.3: Live RPC Integration**: Sincronización bidireccional y monitoreo de salud.
+- [x] **Phase 20.4: Industrial Persistence**: Guardado canónico con gatekeeping de validación.
+- [x] **Phase 20.5: Transactional Integrity**: Edición atómica con rollback automático.
+- [x] **Phase 20.6: Delta Batching**: Optimización de tráfico de control a 60Hz.
+- [x] **Phase 20.7: State Reconciliation**: Convergencia determinista UI/Motor.
+
+---
+## ✅ Fase 21: History Engine & Semantic Memory (Completado)
+**Objetivo:** Establecer un subsistema de memoria duradera para registrar, comparar y restaurar la evolución del manifiesto.
+- [x] **Phase 21.1: History Capture**: Registro inmutable de revisiones con lineage y causas.
+- [x] **Phase 21.2: Semantic Diff**: Comparación estructural profunda de grafos de nodos.
+- [x] **Phase 21.3: Time-Travel Restore**: Restauración validada de estados históricos vía Orquestador.
+- [x] **Phase 21.4: Historical Observability**: Trazabilidad completa de operaciones históricas y latencia.
+- [x] **Phase 21.5: Architectural Consolidation**: Integración de Undo/Redo como fachada sobre el History Engine.
+
+---
+*OMEGA — Engineering Standard V8.2 — Industrial Governance ERA 7.2.3 — Roadmap Updated 2026-05-14*

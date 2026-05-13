@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { WorkbenchPaneId, WorkbenchTab } from '../../types/workbench';
+import type { WorkbenchPaneId, WorkbenchTab } from '../../types/workbench';
 import MultiTabHeader from '../layout/MultiTabHeader';
 import { WorkbenchViewport } from '../viewport/WorkbenchViewport';
 import { SourceView } from '../views/SourceView';
-import { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
-import { SimulationBridgeState } from '../../hooks/useSimulationBridge';
-import { AuditResult } from '@/services/auditService';
-import { DocumentOrchestrator } from '../../types/document';
+import type { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { SimulationBridgeState } from '../../hooks/useSimulationBridge';
+import type { AuditResult } from '@/services/auditService';
+import type { DocumentOrchestrator } from '../../types/document';
 
 interface WorkbenchPaneProps {
   paneId: WorkbenchPaneId;

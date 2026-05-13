@@ -3,8 +3,8 @@
 import React from 'react';
 import { FolderOpen, ChevronRight, Zap, Database, Palette, CheckCircle, AlertTriangle } from 'lucide-react';
 
-import { OMEGA_Manifest } from '@/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OMEGA_Manifest } from '@/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 
 interface LogicAssetsSectionProps {
   manifest: OMEGA_Manifest;

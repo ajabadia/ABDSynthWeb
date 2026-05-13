@@ -1,15 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { OMEGA_Manifest } from '@/types/manifest';
-import { AuditResult } from '@/services/auditService';
-import { RackContainer } from '../rack/RackContainer';
-import { RackEntity } from '../rack/RackEntity';
-import { RackScrews } from '../rack/RackScrews';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { AuditResult } from '@/services/auditService';
+import { UniversalRenderer } from '@/omega-ui-core/renderers/UniversalRenderer';
+import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
+
 
 interface MockupViewportProps {
   manifest: OMEGA_Manifest;
   audit: AuditResult;
-  resolveAsset?: (id: string | undefined) => string | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
   width: number;
   height: number;
   skin: string;
@@ -28,20 +28,7 @@ export const MockupViewport = ({
     }
   };
 
-  const allElements = React.useMemo(() => [
-    ...(manifest.ui?.controls || []).map(c => ({ ...c, isJack: false })),
-    ...(manifest.ui?.jacks || []).map(j => ({ ...j, isJack: true }))
-  ], [manifest.ui]);
 
-  const containers = manifest.ui.layout?.containers || [];
-  const visibleContainers = containers.filter(c => !c.tab || c.tab === activeTab);
-  
-  const visibleElements = allElements.filter(entity => {
-    const containerId = entity.presentation?.container;
-    const container = containers.find(c => c.id === containerId);
-    if (container) return !container.tab || container.tab === activeTab;
-    return (entity.presentation?.tab || 'MAIN') === activeTab;
-  });
 
   return (
     <motion.div 
@@ -64,29 +51,17 @@ export const MockupViewport = ({
           boxShadow: '0 50px 100px -20px rgba(0,0,0,0.9), 0 30px 60px -30px rgba(0,0,0,0.5)'
         }}
       >
-        <RackScrews manifest={manifest} />
 
-        {/* ARCHITECTURAL LAYERS */}
-          {visibleContainers.map((c) => (
-            <RackContainer 
-              key={c.id} container={c} isSelected={false} 
-              activeContainers={{}} audit={audit} 
-              skin={skin} rackWidthPx={width} 
-              resolveAsset={resolveAsset}
-            />
-          ))}
 
-        {/* ENTITIES LAYER */}
-        {visibleElements.map((item) => (
-          <RackEntity 
-            key={item.id} item={item} rackRef={{ current: null }} 
-            zoom={1.0} isLiveMode={true} selectedItemId={null} 
-            onSelectItem={() => {}} onUpdateItem={() => {}} 
-            runtimeValue={0.5} steps={100} 
-            onPortClick={() => {}} audit={audit} skin={skin} 
-            resolveAsset={resolveAsset} manifest={manifest}
+        {/* UCA NATIVE ENGINE (Static Viewport) */}
+        <div className="absolute inset-0 uca-native-layer">
+          <UniversalRenderer 
+            node={manifest.ui.tree || manifestToTree(manifest, manifest.ui?.tree)} 
+            manifest={manifest} 
+            catalog={manifest.moduleTemplates || {}}
+            resolveAsset={resolveAsset}
           />
-        ))}
+        </div>
 
         {/* STUDIO OVERLAY SHINE (Glass Effect) */}
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.01] pointer-events-none z-[100]" />

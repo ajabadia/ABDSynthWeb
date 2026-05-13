@@ -1,11 +1,17 @@
 'use client';
 
 import { useCallback, useMemo, useReducer, useEffect, useRef } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
-import { DocumentState } from '../types/document';
+import type { DocumentState } from '../types/document';
 import { IntegrityService } from '@/services/integrityService';
-import { HistoryEntry, INITIAL_HISTORY_STATE } from '../types/history';
+import { persistenceService } from '@/services/persistenceService';
+import { observabilityService } from '@/services/observabilityService';
+import { BlueprintValidator } from '@/omega-ui-core/uca/blueprintValidator';
+import { historyService } from '@/services/historyService';
+import { HistoryRestoreEngine } from '@/services/historyRestore';
+import type { HistoryEntry } from '../types/history';
+import { INITIAL_HISTORY_STATE } from '../types/history';
 export { type HistoryEntry, INITIAL_HISTORY_STATE };
 
 type DocumentAction = 
@@ -21,7 +27,10 @@ type DocumentAction =
   | { type: 'UNDO_DOCUMENT'; id: string }
   | { type: 'REDO_DOCUMENT'; id: string }
   | { type: 'UNDO_TO_INDEX'; id: string; index: number }
-  | { type: 'PUSH_HISTORY'; id: string; entry: HistoryEntry };
+  | { type: 'PUSH_HISTORY'; id: string; entry: HistoryEntry }
+  | { type: 'START_TRANSACTION'; id: string; label: string; correlationId: string }
+  | { type: 'COMMIT_TRANSACTION'; id: string }
+  | { type: 'ABORT_TRANSACTION'; id: string };
 
 export interface OrchestratorState {
   documentsById: Record<string, DocumentState>;
@@ -37,7 +46,8 @@ const createInitialDocument = (id: string, manifest: OMEGA_Manifest): DocumentSt
   isDirty: false,
   lastStableHash: null,
   isInitializing: true,
-  history: INITIAL_HISTORY_STATE
+  history: INITIAL_HISTORY_STATE,
+  activeTransaction: null
 });
 
 /**
@@ -59,10 +69,8 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
       const sourceValue = source[key];
       const targetValue = target[key];
 
-      // CRITICAL: If the key is 'tree', we typically want to REPLACEMENT if it's a full tree update,
-      // but we allow deep merging if it's a partial node update. 
-      // However, our updateItem sends a FULL nextTree, so replacement is safer for 'tree' and 'controls'.
-      if (key === 'tree' || key === 'controls' || key === 'jacks') {
+      // CRITICAL: If the key is 'tree', we typically want to REPLACEMENT if it's a full tree update
+      if (key === 'tree') {
         result[key] = sourceValue;
         continue;
       }
@@ -110,6 +118,12 @@ function orchestratorReducer(state: OrchestratorState, action: DocumentAction): 
               ? deepMerge(doc.manifest as unknown as Record<string, unknown>, action.updates.manifest as unknown as Record<string, unknown>) as unknown as OMEGA_Manifest
               : doc.manifest;
 
+            // PURGE LEGACY ARRAYS (Aggressive Demolition)
+            if (nextManifest.ui) {
+              delete (nextManifest.ui as Record<string, unknown>).controls;
+              delete (nextManifest.ui as Record<string, unknown>).jacks;
+            }
+
             // ERA 7.2.3 - SELF-HEALING TREE (Phase 10.1C)
             // If UCA is enabled but the update (or merge) resulted in a missing tree, 
             // restore it from the old manifest or re-generate it with old tree as base.
@@ -139,18 +153,66 @@ function orchestratorReducer(state: OrchestratorState, action: DocumentAction): 
     case 'SET_ACTIVE_DOCUMENT':
       if (state.activeDocumentId === action.id) return state;
       return { ...state, activeDocumentId: action.id };
-    case 'CAPTURE_HASH':
+    case 'CAPTURE_HASH': {
+      const doc = state.documentsById[action.id];
+      if (!doc) return state;
+      // Do not capture stable hash if a transaction is mid-flight
+      if (doc.activeTransaction) return state;
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: { ...doc, lastStableHash: action.hash, isDirty: false }
+        }
+      };
+    }
+    case 'START_TRANSACTION': {
+      const doc = state.documentsById[action.id];
+      if (!doc || doc.activeTransaction) return state;
       return {
         ...state,
         documentsById: {
           ...state.documentsById,
           [action.id]: {
-            ...state.documentsById[action.id],
-            lastStableHash: action.hash,
-            isDirty: false
+            ...doc,
+            activeTransaction: {
+              label: action.label,
+              baseManifest: JSON.parse(JSON.stringify(doc.manifest)), // Deep copy for rollback
+              correlationId: action.correlationId
+            }
           }
         }
       };
+    }
+    case 'COMMIT_TRANSACTION': {
+      const doc = state.documentsById[action.id];
+      if (!doc || !doc.activeTransaction) return state;
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...doc,
+            activeTransaction: null
+          }
+        }
+      };
+    }
+    case 'ABORT_TRANSACTION': {
+      const doc = state.documentsById[action.id];
+      if (!doc || !doc.activeTransaction) return state;
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...doc,
+            manifest: doc.activeTransaction.baseManifest,
+            activeTransaction: null
+          }
+        }
+      };
+    }
     case 'SET_DIRTY':
       return {
         ...state,
@@ -319,17 +381,18 @@ const DEFAULT_MANIFEST: OMEGA_Manifest = {
   id: 'omega_primary',
   metadata: { 
     name: 'Primary Manifest', 
+    version: '1.0.0',
     family: 'oscillator', 
     tags: ['era7'] 
   },
   ui: { 
     dimensions: { width: 140, height: 420 },
-    controls: [],
-    jacks: [],
     layout: { 
+      width: 140,
+      height: 420,
       containers: [], 
       planes: ['MAIN'], 
-      gridSnap: 5 
+      grid: { enabled: true, spacingX: 5, spacingY: 5, snapMode: 'center' }
     },
     useUCA: true,
     tree: {
@@ -354,9 +417,13 @@ const DEFAULT_MANIFEST: OMEGA_Manifest = {
       ]
     },
     ucaDebug: {
-      enabled: false
+      enabled: false,
+      showLabels: false,
+      hideDecorative: false,
+      showCADOverlay: false
     }
   },
+  entities: [],
   resources: { 
     wasm: 'module.wasm',
     assets: []
@@ -373,41 +440,67 @@ export const useDocumentOrchestrator = () => {
     activeDocumentId: 'primary'
   });
 
-  // Client-Side Hydration (Fix for Hydration Mismatch)
+  // Client-Side Hydration (Phase 20.6 - Persistence & Recovery)
   useEffect(() => {
     try {
+      const persisted = persistenceService.loadCanonicalState();
+      
+      if (persisted) {
+        // Mandatory Validation before rehydration
+        try {
+          BlueprintValidator.validate(persisted.graph, { id: persisted.id } as any);
+          
+          observabilityService.trackEvent({
+            correlationId: persisted.metadata.lastCorrelationId,
+            phase: 'PHASE_20_RECOVERY',
+            component: 'ORCHESTRATOR',
+            state: 'SUCCESS',
+            message: `Rehydrated canonical state for ${persisted.id} (Hash: ${persisted.metadata.syncHash})`
+          });
+
+          // Open the recovered document
+          const recoveredManifest: OMEGA_Manifest = {
+            ...DEFAULT_MANIFEST,
+            id: persisted.id,
+            ui: {
+              ...DEFAULT_MANIFEST.ui,
+              tree: persisted.graph
+            }
+          };
+
+          dispatch({ 
+            type: 'OPEN_DOCUMENT', 
+            id: persisted.id, 
+            manifest: recoveredManifest
+          });
+
+          // Phase 21.1: Capture as historical revision
+          historyService.captureRevision(
+            persisted.graph as any,
+            'RECOVERY_POINT',
+            persisted.metadata.lastCorrelationId,
+            'Session Recovery Point'
+          );
+          
+          return; // Skip general session hydration if canonical recovery succeeds
+        } catch (valErr: any) {
+          observabilityService.trackEvent({
+            correlationId: persisted.metadata.lastCorrelationId,
+            phase: 'PHASE_20_RECOVERY',
+            component: 'ORCHESTRATOR',
+            state: 'FAILURE',
+            code: 'RECOVERY_VALIDATION_FAILED',
+            message: `Persisted state invalid: ${valErr.message}`
+          });
+          persistenceService.clearPersistedState();
+        }
+      }
+
+      // Fallback to legacy session hydration if no canonical state or validation failed
       const stored = localStorage.getItem(STORAGE_KEYS.SESSION_DOCS);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Re-hydrate documents with isInitializing: true to trigger fresh hash check
-        const hydratedDocs = Object.fromEntries(
-          Object.entries(parsed.documentsById).map(([id, doc]) => {
-            const d = doc as DocumentState;
-            // Migration: If UCA is enabled but tree is missing, hydrate it now
-            if (d.manifest.ui?.useUCA !== false && !d.manifest.ui?.tree) {
-              d.manifest.ui = {
-                ...d.manifest.ui,
-                tree: manifestToTree(d.manifest)
-              };
-            }
-            return [
-              id, 
-              { 
-                ...d, 
-                isInitializing: true, 
-                lastStableHash: null,
-                history: d.history || INITIAL_HISTORY_STATE 
-              }
-            ];
-          })
-        );
-        dispatch({ 
-          type: 'HYDRATE_SESSION', 
-          state: {
-            ...parsed,
-            documentsById: hydratedDocs
-          } 
-        });
+        dispatch({ type: 'HYDRATE_SESSION', state: parsed });
       }
     } catch (err) {
       console.error('[OMEGA ORCHESTRATOR] Session restore failed:', err);
@@ -458,6 +551,76 @@ export const useDocumentOrchestrator = () => {
   const redo = useCallback((id: string) => dispatch({ type: 'REDO_DOCUMENT', id }), []);
   const undoTo = useCallback((id: string, index: number) => dispatch({ type: 'UNDO_TO_INDEX', id, index }), []);
   const pushHistory = useCallback((id: string, entry: HistoryEntry) => dispatch({ type: 'PUSH_HISTORY', id, entry }), []);
+  
+  const startTransaction = useCallback((id: string, label: string) => {
+    const correlationId = observabilityService.generateCorrelationId();
+    dispatch({ type: 'START_TRANSACTION', id, label, correlationId });
+    observabilityService.trackEvent({
+      correlationId,
+      phase: 'PHASE_20_TRANSACTION',
+      component: 'ORCHESTRATOR',
+      state: 'START',
+      message: `Transaction started: ${label}`
+    });
+  }, []);
+
+  const commitTransaction = useCallback((id: string) => {
+    const doc = state.documentsById[id];
+    if (!doc || !doc.activeTransaction) return;
+    
+    const correlationId = doc.activeTransaction.correlationId;
+    const label = doc.activeTransaction.label;
+
+    try {
+      // 1. Validation (Blocking)
+      if (doc.manifest.ui?.tree) {
+        BlueprintValidator.validate(doc.manifest.ui.tree, doc.manifest);
+      }
+
+      // Phase 21.1: Capture as historical revision
+      historyService.captureRevision(
+        doc.manifest.nodes || [],
+        'TRANSACTION_COMMIT',
+        doc.activeTransaction.correlationId,
+        doc.activeTransaction.label
+      );
+
+      dispatch({ type: 'COMMIT_TRANSACTION', id: id });
+      
+      observabilityService.trackEvent({
+        correlationId,
+        phase: 'PHASE_20_TRANSACTION',
+        component: 'ORCHESTRATOR',
+        state: 'SUCCESS',
+        message: `Transaction committed: ${label}`
+      });
+    } catch (err: any) {
+      observabilityService.trackEvent({
+        correlationId,
+        phase: 'PHASE_20_TRANSACTION',
+        component: 'ORCHESTRATOR',
+        state: 'FAILURE',
+        code: 'TRANSACTION_COMMIT_FAILED',
+        message: `Validation failed for transaction '${label}': ${err.message}`
+      });
+      // Automatic Rollback on failure
+      dispatch({ type: 'ABORT_TRANSACTION', id });
+    }
+  }, [state.documentsById]);
+
+  const abortTransaction = useCallback((id: string) => {
+    const doc = state.documentsById[id];
+    if (!doc || !doc.activeTransaction) return;
+
+    observabilityService.trackEvent({
+      correlationId: doc.activeTransaction.correlationId,
+      phase: 'PHASE_20_TRANSACTION',
+      component: 'ORCHESTRATOR',
+      state: 'ROLLBACK',
+      message: `Transaction aborted: ${doc.activeTransaction.label}`
+    });
+    dispatch({ type: 'ABORT_TRANSACTION', id });
+  }, [state.documentsById]);
 
   // Multi-Document Hashing Effect (Gate 9.0 Hashing Coordination)
   const debouncedHashingRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -484,12 +647,44 @@ export const useDocumentOrchestrator = () => {
     }
   }, [state.documentsById]);
 
+  const restoreHistoricalRevision = useCallback(async (id: string, revisionId: string) => {
+    const graph = await HistoryRestoreEngine.prepareRestore(revisionId);
+    if (!graph) return;
+
+    // Promote historical state to active manifest
+    dispatch({
+      type: 'UPDATE_DOCUMENT',
+      id,
+      updates: {
+        manifest: {
+          nodes: graph
+        }
+      }
+    });
+
+    // Capture the restore action as a new recovery point in history
+    historyService.captureRevision(
+      graph,
+      'RECOVERY_POINT',
+      `restore_${Date.now()}_${revisionId}`,
+      `Restored Revision: ${revisionId}`
+    );
+  }, []);
+
   const captureStableSnapshot = useCallback(async (id: string) => {
     await flushPendingHash(id); // Ensure integrity before snapshot (Gate 9.0 requirement)
     const doc = state.documentsById[id];
     if (!doc) return;
     const hash = await IntegrityService.generateManifestHash(doc.manifest);
     dispatch({ type: 'CAPTURE_HASH', id, hash });
+
+    // Phase 21.1: Capture as historical revision
+    historyService.captureRevision(
+      doc.manifest.nodes || [],
+      'SNAPSHOT_SYNC',
+      `sync_${Date.now()}_${hash.substring(0, 8)}`,
+      'Structural Sync Point'
+    );
   }, [state.documentsById, flushPendingHash]);
 
   useEffect(() => {
@@ -538,7 +733,7 @@ export const useDocumentOrchestrator = () => {
 
     const currentDebounced = debouncedHashingRef.current;
     return () => {
-      Object.values(currentDebounced).forEach((timer) => {
+      Object.values(currentDebounced).forEach((timer: NodeJS.Timeout) => {
         if (timer) clearTimeout(timer);
       });
     };
@@ -559,6 +754,10 @@ export const useDocumentOrchestrator = () => {
     redo,
     undoTo,
     pushHistory,
+    startTransaction,
+    commitTransaction,
+    abortTransaction,
+    restoreHistoricalRevision,
     // Compat with Phase 7.0 primary accessor
     primaryDocument: activeDocument 
   }), [
@@ -575,6 +774,9 @@ export const useDocumentOrchestrator = () => {
     undo,
     redo,
     undoTo,
-    pushHistory
+    pushHistory,
+    startTransaction,
+    commitTransaction,
+    abortTransaction
   ]);
 };

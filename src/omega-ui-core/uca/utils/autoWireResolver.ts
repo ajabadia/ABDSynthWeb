@@ -1,4 +1,4 @@
-import { 
+import type { 
   OMEGA_Manifest, 
   BlueprintDefinition, 
   BlueprintAutoWireDecision,
@@ -38,9 +38,10 @@ export class AutoWireResolver {
             if (candidateId) {
               node.bind = candidateId;
               decisions.push({
-                type: 'AUTO_BIND',
                 nodeId: node.id,
                 targetId: candidateId,
+                strategy: 'strict',
+                status: 'bound' as const,
                 reason: 'Strict ID/Label match'
               });
             }

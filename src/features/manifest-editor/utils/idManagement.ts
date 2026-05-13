@@ -1,4 +1,4 @@
-import { ManifestEntity, OmegaNode, Attachment } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, OmegaNode, Attachment } from '@/omega-ui-core/types/manifest';
 
 /**
  * OMEGA Identity Governance (Phase 9.1)

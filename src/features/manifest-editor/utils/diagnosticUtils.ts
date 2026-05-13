@@ -3,7 +3,7 @@
  * Logic for merging and prioritizing multi-source diagnostics.
  */
 
-import { TabDiagnostics, Diagnostic } from '../types/diagnostics';
+import type { TabDiagnostics, Diagnostic } from '../types/diagnostics';
 
 /**
  * Merges multiple diagnostic sets into one.
@@ -70,6 +70,8 @@ export function mapMonacoMarkers(markers: unknown[]): TabDiagnostics {
       code?: string | number | { value: string };
     };
 
+    const code = typeof m.code === 'object' ? m.code.value : m.code?.toString();
+
     const diag: Diagnostic = {
       id: `monaco-${m.owner}-${m.startLineNumber}-${m.startColumn}`,
       source: 'Monaco',
@@ -77,7 +79,7 @@ export function mapMonacoMarkers(markers: unknown[]): TabDiagnostics {
       severity: m.severity === 8 ? 'error' : m.severity === 4 ? 'warning' : 'info',
       line: m.startLineNumber,
       column: m.startColumn,
-      code: typeof m.code === 'object' ? m.code.value : m.code?.toString()
+      code: code || 'GENERIC'
     };
 
     if (diag.severity === 'error') result.errors.push(diag);

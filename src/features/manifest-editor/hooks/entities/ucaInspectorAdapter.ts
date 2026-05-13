@@ -1,4 +1,4 @@
-import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 import { moveChildInTree } from '@/omega-ui-core/uca/treeUtils';
 
@@ -43,19 +43,9 @@ export function adaptNodeToManifestEntity(node: OmegaNode): ManifestEntity {
     type: node.cellRef || 'knob',
     role: node.role || (isJack ? 'port' : 'control'),
     bind: node.bind || 'none',
+    label: node.id,
     pos: node.layout?.pos || { x: 0, y: 0 },
-    presentation: {
-      component: node.cellRef || 'knob',
-      variant: 'default',
-      offsetX: 0,
-      offsetY: 0,
-      attachments: [],
-      tab: 'MAIN',
-      style: {
-        ...node.style
-      },
-      size: node.layout?.size ? { w: node.layout.size.width, h: node.layout.size.height } : undefined
-    }
+    size: node.layout?.size || { width: 48, height: 48 },
   };
 }
 

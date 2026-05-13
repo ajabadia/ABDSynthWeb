@@ -1,18 +1,18 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
-import { ManifestEntity } from '@/types/manifest';
+import type { OmegaNode } from '@/omega-ui-core/types/manifest';
 
 import InspectorCollapsible from '../shared/InspectorCollapsible';
 
 interface EngineeringSectionProps {
-  item: ManifestEntity;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
-  onHelp?: (sectionId?: string) => void;
-  highlightPath?: string | null;
+  item: OmegaNode;
+  onUpdate: (updates: Partial<OmegaNode>) => void;
+  onHelp?: ((sectionId: string) => void) | undefined;
+  highlightPath?: (string | null) | undefined;
 }
 
 export default function EngineeringSection({ item, onUpdate, onHelp, highlightPath }: EngineeringSectionProps) {
-  const isHighlighted = (key: string) => highlightPath?.includes(key);
+  const isHighlighted = (key: string) => !!highlightPath?.includes(key);
 
   return (
     <InspectorCollapsible 

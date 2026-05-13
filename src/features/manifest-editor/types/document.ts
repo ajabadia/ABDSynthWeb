@@ -1,6 +1,6 @@
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
-import { HistoryState, HistoryEntry } from './history';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
+import type { HistoryState, HistoryEntry } from './history';
 
 /**
  * OMEGA Document State (v7.2.3 -> v8.0.0 History Engine)
@@ -9,13 +9,18 @@ import { HistoryState, HistoryEntry } from './history';
 export interface DocumentState {
   id: string;
   manifest: OMEGA_Manifest;
-  contract: OmegaContract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   wasmBuffer: ArrayBuffer | null;
   extraResources: { name: string, data: ArrayBuffer, type: string }[];
   isDirty: boolean;
   lastStableHash: string | null;
   isInitializing: boolean;
   history: HistoryState;
+  activeTransaction: {
+    label: string;
+    baseManifest: OMEGA_Manifest;
+    correlationId: string;
+  } | null;
 }
 
 export interface DocumentOrchestrator {

@@ -1,11 +1,11 @@
 "use client";
 
 import React from 'react';
-import { X, LucideIcon } from 'lucide-react';
-import { WorkbenchTab, WorkbenchPaneId } from '../../hooks/useWorkbenchState';
-import { Diagnostic } from '../../types/diagnostics';
-import { SimulationStatusBadge } from '../header/SimulationStatusBadge';
-import { SimulationBridgeState } from '../../hooks/useSimulationBridge';
+import { X, type LucideIcon } from 'lucide-react';
+import type { WorkbenchTab, WorkbenchPaneId } from '@/features/manifest-editor/hooks/useWorkbenchState';
+import type { Diagnostic } from '@/features/manifest-editor/types/diagnostics';
+import { SimulationStatusBadge } from '@/features/manifest-editor/components/header/SimulationStatusBadge';
+import type { SimulationBridgeState } from '@/features/manifest-editor/hooks/useSimulationBridge';
 
 interface MultiTabHeaderProps {
   paneId: WorkbenchPaneId;

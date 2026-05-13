@@ -1,22 +1,22 @@
 import React from 'react';
 import { Monitor, Hash } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface DisplayPropertiesProps {
   item: ManifestEntity;
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function DisplayProperties({ item, manifest, onUpdate, setActiveSection }: DisplayPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const currentVariant = pres.variant || 'A';
   const precision = pres.precision ?? 2;
   const isCustom = manifest.ui.skinMode === 'custom';
   const displayStyles = manifest.ui.styles?.['display'] || [];
-  const currentStyle = displayStyles.find(s => s.id === currentVariant) || { id: currentVariant, label: 'Standard Display' };
+  const currentStyle = displayStyles.find((s: { id: string; label: string }) => s.id === currentVariant) || { id: currentVariant as string, label: 'Standard Display' };
 
   const updateVariant = (v: string) => {
     onUpdate({ presentation: { ...pres, variant: v } });

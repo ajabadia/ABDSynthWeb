@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
-import { ValidationIssue } from '@/types/validation';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
+import type { ValidationIssue } from '@/types/validation';
 
 interface DeploymentDependencies {
   manifest: OMEGA_Manifest;

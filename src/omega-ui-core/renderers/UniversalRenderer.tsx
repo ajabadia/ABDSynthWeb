@@ -1,12 +1,10 @@
-'use client';
-
 import React from 'react';
 import { resolveNodeSemantics } from '../uca/ucaSemantics';
 import { resolveLayout } from '../uca/layoutResolver';
 import { StructuralNode } from './components/StructuralNode';
 import { CellNode } from './components/CellNode';
 import { UCADebugHUD } from './components/UCADebugHUD';
-import { UniversalRendererProps } from './ucaTypes';
+import type { UniversalRendererProps } from './ucaTypes';
 
 /**
  * UNIVERSAL RENDERER (Phase 1 Experimental - Refactored)
@@ -28,8 +26,8 @@ export function UniversalRenderer({
   const node = resolveLayout(semanticNode);
 
   const isLayoutGoverned = !!(parentNode?.layout?.mode && parentNode.layout.mode !== 'absolute');
-  const worldX = parentWorldPos.x + (node.layout?.pos?.x || 0);
-  const worldY = parentWorldPos.y + (node.layout?.pos?.y || 0);
+  const worldX = (parentWorldPos?.x || 0) + (node.layout?.pos?.x || 0);
+  const worldY = (parentWorldPos?.y || 0) + (node.layout?.pos?.y || 0);
   const worldPos = { x: worldX, y: worldY };
 
   if (node.visible === false) return null;
@@ -52,8 +50,8 @@ export function UniversalRenderer({
         manifest={manifest}
         depth={depth}
         catalog={catalog}
-        resolveAsset={resolveAsset}
-        debugContext={debugContext}
+        resolveAsset={resolveAsset || undefined}
+        debugContext={debugContext || undefined}
         worldPos={worldPos}
         isLayoutGoverned={isLayoutGoverned}
         handleDebugClick={handleDebugClick}
@@ -69,8 +67,8 @@ export function UniversalRenderer({
         manifest={manifest}
         depth={depth}
         catalog={catalog}
-        resolveAsset={resolveAsset}
-        debugContext={debugContext}
+        resolveAsset={resolveAsset || undefined}
+        debugContext={debugContext || undefined}
         worldPos={worldPos}
         isLayoutGoverned={isLayoutGoverned}
         handleDebugClick={handleDebugClick}
@@ -87,8 +85,8 @@ export function UniversalRenderer({
         onClick={handleDebugClick}
         style={{
           position: 'absolute',
-          left: `${node.layout?.pos.x}px`,
-          top: `${node.layout?.pos.y}px`,
+          left: `${node.layout?.pos?.x || 0}px`,
+          top: `${node.layout?.pos?.y || 0}px`,
           color: node.style?.color,
           fontSize: node.style?.fontSize,
           opacity: node.style?.opacity,

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Lock, Unlock, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 
-import { OmegaStyleNode } from '@/types/manifest';
+import type { OmegaStyleNode } from '@/types/manifest';
 
 interface SequenceAnatomyInspectorProps {
   values: Partial<OmegaStyleNode>;

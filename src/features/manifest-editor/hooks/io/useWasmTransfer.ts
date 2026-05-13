@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, Dispatch, SetStateAction } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { WasmLoaderService, OmegaContract } from '@/services/wasmLoader';
+import { useCallback } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import { WasmLoaderService, type OmegaContract } from '@/services/wasmLoader';
 import { wasmRuntime } from '@/services/wasmRuntime';
 import { ContractService } from '@/services/contractService';
 
@@ -37,12 +38,22 @@ export const useWasmTransfer = (
       metadata: {
         ...(prev.metadata || {}),
         name: (prev.metadata?.name === 'New Module' || !prev.metadata?.name) ? (newContract.name || newContract.id) : prev.metadata.name,
-        family: newContract.family || prev.metadata?.family || 'oscillator'
+        family: newContract.family || prev.metadata?.family || 'oscillator',
+        version: prev.metadata?.version || '0.1.0'
       },
       resources: {
         ...(prev.resources || {}),
         wasm: filename,
-        contract: filename.replace('.wasm', '.contract.json')
+        contract: {
+          id: newContract.id,
+          label: newContract.name || newContract.id,
+          role: newContract.family || 'oscillator',
+          ports: newContract.ports.map(p => ({
+            id: p.id,
+            direction: p.direction === 'output' ? 'out' as const : 'in' as const,
+            signalType: (p.type === 'audio' || p.type === 'cv' || p.type === 'midi' || p.type === 'gate') ? p.type : 'audio'
+          }))
+        }
       }
     }));
   }, [setManifest]);

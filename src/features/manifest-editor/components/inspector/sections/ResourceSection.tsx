@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Image as ImageIcon, Plus, Trash2, FileImage, Globe, ShieldCheck, Folder, ChevronLeft } from 'lucide-react';
 import Image from 'next/image';
-import { ExtraResource } from '@/types/manifest';
+import type { ExtraResource } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../shared/InspectorCollapsible';
 import IndustrialButton from '../shared/IndustrialButton';
 import EmptyState from '../shared/EmptyState';
@@ -12,14 +12,14 @@ import InfoBlock from '../shared/InfoBlock';
  
 interface ResourceSectionProps {
   resources: ExtraResource[];
-  onTriggerUpload: () => void;
-  onRemove?: (name: string) => void;
+  onTriggerUpload: (() => void) | undefined;
+  onRemove?: ((name: string) => void) | undefined;
 }
  
 interface ResourceItemProps {
   res: ExtraResource;
   idx: number;
-  onRemove?: (name: string) => void;
+  onRemove?: ((name: string) => void) | undefined;
 }
  
 const ResourceItem = React.memo(({ res, idx, onRemove }: ResourceItemProps) => {

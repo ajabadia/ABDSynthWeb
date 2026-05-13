@@ -1,5 +1,5 @@
-import { LucideIcon } from "lucide-react";
-import { TabDiagnostics } from "./diagnostics";
+import type { LucideIcon } from "lucide-react";
+import type { TabDiagnostics } from "./diagnostics";
 
 export type WorkbenchTabType =
   | "orbital"
@@ -19,7 +19,7 @@ export interface WorkbenchTab {
   icon?: string | LucideIcon;
   closable?: boolean;
   persistent?: boolean;
-  payload?: Record<string, unknown>;
+  payload?: Record<string, unknown> | undefined;
   isDirty?: boolean;
   diagnostics?: TabDiagnostics;
 }
@@ -50,7 +50,7 @@ export interface WorkbenchTabViewState {
 
 export interface StudioModeState {
   isOpen: boolean;
-  cellId?: string;
+  cellId?: string | undefined;
 }
 
 export interface WorkbenchState {
@@ -66,7 +66,7 @@ export interface WorkbenchState {
   showLogs: boolean;
   isLiveMode: boolean;
   showModGrid: boolean;
-  helpState: { isOpen: boolean; sectionId?: string };
+  helpState: { isOpen: boolean; sectionId?: string | undefined };
   mockupOpen: boolean;
   isAuditModalOpen: boolean;
   isAboutModalOpen: boolean;
@@ -92,7 +92,7 @@ export type WorkbenchAction =
   | { type: "FOCUS_TAB"; payload: { paneId: WorkbenchPaneId; tabId: string } }
   | { type: "REORDER_TABS"; payload: { paneId: WorkbenchPaneId; tabIds: string[] } }
   | { type: "FOCUS_PANE"; payload: { paneId: WorkbenchPaneId } }
-  | { type: "MOVE_TAB_TO_PANE"; payload: { tabId: string; targetPaneId: WorkbenchPaneId; index?: number } }
+  | { type: "MOVE_TAB_TO_PANE"; payload: { tabId: string; targetPaneId: WorkbenchPaneId; index?: number | undefined } }
   | { type: "SET_LAYOUT_MODE"; payload: { mode: WorkbenchLayoutMode } }
   | { type: "SET_LAYOUT_RATIO"; payload: { ratio: number } }
   | { type: "SET_SELECTED_NODE"; payload: { nodeId: string | null } }
@@ -100,7 +100,7 @@ export type WorkbenchAction =
   | { type: "CAPTURE_TAB_VIEW_STATE"; payload: { tabId: string; viewState: Partial<WorkbenchTabViewState> } }
   | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen' | 'isDiffModalOpen'>, value?: boolean } }
   | { type: "SET_STUDIO_MODE"; payload: StudioModeState } // Phase 15 Action
-  | { type: "SET_HELP_STATE"; payload: { isOpen: boolean; sectionId?: string } }
+  | { type: "SET_HELP_STATE"; payload: { isOpen: boolean; sectionId?: string | undefined } }
   | { type: "SET_UI_THEME"; payload: { theme: "light" | "dark" } }
   | { type: "SET_PENDING_FILES"; payload: { files: File[] } }
   | { type: "SET_ACTIVE_DIFF"; payload: { diff: import("../types/diff").ManifestDiffResult | null } }

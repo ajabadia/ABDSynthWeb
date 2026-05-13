@@ -3,7 +3,7 @@
 import React from 'react';
 import { Image as ImageIcon, Film, Layers, Move, Maximize } from 'lucide-react';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
-import { OMEGA_Manifest, OmegaStyleNode } from '@/types/manifest';
+import type { OMEGA_Manifest, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import AssetSelector from '../AssetSelector';
 import InspectorCollapsible from '../InspectorCollapsible';
 import SequenceAnatomyInspector from './SequenceAnatomyInspector'; 

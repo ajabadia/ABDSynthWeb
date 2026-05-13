@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
 
-import { OMEGA_Metric } from '@/types/manifest';
+import type { OMEGA_Metric } from '@/omega-ui-core/types/manifest';
 
 interface IndustrialStatusSectionProps {
   metrics: OMEGA_Metric[];
@@ -41,7 +41,7 @@ export default function IndustrialStatusSection({ metrics, sysReady, onDeploy }:
             <div className="flex flex-col">
                <span className="text-[6px] wb-text-muted uppercase font-black">Ready Score</span>
                <span className={`text-[10px] font-black font-mono ${sysReady ? 'text-green-400' : 'text-amber-400'}`}>
-                  {Math.round(metrics[4].value)}%
+                  {metrics.length > 4 ? Math.round(Number(metrics[4].value)) : 0}%
                </span>
             </div>
             <div className="flex flex-col text-right">

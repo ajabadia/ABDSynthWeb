@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { ModuleTemplate } from '@/omega-ui-core/types/manifest';
+import type { ModuleTemplate } from '@/omega-ui-core/types/manifest';
 
 import { INDUSTRIAL_TEMPLATES } from '../constants/templates';
 

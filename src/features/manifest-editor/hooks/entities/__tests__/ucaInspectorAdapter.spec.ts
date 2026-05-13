@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OmegaNode } from '@/omega-ui-core/types/manifest';
 import { findNodeInTree, updateNodeInTree, adaptNodeToManifestEntity } from '../ucaInspectorAdapter';
 
 /**

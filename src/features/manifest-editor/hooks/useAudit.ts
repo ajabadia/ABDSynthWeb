@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import { AuditService } from '@/services/auditService';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OmegaContract } from '@/services/wasmLoader';
 
 /**
  * useAudit (v7.2.3)
  * Manages real-time manifest auditing and cryptographic fingerprinting.
  */
-export const useAudit = (manifest: OMEGA_Manifest, contract: OmegaContract | null) => {
+export const useAudit = (manifest: OMEGA_Manifest, contract: (OmegaContract | OMEGA_Contract) | null) => {
   const [fingerprint, setFingerprint] = useState<string>('');
 
   const auditResult = useMemo(() => {
@@ -15,7 +15,7 @@ export const useAudit = (manifest: OMEGA_Manifest, contract: OmegaContract | nul
     return { 
       ...res, 
       fingerprint, 
-      isHashMatched: fingerprint === contract?.firmwareHash 
+      isHashMatched: contract && 'firmwareHash' in contract ? fingerprint === contract.firmwareHash : false
     };
   }, [manifest, fingerprint, contract]);
 

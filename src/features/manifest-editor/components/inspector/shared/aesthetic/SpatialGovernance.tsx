@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Maximize, Move, Layers } from 'lucide-react';
-import { OmegaStyleNode } from '@/types/manifest';
+import type { OmegaStyleNode } from '@/types/manifest';
 import InspectorCollapsible from '../InspectorCollapsible';
 
 interface SpatialGovernanceProps {

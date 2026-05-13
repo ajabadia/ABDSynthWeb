@@ -1,30 +1,30 @@
 'use client';
-
+ 
 import React from 'react';
 import { Box, Target } from 'lucide-react';
 import Image from 'next/image';
-import { OMEGA_Manifest, ManifestMetadata } from '@/omega-ui-core/types/manifest';
-import AssetSelector from '../../shared/AssetSelector';
-import InspectorCollapsible from '../../shared/InspectorCollapsible';
-import { IndustrialField } from '../../../primitives/IndustrialField';
-import { IndustrialInput } from '../../../primitives/IndustrialInput';
-import { IndustrialTextArea } from '../../../primitives/IndustrialTextArea';
-
+import type { OMEGA_Manifest, ManifestMetadata } from '@/omega-ui-core/types/manifest';
+import AssetSelector from '@/features/manifest-editor/components/inspector/shared/AssetSelector';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
+import { IndustrialField } from '@/features/manifest-editor/components/primitives/IndustrialField';
+import { IndustrialInput } from '@/features/manifest-editor/components/primitives/IndustrialInput';
+import { IndustrialTextArea } from '@/features/manifest-editor/components/primitives/IndustrialTextArea';
+ 
 interface ModuleSignatureProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
-  onHelp?: (id: string) => void;
+  onHelp?: ((id: string) => void) | undefined;
   isHighlighted: (key: string) => boolean;
   resolveAsset: (id: string | undefined) => string | undefined;
 }
-
+ 
 export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighlighted, resolveAsset }: ModuleSignatureProps) {
   const metadata = manifest.metadata;
-
+ 
   const updateMetadata = (field: keyof ManifestMetadata, value: unknown) => {
     onUpdate({ metadata: { ...metadata, [field]: value } } as Partial<OMEGA_Manifest>);
   };
-
+ 
   return (
     <InspectorCollapsible 
       title="Module Signature" 
@@ -44,7 +44,7 @@ export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighligh
               mono
             />
           </IndustrialField>
-
+ 
           <div className="col-span-2">
             <IndustrialField 
               label="Canonical ID (Unique)" 
@@ -60,7 +60,7 @@ export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighligh
             </IndustrialField>
           </div>
         </div>
-
+ 
         <div className="grid grid-cols-6 gap-3">
           <div className="col-span-3">
             <IndustrialField 
@@ -98,7 +98,7 @@ export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighligh
             />
           </IndustrialField>
         </div>
-
+ 
         <IndustrialField label="Module Description">
           <IndustrialTextArea 
             value={metadata.description || ''} 
@@ -107,7 +107,7 @@ export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighligh
             rows={5}
           />
         </IndustrialField>
-
+ 
         <div className="space-y-3 pt-2">
            <div className="text-[7px] font-black uppercase wb-text-muted flex items-center gap-2 tracking-[0.2em]">
               <Target className="w-3 h-3 text-primary" />
@@ -133,7 +133,7 @@ export default function ModuleSignature({ manifest, onUpdate, onHelp, isHighligh
                     <span className="text-[6px] font-black uppercase">Module Face</span>
                  </div>
               </div>
-
+ 
               <div className="flex-1 space-y-2">
                  <p className="text-[7px] wb-text-muted leading-relaxed uppercase font-bold tracking-tighter">
                     Select the high-fidelity asset to be displayed in the OMEGA Module Registry. 

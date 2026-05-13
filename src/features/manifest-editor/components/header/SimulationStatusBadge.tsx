@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Zap, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
-import { SimulationSyncStatus } from '../../hooks/useSimulationBridge';
+import type { SimulationSyncStatus } from '../../hooks/useSimulationBridge';
 
 /**
  * OMEGA Simulation Status Badge (Phase 9.1)

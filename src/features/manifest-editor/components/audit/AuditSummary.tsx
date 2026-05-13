@@ -6,8 +6,8 @@ import {
   ShieldCheck, Activity, Layers, Terminal, 
   CheckCircle2, AlertCircle 
 } from 'lucide-react';
-import { AuditResult } from '@/services/auditService';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { AuditResult } from '@/features/manifest-editor/types/diagnostics';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 interface AuditStatusConfig {
   color: string;
@@ -77,7 +77,7 @@ export default function AuditSummary({ audit, manifest, statusConfig }: AuditSum
               <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Metadata Density</span>
               <div className="flex justify-between text-[10px] font-mono font-black wb-text">
                 <span>{manifest.metadata?.name || 'NOT_SET'}</span>
-                <span className="text-primary">{manifest.metadata?.rack?.hp || 12}HP</span>
+                <span className="text-primary">{manifest.metadata?.rack?.width || 12}HP</span>
               </div>
            </div>
            

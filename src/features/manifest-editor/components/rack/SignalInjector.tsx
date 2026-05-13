@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
-import { inputSignalService, SignalType, VirtualSignal } from '@/services/inputSignalService';
+import { inputSignalService, type SignalType, type VirtualSignal } from '@/services/inputSignalService';
 
 interface SignalInjectorProps {
   portId: string;

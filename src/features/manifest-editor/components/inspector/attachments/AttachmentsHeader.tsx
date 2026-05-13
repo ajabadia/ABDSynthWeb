@@ -5,7 +5,7 @@ import { Paperclip, Info, Plus } from 'lucide-react';
 
 interface AttachmentsHeaderProps {
   onAdd: () => void;
-  onHelp?: (id: string) => void;
+  onHelp?: ((id: string) => void) | undefined;
 }
 
 export default function AttachmentsHeader({ onAdd, onHelp }: AttachmentsHeaderProps) {

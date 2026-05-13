@@ -1,21 +1,21 @@
 import React from 'react';
 import { Box, Palette } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface SliderPropertiesProps {
   item: ManifestEntity;
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function SliderProperties({ item, manifest, onUpdate, setActiveSection }: SliderPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const currentVariant = pres.variant || 'A_silver';
   const isCustom = manifest.ui.skinMode === 'custom';
   const sliderStyles = manifest.ui.styles?.[pres.component || 'slider-v'] || [];
-  const currentStyle = sliderStyles.find(s => s.id === currentVariant) || { id: currentVariant, label: 'Standard Fader' };
+  const currentStyle = sliderStyles.find(s => s.id === currentVariant) || { id: currentVariant as string, label: 'Standard Fader' };
 
   const parseVariant = (v: string) => {
     const parts = v.split('_');

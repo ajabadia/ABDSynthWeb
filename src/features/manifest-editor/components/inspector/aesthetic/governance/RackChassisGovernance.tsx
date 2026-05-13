@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Settings, HardDrive, Layers } from 'lucide-react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, StyleVariant } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 import ColorTokenInput from '../../shared/ColorTokenInput';
 // Removed unused AssetSelector
@@ -11,6 +11,13 @@ interface MasterHardwareGovernanceProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
+}
+
+interface ScrewItem {
+  id: string;
+  name?: string;
+  path?: string;
+  type?: string;
 }
 
 export default function MasterHardwareGovernance({ manifest, onUpdate, resolveAsset }: MasterHardwareGovernanceProps) {
@@ -39,14 +46,12 @@ export default function MasterHardwareGovernance({ manifest, onUpdate, resolveAs
   // Removed unused updatePalette
 
   // Merge library styles with physical object library
-  const libraryScrews = manifest.ui.styles?.['mounting-screw'] || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const physicalScrews = (objectLibrary as unknown as Record<string, unknown>)?.decor as Record<string, any> ? (objectLibrary as unknown as Record<string, any>).decor.screws : [];
+  const libraryScrews = manifest.resources?.styles?.['mounting-screw'] || [];
+  const physicalScrews = ((objectLibrary as Record<string, unknown>)?.decor as Record<string, unknown>)?.screws as ScrewItem[] || [];
   
   const allAvailableScrews = [
-    ...libraryScrews.map(s => ({ id: s.id, name: s.id.toUpperCase(), type: 'style' })),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...physicalScrews.map((s: any) => ({ id: s.id as string, name: s.name as string, type: 'physical', path: s.path as string }))
+    ...libraryScrews.map((s: { id: string }) => ({ id: s.id, name: s.id.toUpperCase(), type: 'style' })),
+    ...physicalScrews.map((s: ScrewItem) => ({ id: s.id, name: s.name || s.id, type: 'physical', path: s.path }))
   ];
 
   const railStyles: ('none' | 'slim' | 'heavy' | 'industrial')[] = ['none', 'slim', 'heavy', 'industrial'];
@@ -149,8 +154,7 @@ export default function MasterHardwareGovernance({ manifest, onUpdate, resolveAs
                       <span className="text-[6px] wb-text-muted font-bold uppercase italic">From: /assets/elements/decor/screws</span>
                    </div>
                    <div className="grid grid-cols-4 gap-2">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {physicalScrews.map((s: any) => (
+                      {physicalScrews.map((s: ScrewItem) => (
                         <div key={s.id} className="p-2 bg-black/40 border wb-outline rounded-xs flex flex-col items-center gap-1 group hover:border-primary/40 transition-all">
                            <div className="w-full aspect-square bg-black/60 rounded-xs flex items-center justify-center p-1 border border-white/5">
                               {/* eslint-disable-next-line @next/next/no-img-element -- Catalog previews use dynamic local/user asset paths; next/image adds no useful optimization here. */}
@@ -211,8 +215,7 @@ export default function MasterHardwareGovernance({ manifest, onUpdate, resolveAs
                        <span className="text-[7px] font-black uppercase text-primary tracking-widest">Master Hardware Style (Library)</span>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
-                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                       {(manifest.ui.styles?.['rack-screw'] || []).map((style: any) => {
+                       {(manifest.resources?.styles?.['rack-screw'] || []).map((style: StyleVariant) => {
                          const isActive = hardware.variant === style.id;
                          const sAsset = style.aesthetics?.asset;
                          const sColor = style.aesthetics?.color || '#ffffff';

@@ -1,26 +1,13 @@
-import { OMEGA_Manifest } from '../types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import { ValidationService } from './validationService';
-import { ValidationIssue } from '../types/validation';
-import { OmegaContract } from './wasmLoader';
+import type { OmegaContract } from './wasmLoader';
 
-export interface AuditResult {
-  isCompliant: boolean;
-  score: number; // 0-100
-  status: 'DRAFT' | 'CERTIFIED' | 'CRITICAL_FAIL';
-  checks: {
-    governance: boolean;
-    technical: boolean;
-    aesthetic: boolean;
-    integrity: boolean;
-  };
-  details: string[];
-  issues: ValidationIssue[];
-  fingerprint?: string; 
-  isHashMatched?: boolean;
-}
+import type { AuditResult, Diagnostic } from '@/features/manifest-editor/types/diagnostics';
+
+export type { AuditResult };
 
 export class AuditService {
-  static performFullAudit(manifest: OMEGA_Manifest, contract: OmegaContract | null = null): AuditResult {
+  static performFullAudit(manifest: OMEGA_Manifest, contract: (OmegaContract | OMEGA_Contract) | null = null): AuditResult {
     const issues = ValidationService.validate(manifest, contract);
     const details: string[] = [];
     
@@ -76,6 +63,10 @@ export class AuditService {
     if (hasCritical || !isCompliant) status = 'CRITICAL_FAIL';
     else if (score < 90) status = 'DRAFT';
 
+    const errors = issues.filter(i => i.severity === 'critical' || i.severity === 'error') as unknown as Diagnostic[];
+    const warnings = issues.filter(i => i.severity === 'warning' || i.severity === 'audit') as unknown as Diagnostic[];
+    const infos = issues.filter(i => (i.severity as any) === 'info') as unknown as Diagnostic[];
+
     return {
       isCompliant,
       score,
@@ -87,7 +78,13 @@ export class AuditService {
         integrity 
       },
       details,
-      issues
+      issues: issues as unknown as Diagnostic[],
+      errors,
+      warnings,
+      infos,
+      errorCount: errors.length,
+      warningCount: warnings.length,
+      infoCount: infos.length
     };
   }
 

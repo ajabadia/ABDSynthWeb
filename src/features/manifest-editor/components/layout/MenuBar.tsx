@@ -25,8 +25,8 @@ interface MenuBarProps {
   onOpenAudit: () => void;
   onOpenAbout: () => void;
   onOpenConfig: () => void;
-  onOpenCellEditor?: () => void;
-  onOpenGallery?: () => void;
+  onOpenCellEditor?: (() => void) | undefined;
+  onOpenGallery?: (() => void) | undefined;
 }
 
 export default function MenuBar(props: MenuBarProps) {

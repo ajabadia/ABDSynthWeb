@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/types/manifest';
 import IndustrialGovernanceConsole from './IndustrialGovernanceConsole';
 
 interface AestheticsGovernanceProps {
@@ -13,12 +13,12 @@ interface AestheticsGovernanceProps {
 }
 
 export default function AestheticsGovernance({ item, manifest, onUpdate, resolveAsset, onOpenConfig }: AestheticsGovernanceProps) {
-  const pres = item.presentation || {};
-  const componentType = pres.component || 'knob';
+  const pres = (item.presentation || {}) as Record<string, unknown>;
+  const componentType = (pres.component as string) || 'knob';
 
   const mergedValues = {
     ...pres,
-    ...(pres.style || {})
+    ...((pres as Record<string, unknown>).style || {}) as object
   };
 
   const updateAesthetics = (updates: Record<string, unknown>) => {
@@ -29,7 +29,7 @@ export default function AestheticsGovernance({ item, manifest, onUpdate, resolve
     const coreProps = ['variant', 'attachments', 'options', 'tab', 'component', 'offsetX', 'offsetY', 'container', 'colSpan', 'rowSpan', 'scale', 'precision', 'step', 'unit'];
     
     const newPres = { ...pres };
-    const newStyle = { ...(pres.style || {}) };
+    const newStyle = { ...(pres.style as Record<string, unknown> || {}) } as Record<string, unknown>;
     
     Object.entries(updates).forEach(([key, value]) => {
         if (coreProps.includes(key)) {
@@ -46,7 +46,7 @@ export default function AestheticsGovernance({ item, manifest, onUpdate, resolve
       presentation: {
         ...newPres,
         style: Object.keys(newStyle).length > 0 ? newStyle : undefined
-      }
+      } as Presentation
     });
   };
 

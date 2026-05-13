@@ -3,7 +3,7 @@
  * Canonical blueprints for modular synthesis architecture.
  */
 
-import { ModuleTemplate } from '@/omega-ui-core/types/manifest';
+import type { ModuleTemplate } from '@/omega-ui-core/types/manifest';
 
 export const INDUSTRIAL_TEMPLATES: ModuleTemplate[] = [
   {
@@ -114,7 +114,7 @@ export const INDUSTRIAL_TEMPLATES: ModuleTemplate[] = [
     version: '1.0.0',
     label: 'Performance 8-Grid',
     family: 'Control',
-    category: 'control',
+    category: 'composite',
     description: '8-Knob macro grid for live performance control.',
     policy: [],
     slots: [],

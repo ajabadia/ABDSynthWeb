@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wand2, X, Save, RefreshCcw, ShieldCheck, Box, Layout } from 'lucide-react';
-import { OMEGA_Manifest, ManifestEntity, StyleVariant, LayoutContainer, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, StyleVariant, LayoutContainer, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import IndustrialGovernanceConsole from './IndustrialGovernanceConsole';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
@@ -18,7 +18,7 @@ interface StyleEditorModalProps {
   onUpdate: (updates: Partial<OmegaStyleNode>) => void;
   manifest: OMEGA_Manifest;
   resolveAsset: (id: string | undefined) => string | undefined;
-  onOpenConfig?: () => void;
+  onOpenConfig?: (() => void) | undefined;
 }
 
 /**
@@ -37,13 +37,15 @@ function CanonicalStylePreview({
     id: 'preview-phantom',
     type: type,
     role: 'telemetry',
+    label: 'Preview Phantom',
+    size: { width: 320, height: 224, w: 320, h: 224 },
     bind: 'none',
     pos: { x: 0, y: 0 },
     presentation: {
       component: type,
       variant: 'default',
       style: aesthetics,
-      size: { w: 320, h: 224 },
+      size: { width: 320, height: 224, w: 320, h: 224 },
       tab: 'MAIN',
       attachments: [],
       offsetX: 0,
@@ -71,7 +73,8 @@ function CanonicalStylePreview({
     <div className="relative scale-[2.0] flex items-center justify-center text-white forced-dark-context">
        <div 
           dangerouslySetInnerHTML={{ 
-            __html: CellRenderer.renderCellHTML(phantomEntity, {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            __html: CellRenderer.renderCellHTML(phantomEntity as any, {
               skin: 'industrial',
               zoom: 1.0,
               runtimeValue: 0.5,

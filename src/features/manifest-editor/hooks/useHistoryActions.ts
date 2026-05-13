@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { calculateManifestDiff, applyDiffEntry } from '../utils/manifestDiff';
-import { ManifestDiffResult, DiffEntry } from '../types/diff';
-import { DocumentOrchestrator } from '../types/document';
+import type { ManifestDiffResult, DiffEntry } from '../types/diff';
+import type { DocumentOrchestrator } from '../types/document';
 
 interface HistoryDependencies {
   orchestrator: Pick<DocumentOrchestrator, 'pushHistory' | 'undo' | 'redo' | 'undoTo' | 'updateDocument' | 'documentsById'>;
@@ -78,7 +78,11 @@ export const useHistoryActions = ({
 
     pushHistoryEntry(label, forceHistory);
     orchestrator.updateDocument(activeId, { manifest: finalUpdates });
-    simulationBridge.scheduleStructuralSync(label);
+    
+    // Only sync if NOT in a transaction (Atomic Commitment Rule)
+    if (!currentDoc?.activeTransaction) {
+      simulationBridge.scheduleStructuralSync(label);
+    }
   }, [pushHistoryEntry, orchestrator, activeId, manifest, simulationBridge]);
 
   const compareWithHistory = useCallback((index: number): ManifestDiffResult | null => {

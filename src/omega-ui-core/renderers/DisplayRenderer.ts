@@ -9,12 +9,12 @@ export interface DisplayProps {
   mode: string;      // oled, lcd, led
   value: number;     // 0.0 to 1.0
   steps: number;     // Total steps to display
-  id?: string;       // Canonical ID
+  id?: string | undefined;       // Canonical ID
   inheritedFont?: string | undefined;
   inheritedSize?: number | undefined;
   inheritedColor?: string | undefined;
-  explicitGlassColor?: string; // Era 7.2.3 Custom Mode
-  explicitTextColor?: string;  // Era 7.2.3 Custom Mode
+  explicitGlassColor?: string | undefined; // Era 7.2.3 Custom Mode
+  explicitTextColor?: string | undefined;  // Era 7.2.3 Custom Mode
 }
 
 export const renderDisplayHTML = (props: DisplayProps): string => {

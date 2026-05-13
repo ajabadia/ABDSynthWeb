@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ManifestEntity } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity } from '@/omega-ui-core/types/manifest';
 import { wasmRuntime } from '@/services/wasmRuntime';
 
 /**

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Maximize2, Layers } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface IllustrationPropertiesProps {
@@ -10,15 +10,15 @@ interface IllustrationPropertiesProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function IllustrationProperties({ item, manifest, onUpdate, setActiveSection }: IllustrationPropertiesProps) {
-  const pres = item.presentation;
-  const size = pres.size || { w: 40, h: 40 };
+  const pres = (item.presentation || {}) as Presentation;
+  const size = pres.size || { width: 40, height: 40 };
   const currentVariant = pres.variant || 'contain';
   const illustrationStyles = manifest.ui.styles?.['illustration'] || [];
-  const currentStyle = illustrationStyles.find(s => s.id === currentVariant) || { id: currentVariant, label: 'Standard Image' };
+  const currentStyle = illustrationStyles.find((s: { id: string; label: string }) => s.id === currentVariant) || { id: currentVariant as string, label: 'Standard Image' };
 
   return (
     <div className="grid grid-cols-1 gap-6 pt-2">
@@ -30,19 +30,19 @@ export default function IllustrationProperties({ item, manifest, onUpdate, setAc
             <span>Industrial Scale (HP)</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
+             <div className="space-y-1">
                 <span className="text-[7px] font-bold opacity-50 uppercase">Width (HP)</span>
                 <input 
-                    type="number" value={size.w} 
-                    onChange={(e) => onUpdate({ presentation: { ...pres, size: { ...size, w: Number(e.target.value) } } })}
+                    type="number" value={size.width} 
+                    onChange={(e) => onUpdate({ presentation: { ...pres, size: { ...size, width: Number(e.target.value) } } } as Partial<ManifestEntity>)}
                     className="w-full bg-black/20 border border-outline rounded-xs px-2 py-1.5 text-[10px] font-mono text-primary"
                 />
             </div>
             <div className="space-y-1">
                 <span className="text-[7px] font-bold opacity-50 uppercase">Height (px)</span>
                 <input 
-                    type="number" value={size.h} 
-                    onChange={(e) => onUpdate({ presentation: { ...pres, size: { ...size, h: Number(e.target.value) } } })}
+                    type="number" value={size.height} 
+                    onChange={(e) => onUpdate({ presentation: { ...pres, size: { ...size, height: Number(e.target.value) } } } as Partial<ManifestEntity>)}
                     className="w-full bg-black/20 border border-outline rounded-xs px-2 py-1.5 text-[10px] font-mono text-primary"
                 />
             </div>
@@ -59,7 +59,7 @@ export default function IllustrationProperties({ item, manifest, onUpdate, setAc
             {['contain', 'cover', 'stretch'].map(v => (
                 <button
                     key={v}
-                    onClick={() => onUpdate({ presentation: { ...pres, variant: v } })}
+                    onClick={() => onUpdate({ presentation: { ...pres, variant: v } } as Partial<ManifestEntity>)}
                     className={`py-1.5 rounded-xs border text-[8px] font-black uppercase transition-all ${pres.variant === v ? 'border-primary bg-primary/20 text-primary' : 'border-outline text-foreground/40'}`}
                 >
                     {v}

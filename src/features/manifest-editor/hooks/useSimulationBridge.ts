@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 import { wasmRuntime } from '@/services/wasmRuntime';
+import { ucaPathResolver } from '@/omega-ui-core/uca/utils/ucaPathResolver';
+import { reconciliationService } from '@/services/reconciliationService';
 
 /**
  * OMEGA Simulation Bridge (Phase 9.1 - Live Loop)
@@ -9,7 +11,7 @@ import { wasmRuntime } from '@/services/wasmRuntime';
  * between the React authoring state and the WASM execution runtime.
  */
 
-export type SimulationSyncStatus = 'idle' | 'syncing' | 'in-sync' | 'degraded' | 'error';
+export type SimulationSyncStatus = 'idle' | 'syncing' | 'in-sync' | 'degraded' | 'error' | 'disconnected';
 
 export interface SimulationBridgeState {
   status: SimulationSyncStatus;
@@ -19,6 +21,7 @@ export interface SimulationBridgeState {
   pushParameterUpdate: (id: string, value: number) => void;
   scheduleStructuralSync: (reason: string) => void;
   forceResync: () => Promise<void>;
+  forceReconciliation: () => Promise<void>;
 }
 
 export const useSimulationBridge = (
@@ -42,13 +45,19 @@ export const useSimulationBridge = (
    * Low-latency route for numeric updates.
    */
   const pushParameterUpdate = useCallback((id: string, value: number) => {
-    if (!isReady) return;
+    if (!isReady || !manifest.nodes?.[0]) return;
     
-    wasmRuntime.setParameter(id, value);
-    
-    // Status maintenance
-    if (status === 'idle' || status === 'error') setStatus('in-sync');
-  }, [isReady, status]);
+    try {
+      // Resolve hierarchical path (HPA) for deterministic binding
+      const path = ucaPathResolver.resolvePath(id, manifest.nodes[0]);
+      wasmRuntime.setParameter(path, value);
+      
+      // Status maintenance is handled by the RPC Bridge callback
+    } catch (err) {
+      console.warn(`[BRIDGE] Failed to resolve HPA for node ${id}. Falling back to ID.`, err);
+      wasmRuntime.setParameter(id, value);
+    }
+  }, [isReady, manifest.nodes]);
 
   /**
    * Core Sync Logic (Workstream 3, 4 & 6)
@@ -71,14 +80,13 @@ export const useSimulationBridge = (
         await captureStableSnapshot(activeId);
         
         setLastSuccessfulSyncAt(Date.now());
-        setStatus('in-sync');
         setPendingStructuralSync(false);
         setLastError(null);
         console.log(`[BRIDGE] Sync Success: ${result.hash}`);
       } else {
         throw new Error('Deployment failed at runtime');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[BRIDGE] Sync failed:', err);
       setLastError(err instanceof Error ? err.message : 'Unknown sync error');
       setStatus('error');
@@ -96,7 +104,7 @@ export const useSimulationBridge = (
     if (!isReady) return;
 
     setPendingStructuralSync(true);
-    setStatus('syncing');
+    // syncing status will be driven by the bridge during deployManifest
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -115,8 +123,45 @@ export const useSimulationBridge = (
     await performStructuralSync('Manual Recovery');
   }, [performStructuralSync]);
 
-  // Cleanup timers on unmount
+  const forceReconciliation = useCallback(async () => {
+    if (!isReady) return;
+    console.log('[BRIDGE] Starting state reconciliation...');
+    
+    try {
+      // 1. Fetch current engine state
+      const engineState = await wasmRuntime.reconcileState();
+      
+      // 2. Simple comparison with what we expect (mocking UI state as manifest-based for now)
+      // In a full implementation, we'd pull the actual UI component values.
+      const uiState: Record<string, number> = {}; 
+      // ... logic to populate uiState from manifest nodes ...
+
+      const divergences = reconciliationService.detectDivergence(uiState, engineState);
+      
+      if (divergences.length > 0) {
+        console.log(`[BRIDGE] Detected ${divergences.length} divergences. Resolving...`);
+        divergences.forEach(path => {
+          reconciliationService.resolveConflict(path, uiState[path], engineState[path]);
+        });
+      } else {
+        console.log('[BRIDGE] UI and Engine are in sync.');
+      }
+    } catch (err) {
+      console.error('[BRIDGE] Reconciliation failed:', err);
+    }
+  }, [isReady]);
+
+  // Initial connection and status synchronization
   useEffect(() => {
+    wasmRuntime.connect((newStatus) => {
+      // Map RPC status to hook status
+      if (newStatus === 'disconnected') setStatus('disconnected');
+      else if (newStatus === 'syncing') setStatus('syncing');
+      else if (newStatus === 'in-sync') setStatus('in-sync');
+      else if (newStatus === 'degraded') setStatus('degraded');
+      else if (newStatus === 'error') setStatus('error');
+    });
+
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
@@ -129,6 +174,7 @@ export const useSimulationBridge = (
     lastError,
     pushParameterUpdate,
     scheduleStructuralSync,
-    forceResync
-  }), [status, pendingStructuralSync, lastSuccessfulSyncAt, lastError, pushParameterUpdate, scheduleStructuralSync, forceResync]);
+    forceResync,
+    forceReconciliation
+  }), [status, pendingStructuralSync, lastSuccessfulSyncAt, lastError, pushParameterUpdate, scheduleStructuralSync, forceResync, forceReconciliation]);
 };

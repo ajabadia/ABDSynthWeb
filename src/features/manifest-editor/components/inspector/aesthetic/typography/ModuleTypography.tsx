@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Type, ShieldAlert } from 'lucide-react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 import InfoBlock from '../../shared/InfoBlock';
 import { 
@@ -24,26 +24,20 @@ const SYSTEM_FONTS = OMEGA_OFFICIAL_FONTS;
  
 export default function ModuleTypography({ manifest, onUpdate, onHelp }: ModuleTypographyProps) {
   const typography = manifest.ui.typography || {};
-  const fonts = (manifest.ui.resources?.fonts || []) as { name: string; file: string }[];
+  const fonts = (manifest.resources?.fonts || []) as { name: string; file: string }[];
   const allAvailableFonts = [...SYSTEM_FONTS.map((f: { name: string }) => f.name), ...fonts.map((f: { name: string }) => f.name)];
  
   const handleAddFont = (name: string, file: string) => {
     const updatedFonts = [...fonts, { name, file }];
     onUpdate({
-      ui: {
-        ...manifest.ui,
-        resources: { ...(manifest.ui.resources || {}), fonts: updatedFonts }
-      }
+      resources: { ...(manifest.resources || {}), fonts: updatedFonts }
     });
   };
  
   const handleRemoveFont = (index: number) => {
     const updatedFonts = fonts.filter((_: unknown, i: number) => i !== index);
     onUpdate({
-      ui: {
-        ...manifest.ui,
-        resources: { ...(manifest.ui.resources || {}), fonts: updatedFonts }
-      }
+      resources: { ...(manifest.resources || {}), fonts: updatedFonts }
     });
   };
 

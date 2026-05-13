@@ -1,4 +1,4 @@
-import type { OMEGA_Manifest } from '../../types/manifest.js';
+import type { OMEGA_Manifest } from '../../types/manifest';
  
 /**
  * OMEGA Typography Inheritance Engine

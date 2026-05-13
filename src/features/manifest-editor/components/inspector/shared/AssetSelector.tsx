@@ -3,25 +3,27 @@
 import React from 'react';
 import { Image as ImageIcon, Plus, Trash2, Folder, ChevronLeft, Film } from 'lucide-react';
 import Image from 'next/image';
-import { OMEGA_Manifest, LibraryAsset, OmegaStyleNode, OMEGA_Asset } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, LibraryAsset, OmegaStyleNode, OMEGA_Asset } from '@/omega-ui-core/types/manifest';
 import SequenceIngestionLab from './aesthetic/SequenceIngestionLab';
 import { useAssetRegistry } from '@/features/manifest-editor/hooks/useAssetRegistry';
 
 type UploadBridge = (f: File[], cb: (id: string) => void) => void;
 
 export interface AssetSelectionMetadata extends Partial<OmegaStyleNode> {
-  // Any extra non-style metadata for the selector
-  isFolder?: boolean;
+  id?: string | undefined;
+  name?: string | undefined;
+  path?: string | undefined;
+  isFolder?: boolean | undefined;
 }
 
 interface AssetSelectorProps {
   manifest: OMEGA_Manifest;
-  selectedAssetId?: string;
-  onSelect: (assetId: string | undefined, metadata?: AssetSelectionMetadata) => void;
-  label?: string;
+  selectedAssetId?: string | undefined;
+  onSelect: (assetId: string | undefined, metadata?: AssetSelectionMetadata | undefined) => void;
+  label?: string | undefined;
   resolveAsset: (id: string | undefined) => string | undefined;
-  initialPath?: string;
-  restrictToSequences?: boolean;
+  initialPath?: string | undefined;
+  restrictToSequences?: boolean | undefined;
 }
 
 export default function AssetSelector({ 
@@ -51,7 +53,7 @@ export default function AssetSelector({
       if (!subfolders.has(rootKey)) subfolders.set(rootKey, new Set());
 
       items.forEach((item: LibraryAsset) => {
-        const path = item.path;
+        const path = item.path || item.id;
         const pathMarker = `/${modeKey}/`;
         const pathParts = path.split(pathMarker);
         
@@ -76,12 +78,12 @@ export default function AssetSelector({
               }
               currentParent = fKey;
             }
-            map.get(currentParent)?.push(item as AssetSelectionMetadata);
+            map.get(currentParent)?.push(item as unknown as AssetSelectionMetadata);
           } else {
-            map.get(rootKey)?.push(item as AssetSelectionMetadata);
+            map.get(rootKey)?.push(item as unknown as AssetSelectionMetadata);
           }
         } else {
-          map.get(rootKey)?.push(item as AssetSelectionMetadata);
+          map.get(rootKey)?.push(item as unknown as AssetSelectionMetadata);
         }
       });
     }
@@ -96,7 +98,11 @@ export default function AssetSelector({
       const folderName = parts.length > 1 ? parts[0] : 'root';
       if (!map.has(folderName)) map.set(folderName, []);
       const existing = map.get(folderName);
-      if (existing) existing.push(asset as unknown as AssetSelectionMetadata);
+      if (existing) existing.push({ 
+        id: asset.id, 
+        name: asset.id.split('/').pop() || 'Untitled', 
+        path: resolveAsset(asset.id),
+      } as unknown as AssetSelectionMetadata);
     });
 
     // Merge subfolders into the map as "Folder Objects" for the UI to render

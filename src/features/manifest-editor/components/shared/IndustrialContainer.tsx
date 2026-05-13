@@ -1,18 +1,17 @@
-import React from 'react';
-import { LayoutContainer, OMEGA_Manifest, ManifestEntity } from '@/types/manifest';
+import type { LayoutContainer, OMEGA_Manifest, ManifestEntity } from '@/omega-ui-core/types/manifest';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
-
+ 
 interface IndustrialContainerProps {
   container: LayoutContainer;
   manifest: OMEGA_Manifest;
-  resolveAsset?: (id: string | undefined) => string | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
   className?: string;
   style?: React.CSSProperties;
   isSelected?: boolean;
   isError?: boolean;
   hideLabel?: boolean;
 }
-
+ 
 /**
  * OMEGA INDUSTRIAL CONTAINER ENGINE (Era 7.2.3)
  * Delegating to CellRenderer for absolute visual parity.
@@ -32,6 +31,10 @@ export default function IndustrialContainer({
     type: 'container' as ManifestEntity['type'],
     label: 'LABEL',
     pos: container.pos,
+    size: { 
+      width: typeof container.size.width === 'number' ? container.size.width : 320, 
+      height: container.size.height || 100 
+    },
     role: 'infrastructure',
     bind: '',
     presentation: {
@@ -52,8 +55,8 @@ export default function IndustrialContainer({
         ...((container as unknown as Record<string, unknown>).presentation as Record<string, unknown>)?.style as Record<string, unknown> || {}
       },
       size: { 
-        w: typeof container.size.w === 'number' ? container.size.w : 320, 
-        h: container.size.h 
+        width: typeof container.size.width === 'number' ? container.size.width : 320, 
+        height: container.size.height || 100
       },
       tab: 'MAIN',
       offsetX: 0,
@@ -70,7 +73,8 @@ export default function IndustrialContainer({
         position: 'relative',
       }}
       dangerouslySetInnerHTML={{
-        __html: CellRenderer.renderCellHTML(entity, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        __html: CellRenderer.renderCellHTML(entity as any, {
           skin: 'industrial',
           zoom: 1.0,
           runtimeValue: 0,

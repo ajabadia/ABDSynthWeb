@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Palette, Plus } from 'lucide-react';
-import { OMEGA_Manifest, StyleVariant } from '@/omega-ui-core/types/manifest';
-import { OMEGA_ELEMENT_CATALOG, ElementCategory, getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
+import type { OMEGA_Manifest, StyleVariant } from '@/omega-ui-core/types/manifest';
+import { OMEGA_ELEMENT_CATALOG, type ElementCategory, getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 
 // Stable ID Generator to ensure purity
@@ -22,7 +22,7 @@ interface ModuleStyleLibraryProps {
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
   resolveAsset: (id: string | undefined) => string | undefined;
   activeTab: string;
-  onOpenConfig?: () => void;
+  onOpenConfig?: (() => void) | undefined;
 }
 
 export default function ModuleStyleLibrary({ manifest, onUpdate, resolveAsset, activeTab, onOpenConfig }: ModuleStyleLibraryProps) {

@@ -1,15 +1,15 @@
 'use client';
 
 import React from 'react';
-import { OmegaNode, Position } from '../../../types/manifest';
-import { UCADebugContext } from '../ucaTypes';
+import type { OmegaNode, Position } from '../../types/manifest';
+import type { UCADebugContext } from '../ucaTypes';
 
 interface UCADebugHUDProps {
   node: OmegaNode;
   debugContext: UCADebugContext;
-  worldPos: Position;
-  labelRef?: React.RefObject<HTMLSpanElement | null>;
-  localLabelRef?: React.RefObject<HTMLSpanElement | null>;
+  worldPos: Position | undefined;
+  labelRef?: React.RefObject<HTMLSpanElement | null> | undefined;
+  localLabelRef?: React.RefObject<HTMLSpanElement | null> | undefined;
 }
 
 export function UCADebugHUD({
@@ -26,7 +26,7 @@ export function UCADebugHUD({
       <div className={`px-1 py-0.5 rounded-xs text-[6px] font-black uppercase text-white shadow-lg ${
         node.kind === 'rack' ? 'bg-purple-600' : node.kind === 'face' ? 'bg-blue-600' : 'bg-amber-600'
       }`}>
-        {node.kind}:{node.id} [<span ref={labelRef}>W: {Math.round(worldPos.x)}, {Math.round(worldPos.y)}</span>]
+        {node.kind}:{node.id} [<span ref={labelRef}>W: {Math.round(worldPos?.x || 0)}, {Math.round(worldPos?.y || 0)}</span>]
       </div>
       <div className="bg-emerald-600 px-1 py-0.5 rounded-xs text-[5px] font-bold text-white shadow-lg opacity-80">
         <span ref={localLabelRef}>L: {Math.round(node.layout?.pos?.x || 0)}, {Math.round(node.layout?.pos?.y || 0)}</span>

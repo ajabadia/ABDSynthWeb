@@ -48,8 +48,10 @@ export type AestheticCapability =
   | 'blur'         // Backdrop blur / Glass effect
   | 'labelX'       // X Offset for internal labels
   | 'labelY'       // Y Offset for internal labels
-  | 'labelW'       // Explicit width for internal labels
-  | 'labelH'       // Explicit height for internal labels
+  | 'labelW'       // Alias for labelWidth
+  | 'labelH'       // Alias for labelHeight
+  | 'labelWidth'       // Explicit width for internal labels
+  | 'labelHeight'      // Explicit height for internal labels
   | 'labelBg'      // Background color for internal labels
   | 'labelRounding' // Corner radius for internal labels
   | 'labelPadding' // Internal spacing for internal labels
@@ -358,7 +360,7 @@ export const OMEGA_ELEMENT_CATALOG: ElementDefinition[] = [
     capabilities: [
       'variant', 'color', 'indicatorColor', 'font', 'fontSize', 'fontColor', 
       'rounding', 'borderWidth', 'opacity', 'alignment', 'thickness', 'shadow', 'spacing', 'zIndex', 'blur',
-      'labelX', 'labelY', 'labelW', 'labelH', 'labelBg', 'labelRounding', 'labelPadding',
+      'labelX', 'labelY', 'labelWidth', 'labelHeight', 'labelBg', 'labelRounding', 'labelPadding',
       'position', 'size'
     ],
     attachmentRole: 'host',

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, KeyboardEvent } from 'react';
-import { OmegaNode, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import React, { useState, useMemo, type KeyboardEvent } from 'react';
+import type { OmegaNode, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { ChevronRight, ChevronDown, Layers, LayoutPanelLeft, Container, Settings2, BoxSelect } from 'lucide-react';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 

@@ -5,7 +5,7 @@ import SourceHeader from '../source/SourceHeader';
 import SourceCodeBlock from '../source/SourceCodeBlock';
 import { useSourceEditor } from '@/features/manifest-editor/hooks/useSourceEditor';
 
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 interface SourceViewerProps {
   manifest: OMEGA_Manifest;

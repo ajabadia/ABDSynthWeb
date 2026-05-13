@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Grid, Layout, Cpu, Box, ChevronRight, Sparkles } from 'lucide-react';
 import { useTemplateGallery } from '@/features/manifest-editor/hooks/useTemplateGallery';
-import { ModuleTemplate } from '@/omega-ui-core/types/manifest';
+import type { ModuleTemplate } from '@/omega-ui-core/types/manifest';
 
 interface TemplateGalleryProps {
   onSelect: (template: ModuleTemplate) => void;

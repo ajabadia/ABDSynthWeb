@@ -1,22 +1,17 @@
 import { Settings2, LayoutGrid, Layers, Cpu } from 'lucide-react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import InspectorCollapsible from '../../shared/InspectorCollapsible';
-import { IndustrialField, IndustrialInput } from '../../../primitives';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
+import { IndustrialField, IndustrialInput } from '@/features/manifest-editor/components/primitives';
 
 interface ModuleMechanicalSpecProps {
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<OMEGA_Manifest>) => void;
-  onHelp?: (id: string) => void;
+  onHelp?: ((id: string) => void) | undefined;
 }
 
 export default function ModuleMechanicalSpec({ manifest, onUpdate, onHelp }: ModuleMechanicalSpecProps) {
   const metadata = manifest.metadata;
-  const rack = (metadata.rack || {}) as { 
-    hp?: number;
-    depth?: number; 
-    units?: string; 
-    power?: { plus12?: number; minus12?: number; five?: number } 
-  };
+  const rack = metadata.rack || { width: 0, height: 0 };
 
   const updateRack = (field: string, value: unknown) => {
     onUpdate({ 

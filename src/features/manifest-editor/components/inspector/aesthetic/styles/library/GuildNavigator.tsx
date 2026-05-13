@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ElementCategory } from '@/omega-ui-core/governance/ElementCatalog';
+import type { ElementCategory } from '@/omega-ui-core/governance/ElementCatalog';
 
 interface GuildNavigatorProps {
   categories: ElementCategory[];

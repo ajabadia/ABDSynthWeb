@@ -6,20 +6,18 @@
  * ---------------------------------------------------------------------------
  */
 
-
-
 export interface SequenceProps {
-    assetUrl?: string;
+    assetUrl?: string | undefined;
     value: number;
     frames: number;
     frameWidth: number;
     frameHeight: number;
     orientation: 'v' | 'h';
     opacity: number;
-    padding?: number[];
+    padding?: number[] | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    style?: Record<string, any>;
-    isFrameIndex?: boolean; // If true, value is treated as literal frame index [0...N-1]
+    style?: Record<string, any> | undefined;
+    isFrameIndex?: boolean | undefined; // If true, value is treated as literal frame index [0...N-1]
 }
 
 export const renderSequenceHTML = (props: SequenceProps): string => {

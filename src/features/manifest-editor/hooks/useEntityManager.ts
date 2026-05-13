@@ -4,7 +4,7 @@ import { useEntityCRUD } from './entities/useEntityCRUD';
 import { useModulationCRUD } from './entities/useModulationCRUD';
 import { useLayoutCRUD } from './entities/useLayoutCRUD';
 import { useTemplateCRUD } from './entities/useTemplateCRUD';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 /**
  * OMEGA Entity Manager (v7.2.3)

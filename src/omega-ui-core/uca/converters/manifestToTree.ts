@@ -1,4 +1,4 @@
-import { OMEGA_Manifest, OmegaNode } from '../../types/manifest';
+import type { OMEGA_Manifest, OmegaNode } from '../../types/manifest';
 
 /**
  * manifestToTree
@@ -6,22 +6,22 @@ import { OMEGA_Manifest, OmegaNode } from '../../types/manifest';
  */
 export function manifestToTree(manifest: OMEGA_Manifest, existingTree?: OmegaNode): OmegaNode {
   const ui = manifest.ui;
-  const containers = ui.layout?.containers || [];
-  const controls = ui.controls || [];
-  const jacks = ui.jacks || [];
+  const containers = ui?.layout?.containers || [];
+  const controls = ui?.controls || [];
+  const jacks = ui?.jacks || [];
 
   // Try to recover MAIN_FACE from existing tree if available (Phase 10.1C)
   const existingMainFace = existingTree?.children?.find(c => c.id === 'MAIN_FACE');
 
   // 1. Create the Root Rack
   const root: OmegaNode = {
-    id: manifest.id,
+    id: manifest.id || 'anonymous_rack',
     kind: 'rack',
     role: 'root',
-    layout: {
-      pos: existingTree?.layout?.pos || { x: 0, y: 0 },
-      size: existingTree?.layout?.size || ui.dimensions
-    },
+      layout: {
+        pos: existingTree?.layout?.pos || { x: 0, y: 0 },
+        size: existingTree?.layout?.size || ui?.dimensions
+      },
     children: []
   };
 
@@ -32,7 +32,7 @@ export function manifestToTree(manifest: OMEGA_Manifest, existingTree?: OmegaNod
     role: 'presentation',
     layout: {
       pos: existingMainFace?.layout?.pos || { x: 0, y: 0 },
-      size: existingMainFace?.layout?.size || ui.dimensions
+      size: existingMainFace?.layout?.size || ui?.dimensions
     },
     children: []
   };
@@ -47,16 +47,18 @@ export function manifestToTree(manifest: OMEGA_Manifest, existingTree?: OmegaNod
       role: 'infrastructure',
       layout: {
         pos: c.pos,
-        size: typeof c.size.w === 'number' 
-          ? { width: c.size.w, height: c.size.h } 
-          : undefined, 
+        size: (typeof c.size.width === 'number') 
+          ? { width: c.size.width, height: c.size.height }
+          : (typeof c.size.w === 'number' && typeof c.size.h === 'number')
+            ? { width: c.size.w, height: c.size.h }
+            : undefined, 
         zIndex: c.zIndex
       },
       style: {
-        color: c.color,
-        indicatorColor: c.indicatorColor,
-        rounding: c.rounding,
-        borderWidth: c.borderWidth
+        color: c.color || undefined,
+        indicatorColor: c.indicatorColor || undefined,
+        rounding: c.rounding || undefined,
+        borderWidth: c.borderWidth || undefined
       },
       children: []
     };
@@ -75,8 +77,8 @@ export function manifestToTree(manifest: OMEGA_Manifest, existingTree?: OmegaNod
       layout: {
         pos: entity.pos,
         size: entity.presentation?.size ? {
-          width: entity.presentation.size.w,
-          height: entity.presentation.size.h
+          width: entity.presentation.size.width,
+          height: entity.presentation.size.height
         } : undefined,
         zIndex: entity.presentation?.style?.zIndex
       },

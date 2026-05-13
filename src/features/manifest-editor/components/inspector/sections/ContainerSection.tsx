@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Plus, Layout } from 'lucide-react';
-import { LayoutContainer, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { LayoutContainer, OMEGA_Manifest } from '@/types/manifest';
 import { useContainerState } from '@/features/manifest-editor/hooks/useContainerState';
 import ContainerCard from '../container/ContainerCard';
 
@@ -17,12 +17,13 @@ interface ContainerSectionProps {
   onAdd: () => void;
   onUpdate: (id: string, updates: Partial<LayoutContainer>) => void;
   onRemove: (id: string) => void;
-  highlightPath?: string | null;
+  highlightPath?: string | null | undefined;
+  setActiveSection?: ((s: string) => void) | undefined;
 }
 
 export default function ContainerSection({
   containers, manifest, onAdd, onUpdate, onRemove, setActiveSection
-}: Omit<ContainerSectionProps, 'resolveAsset'> & { setActiveSection?: (s: string) => void }) {
+}: ContainerSectionProps) {
   const { isExpanded, toggleExpand } = useContainerState();
 
   return (

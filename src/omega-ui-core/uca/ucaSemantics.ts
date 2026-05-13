@@ -1,4 +1,4 @@
-import { OmegaNode, CellTemplate, OmegaStyleNode, ModuleTemplate } from '../types/manifest';
+import type { OmegaNode, CellTemplate, OmegaStyleNode, ModuleTemplate } from '../types/manifest';
 import { mergeWithOverrides, applySlotMappings } from './treeUtils';
 
 /**
@@ -8,8 +8,8 @@ import { mergeWithOverrides, applySlotMappings } from './treeUtils';
 
 export interface ResolutionContext {
   catalog: Record<string, CellTemplate>;
-  moduleTemplates?: Record<string, ModuleTemplate>; // [Phase 5] Global template registry
-  parentStyle?: OmegaStyleNode;
+  moduleTemplates?: Record<string, ModuleTemplate> | undefined; // [Phase 5] Global template registry
+  parentStyle?: OmegaStyleNode | undefined;
 }
 
 /**
@@ -30,14 +30,18 @@ export function resolveNodeSemantics(
   // Strategy B: Module Template (Blueprint)
   else if (node.cellRef && ctx.moduleTemplates?.[node.cellRef]) {
     const template = ctx.moduleTemplates[node.cellRef];
-    const blueprint = JSON.parse(JSON.stringify(template.baseNode || template.root)) as OmegaNode;
-    
-    // Apply Genetic Overrides
-    templateBase = mergeWithOverrides(blueprint, node.overrides || {}, template.policy || []) as Partial<OmegaNode>;
+    if (template) {
+      const baseNode = template.baseNode;
+      if (baseNode) {
+        const blueprint = JSON.parse(JSON.stringify(baseNode)) as OmegaNode;
+        // Apply Genetic Overrides
+        templateBase = mergeWithOverrides(blueprint, node.overrides || {}, template.policy || []) as Partial<OmegaNode>;
 
-    // Apply Slot Mappings (Recursive Binding Injection)
-    if (node.slotMappings) {
-      applySlotMappings(templateBase as OmegaNode, node.slotMappings);
+        // Apply Slot Mappings (Recursive Binding Injection)
+        if (node.slotMappings) {
+          applySlotMappings(templateBase as OmegaNode, node.slotMappings);
+        }
+      }
     }
   }
   // Strategy C: Cell Template (Legacy Primitive)
@@ -45,7 +49,7 @@ export function resolveNodeSemantics(
     const ref = node.cellRef || node.templateRef;
     const template = ctx.catalog[ref!];
     if (template) {
-      templateBase = JSON.parse(JSON.stringify(template.baseNode || template.root));
+      templateBase = JSON.parse(JSON.stringify(template.baseNode));
     }
   }
 
@@ -72,10 +76,9 @@ export function resolveNodeSemantics(
   // 3. APPLY INHERITED STYLE/TOKENS (Era 7.2.3 Genetic Propagation)
   if (ctx.parentStyle) {
     resolved.style = {
-      font: resolved.style?.font || ctx.parentStyle.font,
-      fontColor: resolved.style?.fontColor || ctx.parentStyle.fontColor,
-      // Color tokens don't usually inherit unless they are generic
-      ...resolved.style
+      ...resolved.style,
+      font: resolved.style?.font || ctx.parentStyle.font || undefined,
+      fontColor: resolved.style?.fontColor || ctx.parentStyle.fontColor || undefined,
     };
   }
 

@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toPng } from 'html-to-image';
-import { OMEGA_Manifest } from '@/types/manifest';
-import { AuditResult } from '@/services/auditService';
+import type { OMEGA_Manifest } from '@/types/manifest';
+import type { AuditResult } from '@/services/auditService';
 
 // Atomic Mockup Components
 import { MockupHeader } from '../mockup/MockupHeader';
@@ -15,7 +15,7 @@ interface MockupModalProps {
   onClose: () => void;
   manifest: OMEGA_Manifest;
   audit: AuditResult;
-  resolveAsset?: (id: string | undefined) => string | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
 }
 
 export default function MockupModal({ isOpen, onClose, manifest, audit, resolveAsset }: MockupModalProps) {
@@ -24,7 +24,7 @@ export default function MockupModal({ isOpen, onClose, manifest, audit, resolveA
   const viewportRef = useRef<HTMLDivElement>(null);
   const hasRendered = useRef(false);
 
-  const hasCriticalErrors = audit.issues.some(i => i.severity === 'critical');
+  const hasCriticalErrors = audit.issues.some(i => (i.severity as string) === 'critical' || i.severity === 'error');
 
   React.useEffect(() => {
     if (isOpen && !hasRendered.current) {

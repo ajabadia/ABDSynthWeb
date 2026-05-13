@@ -3,20 +3,25 @@
  * Formal contracts for multi-source validation aggregation.
  */
 
-import { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 
-export type DiagnosticSeverity = 'error' | 'warning' | 'info';
+export type DiagnosticSeverity = 'error' | 'warning' | 'info' | 'audit';
 
 export interface Diagnostic {
   id: string;          // Unique ID for the diagnostic (e.g., 'broken-bind-osc1')
   source: string;      // Name of the source (e.g., 'Monaco', 'Structural', 'Layout')
   message: string;     // Human-readable message
   severity: DiagnosticSeverity;
+  path?: string;       // Legacy compatibility for ValidationIssue
+  keyword?: string;    // Legacy compatibility for ValidationIssue
   line?: number;       // Optional line number (primarily for Monaco)
   column?: number;     // Optional column number
   entityId?: string;   // Optional ID of the affected manifest entity
   code?: string;       // Machine-readable error code
 }
+ 
+export type AuditIssue = Diagnostic;
 
 export interface TabDiagnostics {
   errors: Diagnostic[];
@@ -26,9 +31,25 @@ export interface TabDiagnostics {
   warningCount: number;
   infoCount: number;
 }
+ 
+export interface AuditResult extends TabDiagnostics {
+  score: number;
+  status?: 'DRAFT' | 'CERTIFIED' | 'CRITICAL_FAIL';
+  details?: string[];
+  checks: {
+    governance: boolean;
+    integrity: boolean;
+    technical: boolean;
+    aesthetic: boolean;
+  };
+  isCompliant: boolean;
+  isHashMatched?: boolean;
+  fingerprint?: string;
+  issues: Diagnostic[]; // Alias for backward compatibility in components
+}
 
 export interface DiagnosticContext {
-  contract: OMEGA_Contract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   [key: string]: unknown;
 }
 

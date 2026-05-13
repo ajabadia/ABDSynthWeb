@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Layers, RefreshCw, Lock, Unlock, ChevronDown, ChevronRight } from 'lucide-react';
-import { OmegaStyleNode } from '@/types/manifest';
+import type { OmegaStyleNode } from '@/types/manifest';
 
 interface SequenceGovernanceProps {
   values: Partial<OmegaStyleNode>;

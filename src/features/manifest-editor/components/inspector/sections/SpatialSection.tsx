@@ -2,32 +2,30 @@
  
 import React from 'react';
 import { Move, Grid3X3, Layout, Info } from 'lucide-react';
-import { ManifestEntity, LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { LayoutContainer, OmegaNode } from '@/omega-ui-core/types/manifest';
 import { getInspectorModel, buildInspectorPatch } from '@/features/manifest-editor/hooks/entities/ucaInspectorModel';
 import { calculateWorldPosition } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
-import ContainerSelector from '../ContainerSelector';
-import InspectorCollapsible from '../shared/InspectorCollapsible';
-import InfoBlock from '../shared/InfoBlock';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
+import InfoBlock from '@/features/manifest-editor/components/inspector/shared/InfoBlock';
  
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
  
 interface SpatialSectionProps {
-  item: ManifestEntity | OmegaNode;
-  onUpdate: (updates: Partial<ManifestEntity> | Partial<OmegaNode>) => void;
-  onHelp?: (sectionId?: string) => void;
-  highlightPath?: string | null;
-  containers?: LayoutContainer[];
-  rootTree?: OmegaNode;
+  item: OmegaNode;
+  onUpdate: (updates: Partial<OmegaNode>) => void;
+  onHelp?: ((sectionId: string) => void) | undefined;
+  highlightPath?: (string | null) | undefined;
+  containers?: LayoutContainer[] | undefined;
+  rootTree?: OmegaNode | undefined;
 }
  
-export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, containers = [], rootTree }: SpatialSectionProps) {
+export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, rootTree }: SpatialSectionProps) {
   const model = getInspectorModel(item, rootTree);
   
   const componentType = model.component || 'knob';
   const elementDef = getElementDefinition(componentType);
   const pos = model.pos || { x: 0, y: 0 };
-  const colSpan = model.colSpan || 1;
-  const isHighlighted = (key: string) => highlightPath?.includes(key);
+  const isHighlighted = (key: string) => !!highlightPath?.includes(key);
 
   const [localX, setLocalX] = React.useState<string>(pos.x.toString());
   const [localY, setLocalY] = React.useState<string>(pos.y.toString());
@@ -93,14 +91,14 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
  
   return (
     <div className="space-y-4 pt-2">
-      <ContainerSelector 
-        item={item} 
-        onUpdate={onUpdate} 
-        containers={containers} 
-        onHelp={onHelp} 
-        highlightPath={highlightPath} 
-        rootTree={rootTree}
-      />
+      {/* PARENT INFO */}
+      <div className="p-3 bg-black/40 border wb-outline rounded-xs space-y-1">
+        <span className="text-[8px] font-black uppercase text-foreground/40 tracking-widest">Structural Parent</span>
+        <div className="flex items-center gap-2">
+           <Layout className="w-3 h-3 text-primary/60" />
+           <span className="text-[10px] font-bold text-foreground/80">{model.parentId || 'ROOT (Face)'}</span>
+        </div>
+      </div>
 
       {/* COORDINATES */}
       {canMove && (
@@ -151,7 +149,7 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
         </InspectorCollapsible>
       )}
 
-      {/* GRID LOGIC (Era 6 Compatibility) */}
+      {/* GRID LOGIC (Era 7.2.3) */}
       {canScale && (
         <InspectorCollapsible 
           title="Grid Dimensionality" 
@@ -162,15 +160,9 @@ export default function SpatialSection({ item, onUpdate, onHelp, highlightPath, 
             <label className="text-[8px] text-foreground/60 uppercase font-bold tracking-tighter">
               Column Span (Rack Width)
             </label>
-            <select 
-              value={colSpan} 
-              onChange={(e) => onUpdate(buildInspectorPatch(item, { colSpan: parseInt(e.target.value) }))}
-              className="w-full bg-black/40 border border-outline rounded-sm p-2 text-[10px] font-bold text-foreground outline-none transition-colors duration-500 [color-scheme:dark]"
-            >
-              <option value={1}>1 Column (Standard)</option>
-              <option value={2}>2 Columns (Wide)</option>
-              <option value={3}>3 Columns (Full Width)</option>
-            </select>
+            <div className="p-2 bg-white/5 border border-outline rounded-xs opacity-50 italic text-[9px]">
+               Managed via UCA Grid Constraints (Phase 10.2)
+            </div>
           </div>
         </InspectorCollapsible>
       )}

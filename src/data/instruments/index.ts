@@ -1,7 +1,7 @@
 import { junio601 } from "./junio-601";
 import { omega } from "./omega";
 import { neuronik } from "./neuronik";
-import { Instrument } from "./types";
+import type { Instrument } from "./types";
 
 export * from "./types";
 export { junio601, omega, neuronik };

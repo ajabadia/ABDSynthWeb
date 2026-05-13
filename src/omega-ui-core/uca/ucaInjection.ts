@@ -3,13 +3,13 @@
  * Canonical Orchestrator for Blueprint Materialization and Integration.
  */
 
-import { 
+import type { 
   OMEGA_Manifest, 
   OmegaNode, 
   BlueprintDefinition,
   CellTemplate
 } from '../types/manifest';
-import { 
+import type { 
   BlueprintInjectionRequest, 
   BlueprintInjectionResult, 
   BlueprintInjectionReport,
@@ -36,11 +36,13 @@ export async function injectBlueprint(
   
   // 0. Aseptic Tree Initialization (Ensures UCA mode)
   const activeManifest = { ...manifest };
-  if (!activeManifest.ui.tree) {
-    activeManifest.ui = {
-      ...activeManifest.ui,
-      tree: manifestToTree(activeManifest)
-    };
+  const rootNode = activeManifest.nodes?.[0] || activeManifest.ui.tree;
+  
+  if (!rootNode) {
+    const initializedTree = manifestToTree(activeManifest);
+    activeManifest.nodes = [initializedTree];
+  } else if (!activeManifest.nodes || activeManifest.nodes.length === 0) {
+    activeManifest.nodes = [rootNode];
   }
 
   const report: BlueprintInjectionReport = {
@@ -49,7 +51,7 @@ export async function injectBlueprint(
     timestamp: new Date().toISOString(),
     mode: request.mode,
     dryRun: request.strategy.dryRun,
-    compatibilityStatus: 'unknown',
+    compatibilityStatus: 'compliant',
     validationIssues: [],
     idRemapLog: {},
     autoWireDecisions: [],
@@ -60,11 +62,12 @@ export async function injectBlueprint(
 
   try {
     // 1 & 2 & 3 & 4. Formal Compilation (Bridge handles pre-validation & materialization)
-    const targetParent = findNodeById(activeManifest.ui.tree, request.strategy.targetParentNodeId);
+    const rootNode = activeManifest.nodes[0];
+    const targetParent = findNodeById(rootNode, request.strategy.targetParentNodeId);
     
     const compilation = blueprintToTree(blueprint, {
       placeholders: request.placeholderValues,
-      templates: options?.templates,
+      templates: options?.templates || {}, // Ensure Record
       targetParent: targetParent || null,
       strict: true
     });
@@ -81,7 +84,7 @@ export async function injectBlueprint(
       message: warn
     })));
 
-    report.compatibilityStatus = compilation.errors.length > 0 ? 'incompatible' : 'compatible';
+    report.compatibilityStatus = compilation.errors.length > 0 ? 'incompatible' : 'compliant';
     
     if (compilation.errors.length > 0) {
       return fatal('COMPILATION_FAILURE', 'Blueprint compilation failed.', report);
@@ -132,10 +135,10 @@ export async function injectBlueprint(
  * Internal helper to splice the compiled node into the manifest tree.
  */
 function performMerge(manifest: OMEGA_Manifest, node: OmegaNode, strategy: BlueprintInsertionStrategy): OMEGA_Manifest {
-  const tree = manifest.ui?.tree;
-  if (!tree) throw new Error('Manifest tree not found.');
+  const rootNode = manifest.nodes?.[0] || manifest.ui?.tree;
+  if (!rootNode) throw new Error('Manifest root node not found.');
 
-  const targetId = strategy.targetParentNodeId || tree.id;
+  const targetId = strategy.targetParentNodeId || rootNode.id;
   
   const updateTree = (root: OmegaNode): OmegaNode => {
     if (root.id === targetId) {
@@ -153,21 +156,12 @@ function performMerge(manifest: OMEGA_Manifest, node: OmegaNode, strategy: Bluep
     return root;
   };
 
-  const nextTree = updateTree(tree);
-  const legacyProjections = treeToManifest(nextTree);
+  const nextTree = updateTree(rootNode);
+  const canonicalUpdates = treeToManifest(nextTree);
 
   return {
     ...manifest,
-    ui: { 
-      ...manifest.ui, 
-      tree: nextTree,
-      controls: legacyProjections.controls || manifest.ui.controls || [],
-      jacks: legacyProjections.jacks || manifest.ui.jacks || [],
-      layout: {
-        ...manifest.ui.layout,
-        containers: legacyProjections.layout?.containers || manifest.ui.layout?.containers || []
-      }
-    }
+    ...canonicalUpdates, // Populates manifest.nodes and manifest.ui
   };
 }
 

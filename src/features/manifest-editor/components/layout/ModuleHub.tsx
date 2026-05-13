@@ -3,8 +3,8 @@
 import React from 'react';
 import LogicAssetsSection from '../hub/LogicAssetsSection';
 
-import { OMEGA_Manifest } from '@/types/manifest';
-import { OmegaContract } from '@/services/wasmLoader';
+import type { OMEGA_Manifest } from '@/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 
 interface ModuleHubProps {
   manifest: OMEGA_Manifest;

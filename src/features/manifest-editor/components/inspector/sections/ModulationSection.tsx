@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Plus, Activity, LayoutGrid } from 'lucide-react';
-import { OMEGA_Manifest, OMEGA_Modulation } from '@/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Modulation, ManifestEntity } from '@/omega-ui-core/types/manifest';
 import { ModulationItem } from '../ModulationItem';
 import InspectorCollapsible from '../shared/InspectorCollapsible';
  
@@ -11,8 +11,8 @@ interface ModulationSectionProps {
   onAdd: (mod: OMEGA_Modulation) => void;
   onRemove: (id: string) => void;
   onUpdate: (id: string, updates: Partial<OMEGA_Modulation>) => void;
-  onOpenModGrid?: () => void;
-  onHelp?: (sectionId?: string) => void;
+  onOpenModGrid?: (() => void) | undefined;
+  onHelp?: ((sectionId?: string) => void) | undefined;
 }
  
 import IndustrialButton from '../shared/IndustrialButton';
@@ -21,7 +21,7 @@ import EmptyState from '../shared/EmptyState';
 export default function ModulationSection({ manifest, onAdd, onRemove, onUpdate, onOpenModGrid, onHelp }: ModulationSectionProps) {
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   
-  const allEntities = [
+  const allEntities: ManifestEntity[] = [
     ...(manifest.ui?.controls || []),
     ...(manifest.ui?.jacks || [])
   ];

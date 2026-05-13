@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest, ModuleTemplate, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ModuleTemplate, OmegaNode } from '@/omega-ui-core/types/manifest';
 
 /**
  * useTemplateCRUD (Phase 5.4)
@@ -14,32 +14,22 @@ export const useTemplateCRUD = (
 ) => {
 
   const registerTemplate = useCallback((template: ModuleTemplate) => {
-    const nextLibrary = { ...(manifest.ui.cellLibrary || manifest.ui.moduleTemplates || {}) };
+    const nextLibrary = { ...(manifest.moduleTemplates || {}) };
     nextLibrary[template.id] = template;
 
     updateManifest({
-      ui: {
-        ...manifest.ui,
-        cellLibrary: nextLibrary,
-        moduleTemplates: nextLibrary // Keep sync
-      }
+      moduleTemplates: nextLibrary
     }, `[DNA] Register Template: ${template.label}`);
 
     addLog(`[DNA] Template '${template.label}' certified and registered in library.`);
   }, [manifest, updateManifest, addLog]);
 
   const removeTemplate = useCallback((id: string) => {
-    const nextLibrary = { ...(manifest.ui.cellLibrary || manifest.ui.moduleTemplates || {}) };
+    const nextLibrary = { ...(manifest.moduleTemplates || {}) };
     const label = nextLibrary[id]?.label || id;
     delete nextLibrary[id];
 
-    updateManifest({
-      ui: {
-        ...manifest.ui,
-        cellLibrary: nextLibrary,
-        moduleTemplates: nextLibrary
-      }
-    }, `[DNA] Remove Template: ${label}`);
+    updateManifest({ moduleTemplates: nextLibrary } as Partial<OMEGA_Manifest>, `Update Template: ${id}`);
 
     addLog(`[DNA] Template '${label}' removed from library.`);
   }, [manifest, updateManifest, addLog]);
@@ -64,14 +54,14 @@ export const useTemplateCRUD = (
       cellRef: template.id,
       layout: {
         pos: { x: 10, y: 10 }, 
-        mode: (template.baseNode || template.root)?.layout?.mode || 'absolute'
+        mode: (template.baseNode)?.layout?.mode || 'absolute'
       },
       overrides: {},
       slotMappings: {}
     };
 
     // 3. Initialize required slot mappings
-    (template.slots || []).forEach(slot => {
+    (template.slots || []).forEach((slot: { id: string }) => {
       if (newNode.slotMappings) {
         newNode.slotMappings[slot.id] = ''; 
       }

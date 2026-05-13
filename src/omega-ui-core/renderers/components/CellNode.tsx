@@ -2,26 +2,26 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { OmegaNode, OMEGA_Manifest, CellTemplate, ManifestEntity } from '@/omega-ui-core/types/manifest';
+import type { OmegaNode, OMEGA_Manifest, CellTemplate } from '../../types/manifest';
 import { CellRenderer } from '../CellRenderer';
 import { useUCADrag } from '../hooks/useUCADrag';
 import { UCADebugHUD } from './UCADebugHUD';
 import { CADOverlay } from './CADOverlay';
 import { GovernedOverlay } from './GovernedOverlay';
 import { UniversalRenderer } from '../UniversalRenderer';
-import { UCADebugContext } from '../ucaTypes';
-import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
+import type { UCADebugContext } from '../ucaTypes';
+import { useDesignTokens } from '../../hooks/useDesignTokens';
 
 interface CellNodeProps {
   node: OmegaNode;
   manifest: OMEGA_Manifest;
   depth: number;
   catalog: Record<string, CellTemplate>;
-  resolveAsset?: (id: string | undefined) => string | undefined;
-  debugContext?: UCADebugContext;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
+  debugContext?: UCADebugContext | undefined;
   worldPos: { x: number, y: number };
   isLayoutGoverned: boolean;
-  parentNode?: OmegaNode | null;
+  parentNode?: OmegaNode | null | undefined;
   handleDebugClick: (e: React.MouseEvent) => void;
 }
 
@@ -51,24 +51,7 @@ export function CellNode({
     parentNode
   });
 
-  const phantomEntity: ManifestEntity = {
-    id: node.id,
-    type: node.cellRef || 'knob',
-    pos: node.layout?.pos || { x: 0, y: 0 },
-    role: node.role || 'control',
-    bind: node.bind || 'none',
-    presentation: {
-      tab: 'MAIN',
-      component: node.cellRef || 'knob', 
-      variant: 'default',
-      offsetX: 0,
-      offsetY: 0,
-      attachments: [],
-      style: node.style
-    }
-  };
-
-  const cellHTML = CellRenderer.renderCellHTML(phantomEntity, {
+  const cellHTML = CellRenderer.renderCellHTML(node, {
     skin: manifest.ui?.skin || 'industrial',
     zoom: 1.0,
     runtimeValue: 0, 
@@ -86,7 +69,7 @@ export function CellNode({
       id={`uca-${node.id}`}
       className="uca-node uca-cell group"
       onClick={handleDebugClick}
-      drag={debugContext?.enabled}
+      drag={debugContext?.enabled || false}
       dragMomentum={false}
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}

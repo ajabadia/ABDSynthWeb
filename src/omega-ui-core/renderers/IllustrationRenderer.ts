@@ -5,7 +5,7 @@
 
 export interface IllustrationProps {
   assetUrl?: string | undefined;
-  size?: { w: number; h: number } | undefined;
+  size?: { width: number; height: number } | undefined;
   opacity?: number | undefined;
   id?: string | undefined;
   variant?: string | undefined;
@@ -14,17 +14,17 @@ export interface IllustrationProps {
 export const renderIllustrationHTML = (props: IllustrationProps): string => {
   const { assetUrl, size, id, variant = 'contain' } = props;
   
-  const w = size?.w || 40;
-  const h = size?.h || 40;
+  const width = size?.width || 40;
+  const height = size?.height || 40;
 
   if (!assetUrl) {
-    return `<div class="illustration-container illustration-missing" style="width: ${w * 1.5}px; height: ${h * 1.5}px;"></div>`;
+    return `<div class="illustration-container illustration-missing" style="width: ${width * 1.5}px; height: ${height * 1.5}px;"></div>`;
   }
 
   return `
     <div 
         class="illustration-container variant-${variant}" 
-        style="width: ${w * 1.5}px; height: ${h * 1.5}px;"
+        style="width: ${width * 1.5}px; height: ${height * 1.5}px;"
         ${id ? `data-source="${id}"` : ''}
     >
         <img 

@@ -1,4 +1,4 @@
-import { OmegaNode, OMEGA_Manifest } from '../../types/manifest';
+import type { OmegaNode, OMEGA_Manifest } from '../../types/manifest';
 
 /**
  * OMEGA Phase 9.4A - ID Manager Service (Industrial Core)

@@ -5,18 +5,18 @@
  * Ensures 100% parity across all rendering contexts.
  */
 
-import { Presentation, OMEGA_Manifest, OmegaStyleNode } from '../types/manifest';
+import type { Presentation, OMEGA_Manifest, OmegaStyleNode } from '../types/manifest';
 import { ColorResolver } from '../utils/ColorResolver';
 
 interface ContainerRenderProps {
   id: string;
   label: string;
   variant: string;
-  manifest?: OMEGA_Manifest;
-  style?: OmegaStyleNode;
-  isSelected?: boolean;
-  isError?: boolean;
-  resolveAsset?: (ref: string | undefined) => string | undefined;
+  manifest?: OMEGA_Manifest | undefined;
+  style?: OmegaStyleNode | undefined;
+  isSelected?: boolean | undefined;
+  isError?: boolean | undefined;
+  resolveAsset?: ((ref: string | undefined) => string | undefined) | undefined;
 }
 
 export function renderContainerHTML(props: ContainerRenderProps): string {

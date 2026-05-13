@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 
 /**
  * useRackTokens (Era 7.2.3)

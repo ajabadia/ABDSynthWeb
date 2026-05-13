@@ -1,6 +1,6 @@
 import { Shield, Terminal, Settings, Columns } from 'lucide-react';
 
-import { AuditResult } from '@/services/auditService';
+import type { AuditResult } from '@/services/auditService';
 import { ComplianceBadge } from '../shared/ComplianceBadge';
  
 import ViewModeSelector from '../header/ViewModeSelector';
@@ -29,8 +29,8 @@ interface HeaderProps {
   onTriggerUpload: (id: string) => void;
   onOpenAbout: () => void;
   onOpenConfig: () => void;
-  onOpenCellEditor?: () => void;
-  onOpenGallery?: () => void;
+  onOpenCellEditor?: (() => void) | undefined;
+  onOpenGallery?: (() => void) | undefined;
   isSplit?: boolean;
   onToggleSplit?: () => void;
 }

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Layers } from 'lucide-react';
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import InspectorCollapsible from '../../shared/InspectorCollapsible';
 
 // Specialized Governance Components
@@ -33,7 +33,8 @@ export default function ModuleGlobalAesthetics({ manifest, onUpdate, resolveAsse
             </p>
             <AssetSelector 
                manifest={manifest}
-               selectedAssetId={typeof faceplate === 'string' ? faceplate : (faceplate ? Object.values(faceplate)[0] : undefined)}
+               label="Faceplate Texture"
+               selectedAssetId={typeof faceplate === 'string' ? faceplate : undefined}
                onSelect={(id) => onUpdate({ ui: { ...manifest.ui, faceplate: id } })}
                resolveAsset={resolveAsset || ((id) => id)}
             />

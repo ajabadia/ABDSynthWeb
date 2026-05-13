@@ -5,20 +5,20 @@ import { ShieldCheck, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AttachmentItem from '../AttachmentItem';
 
-import { Attachment, OMEGA_Manifest } from '@/types/manifest';
+import type { Attachment, OMEGA_Manifest } from '@/types/manifest';
 
 interface AttachmentCardProps {
   att: Attachment;
   manifest: OMEGA_Manifest;
   hostType: string;
   idx: number | string;
-  isCore?: boolean;
+  isCore?: boolean | undefined;
   isExpanded: boolean;
   onToggle: () => void;
   onRemove: (idx: number) => void;
   onUpdate: (idx: number | string, updates: Partial<Attachment>) => void;
   availableBinds: string[];
-  onOpenConfig?: () => void;
+  onOpenConfig?: (() => void) | undefined;
 }
 
 export default function AttachmentCard({

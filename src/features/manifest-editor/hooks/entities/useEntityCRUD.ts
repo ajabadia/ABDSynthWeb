@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, OmegaNode, LayoutContainer } from '@/omega-ui-core/types/manifest';
 import { findNodeInTree, updateNodeInTree, findLegacyItem, applyUpdatesToNode, insertNodeInTree } from './ucaInspectorAdapter';
 import { treeToManifest, manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 import { regenerateEntityId, cloneAndRegenerateNodeIds } from '../../utils/idManagement';
@@ -51,26 +51,28 @@ export const useEntityCRUD = (
         const legacyProjections = treeToManifest(nextTree);
         
         return { 
-          ui: { 
-            ...latestManifest.ui, 
+          ui: {
+            ...latestManifest.ui,
             tree: nextTree,
             controls: legacyProjections.controls || latestManifest.ui?.controls || [],
             jacks: legacyProjections.jacks || latestManifest.ui?.jacks || [],
             layout: {
-              ...(latestManifest.ui?.layout || { planes: ['MAIN'], containers: [] }),
+              ...(latestManifest.ui?.layout as Record<string, unknown>), // Containers and other keys might be missing from partials
+              width: latestManifest.ui?.layout?.width || 800,
+              height: latestManifest.ui?.layout?.height || 600,
               containers: legacyProjections.layout?.containers || latestManifest.ui?.layout?.containers || []
             }
-          } 
+          }
         };
       } else {
         // Legacy edit fallback
         const isJack = latestManifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
         
         if (isJack) {
-          const nextJacks = latestManifest.ui.jacks.map((j: ManifestEntity) => j.id === id ? { ...j, ...(updates as Partial<ManifestEntity>) } : j);
+          const nextJacks = (latestManifest.ui?.jacks || []).map((j: ManifestEntity) => j.id === id ? { ...j, ...(updates as Partial<ManifestEntity>) } : j);
           return { ui: { ...latestManifest.ui, jacks: nextJacks } };
         } else {
-          const nextControls = latestManifest.ui.controls.map((c: ManifestEntity) => c.id === id ? { ...c, ...(updates as Partial<ManifestEntity>) } : c);
+          const nextControls = (latestManifest.ui?.controls || []).map((c: ManifestEntity) => c.id === id ? { ...c, ...(updates as Partial<ManifestEntity>) } : c);
           return { ui: { ...latestManifest.ui, controls: nextControls } };
         }
       }
@@ -108,26 +110,43 @@ export const useEntityCRUD = (
   const removeItem = useCallback((id: string) => {
     const isJack = manifest.ui?.jacks?.some((j: ManifestEntity) => j.id === id);
     if (isJack) {
-      const nextJacks = manifest.ui.jacks.filter((j: ManifestEntity) => j.id !== id);
+      const nextJacks = (manifest.ui?.jacks || []).filter((j: ManifestEntity) => j.id !== id);
       updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Remove Jack: ${id}`);
     } else {
-      const nextControls = manifest.ui.controls.filter((c: ManifestEntity) => c.id !== id);
+      const nextControls = (manifest.ui?.controls || []).filter((c: ManifestEntity) => c.id !== id);
       updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Remove Control: ${id}`);
     }
     addLog(`Removed entity: ${id}`);
   }, [manifest, updateManifest, addLog]);
 
-  const addEntity = useCallback((type: 'control' | 'jack', template?: Partial<ManifestEntity>) => {
+  const addEntity = useCallback((type: 'control' | 'jack', template?: Partial<ManifestEntity>, node?: OmegaNode, container?: LayoutContainer) => {
     const id = `new_${type}_${Date.now().toString().slice(-4)}`;
     
     // Default base structure
-    const baseEntity: ManifestEntity = {
+    const baseEntity: ManifestEntity = node ? {
+      id: node.id,
+      type: node.cellRef || 'knob',
+      role: node.role || 'control',
+      bind: node.bind || 'none',
+      label: node.id,
+      pos: node.layout?.pos || { x: 0, y: 0 },
+      size: node.layout?.size || { width: 48, height: 48 },
+      presentation: {
+        tab: 'MAIN',
+        component: node.cellRef || 'knob', 
+        variant: 'default',
+        offsetX: 0,
+        offsetY: 0,
+        attachments: []
+      }
+    } : {
       id,
       type: type === 'control' ? 'knob' : 'port',
       role: type === 'control' ? 'control' : 'stream',
       bind: '',
       label: type === 'control' ? 'New Control' : 'New Jack',
       pos: type === 'control' ? { x: 50, y: 50 } : { x: 50, y: 350 },
+      size: { width: 48, height: 48 },
       presentation: {
         tab: 'MAIN',
         component: type === 'control' ? 'knob' : 'port',
@@ -151,9 +170,9 @@ export const useEntityCRUD = (
       }
     } as ManifestEntity : baseEntity;
 
-    if (type === 'control') {
-      const nextControls = [...(manifest.ui?.controls || []), newEntity];
-      updateManifest({ ui: { ...manifest.ui, controls: nextControls } }, `Add Control: ${id}`);
+    if (type === 'control' && container && manifest.ui) {
+      const nextLayout = { ...manifest.ui.layout, width: manifest.ui.layout?.width || 800, height: manifest.ui.layout?.height || 600, containers: [...(manifest.ui.layout?.containers || []), container] };
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout as OMEGA_Manifest['ui']['layout'] } }, `Add Container: ${id}`);
     } else {
       const nextJacks = [...(manifest.ui?.jacks || []), newEntity];
       updateManifest({ ui: { ...manifest.ui, jacks: nextJacks } }, `Add Jack: ${id}`);
@@ -186,10 +205,12 @@ export const useEntityCRUD = (
         ui: {
           ...manifest.ui,
           tree: nextTree,
-          controls: projections.controls || manifest.ui?.controls,
-          jacks: projections.jacks || manifest.ui?.jacks,
+          controls: projections.controls || manifest.ui?.controls || [],
+          jacks: projections.jacks || manifest.ui?.jacks || [],
           layout: {
-            ...(manifest.ui?.layout || { planes: ['MAIN'], containers: [] }),
+            ...manifest.ui?.layout,
+            width: manifest.ui?.layout?.width || 800,
+            height: manifest.ui?.layout?.height || 600,
             containers: projections.layout?.containers || manifest.ui?.layout?.containers || []
           }
         }

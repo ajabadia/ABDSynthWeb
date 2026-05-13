@@ -2,28 +2,34 @@
  
 import React from 'react';
 import { Paperclip } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest, Attachment } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Attachment, OmegaNode } from '@/omega-ui-core/types/manifest';
 import { useAttachmentsLogic } from '@/features/manifest-editor/hooks/useAttachmentsLogic';
-import AttachmentsHeader from '../attachments/AttachmentsHeader';
-import AttachmentCard from '../attachments/AttachmentCard';
-import InspectorCollapsible from '../shared/InspectorCollapsible';
+import { adaptNodeToManifestEntity } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
+import AttachmentsHeader from '@/features/manifest-editor/components/inspector/attachments/AttachmentsHeader';
+import AttachmentCard from '@/features/manifest-editor/components/inspector/attachments/AttachmentCard';
+import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
  
 interface AttachmentsSectionProps {
-  item: ManifestEntity;
+  item: OmegaNode;
   manifest: OMEGA_Manifest;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
-  availableBinds?: string[];
-  onHelp?: (sectionId?: string) => void;
-  onOpenConfig?: () => void;
+  onUpdate: (updates: Partial<OmegaNode>) => void;
+  availableBinds?: string[] | undefined;
+  onHelp?: ((sectionId: string) => void) | undefined;
+  onOpenConfig?: (() => void) | undefined;
 }
  
-export default function AttachmentsSection({ item, manifest, onUpdate, availableBinds = [], onHelp, onOpenConfig }: AttachmentsSectionProps) {
+export default function AttachmentsSection({ item: node, manifest, onUpdate, availableBinds = [], onHelp, onOpenConfig }: AttachmentsSectionProps) {
+  const item = adaptNodeToManifestEntity(node);
+  const onLegacyUpdate = (u: Partial<ManifestEntity>) => {
+    onUpdate(u as unknown as Partial<OmegaNode>);
+  };
+
   const { 
     attachments, coreAtt, expandedIdx, setExpandedIdx, 
     addAttachment, removeAttachment, updateAttachment 
-  } = useAttachmentsLogic(item, onUpdate);
- 
-  const hostType = item.presentation?.component || 'knob';
+  } = useAttachmentsLogic(item, onLegacyUpdate);
+
+  const hostType = node.cellRef || node.kind || 'knob';
 
   return (
     <div className="space-y-4 pt-2">

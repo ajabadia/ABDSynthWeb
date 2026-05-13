@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FileCode, Binary, ScrollText, Image as ImageIcon, Check } from 'lucide-react';
-import { IngestionFile } from '@/features/manifest-editor/hooks/useIngestionLogic';
+import type { IngestionFile } from '@/features/manifest-editor/hooks/useIngestionLogic';
 
 interface IngestionFileListProps {
   ingestionList: IngestionFile[];

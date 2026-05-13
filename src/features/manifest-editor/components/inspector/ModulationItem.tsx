@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Trash2, ArrowRight, Info } from 'lucide-react';
-import { ManifestEntity, OMEGA_Modulation } from '@/types/manifest';
+import type { ManifestEntity, OMEGA_Modulation } from '@/omega-ui-core/types/manifest';
 
 interface ModulationItemProps {
   mod: OMEGA_Modulation;
@@ -23,7 +23,7 @@ export function ModulationItem({ mod, isExpanded, onToggle, onUpdate, onRemove, 
         className="p-2.5 flex items-center gap-4 cursor-pointer hover:bg-slate-200 dark:hover:bg-white/[0.02]"
         onClick={onToggle}
       >
-        <div className="shrink-0 w-1.5 h-6 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(0,240,255,0.3)]" style={{ opacity: 0.2 + mod.amount * 0.8 }} />
+        <div className="shrink-0 w-1.5 h-6 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(0,240,255,0.3)]" style={{ opacity: 0.2 + (mod.amount || 0) * 0.8 }} />
         
         <div className="flex-1 flex items-center gap-3">
            {/* SOURCE */}
@@ -35,11 +35,11 @@ export function ModulationItem({ mod, isExpanded, onToggle, onUpdate, onRemove, 
                 onChange={(e) => onUpdate(mod.id, { source: e.target.value })}
                 className="w-full bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-xs text-[10px] font-bold text-cyan-600 dark:text-cyan-400/80 px-2 py-1 outline-none focus:border-cyan-500/40 transition-colors appearance-auto [color-scheme:dark]"
               >
-                {allEntities.map(e => <option key={e.id} value={e.id}>{e.label || e.id}</option>)}
+                {allEntities.map((e: ManifestEntity) => <option key={e.id} value={e.id}>{e.label || e.id}</option>)}
               </select>
            </div>
  
-           <ArrowRight className={`w-4 h-4 mt-4 ${mod.amount > 0 ? 'text-cyan-400' : 'text-foreground/10'} shrink-0`} />
+           <ArrowRight className={`w-4 h-4 mt-4 ${(mod.amount ?? 0) > 0 ? 'text-cyan-400' : 'text-foreground/10'} shrink-0`} />
  
            {/* TARGET */}
            <div className="flex-1 space-y-1">
@@ -50,7 +50,7 @@ export function ModulationItem({ mod, isExpanded, onToggle, onUpdate, onRemove, 
                 onChange={(e) => onUpdate(mod.id, { target: e.target.value })}
                 className="w-full bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-xs text-[10px] font-bold text-slate-900 dark:text-foreground/80 px-2 py-1 outline-none focus:border-cyan-500/40 transition-colors appearance-auto [color-scheme:dark]"
               >
-                {allEntities.map(e => <option key={e.id} value={e.id}>{e.label || e.id}</option>)}
+                {allEntities.map((e: ManifestEntity) => <option key={e.id} value={e.id}>{e.label || e.id}</option>)}
               </select>
            </div>
         </div>
@@ -58,7 +58,7 @@ export function ModulationItem({ mod, isExpanded, onToggle, onUpdate, onRemove, 
         <div className="shrink-0 flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-white/5 mt-3">
            <div className="flex-col flex items-end">
               <span className="text-[6px] font-black wb-text-muted uppercase">Amount</span>
-              <span className="text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400">{mod.amount.toFixed(2)}</span>
+              <span className="text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400">{(mod.amount || 0).toFixed(2)}</span>
            </div>
            <button 
              onClick={(e) => { e.stopPropagation(); onRemove(mod.id); }} 
@@ -76,16 +76,16 @@ export function ModulationItem({ mod, isExpanded, onToggle, onUpdate, onRemove, 
           <div className="flex items-center gap-4">
             <div className="flex-1 space-y-1.5">
               <div className="flex justify-between items-center px-1">
-                 <label className="text-[7px] font-black uppercase wb-text-muted">Modulation Depth</label>
-                 <span className="text-[8px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-400/10 px-1 rounded-xs">{(mod.amount * 100).toFixed(0)}%</span>
+                  <label className="text-[7px] font-black uppercase wb-text-muted">Modulation Depth</label>
+                  <span className="text-[8px] font-mono text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-400/10 px-1 rounded-xs">{((mod.amount ?? 0) * 100).toFixed(0)}%</span>
               </div>
-              <input 
-                type="range" min="0" max="1" step="0.01"
-                value={mod.amount}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => onUpdate(mod.id, { amount: parseFloat(e.target.value) })}
-                className="w-full accent-cyan-500 h-1.5 bg-slate-300 dark:bg-white/5 rounded-full appearance-none cursor-pointer"
-              />
+               <input 
+                 type="range" min="0" max="1" step="0.01"
+                 value={mod.amount ?? 1.0}
+                 onClick={(e) => e.stopPropagation()}
+                 onChange={(e) => onUpdate(mod.id, { amount: parseFloat(e.target.value) })}
+                 className="w-full accent-cyan-500 h-1.5 bg-slate-300 dark:bg-white/5 rounded-full appearance-none cursor-pointer"
+               />
             </div>
  
             <div className="w-32 space-y-1.5 group/mode relative">

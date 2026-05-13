@@ -1,13 +1,13 @@
 import React from 'react';
-import { BehaviorMapping, BehaviorMappingMode } from '@/omega-ui-core/types/assetBehavior';
+import type { BehaviorMapping, BehaviorMappingMode } from '@/omega-ui-core/types/assetBehavior';
 import { Zap, Target, ArrowRightLeft, Layers } from 'lucide-react';
-
+ 
 interface BehaviorMappingInspectorProps {
   mapping: BehaviorMapping;
   onChange: (updates: Partial<BehaviorMapping>) => void;
-  resolvedFrame?: number;
+  resolvedFrame?: number | undefined;
 }
-
+ 
 export default function BehaviorMappingInspector({ mapping, onChange, resolvedFrame }: BehaviorMappingInspectorProps) {
   return (
     <div className="space-y-6 bg-[#111112] border border-[#222] rounded-lg p-4">
@@ -15,7 +15,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
         <Target className="w-3.5 h-3.5 text-accent" />
         <h3 className="text-[10px] font-black uppercase tracking-widest text-white">Semantic Mapping</h3>
       </div>
-
+ 
       <div className="grid grid-cols-2 gap-6">
         {/* INPUT SOURCE */}
         <div className="space-y-2">
@@ -35,7 +35,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
             <option value="manual">Manual Scrubbing</option>
           </select>
         </div>
-
+ 
         {/* MAPPING MODE */}
         <div className="space-y-2">
           <label className="text-[7px] font-black uppercase tracking-widest opacity-40 flex items-center gap-1">
@@ -54,7 +54,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
           </select>
         </div>
       </div>
-
+ 
       {/* FRAME RANGE */}
       <div className="space-y-4 pt-4 border-t border-white/5">
         <label className="text-[7px] font-black uppercase tracking-widest opacity-40 flex items-center gap-1">
@@ -70,7 +70,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
               onChange={(e) => onChange({ frameRange: { start: parseInt(e.target.value), end: mapping.frameRange?.end ?? 0 } })}
               className="w-full bg-[#0a0a0b] border border-[#222] rounded p-1.5 text-[8px] font-mono text-white outline-none focus:border-accent/40"
             />
-            {resolvedFrame === (mapping.frameRange?.start ?? 0) && (
+            {(resolvedFrame ?? 0) === (mapping.frameRange?.start ?? 0) && (
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-pulse shadow-[0_0_5px_rgba(0,242,255,0.5)]" />
             )}
           </div>
@@ -82,7 +82,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
               onChange={(e) => onChange({ frameRange: { start: mapping.frameRange?.start ?? 0, end: parseInt(e.target.value) } })}
               className="w-full bg-[#0a0a0b] border border-[#222] rounded p-1.5 text-[8px] font-mono text-white outline-none focus:border-accent/40"
             />
-            {resolvedFrame === (mapping.frameRange?.end ?? 1) && (
+            {(resolvedFrame ?? 0) === (mapping.frameRange?.end ?? 1) && (
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-pulse shadow-[0_0_5px_rgba(0,242,255,0.5)]" />
             )}
           </div>
@@ -98,7 +98,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
              </select>
           </div>
         </div>
-
+ 
         {/* VISUAL FRAME TRACKER */}
         <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden relative">
            <div 
@@ -116,7 +116,7 @@ export default function BehaviorMappingInspector({ mapping, onChange, resolvedFr
            </div>
         </div>
       </div>
-
+ 
       <div className="p-3 bg-accent/5 rounded border border-accent/10">
           <p className="text-[8px] font-bold uppercase opacity-40 leading-relaxed">
             Mapping determines how the source signal is quantized into visual frames. For filmstrips, ensure the frame range matches the asset sequence.

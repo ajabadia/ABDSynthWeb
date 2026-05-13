@@ -1,4 +1,4 @@
-import { OMEGA_Manifest } from '@/types/manifest';
+import type { OMEGA_Manifest } from '../types/manifest';
 
 /**
  * OMEGA COLOR RESOLUTION ENGINE (Era 7.2.3)
@@ -18,8 +18,8 @@ export class ColorResolver {
 
     if (col.includes('/')) {
       const parts = col.split('/');
-      baseColor = parts[0];
-      alpha = parseFloat(parts[1]) || 1;
+      baseColor = parts[0] || col;
+      alpha = parseFloat(parts[1] || '1') || 1;
     }
 
     const resolveBase = (c: string): string => {
@@ -42,9 +42,9 @@ export class ColorResolver {
         weak: '#555555'
       };
 
-      const palette = manifest?.ui?.palette || {};
-      const colors = manifest?.ui?.colors || {};
-      const fullPalette: Record<string, string> = { ...defaults, ...palette, ...colors };
+      const palette = (manifest?.ui?.palette || {}) as Record<string, string | undefined>;
+      const colors = (manifest?.ui?.colors || {}) as Record<string, string | undefined>;
+      const fullPalette: Record<string, string | undefined> = { ...defaults, ...palette, ...colors };
       return fullPalette[c] || c;
     };
 

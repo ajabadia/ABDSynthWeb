@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import { HelpSection } from '../modals/helpData';
+import type { HelpSection } from '../modals/helpData';
 import { HelpCodeBlock } from './HelpCodeBlock';
 
 interface HelpSectionItemProps {

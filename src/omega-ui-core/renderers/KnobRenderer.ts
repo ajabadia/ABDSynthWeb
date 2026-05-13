@@ -3,25 +3,25 @@
  * Single Source of Truth for Knob HTML Structure.
  */
  
-import { OmegaStyleNode } from '../types/manifest';
+import type { OmegaStyleNode } from '../types/manifest';
 
 export interface KnobProps {
   size: string;          // A, B, C, D
   colorId: string;       // cyan, orange, etc.
   value: number;         // 0.0 to 1.0
-  isSelected?: boolean;
-  isMain?: boolean;
-  id?: string;           // Canonical ID
-  rotationOffset?: number; // Standard: -135
-  rotationRange?: number;  // Standard: 270
+  isSelected?: boolean | undefined;
+  isMain?: boolean | undefined;
+  id?: string | undefined;           // Canonical ID
+  rotationOffset?: number | undefined; // Standard: -135
+  rotationRange?: number | undefined;  // Standard: 270
   assetUrl?: string | undefined;       // URL del recurso (blob o external)
   frames?: number | undefined;         // Número de frames en el filmstrip
   orientation?: 'v' | 'h' | undefined; // Orientación del strip
   inheritedFont?: string | undefined;
   inheritedSize?: number | undefined;
   inheritedColor?: string | undefined;
-  explicitMarkerColor?: string; // Era 7.2.3 Custom Mode
-  style?: OmegaStyleNode; // [NEW] Era 7.2.3 Granular Style Node
+  explicitMarkerColor?: string | undefined; // Era 7.2.3 Custom Mode
+  style?: OmegaStyleNode | undefined; // [NEW] Era 7.2.3 Granular Style Node
 }
 
 export const renderKnobHTML = (props: KnobProps): string => {

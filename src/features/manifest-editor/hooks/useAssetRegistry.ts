@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { OMEGA_Manifest, LibraryAsset } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Asset } from '@/omega-ui-core/types/manifest';
 
 /**
  * useAssetRegistry (Era 7.2.3)
  * Centralizes the retrieval and filtering of industrial assets (Manifest & Libraries).
  */
 export function useAssetRegistry(manifest: OMEGA_Manifest, mode: 'statics' | 'sequences' = 'statics') {
-  const [library, setLibrary] = useState<LibraryAsset[]>([]);
+  const [library, setLibrary] = useState<OMEGA_Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const assets = useMemo(() => manifest.resources?.assets || [], [manifest.resources?.assets]);
 

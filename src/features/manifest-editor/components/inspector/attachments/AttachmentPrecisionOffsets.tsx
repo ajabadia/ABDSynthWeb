@@ -3,11 +3,11 @@
 import React from 'react';
 import { Move } from 'lucide-react';
 
-import { Attachment } from '@/types/manifest';
+import type { Attachment } from '@/types/manifest';
 
 interface AttachmentPrecisionOffsetsProps {
-  offsetX: number;
-  offsetY: number;
+  offsetX: number | undefined;
+  offsetY: number | undefined;
   onUpdate: (updates: Partial<Attachment>) => void;
 }
 

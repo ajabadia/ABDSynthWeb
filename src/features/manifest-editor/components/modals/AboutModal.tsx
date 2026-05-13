@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Info, Globe, Zap, X } from 'lucide-react';
 import IndustrialStatusSection from '../hub/IndustrialStatusSection';
-import { OMEGA_Metric } from '@/types/manifest';
+import type { OMEGA_Metric } from '@/types/manifest';
 
 interface AboutModalProps {
   isOpen: boolean;

@@ -4,22 +4,22 @@ import React from 'react';
 import { List, Plus, Trash2, Hash, Type, Zap } from 'lucide-react';
 import { INDUSTRIAL_PRESETS } from './presets';
 
-import { ManifestEntity, SelectOption, OMEGA_Manifest } from '@/types/manifest';
+import type { ManifestEntity, SelectOption, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
 
 interface SelectPropertiesProps {
   item: ManifestEntity;
   manifest: OMEGA_Manifest;
   onUpdate: (updates: Partial<ManifestEntity>) => void;
-  setActiveSection?: (sectionId: string) => void;
+  setActiveSection?: ((sectionId: string) => void) | undefined;
 }
 
 export default function SelectProperties({ item, manifest, onUpdate, setActiveSection }: SelectPropertiesProps) {
-  const pres = item.presentation || {};
+  const pres = (item.presentation || {}) as Presentation;
   const options = pres.options || [];
   const currentVariant = pres.variant || 'default';
   const selectStyles = manifest.ui.styles?.['select'] || [];
-  const currentStyle = selectStyles.find(s => s.id === currentVariant) || { id: currentVariant, label: 'Standard Select' };
+  const currentStyle = selectStyles.find(s => s.id === currentVariant) || { id: currentVariant as string, label: 'Standard Select' };
 
 
 

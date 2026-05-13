@@ -9,7 +9,7 @@ import { HelpSectionItem } from '../help/HelpSectionItem';
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialSectionId?: string;
+  initialSectionId?: string | undefined;
 }
 
 export default function HelpModal({ isOpen, onClose, initialSectionId }: HelpModalProps) {

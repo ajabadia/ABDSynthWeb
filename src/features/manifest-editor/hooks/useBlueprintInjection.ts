@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { 
+import type { 
   OMEGA_Manifest, 
   BlueprintDefinition,
   BlueprintPlaceholderValues 
 } from '@/omega-ui-core/types/manifest';
-import { 
+import type { 
   BlueprintInjectionRequest, 
   BlueprintInjectionResult 
 } from '@/omega-ui-core/types/blueprint';
@@ -39,7 +39,7 @@ export const useBlueprintInjection = (
     const request: BlueprintInjectionRequest = {
       blueprintId: blueprint.blueprintId,
       placeholderValues: values,
-      manifestId: manifest.id,
+      manifestId: manifest.id || '',
       mode: 'commit', // We use 'commit' mode but don't apply it to orchestrator
       strategy: {
         targetParentNodeId: targetId || null,
@@ -71,7 +71,7 @@ export const useBlueprintInjection = (
     const request: BlueprintInjectionRequest = {
       blueprintId: blueprint.blueprintId,
       placeholderValues: values,
-      manifestId: manifest.id,
+      manifestId: manifest.id || '',
       mode: 'commit',
       strategy: {
         targetParentNodeId: targetId || null,

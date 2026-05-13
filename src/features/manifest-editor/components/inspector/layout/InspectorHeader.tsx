@@ -4,7 +4,7 @@ import React from 'react';
 import { X, Package, Settings } from 'lucide-react';
 
 interface InspectorHeaderProps {
-  id: string;
+  id?: string | undefined;
   isModule: boolean;
   onClose: () => void;
 }

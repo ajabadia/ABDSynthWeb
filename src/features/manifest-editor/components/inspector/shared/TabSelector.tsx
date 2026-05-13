@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { TabName } from '@/types/manifest';
+import type { TabName } from '@/types/manifest';
 
 interface TabSelectorProps {
   value: TabName | TabName[];

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Palette, Sun, Box, Save, ShieldCheck, Type } from 'lucide-react';
-import { OMEGA_Manifest, StyleVariant } from '@/types/manifest';
+import type { OMEGA_Manifest, StyleVariant } from '@/types/manifest';
 
 // Re-using the specialized governance components
 import ThemePaletteGovernance from '../inspector/aesthetic/governance/ThemePaletteGovernance';
@@ -170,7 +170,7 @@ export default function GlobalGovernanceModal({
                                </div>
                                
                                <div className="grid grid-cols-3 gap-2">
-                                  {(manifest.ui.styles?.rack || []).map((style: StyleVariant) => {
+                                  {((manifest.ui.styles as Record<string, StyleVariant[]>)?.rack || []).map((style: StyleVariant) => {
                                     const tabStyles = (manifest.ui.layout?.tabStyles || {}) as Record<string, string | undefined>;
                                     const isActive = tabStyles.MAIN === style.id;
                                     const bgAsset = style.aesthetics?.asset;
@@ -182,8 +182,18 @@ export default function GlobalGovernanceModal({
                                         key={style.id}
                                         onClick={() => {
                                           const newTabStyles = { ...tabStyles, MAIN: style.id };
-                                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                          onUpdate({ ui: { ...manifest.ui, layout: { ...manifest.ui.layout, tabStyles: newTabStyles } } as any });
+                                          onUpdate({ 
+                                            ui: { 
+                                              ...manifest.ui, 
+                                                                                             layout: { 
+                                                 ...manifest.ui.layout, 
+                                                 width: manifest.ui.layout?.width || 800,
+                                                 height: manifest.ui.layout?.height || 600,
+                                                 tabStyles: newTabStyles 
+                                               } 
+ 
+                                            }
+                                          });
                                         }}
                                         className={`
                                           p-2 border rounded-xs flex flex-col gap-2 items-center transition-all group
@@ -212,7 +222,7 @@ export default function GlobalGovernanceModal({
                                   })}
 
                                   {/* FALLBACK: NO STYLES */}
-                                  {(!manifest.ui.styles?.rack || manifest.ui.styles.rack.length === 0) && (
+                                  {(!(manifest.ui.styles as Record<string, StyleVariant[]>)?.rack || (manifest.ui.styles as Record<string, StyleVariant[]>).rack.length === 0) && (
                                     <div className="col-span-3 p-8 border border-dashed wb-outline flex flex-col items-center justify-center gap-2 opacity-40">
                                       <Box className="w-6 h-6" />
                                       <span className="text-[8px] font-black uppercase">No Faceplate Styles Defined</span>

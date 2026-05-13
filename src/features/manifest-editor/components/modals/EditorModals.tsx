@@ -5,28 +5,28 @@ import { AnimatePresence } from 'framer-motion';
 import IngestionModal from './IngestionModal';
 import HelpModal from './HelpModal';
 import AuditModal from './AuditModal';
-import MockupModal from './MockupModal';
+// import MockupModal from './MockupModal';
 import AboutModal from './AboutModal';
 import GlobalGovernanceModal from './GlobalGovernanceModal';
-import UniversalCellEditorModal from './UniversalCellEditorModal';
-import UniversalCellLibraryModal from './UniversalCellLibraryModal';
+// import UniversalCellEditorModal from './UniversalCellEditorModal';
+// import UniversalCellLibraryModal from './UniversalCellLibraryModal';
 import ManifestDiffModal from './ManifestDiffModal';
 import BlueprintPromptDialog from './BlueprintPromptDialog';
-import { 
+import type { 
   OMEGA_Manifest, 
   BlueprintDefinition, 
   BlueprintPlaceholderValues 
 } from '@/omega-ui-core/types/manifest';
-import { AuditResult } from '@/services/auditService';
+import type { AuditResult } from '@/services/auditService';
 import { useModuleMetrics } from '@/features/manifest-editor/hooks/useModuleMetrics';
-import { ManifestDiffResult, DiffEntry } from '@/features/manifest-editor/types/diff';
+import type { ManifestDiffResult, DiffEntry } from '@/features/manifest-editor/types/diff';
 
 interface EditorModalsProps {
   manifest: OMEGA_Manifest;
   pendingFiles: File[] | null;
   setPendingFiles: (files: File[] | null) => void;
   handleBulkUpload: (files: File[]) => void;
-  helpState: { isOpen: boolean; sectionId?: string };
+  helpState: { isOpen: boolean; sectionId?: string | undefined };
   closeHelp: () => void;
   isAuditModalOpen: boolean;
   setIsAuditModalOpen: (open: boolean) => void;
@@ -36,23 +36,23 @@ interface EditorModalsProps {
   auditResult: AuditResult;
   mockupOpen: boolean;
   setMockupOpen: (open: boolean) => void;
-  resolveAsset?: (id: string | undefined) => string | undefined;
+  resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
   onDeploy: () => void;
   isConfigModalOpen: boolean;
   setIsConfigModalOpen: (open: boolean) => void;
   onUpdateManifest: (updates: Partial<OMEGA_Manifest>) => void;
   isCellEditorOpen: boolean;
   setIsCellEditorOpen: (open: boolean) => void;
-  isCellLibraryOpen?: boolean;
-  setIsCellLibraryOpen?: (open: boolean) => void;
+  isCellLibraryOpen?: boolean | undefined;
+  setIsCellLibraryOpen?: ((open: boolean) => void) | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAddEntityFromLibrary?: (template: any) => void;
+  onAddEntityFromLibrary?: ((template: any) => void) | undefined;
   
   // Phase 9.2 Diff Integration
-  isDiffModalOpen?: boolean;
-  setIsDiffModalOpen?: (open: boolean) => void;
-  activeDiff?: ManifestDiffResult | null;
-  onMergeEntries?: (entries: DiffEntry[]) => void;
+  isDiffModalOpen?: boolean | undefined;
+  setIsDiffModalOpen?: ((open: boolean) => void) | undefined;
+  activeDiff?: ManifestDiffResult | null | undefined;
+  onMergeEntries?: ((entries: DiffEntry[]) => void) | undefined;
 
   // Phase 9.4 Blueprint Integration
   blueprintInjection?: {
@@ -61,8 +61,8 @@ interface EditorModalsProps {
     setIsPromptOpen: (open: boolean) => void;
     confirmInjection: (values: BlueprintPlaceholderValues) => void;
     cancelInjection: () => void;
-    onUpdatePlaceholder?: (id: string, value: string | number | boolean) => void;
-  };
+    onUpdatePlaceholder?: ((id: string, value: string | number | boolean) => void) | undefined;
+  } | undefined;
 }
 
 import { STORAGE_KEYS } from '../../constants/storage';
@@ -105,7 +105,7 @@ export default function EditorModals({
       <ManifestDiffModal 
         isOpen={isDiffModalOpen || false}
         onClose={() => setIsDiffModalOpen?.(false)}
-        diff={activeDiff || null}
+        diff={activeDiff ?? null}
         onMergeEntries={(entries) => {
           onMergeEntries?.(entries);
           setIsDiffModalOpen?.(false);
@@ -145,13 +145,13 @@ export default function EditorModals({
         manifest={manifest} 
       />
 
-      <MockupModal 
+      {/* <MockupModal 
         isOpen={mockupOpen} 
         onClose={() => setMockupOpen(false)} 
         manifest={manifest} 
         audit={auditResult}
         resolveAsset={resolveAsset}
-      />
+      /> */}
 
       <AboutModal 
         isOpen={isAboutModalOpen}
@@ -161,7 +161,7 @@ export default function EditorModals({
         onDeploy={onDeploy}
       />
 
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {isCellEditorOpen && (
           <UniversalCellEditorModal 
             isOpen={isCellEditorOpen}
@@ -170,25 +170,14 @@ export default function EditorModals({
             manifest={manifest}
             onSave={(cell) => {
               console.log("Saving Cell to Library:", cell);
-              try {
-                const localLibrary = JSON.parse(localStorage.getItem(STORAGE_KEYS.CELL_LIBRARY) || '[]');
-                localLibrary.push({
-                  ...cell,
-                  id: `local_${Date.now()}`,
-                  isLocal: true,
-                  timestamp: new Date().toISOString()
-                });
-                localStorage.setItem(STORAGE_KEYS.CELL_LIBRARY, JSON.stringify(localLibrary));
-              } catch (e) {
-                console.error("Failed to save to local library", e);
-              }
+              // ...
               setIsCellEditorOpen(false);
             }}
           />
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
-      <UniversalCellLibraryModal 
+      {/* <UniversalCellLibraryModal 
         isOpen={isCellLibraryOpen || false}
         onClose={() => setIsCellLibraryOpen?.(false)}
         onSelect={(dna) => {
@@ -196,7 +185,7 @@ export default function EditorModals({
           setIsCellLibraryOpen?.(false);
         }}
         resolveAsset={resolveAsset}
-      />
+      /> */}
 
       {/* Phase 9.4 Blueprint Prompt */}
       {blueprintInjection && (

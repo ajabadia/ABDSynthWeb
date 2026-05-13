@@ -5,10 +5,10 @@ import {
   Fingerprint, Settings, Palette, 
   Layout, Wand2
 } from 'lucide-react';
-import { ManifestEntity, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, OmegaNode } from '@/omega-ui-core/types/manifest';
 
 export const usePropertyPanel = (
-  item: ManifestEntity | OMEGA_Manifest | null,
+  item: ManifestEntity | OMEGA_Manifest | OmegaNode | null,
   highlightPath?: string | null
 ) => {
   const [activeSection, setActiveSection] = useState<string>('identity');

@@ -6,7 +6,7 @@
 export interface TerminalProps {
   variant: string;
   bind: string;
-  size: { w: number; h: number };
+  size: { width: number; height: number };
   color?: string | undefined;
   font?: string | undefined;
 }
@@ -14,8 +14,8 @@ export interface TerminalProps {
 export function renderTerminalHTML(props: TerminalProps): string {
   const { variant, bind, size, color = 'var(--terminal-color, #ffcc00)', font = 'monospace' } = props;
   const zoom = 1.5;
-  const w = size.w * zoom;
-  const h = size.h * zoom;
+  const w = size.width * zoom;
+  const h = size.height * zoom;
 
   return `
     <div class="terminal-display variant-${variant}" 

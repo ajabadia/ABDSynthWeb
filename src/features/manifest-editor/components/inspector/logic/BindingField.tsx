@@ -2,16 +2,16 @@
  
 import React from 'react';
 import { Settings2 } from 'lucide-react';
-import { ManifestEntity } from '@/types/manifest';
+import type { OmegaNode } from '@/omega-ui-core/types/manifest';
 
 import InspectorCollapsible from '../shared/InspectorCollapsible';
 
 interface BindingFieldProps {
-  item: ManifestEntity;
+  item: OmegaNode;
   availableBinds: string[];
-  isHighlighted: (key: string) => boolean | undefined;
-  onUpdate: (updates: Partial<ManifestEntity>) => void;
-  onHelp?: (id: string) => void;
+  isHighlighted: (key: string) => boolean;
+  onUpdate: (updates: Partial<OmegaNode>) => void;
+  onHelp?: ((id: string) => void) | undefined;
 }
 
 export function BindingField({ item, availableBinds, isHighlighted, onUpdate, onHelp }: BindingFieldProps) {
