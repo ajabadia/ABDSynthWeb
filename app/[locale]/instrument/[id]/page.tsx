@@ -253,11 +253,11 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
               </Link>
               <Button size="lg" variant="outline" className="w-full sm:w-auto">{tc('buttons.manual')}</Button>
               {instrument.id === 'abd-omega' && (
-                <Link href="/tools/manifest-editor" className="w-full sm:w-auto">
+                <a href="https://manifests.ajabadia.es/" className="w-full sm:w-auto">
                   <Button size="lg" variant="outline" className="w-full border-primary/40 text-primary hover:bg-primary/10">
                     {tc('buttons.manifestEditor')}
                   </Button>
-                </Link>
+                </a>
               )}
             </div>
           </div>
@@ -280,11 +280,11 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
                         Lab Status: Restricted
                       </div>
                       <div className="pt-4">
-                        <Link href="/tools/manifest-editor">
+                        <a href="https://manifests.ajabadia.es/">
                           <Button variant="outline" size="sm" className="border-primary/20 text-primary/60 hover:text-primary hover:border-primary">
                             {tc('buttons.manifestEditor')}
                           </Button>
-                        </Link>
+                        </a>
                       </div>
                     </div>
                   </div>

@@ -240,9 +240,9 @@ export default async function Home() {
             <div className="text-[9px] font-headline text-zinc-700 uppercase tracking-[0.2em]">
               © 2026 / {tc('footer.matrix')}
             </div>
-            <Link href="/tools/manifest-editor" className="px-3 py-1 border border-zinc-800 text-[8px] font-mono text-zinc-600 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all rounded-xs uppercase tracking-widest">
+            <a href="https://manifests.ajabadia.es/" className="px-3 py-1 border border-zinc-800 text-[8px] font-mono text-zinc-600 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all rounded-xs uppercase tracking-widest">
               [ DEV_CONSOLE ]
-            </Link>
+            </a>
           </div>
         </div>
       </footer>
