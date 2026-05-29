@@ -2,16 +2,20 @@
  
 import React from 'react';
 import { motion } from 'framer-motion';
+import { IntegrityOverlay } from '@/features/manifest-editor/components/viewport/IntegrityOverlay';
 import type { OmegaNode, OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 import type { AuditResult } from '@/services/auditService';
 
 interface OrbitalNodeProps {
   item: OmegaNode;
   index: number;
   total: number;
-  contract: OMEGA_Contract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
+  multiSelectedIds: string[];
+  onSelectMultiple: (ids: string[]) => void;
   audit: AuditResult;
   isV7: boolean;
   manifest: OMEGA_Manifest;
@@ -24,6 +28,8 @@ export function OrbitalNode({
   contract, 
   selectedItemId, 
   onSelectItem, 
+  multiSelectedIds,
+  onSelectMultiple,
   audit,
   isV7,
   manifest
@@ -50,8 +56,21 @@ export function OrbitalNode({
       animate={{ opacity: 1, x, y }}
       exit={{ opacity: 0, scale: 0 }}
       className="absolute z-10 group"
-      onClick={() => onSelectItem(item.id)}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.ctrlKey || e.shiftKey) {
+          const alreadySelected = multiSelectedIds.includes(item.id);
+          if (alreadySelected) {
+            onSelectMultiple(multiSelectedIds.filter(id => id !== item.id));
+          } else {
+            onSelectMultiple([...multiSelectedIds, item.id]);
+          }
+        } else {
+          onSelectItem(item.id);
+        }
+      }}
     >
+      <IntegrityOverlay node={item} audit={audit} isOrbital />
       {/* Connection Line */}
       <svg className="absolute top-1/2 left-1/2 overflow-visible pointer-events-none" style={{ width: 0, height: 0 }}>
          <motion.line 
@@ -67,7 +86,7 @@ export function OrbitalNode({
       <div className={`
         w-10 h-10 rounded-sm border transform -translate-x-1/2 -translate-y-1/2 
         flex items-center justify-center transition-all duration-300 cursor-pointer
-        ${selectedItemId === item.id ? (isJack ? 'scale-110 border-accent ring-2 ring-accent/20 bg-accent/20' : 'scale-110 border-primary ring-2 ring-primary/20 bg-primary/20') : (hasError ? 'bg-red-500/20 border-red-500 hover:bg-red-500/40' : (isJack ? 'wb-surface border-accent/30 hover:border-accent hover:orange-bloom' : 'wb-surface border-primary/30 hover:border-primary hover:cyan-bloom'))}
+        ${(selectedItemId === item.id || multiSelectedIds.includes(item.id)) ? (isJack ? 'scale-110 border-accent ring-2 ring-accent/20 bg-accent/20' : 'scale-110 border-primary ring-2 ring-primary/20 bg-primary/20') : (hasError ? 'bg-red-500/20 border-red-500 hover:bg-red-500/40' : (isJack ? 'wb-surface border-accent/30 hover:border-accent hover:orange-bloom' : 'wb-surface border-primary/30 hover:border-primary hover:cyan-bloom'))}
       `}>
         <span className={`text-[8px] font-bold uppercase tracking-tighter text-center px-1 ${!hasError ? (isJack ? 'text-accent/70' : 'text-primary/70') : 'text-red-200'}`}>
           {((item.meta?.label as string) || item.id).substring(0, 4)}

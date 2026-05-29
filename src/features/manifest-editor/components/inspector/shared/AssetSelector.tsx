@@ -121,7 +121,7 @@ export default function AssetSelector({
     });
 
     return map;
-  }, [assets, library, restrictToSequences]);
+  }, [assets, library, restrictToSequences, resolveAsset]);
 
   // Effect to force navigation in restricted mode (Only if lost)
   React.useEffect(() => {

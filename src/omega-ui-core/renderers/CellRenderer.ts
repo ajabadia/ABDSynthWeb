@@ -20,6 +20,7 @@ import { renderIllustrationHTML } from './IllustrationRenderer';
 import { renderSequenceHTML } from './SequenceRenderer';
 import { AttachmentRenderer } from './AttachmentRenderer';
 import type { OmegaNode, OMEGA_Manifest, OmegaStyleNode, OMEGA_Asset, StyleVariant, Attachment } from '../types/manifest';
+import type { SelectOption } from './SelectRenderer';
  
 import { parseVariant } from './utils/VariantParser';
 import { getComponentRadius } from './utils/CellMetrics';
@@ -54,10 +55,20 @@ interface RendererExtraOptions {
   forceFrame?: number | undefined;
 }
 
+interface MasterRendererProps {
+  size: string;
+  colorId: string;
+  value: number;
+  id: string;
+  isSelected: boolean;
+  isMain: boolean;
+  style: Partial<OmegaStyleNode>;
+}
+
 /**
  * Registry of primitive renderers for industrial dispatching.
  */
-const COMP_RENDERER_MAP: Record<string, (node: OmegaNode, props: Record<string, unknown>, options: RendererExtraOptions) => string> = {
+const COMP_RENDERER_MAP: Record<string, (node: OmegaNode, props: MasterRendererProps, options: RendererExtraOptions) => string> = {
   'sequence-layer': (node, props, opt) => {
     const style = (node.style as Record<string, unknown>) || {};
     const frames = (style.frames as number) || 1;
@@ -159,41 +170,82 @@ const COMP_RENDERER_MAP: Record<string, (node: OmegaNode, props: Record<string, 
     });
   },
   'slider-v': (node, props, opt) => renderSliderHTML({ 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(props as any), 
+    ...props, 
     type: 'slider-v', 
-    ...opt.inherited,
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
     assetUrl: opt.assetUrl,
     frames: opt.assetDef?.frames,
     orientation: opt.assetDef?.orientation
   }),
   'slider-h': (node, props, opt) => renderSliderHTML({ 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(props as any), 
+    ...props, 
     type: 'slider-h', 
-    ...opt.inherited,
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
     assetUrl: opt.assetUrl,
     frames: opt.assetDef?.frames,
     orientation: opt.assetDef?.orientation
   }),
   'switch': (node, props, opt) => renderSwitchHTML({ 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(props as any), 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(opt.inherited as any)
+    ...props, 
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
   }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'button': (node, props, opt) => renderStepperHTML({ ...(props as any), type: 'button', text: (node.meta?.label as string) || node.id || '', ...(opt.inherited as any) }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'push': (node, props, opt) => renderStepperHTML({ ...(props as any), type: 'push', text: (node.meta?.label as string) || node.id || '', ...(opt.inherited as any) }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'stepper': (node, props, opt) => renderStepperHTML({ ...(props as any), type: 'stepper', text: (node.meta?.label as string) || node.id || '', ...(opt.inherited as any) }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'select': (node, props, opt) => renderSelectHTML({ ...(props as any), options: node.meta?.options || (node.style as any)?.options || [], ...(opt.inherited as any) }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'scope': (node, props, opt) => renderScopeHTML({ ...(props as any), ...(opt.inherited as any) }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  'terminal': (node, props, opt) => renderTerminalHTML({ ...(props as any), ...(opt.inherited as any) }),
+  'button': (node, props, opt) => renderStepperHTML({ 
+    ...props, 
+    type: 'button', 
+    text: (node.meta?.label as string) || node.id || '', 
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
+  }),
+  'push': (node, props, opt) => renderStepperHTML({ 
+    ...props, 
+    type: 'push', 
+    text: (node.meta?.label as string) || node.id || '', 
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
+  }),
+  'stepper': (node, props, opt) => renderStepperHTML({ 
+    ...props, 
+    type: 'stepper', 
+    text: (node.meta?.label as string) || node.id || '', 
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
+  }),
+  'select': (node, props, opt) => renderSelectHTML({ 
+    ...props, 
+    options: (node.meta?.options as (string | SelectOption)[]) || (node.style as Record<string, unknown>)?.options as (string | SelectOption)[] || [], 
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
+  }),
+  'scope': (node, props, opt) => renderScopeHTML({ 
+    variant: node.style?.variant || 'default',
+    bind: node.bind || '',
+    size: (node.style?.width && node.style?.height) ? { width: node.style.width, height: node.style.height } : { width: 100, height: 100 },
+    color: node.style?.color as string | undefined,
+    font: node.style?.font as string | undefined,
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
+  }),
+  'terminal': (node, props, opt) => renderTerminalHTML({ 
+    variant: node.style?.variant || 'default',
+    bind: node.bind || '',
+    size: (node.style?.width && node.style?.height) ? { width: node.style.width, height: node.style.height } : { width: 100, height: 100 },
+    color: node.style?.color as string | undefined,
+    font: node.style?.font as string | undefined,
+    inheritedFont: opt.inherited.font as string | undefined,
+    inheritedSize: opt.inherited.size as number | undefined,
+    inheritedColor: opt.inherited.color as string | undefined,
+  }),
   'illustration': (node, props, opt) => renderIllustrationHTML({ 
     assetUrl: opt.assetUrl, 
     size: (node.style?.width && node.style?.height) ? { width: node.style.width, height: node.style.height } : { width: 40, height: 40 }, 
@@ -267,7 +319,7 @@ export class CellRenderer {
     const rounding = aesthetics.rounding ?? genetics.rounding ?? 0;
     const borderWidth = aesthetics.borderWidth ?? genetics.borderWidth ?? 0;
 
-    const attachments = ((style as Record<string, unknown>)?.attachments as any[]) || [];
+    const attachments = ((style as Record<string, unknown>)?.attachments as Attachment[]) || [];
     const screwFragment = attachments?.find((a: Attachment) => a.type === 'knob' && a.variant === 'rack-screw');
     
     const sAesthetics = (screwFragment?.style || {}) as OmegaStyleNode;
@@ -459,7 +511,7 @@ export class CellRenderer {
     let mainHTML = '';
     try {
       mainHTML = renderer 
-        ? renderer(node, commonProps as Record<string, unknown>, { 
+        ? renderer(node, commonProps as MasterRendererProps, { 
             assetUrl: assetUrl as string, 
             assetDef, 
             steps, 

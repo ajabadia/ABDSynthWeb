@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { HeroBackground } from "@/components/ui/HeroBackground";
 import { RenderShowcase } from "@/components/ui/RenderShowcase";
+import { CalibrationPanel } from "@/components/ui/CalibrationPanel";
+import { EmulatedComponents } from "@/components/ui/EmulatedComponents";
 import fs from "fs/promises";
 import path from "path";
 import type { Metadata } from "next";
@@ -118,6 +120,46 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
     galleryItems = [];
   }
   
+  // Render Gallery Discovery Logic
+  let renderGalleryItems: { url: string; caption?: string; description?: string }[] = [];
+  try {
+    const rendersDirPath = path.join(process.cwd(), 'public', 'images', 'renders', cleanId);
+    const renderFiles = await fs.readdir(rendersDirPath);
+    
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+    const validRenderFiles = renderFiles.filter(file => 
+      imageExtensions.includes(path.extname(file).toLowerCase())
+    );
+
+    renderGalleryItems = validRenderFiles.map(file => {
+      const isBlack = file.startsWith('black_');
+      const variantName = isBlack ? (locale === 'es' ? 'Edición Negra' : 'Black Edition') : (locale === 'es' ? 'Edición Blanca' : 'White Edition');
+      
+      let viewName = '';
+      if (file.includes('front')) {
+        viewName = locale === 'es' ? 'Vista Frontal' : 'Front View';
+      } else if (file.includes('diagonal')) {
+        viewName = locale === 'es' ? 'Vista en Perspectiva' : 'Perspective View';
+      } else if (file.includes('rear')) {
+        viewName = locale === 'es' ? 'Panel Trasero' : 'Rear Panel';
+      } else if (file.includes('top')) {
+        viewName = locale === 'es' ? 'Vista Superior' : 'Top View';
+      } else {
+        viewName = file;
+      }
+
+      return {
+        url: `/images/renders/${cleanId}/${file}`,
+        caption: `${variantName} - ${viewName}`,
+        description: locale === 'es' 
+          ? `Renderizado de estudio en alta resolución mostrando la ${variantName.toLowerCase()} del sintetizador.` 
+          : `High-resolution studio render showcasing the synth's ${variantName.toLowerCase()}.`
+      };
+    });
+  } catch {
+    renderGalleryItems = [];
+  }
+
   // Normalize ID to match translation keys (e.g., abd-junio-601 -> junio601)
   const idKey = instrument.id.replace('abd-', '').replace(/-/g, '');
 
@@ -297,13 +339,32 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
         {/* Audio Showcase */}
         <AudioShowcase instrumentId={instrument.id} />
 
+        {/* Emulated Components Details Section (Juno 601 only) */}
+        {instrument.id === 'abd-junio-601' && (
+          <EmulatedComponents locale={locale} />
+        )}
+
         {/* Gallery Section */}
         {galleryItems.length > 0 && (
           <ImageGallery 
             items={galleryItems} 
-            title="Interface Modules"
+            title={instrument.id === 'abd-junio-601' ? (locale === 'es' ? "Personalización de Skins" : "Skins & Custom Themes") : "Interface Modules"}
             altBase={instrument.name} 
           />
+        )}
+
+        {/* Renders Gallery Section */}
+        {renderGalleryItems.length > 0 && (
+          <ImageGallery 
+            items={renderGalleryItems} 
+            title={locale === 'es' ? "Modelado y Renders de Estudio" : "Studio Renders & Modeling"}
+            altBase={instrument.name} 
+          />
+        )}
+
+        {/* Calibration & Circuit Bending Panel (Juno 601 only) */}
+        {instrument.id === 'abd-junio-601' && (
+          <CalibrationPanel />
         )}
       </section>
 

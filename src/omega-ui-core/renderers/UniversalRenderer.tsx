@@ -18,7 +18,8 @@ export function UniversalRenderer({
   resolveAsset,
   debugContext,
   parentWorldPos = { x: 0, y: 0 },
-  parentNode = null
+  parentNode = null,
+  audit
 }: UniversalRendererProps) {
   
   // 1. Resolve semantics & Layout (Phase 4.4.1)
@@ -36,7 +37,16 @@ export function UniversalRenderer({
   const handleDebugClick = (e: React.MouseEvent) => {
     if (debugContext?.enabled) {
       e.stopPropagation();
-      debugContext.onSelect(node.id);
+      if ((e.ctrlKey || e.shiftKey) && debugContext.onSelectMultiple && debugContext.multiSelectedIds) {
+        const alreadySelected = debugContext.multiSelectedIds.includes(node.id);
+        if (alreadySelected) {
+          debugContext.onSelectMultiple(debugContext.multiSelectedIds.filter(id => id !== node.id));
+        } else {
+          debugContext.onSelectMultiple([...debugContext.multiSelectedIds, node.id]);
+        }
+      } else {
+        debugContext.onSelect(node.id);
+      }
     }
   };
 
@@ -98,6 +108,7 @@ export function UniversalRenderer({
           node={node} 
           debugContext={debugContext || { enabled: false, showLabels: false, onSelect: () => {}, selectedId: null, hideDecorative: false }} 
           worldPos={worldPos}
+          audit={audit}
         />
         {node.role === 'label' && <span>{node.id}</span>}
       </div>

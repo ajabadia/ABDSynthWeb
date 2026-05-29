@@ -24,7 +24,6 @@ interface IdentitySectionProps {
 export default function IdentitySection({ 
   item, 
   onUpdate, 
-  onHelp, 
   rootManifest, 
   rootTree,
   highlightPath,
@@ -40,7 +39,6 @@ export default function IdentitySection({
         rootManifest={rootManifest} 
         rootTree={rootTree}
         onUpdate={(u) => onUpdate(u)} 
-        onHelp={onHelp} 
         isHighlighted={isHighlighted} 
       />
     );
@@ -49,31 +47,30 @@ export default function IdentitySection({
   const manifest = item as OMEGA_Manifest;
  
   return (
-    <div className="space-y-10 pt-2 pb-10">
+    <div className="space-y-2">
       <ModuleSignature 
         manifest={manifest} 
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 
-        onHelp={onHelp} 
-        isHighlighted={isHighlighted} 
         resolveAsset={resolveAsset}
       />
  
-      <ModuleSkinSelector 
-        manifest={manifest} 
-        onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 
-      />
- 
-      <ModulePlaneSelector 
-        manifest={manifest}
-        onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)}
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <ModuleSkinSelector 
+          manifest={manifest} 
+          onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 
+        />
+        <ModulePlaneSelector 
+          manifest={manifest}
+          onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)}
+        />
+      </div>
       
       <ModuleTaxonomy 
         manifest={manifest} 
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 
         isHighlighted={isHighlighted} 
       />
- 
+
       <ModuleMechanicalSpec 
         manifest={manifest} 
         onUpdate={(u: Partial<OMEGA_Manifest>) => onUpdate(u)} 

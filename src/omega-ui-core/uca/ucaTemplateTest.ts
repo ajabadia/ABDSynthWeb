@@ -90,7 +90,7 @@ const snapshotInstance: OmegaNode = {
   kind: 'container',
   role: 'structure',
   layout: { pos: { x: 0, y: 0 } },
-  snapshot: JSON.parse(JSON.stringify(mockTemplate.baseNode))
+  snapshot: JSON.parse(JSON.stringify(mockTemplate.baseNode)) as OmegaNode
 };
 
 const resolvedSnapshot = resolveNodeSemantics(snapshotInstance, { catalog: {} });

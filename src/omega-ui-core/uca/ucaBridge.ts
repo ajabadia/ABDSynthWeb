@@ -104,7 +104,7 @@ function materializePlaceholders(root: OmegaBlueprintNode, values: BlueprintPlac
     }
   });
 
-  return JSON.parse(json);
+  return JSON.parse(json) as OmegaBlueprintNode;
 }
 
 /**

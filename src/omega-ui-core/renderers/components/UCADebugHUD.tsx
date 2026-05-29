@@ -10,6 +10,7 @@ interface UCADebugHUDProps {
   worldPos: Position | undefined;
   labelRef?: React.RefObject<HTMLSpanElement | null> | undefined;
   localLabelRef?: React.RefObject<HTMLSpanElement | null> | undefined;
+  audit?: import('@/services/auditService').AuditResult | undefined;
 }
 
 export function UCADebugHUD({
@@ -17,7 +18,8 @@ export function UCADebugHUD({
   debugContext,
   worldPos,
   labelRef,
-  localLabelRef
+  localLabelRef,
+  audit
 }: UCADebugHUDProps) {
   if (!debugContext.enabled || !debugContext.showLabels) return null;
 
@@ -27,6 +29,9 @@ export function UCADebugHUD({
         node.kind === 'rack' ? 'bg-purple-600' : node.kind === 'face' ? 'bg-blue-600' : 'bg-amber-600'
       }`}>
         {node.kind}:{node.id} [<span ref={labelRef}>W: {Math.round(worldPos?.x || 0)}, {Math.round(worldPos?.y || 0)}</span>]
+        {audit?.issues?.some(i => (i.path ?? '').includes(node.id)) && (
+          <span className="ml-1 text-red-400 animate-pulse">●</span>
+        )}
       </div>
       <div className="bg-emerald-600 px-1 py-0.5 rounded-xs text-[5px] font-bold text-white shadow-lg opacity-80">
         <span ref={localLabelRef}>L: {Math.round(node.layout?.pos?.x || 0)}, {Math.round(node.layout?.pos?.y || 0)}</span>

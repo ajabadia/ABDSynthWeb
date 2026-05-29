@@ -12,7 +12,7 @@ import SelectProperties from '@/features/manifest-editor/components/inspector/pr
 import IllustrationProperties from '@/features/manifest-editor/components/inspector/primitives/IllustrationProperties';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
 import SourceCodeView from '@/features/manifest-editor/components/inspector/shared/SourceCodeView';
-import type { ManifestEntity, OMEGA_Manifest, LayoutContainer, OmegaNode, Presentation } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, LayoutContainer, OmegaNode, Presentation, HybridEntityUpdate } from '@/omega-ui-core/types/manifest';
 import { buildInspectorPatch } from '@/features/manifest-editor/hooks/entities/ucaInspectorModel';
 import { adaptNodeToManifestEntity } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
 import InspectorCollapsible from '@/features/manifest-editor/components/inspector/shared/InspectorCollapsible';
@@ -21,7 +21,7 @@ import IndustrialGovernanceConsole from '@/features/manifest-editor/components/i
 interface AestheticSectionProps {
   item: OmegaNode;
   manifest: OMEGA_Manifest;
-  onUpdate: (updates: Partial<OmegaNode>) => void;
+  onUpdate: (updates: HybridEntityUpdate) => void;
   onHelp?: ((sectionId: string) => void) | undefined;
   containers?: LayoutContainer[] | undefined;
   highlightPath?: (string | null) | undefined;
@@ -30,11 +30,17 @@ interface AestheticSectionProps {
   setActiveSection?: ((s: string) => void) | undefined;
 }
  
-export default function AestheticSection({ item: node, manifest, onUpdate, onHelp, containers, highlightPath, resolveAsset, onOpenConfig: handleOpenConfig, setActiveSection }: AestheticSectionProps) {
+export default function AestheticSection({ 
+  item: node, 
+  manifest, 
+  onUpdate, 
+  resolveAsset,
+  onOpenConfig: handleOpenConfig
+}: AestheticSectionProps) {
   const item = adaptNodeToManifestEntity(node);
   const onLegacyUpdate = (u: Partial<ManifestEntity>) => {
     // This is a bridge: in Phase 19 we should eventually move to native OmegaNode updates
-    onUpdate(u as unknown as Partial<OmegaNode>);
+    onUpdate(u);
   };
 
   const [showSource, setShowSource] = React.useState(false);
@@ -57,7 +63,7 @@ export default function AestheticSection({ item: node, manifest, onUpdate, onHel
         );
     }
 
-    const commonProps = { item, manifest, onUpdate: onLegacyUpdate, setActiveSection, resolveAsset };
+    const commonProps = { item, manifest, onUpdate: onLegacyUpdate, resolveAsset };
 
     switch (componentType) {
       case 'knob': return <KnobProperties {...commonProps} resolveAsset={resolveAsset} />;

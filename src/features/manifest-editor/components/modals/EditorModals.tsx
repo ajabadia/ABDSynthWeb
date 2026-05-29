@@ -8,7 +8,7 @@ import AuditModal from './AuditModal';
 // import MockupModal from './MockupModal';
 import AboutModal from './AboutModal';
 import GlobalGovernanceModal from './GlobalGovernanceModal';
-// import UniversalCellEditorModal from './UniversalCellEditorModal';
+import UniversalCellEditorModal from './UniversalCellEditorModal';
 // import UniversalCellLibraryModal from './UniversalCellLibraryModal';
 import ManifestDiffModal from './ManifestDiffModal';
 import BlueprintPromptDialog from './BlueprintPromptDialog';
@@ -161,7 +161,7 @@ export default function EditorModals({
         onDeploy={onDeploy}
       />
 
-      {/* <AnimatePresence>
+      <AnimatePresence>
         {isCellEditorOpen && (
           <UniversalCellEditorModal 
             isOpen={isCellEditorOpen}
@@ -175,7 +175,7 @@ export default function EditorModals({
             }}
           />
         )}
-      </AnimatePresence> */}
+      </AnimatePresence>
 
       {/* <UniversalCellLibraryModal 
         isOpen={isCellLibraryOpen || false}

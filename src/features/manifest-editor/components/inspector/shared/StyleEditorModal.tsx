@@ -9,6 +9,7 @@ import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
 import { useDesignTokens } from '@/features/manifest-editor/hooks/useDesignTokens';
 import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog';
 import IndustrialContainer from '../../shared/IndustrialContainer';
+import { adaptManifestEntityToNode } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
 
 interface StyleEditorModalProps {
   isOpen: boolean;
@@ -73,8 +74,7 @@ function CanonicalStylePreview({
     <div className="relative scale-[2.0] flex items-center justify-center text-white forced-dark-context">
        <div 
           dangerouslySetInnerHTML={{ 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            __html: CellRenderer.renderCellHTML(phantomEntity as any, {
+            __html: CellRenderer.renderCellHTML(adaptManifestEntityToNode(phantomEntity), {
               skin: 'industrial',
               zoom: 1.0,
               runtimeValue: 0.5,

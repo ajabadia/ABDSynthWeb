@@ -103,12 +103,10 @@ export default function MockupModal({ isOpen, onClose, manifest, audit, resolveA
             ) : (
               <MockupViewport 
                 manifest={manifest}
-                audit={audit}
                 resolveAsset={resolveAsset}
                 width={width}
                 height={height}
                 skin={skin}
-                activeTab={activeTab}
                 viewportRef={viewportRef}
               />
             )}

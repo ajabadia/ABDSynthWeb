@@ -14,7 +14,7 @@ export interface OmegaContract {
     min: number;
     max: number;
     default: number;
-    unit?: string;
+    unit?: string | undefined;
   }>;
   ports: Array<{
     id: string;
@@ -72,16 +72,19 @@ export class WasmLoaderService {
       // Read the string from WASM memory
       const memory = exports.memory || (hostFunctions.memory as WebAssembly.Memory);
       const jsonString = this.readStringFromMemory(memory, ptr);
-      const raw = JSON.parse(jsonString);
-      const data = raw.contract || raw;
+      const raw = JSON.parse(jsonString) as Record<string, unknown>;
+      const data = (raw.contract || raw) as Record<string, unknown>;
+
+      interface RawParam { id?: string; name?: string; min?: number; max?: number; default?: number; unit?: string; }
+      interface RawPort { id?: string; name?: string; type?: string; direction?: string; }
 
       // Normalization for Era 7.1 consistency
       const contract: OmegaContract = {
-        omega_version: data.omega_version || data.version || "7.0",
+        omega_version: String(data.omega_version || data.version || "7.0"),
         id: String(data.id || 'unknown'),
-        name: data.name || data.id,
-        family: (data.family || "utility").toLowerCase(),
-        parameters: (data.parameters || []).map((p: { id?: string; name?: string; min?: number; max?: number; default?: number; unit?: string }) => ({
+        name: String(data.name || data.id || 'unknown'),
+        family: String(data.family || "utility").toLowerCase(),
+        parameters: ((data.parameters as RawParam[]) || []).map((p: RawParam) => ({
           id: String(p.id || p.name || '').toLowerCase(),
           name: p.name || p.id || 'unknown',
           min: p.min ?? 0,
@@ -89,7 +92,7 @@ export class WasmLoaderService {
           default: p.default ?? 0,
           unit: p.unit
         })),
-        ports: (data.ports || []).map((p: { id?: string; name?: string; type?: string; direction?: string }) => ({
+        ports: ((data.ports as RawPort[]) || []).map((p: RawPort) => ({
           id: String(p.id || p.name || '').toLowerCase(),
           type: (p.type || 'audio') as 'audio' | 'cv' | 'midi' | 'gate',
           direction: (p.direction || 'input') as 'input' | 'output'

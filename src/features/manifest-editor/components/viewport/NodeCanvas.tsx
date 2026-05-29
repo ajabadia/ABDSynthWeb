@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
  
 import type { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 import type { AuditResult } from '@/services/auditService';
  
 import { CenterModuleNode } from '../orbital/CenterModuleNode';
@@ -11,9 +12,11 @@ import { OrbitalNode } from '../orbital/OrbitalNode';
   
 interface NodeCanvasProps {
   manifest: OMEGA_Manifest;
-  contract: OMEGA_Contract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   selectedItemId: string | null;
+  multiSelectedIds: string[];
   onSelectItem: (id: string | null) => void;
+  onSelectMultiple: (ids: string[]) => void;
   audit: AuditResult;
 }
  
@@ -21,7 +24,7 @@ interface NodeCanvasProps {
  * NodeCanvas (Era 7.2.3 - Orbital Mode)
  * Driven by the Canonical UCA Tree.
  */
-export default function NodeCanvas({ manifest, contract, selectedItemId, onSelectItem, audit }: NodeCanvasProps) {
+export default function NodeCanvas({ manifest, contract, selectedItemId, multiSelectedIds, onSelectItem, onSelectMultiple, audit }: NodeCanvasProps) {
   const isV7 = !!manifest?.schemaVersion?.startsWith('7');
   
   // FLATTEN TREE FOR ORBITAL LAYOUT
@@ -69,7 +72,9 @@ export default function NodeCanvas({ manifest, contract, selectedItemId, onSelec
               manifest={manifest}
               contract={contract}
               selectedItemId={selectedItemId}
+              multiSelectedIds={multiSelectedIds}
               onSelectItem={onSelectItem}
+              onSelectMultiple={onSelectMultiple}
               audit={audit}
               isV7={isV7}
             />

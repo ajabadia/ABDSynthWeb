@@ -59,6 +59,8 @@ export interface WorkbenchState {
   focusedPaneId: WorkbenchPaneId;
   layout: WorkbenchLayout;
   selectedNodeId: string | null;
+  multiSelectedNodeIds: string[];
+  pinnedNodeId: string | null;
   expandedNodeIds: string[];
   tabViewState: Record<string, WorkbenchTabViewState>;
   
@@ -96,6 +98,8 @@ export type WorkbenchAction =
   | { type: "SET_LAYOUT_MODE"; payload: { mode: WorkbenchLayoutMode } }
   | { type: "SET_LAYOUT_RATIO"; payload: { ratio: number } }
   | { type: "SET_SELECTED_NODE"; payload: { nodeId: string | null } }
+  | { type: "SET_MULTI_SELECTED_NODES"; payload: { nodeIds: string[] } }
+  | { type: "SET_PINNED_NODE"; payload: { nodeId: string | null } }
   | { type: "SET_EXPANDED_NODE_IDS"; payload: { nodeIds: string[] } }
   | { type: "CAPTURE_TAB_VIEW_STATE"; payload: { tabId: string; viewState: Partial<WorkbenchTabViewState> } }
   | { type: "TOGGLE_UI_STATE"; payload: { key: keyof Pick<WorkbenchState, 'showLogs' | 'isLiveMode' | 'showModGrid' | 'mockupOpen' | 'isAuditModalOpen' | 'isAboutModalOpen' | 'isConfigModalOpen' | 'isCellEditorOpen' | 'isDiffModalOpen'>, value?: boolean } }

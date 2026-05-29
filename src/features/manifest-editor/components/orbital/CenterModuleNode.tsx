@@ -3,10 +3,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 
 interface CenterModuleNodeProps {
   manifest: OMEGA_Manifest;
-  contract: OMEGA_Contract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   onSelectItem: (id: string | null) => void;
 }
 
@@ -30,7 +31,7 @@ export function CenterModuleNode({ manifest, contract, onSelectItem }: CenterMod
            animate={{ opacity: 1, y: 0 }}
            className="mt-2 text-[7px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 uppercase font-bold"
          >
-           Contract v{contract.omega_version || '7.0'}
+           Contract v{contract && 'omega_version' in contract ? (contract.omega_version || '7.0') : '7.0'}
          </motion.div>
       )}
     </motion.div>

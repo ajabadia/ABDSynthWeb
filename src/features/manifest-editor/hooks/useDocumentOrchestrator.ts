@@ -1,280 +1,150 @@
 'use client';
 
-import { useCallback, useMemo, useReducer, useEffect, useRef } from 'react';
-import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
-import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
-import type { DocumentState } from '../types/document';
+import { useReducer, useEffect, useCallback, useMemo, useRef } from 'react';
+import type { 
+  OMEGA_Manifest, 
+  OmegaNode, 
+  HistoryEntry, 
+  DocumentState, 
+  OrchestratorState, 
+  OrchestratorAction 
+} from '../types/document';
+import { DEFAULT_MANIFEST } from '../constants/defaults';
 import { IntegrityService } from '@/services/integrityService';
+import { historyService } from '@/services/historyService';
 import { persistenceService } from '@/services/persistenceService';
 import { observabilityService } from '@/services/observabilityService';
 import { BlueprintValidator } from '@/omega-ui-core/uca/blueprintValidator';
-import { historyService } from '@/services/historyService';
 import { HistoryRestoreEngine } from '@/services/historyRestore';
-import type { HistoryEntry } from '../types/history';
-import { INITIAL_HISTORY_STATE } from '../types/history';
-export { type HistoryEntry, INITIAL_HISTORY_STATE };
+import { STORAGE_KEYS } from '../constants/storage';
 
-type DocumentAction = 
-  | { type: 'OPEN_DOCUMENT'; id: string; manifest: OMEGA_Manifest }
-  | { type: 'CLOSE_DOCUMENT'; id: string }
-  | { type: 'UPDATE_DOCUMENT'; id: string; updates: Partial<Omit<DocumentState, 'manifest'>> & { manifest?: Partial<OMEGA_Manifest> } }
-  | { type: 'SET_ACTIVE_DOCUMENT'; id: string }
-  | { type: 'CAPTURE_HASH'; id: string; hash: string }
-  | { type: 'SET_DIRTY'; id: string; isDirty: boolean }
-  | { type: 'SET_INITIALIZED'; id: string }
-  | { type: 'HYDRATE_SESSION'; state: OrchestratorState }
-  | { type: 'RESET_DOCUMENT'; id: string }
-  | { type: 'UNDO_DOCUMENT'; id: string }
-  | { type: 'REDO_DOCUMENT'; id: string }
-  | { type: 'UNDO_TO_INDEX'; id: string; index: number }
-  | { type: 'PUSH_HISTORY'; id: string; entry: HistoryEntry }
-  | { type: 'START_TRANSACTION'; id: string; label: string; correlationId: string }
-  | { type: 'COMMIT_TRANSACTION'; id: string }
-  | { type: 'ABORT_TRANSACTION'; id: string };
-
-export interface OrchestratorState {
-  documentsById: Record<string, DocumentState>;
-  activeDocumentId: string;
-}
-
-const createInitialDocument = (id: string, manifest: OMEGA_Manifest): DocumentState => ({
-  id,
-  manifest,
-  contract: null,
-  wasmBuffer: null,
-  extraResources: [],
-  isDirty: false,
-  lastStableHash: null,
-  isInitializing: true,
-  history: INITIAL_HISTORY_STATE,
-  activeTransaction: null
-});
-
-/**
- * Industrial Deep Merge for OMEGA Manifests (Phase 10.1C)
- * Optimized for recursive UCA trees and legacy array preservation.
- */
-function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
-  if (!source) return target;
-  if (!target) return source;
-  
-  // Industrial Rule: Arrays and Primitives are REPLACED
-  if (typeof source !== 'object' || Array.isArray(source)) return source;
-  if (typeof target !== 'object' || Array.isArray(target)) return source;
-
-  const result: Record<string, unknown> = { ...target };
-  
-  for (const key in source) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
-      const sourceValue = source[key];
-      const targetValue = target[key];
-
-      // CRITICAL: If the key is 'tree', we typically want to REPLACEMENT if it's a full tree update
-      if (key === 'tree') {
-        result[key] = sourceValue;
-        continue;
-      }
-
-      if (sourceValue && typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
-        result[key] = deepMerge((targetValue || {}) as Record<string, unknown>, sourceValue as Record<string, unknown>);
-      } else {
-        result[key] = sourceValue;
-      }
-    }
-  }
-  
-  return result;
-}
-
-function orchestratorReducer(state: OrchestratorState, action: DocumentAction): OrchestratorState {
+const orchestratorReducer = (state: OrchestratorState, action: OrchestratorAction): OrchestratorState => {
   switch (action.type) {
     case 'OPEN_DOCUMENT':
-      if (state.documentsById[action.id]) return state; // Already open
+      if (state.documentsById[action.id]) {
+        return { ...state, activeDocumentId: action.id };
+      }
       return {
         ...state,
+        activeDocumentId: action.id,
         documentsById: {
           ...state.documentsById,
-          [action.id]: createInitialDocument(action.id, action.manifest)
-        },
-        activeDocumentId: action.id
+          [action.id]: {
+            id: action.id,
+            manifest: action.manifest,
+            isDirty: false,
+            lastStableHash: '',
+            history: { past: [], future: [], lastSavedIndex: -1 },
+            isInitializing: true,
+            contract: null,
+            wasmBuffer: null,
+            extraResources: []
+          }
+        }
       };
-    case 'CLOSE_DOCUMENT': {
-      const remaining = { ...state.documentsById };
-      delete remaining[action.id];
+
+    case 'CLOSE_DOCUMENT':
+      const { [action.id]: _, ...remainingDocs } = state.documentsById;
       const nextActiveId = state.activeDocumentId === action.id 
-        ? Object.keys(remaining)[0] || 'primary'
+        ? Object.keys(remainingDocs)[0] || 'primary'
         : state.activeDocumentId;
       return {
         ...state,
-        documentsById: remaining,
-        activeDocumentId: nextActiveId
+        activeDocumentId: nextActiveId,
+        documentsById: remainingDocs
       };
-    }
-          case 'UPDATE_DOCUMENT': {
-            const doc = state.documentsById[action.id];
-            if (!doc) return state;
 
-            let nextManifest = action.updates.manifest 
-              ? deepMerge(doc.manifest as unknown as Record<string, unknown>, action.updates.manifest as unknown as Record<string, unknown>) as unknown as OMEGA_Manifest
-              : doc.manifest;
+    case 'UPDATE_DOCUMENT':
+      const doc = state.documentsById[action.id];
+      if (!doc) return state;
+      
+      const updatedManifest = action.updates.manifest 
+        ? { ...doc.manifest, ...action.updates.manifest }
+        : doc.manifest;
 
-            // PURGE LEGACY ARRAYS (Aggressive Demolition)
-            if (nextManifest.ui) {
-              delete (nextManifest.ui as Record<string, unknown>).controls;
-              delete (nextManifest.ui as Record<string, unknown>).jacks;
-            }
-
-            // ERA 7.2.3 - SELF-HEALING TREE (Phase 10.1C)
-            // If UCA is enabled but the update (or merge) resulted in a missing tree, 
-            // restore it from the old manifest or re-generate it with old tree as base.
-            if (nextManifest.ui?.useUCA !== false && !nextManifest.ui?.tree) {
-               console.warn(`[ORCHESTRATOR] Healing missing UCA tree for ${action.id}`);
-               nextManifest = {
-                 ...nextManifest,
-                 ui: {
-                   ...nextManifest.ui,
-                   tree: manifestToTree(nextManifest, doc.manifest.ui?.tree)
-                 }
-               };
-            }
-            
-            return {
-              ...state,
-              documentsById: {
-                ...state.documentsById,
-                [action.id]: {
-                  ...doc,
-                  ...action.updates,
-                  manifest: nextManifest
-                }
-              }
-            };
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: {
+            ...doc,
+            ...action.updates,
+            manifest: updatedManifest
           }
+        }
+      };
+
     case 'SET_ACTIVE_DOCUMENT':
-      if (state.activeDocumentId === action.id) return state;
       return { ...state, activeDocumentId: action.id };
-    case 'CAPTURE_HASH': {
-      const doc = state.documentsById[action.id];
-      if (!doc) return state;
-      // Do not capture stable hash if a transaction is mid-flight
-      if (doc.activeTransaction) return state;
-      return {
-        ...state,
-        documentsById: {
-          ...state.documentsById,
-          [action.id]: { ...doc, lastStableHash: action.hash, isDirty: false }
-        }
-      };
-    }
-    case 'START_TRANSACTION': {
-      const doc = state.documentsById[action.id];
-      if (!doc || doc.activeTransaction) return state;
-      return {
-        ...state,
-        documentsById: {
-          ...state.documentsById,
-          [action.id]: {
-            ...doc,
-            activeTransaction: {
-              label: action.label,
-              baseManifest: JSON.parse(JSON.stringify(doc.manifest)), // Deep copy for rollback
-              correlationId: action.correlationId
-            }
-          }
-        }
-      };
-    }
-    case 'COMMIT_TRANSACTION': {
-      const doc = state.documentsById[action.id];
-      if (!doc || !doc.activeTransaction) return state;
-      return {
-        ...state,
-        documentsById: {
-          ...state.documentsById,
-          [action.id]: {
-            ...doc,
-            activeTransaction: null
-          }
-        }
-      };
-    }
-    case 'ABORT_TRANSACTION': {
-      const doc = state.documentsById[action.id];
-      if (!doc || !doc.activeTransaction) return state;
-      return {
-        ...state,
-        documentsById: {
-          ...state.documentsById,
-          [action.id]: {
-            ...doc,
-            manifest: doc.activeTransaction.baseManifest,
-            activeTransaction: null
-          }
-        }
-      };
-    }
+
     case 'SET_DIRTY':
+      const dirtyDoc = state.documentsById[action.id];
+      if (!dirtyDoc) return state;
       return {
         ...state,
         documentsById: {
           ...state.documentsById,
-          [action.id]: {
-            ...state.documentsById[action.id],
-            isDirty: action.isDirty
-          }
+          [action.id]: { ...dirtyDoc, isDirty: action.isDirty }
         }
       };
+
+    case 'CAPTURE_HASH':
+      const hashDoc = state.documentsById[action.id];
+      if (!hashDoc) return state;
+      return {
+        ...state,
+        documentsById: {
+          ...state.documentsById,
+          [action.id]: { ...hashDoc, lastStableHash: action.hash, isDirty: false }
+        }
+      };
+
     case 'SET_INITIALIZED':
+      const initDoc = state.documentsById[action.id];
+      if (!initDoc) return state;
       return {
         ...state,
         documentsById: {
           ...state.documentsById,
-          [action.id]: {
-            ...state.documentsById[action.id],
-            isInitializing: false
-          }
+          [action.id]: { ...initDoc, isInitializing: false }
         }
       };
+
     case 'HYDRATE_SESSION':
-      return {
-        ...action.state
-      };
-    case 'RESET_DOCUMENT': {
-      const doc = state.documentsById[action.id];
-      if (!doc) return state;
-      // Push current state to history before resetting to make it undoable
-      const resetEntry: HistoryEntry = {
-        manifest: doc.manifest,
-        timestamp: Date.now(),
-        label: 'Reset Document (Automatic Snapshot)'
-      };
+      return action.state;
+
+    case 'RESET_DOCUMENT':
+      const resetDoc = state.documentsById[action.id];
+      if (!resetDoc) return state;
       return {
         ...state,
         documentsById: {
           ...state.documentsById,
           [action.id]: {
-            ...createInitialDocument(action.id, DEFAULT_MANIFEST),
-            isInitializing: false,
-            history: {
-              ...doc.history,
-              past: [...doc.history.past, resetEntry],
-              future: []
-            }
+            ...resetDoc,
+            manifest: DEFAULT_MANIFEST,
+            isDirty: false,
+            lastStableHash: '',
+            history: { past: [], future: [], lastSavedIndex: -1 }
           }
         }
       };
-    }
+
     case 'UNDO_DOCUMENT': {
-      const doc = state.documentsById[action.id];
-      if (!doc || doc.history.past.length === 0) return state;
+      const d = state.documentsById[action.id];
+      if (!d || d.history.past.length === 0) return state;
       
-      const newPast = [...doc.history.past];
-      const previousEntry = newPast.pop()!;
+      const lastPast = d.history.past[d.history.past.length - 1];
+      const newPast = d.history.past.slice(0, -1);
       
-      const currentAsFutureEntry: HistoryEntry = {
-        manifest: doc.manifest,
+      // The current manifest becomes the first entry in future
+      const currentEntry: HistoryEntry = {
+        id: `redo_${Date.now()}`,
+        type: 'SNAPSHOT',
+        label: 'Current State',
         timestamp: Date.now(),
-        label: 'Undo Action'
+        correlationId: 'undo_op',
+        manifest: d.manifest
       };
 
       return {
@@ -282,61 +152,32 @@ function orchestratorReducer(state: OrchestratorState, action: DocumentAction): 
         documentsById: {
           ...state.documentsById,
           [action.id]: {
-            ...doc,
-            manifest: previousEntry.manifest,
+            ...d,
+            manifest: lastPast.manifest,
             history: {
+              ...d.history,
               past: newPast,
-              future: [currentAsFutureEntry, ...doc.history.future]
+              future: [currentEntry, ...d.history.future]
             }
           }
         }
       };
     }
-    case 'UNDO_TO_INDEX': {
-      const doc = state.documentsById[action.id];
-      if (!doc || action.index < 0 || action.index >= doc.history.past.length) return state;
 
-      const targetEntry = doc.history.past[action.index];
-      const newPast = doc.history.past.slice(0, action.index);
-      
-      // Items from index + 1 to current move to future
-      const toFuture = doc.history.past.slice(action.index + 1).map(e => ({
-        ...e,
-        label: `Reverted: ${e.label}`
-      }));
-      
-      const currentAsFutureEntry: HistoryEntry = {
-        manifest: doc.manifest,
-        timestamp: Date.now(),
-        label: 'State before Jump'
-      };
-
-      return {
-        ...state,
-        documentsById: {
-          ...state.documentsById,
-          [action.id]: {
-            ...doc,
-            manifest: targetEntry.manifest,
-            history: {
-              past: newPast,
-              future: [...toFuture, currentAsFutureEntry, ...doc.history.future]
-            }
-          }
-        }
-      };
-    }
     case 'REDO_DOCUMENT': {
-      const doc = state.documentsById[action.id];
-      if (!doc || doc.history.future.length === 0) return state;
+      const d = state.documentsById[action.id];
+      if (!d || d.history.future.length === 0) return state;
       
-      const newFuture = [...doc.history.future];
-      const nextEntry = newFuture.shift()!;
+      const firstFuture = d.history.future[0];
+      const nextFuture = d.history.future.slice(1);
       
-      const currentAsPastEntry: HistoryEntry = {
-        manifest: doc.manifest,
+      const currentEntry: HistoryEntry = {
+        id: `undo_${Date.now()}`,
+        type: 'SNAPSHOT',
+        label: 'Previous State',
         timestamp: Date.now(),
-        label: 'Redo Action'
+        correlationId: 'redo_op',
+        manifest: d.manifest
       };
 
       return {
@@ -344,103 +185,130 @@ function orchestratorReducer(state: OrchestratorState, action: DocumentAction): 
         documentsById: {
           ...state.documentsById,
           [action.id]: {
-            ...doc,
-            manifest: nextEntry.manifest,
+            ...d,
+            manifest: firstFuture.manifest,
             history: {
-              past: [...doc.history.past, currentAsPastEntry],
-              future: newFuture
+              ...d.history,
+              past: [...d.history.past, currentEntry],
+              future: nextFuture
             }
           }
         }
       };
     }
+
     case 'PUSH_HISTORY': {
-      const doc = state.documentsById[action.id];
-      if (!doc) return state;
+      const d = state.documentsById[action.id];
+      if (!d) return state;
+      
+      const newPast = [...d.history.past, action.entry];
+      // Keep only last 50 states
+      if (newPast.length > 50) newPast.shift();
+      
       return {
         ...state,
         documentsById: {
           ...state.documentsById,
           [action.id]: {
-            ...doc,
+            ...d,
             history: {
-              past: [...doc.history.past, action.entry].slice(-50), // Cap history at 50 entries
-              future: []
+              ...d.history,
+              past: newPast,
+              future: [] // Branching rule: new action clears future
             }
           }
         }
       };
     }
+
+    case 'START_TRANSACTION': {
+        const d = state.documentsById[action.id];
+        if (!d) return state;
+        return {
+          ...state,
+          documentsById: {
+            ...state.documentsById,
+            [action.id]: {
+              ...d,
+              activeTransaction: {
+                label: action.label,
+                correlationId: action.correlationId,
+                baseNodes: d.manifest.nodes || []
+              }
+            }
+          }
+        };
+    }
+
+    case 'COMMIT_TRANSACTION': {
+        const d = state.documentsById[action.id];
+        if (!d) return state;
+        return {
+          ...state,
+          documentsById: {
+            ...state.documentsById,
+            [action.id]: {
+              ...d,
+              activeTransaction: undefined
+            }
+          }
+        };
+    }
+
+    case 'ABORT_TRANSACTION': {
+        const d = state.documentsById[action.id];
+        if (!d || !d.activeTransaction) return state;
+        return {
+          ...state,
+          documentsById: {
+            ...state.documentsById,
+            [action.id]: {
+              ...d,
+              manifest: { ...d.manifest, nodes: d.activeTransaction.baseNodes },
+              activeTransaction: undefined
+            }
+          }
+        };
+    }
+
     default:
       return state;
   }
-}
-
-const DEFAULT_MANIFEST: OMEGA_Manifest = {
-  schemaVersion: '7.2.3',
-  id: 'omega_primary',
-  metadata: { 
-    name: 'Primary Manifest', 
-    version: '1.0.0',
-    family: 'oscillator', 
-    tags: ['era7'] 
-  },
-  ui: { 
-    dimensions: { width: 140, height: 420 },
-    layout: { 
-      width: 140,
-      height: 420,
-      containers: [], 
-      planes: ['MAIN'], 
-      grid: { enabled: true, spacingX: 5, spacingY: 5, snapMode: 'center' }
-    },
-    useUCA: true,
-    tree: {
-      id: 'omega_root',
-      kind: 'rack',
-      role: 'root',
-      layout: {
-        pos: { x: 0, y: 0 },
-        size: { width: 140, height: 420 }
-      },
-      children: [
-        {
-          id: 'MAIN_FACE',
-          kind: 'face',
-          role: 'presentation',
-          layout: {
-            pos: { x: 0, y: 0 },
-            size: { width: 140, height: 420 }
-          },
-          children: []
-        }
-      ]
-    },
-    ucaDebug: {
-      enabled: false,
-      showLabels: false,
-      hideDecorative: false,
-      showCADOverlay: false
-    }
-  },
-  entities: [],
-  resources: { 
-    wasm: 'module.wasm',
-    assets: []
-  }
 };
 
-import { STORAGE_KEYS } from '../constants/storage';
+const initialState: OrchestratorState = {
+  documentsById: {
+    'primary': {
+      id: 'primary',
+      manifest: DEFAULT_MANIFEST,
+      isDirty: false,
+      lastStableHash: '',
+      history: { past: [], future: [], lastSavedIndex: -1 },
+      isInitializing: true,
+      contract: null,
+      wasmBuffer: null,
+      extraResources: []
+    }
+  },
+  activeDocumentId: 'primary'
+};
 
 export const useDocumentOrchestrator = () => {
-  const [state, dispatch] = useReducer(orchestratorReducer, {
-    documentsById: {
-      'primary': createInitialDocument('primary', DEFAULT_MANIFEST)
-    },
-    activeDocumentId: 'primary'
-  });
+  const [state, dispatch] = useReducer(orchestratorReducer, initialState);
+  const debouncedHashingRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const hashPromisesRef = useRef<Record<string, Promise<void> | null>>({});
 
-  // Client-Side Hydration (Phase 20.6 - Persistence & Recovery)
+  const flushPendingHash = useCallback(async (id: string) => {
+    if (debouncedHashingRef.current[id]) {
+      clearTimeout(debouncedHashingRef.current[id]);
+      delete debouncedHashingRef.current[id];
+    }
+    if (hashPromisesRef.current[id]) {
+      await hashPromisesRef.current[id];
+    }
+  }, []);
+
+  // Session Rehydration: Load from LocalStorage
   useEffect(() => {
     try {
       const persisted = persistenceService.loadCanonicalState();
@@ -448,7 +316,7 @@ export const useDocumentOrchestrator = () => {
       if (persisted) {
         // Mandatory Validation before rehydration
         try {
-          BlueprintValidator.validate(persisted.graph, { id: persisted.id } as any);
+          BlueprintValidator.validate(persisted.graph, { id: persisted.id });
           
           observabilityService.trackEvent({
             correlationId: persisted.metadata.lastCorrelationId,
@@ -475,22 +343,35 @@ export const useDocumentOrchestrator = () => {
           });
 
           // Phase 21.1: Capture as historical revision
-          historyService.captureRevision(
-            persisted.graph as any,
-            'RECOVERY_POINT',
-            persisted.metadata.lastCorrelationId,
-            'Session Recovery Point'
-          );
+          dispatch({
+            type: 'PUSH_HISTORY',
+            id: persisted.id,
+            entry: {
+              id: `recovery_${Date.now()}`,
+              type: 'RECOVERY_POINT',
+              label: 'Session Recovery Point',
+              timestamp: Date.now(),
+              correlationId: persisted.metadata.lastCorrelationId,
+              manifest: recoveredManifest,
+              uiState: {
+                selectedNodeId: null,
+                multiSelectedNodeIds: [],
+                pinnedNodeId: null,
+                layoutRatio: 0.5
+              }
+            }
+          });
           
           return; // Skip general session hydration if canonical recovery succeeds
-        } catch (valErr: any) {
+        } catch (valErr: unknown) {
+          const error = valErr as Error;
           observabilityService.trackEvent({
             correlationId: persisted.metadata.lastCorrelationId,
             phase: 'PHASE_20_RECOVERY',
             component: 'ORCHESTRATOR',
             state: 'FAILURE',
             code: 'RECOVERY_VALIDATION_FAILED',
-            message: `Persisted state invalid: ${valErr.message}`
+            message: `Persisted state invalid: ${error.message}`
           });
           persistenceService.clearPersistedState();
         }
@@ -499,10 +380,10 @@ export const useDocumentOrchestrator = () => {
       // Fallback to legacy session hydration if no canonical state or validation failed
       const stored = localStorage.getItem(STORAGE_KEYS.SESSION_DOCS);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored) as OrchestratorState;
         dispatch({ type: 'HYDRATE_SESSION', state: parsed });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[OMEGA ORCHESTRATOR] Session restore failed:', err);
     }
   }, []);
@@ -516,15 +397,16 @@ export const useDocumentOrchestrator = () => {
       };
       // We only save manifests and IDs, not large binary buffers or contracts
       localStorage.setItem(STORAGE_KEYS.SESSION_DOCS, JSON.stringify(data, (key, value) => {
-        if (key === 'wasmBuffer' || key === 'contract' || key === 'extraResources') return undefined;
+        if (key === 'wasmBuffer' || key === 'contract' || key === 'extraResources' || key === 'history') return undefined;
         return value;
       }));
     }
   }, [state.documentsById, state.activeDocumentId]);
 
+  const activeDocumentId = state.activeDocumentId;
   const activeDocument = useMemo(() => 
-    state.documentsById[state.activeDocumentId] || state.documentsById['primary']
-  , [state.documentsById, state.activeDocumentId]);
+    state.documentsById[activeDocumentId] || state.documentsById['primary']
+  , [state.documentsById, activeDocumentId]);
 
   // Actions
   const openDocument = useCallback((id: string, manifest: OMEGA_Manifest) => {
@@ -578,12 +460,24 @@ export const useDocumentOrchestrator = () => {
       }
 
       // Phase 21.1: Capture as historical revision
-      historyService.captureRevision(
-        doc.manifest.nodes || [],
-        'TRANSACTION_COMMIT',
-        doc.activeTransaction.correlationId,
-        doc.activeTransaction.label
-      );
+      dispatch({
+        type: 'PUSH_HISTORY',
+        id: id,
+        entry: {
+          id: `tx_${Date.now()}`,
+          type: 'CONTENT_CHANGE',
+          label: doc.activeTransaction.label,
+          timestamp: Date.now(),
+          correlationId: doc.activeTransaction.correlationId,
+          manifest: doc.manifest,
+          uiState: {
+            selectedNodeId: null,
+            multiSelectedNodeIds: [],
+            pinnedNodeId: null,
+            layoutRatio: 0.5
+          }
+        }
+      });
 
       dispatch({ type: 'COMMIT_TRANSACTION', id: id });
       
@@ -594,61 +488,29 @@ export const useDocumentOrchestrator = () => {
         state: 'SUCCESS',
         message: `Transaction committed: ${label}`
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       observabilityService.trackEvent({
         correlationId,
         phase: 'PHASE_20_TRANSACTION',
         component: 'ORCHESTRATOR',
         state: 'FAILURE',
         code: 'TRANSACTION_COMMIT_FAILED',
-        message: `Validation failed for transaction '${label}': ${err.message}`
+        message: error.message
       });
-      // Automatic Rollback on failure
-      dispatch({ type: 'ABORT_TRANSACTION', id });
+      throw error;
     }
   }, [state.documentsById]);
 
   const abortTransaction = useCallback((id: string) => {
-    const doc = state.documentsById[id];
-    if (!doc || !doc.activeTransaction) return;
-
-    observabilityService.trackEvent({
-      correlationId: doc.activeTransaction.correlationId,
-      phase: 'PHASE_20_TRANSACTION',
-      component: 'ORCHESTRATOR',
-      state: 'ROLLBACK',
-      message: `Transaction aborted: ${doc.activeTransaction.label}`
-    });
     dispatch({ type: 'ABORT_TRANSACTION', id });
-  }, [state.documentsById]);
-
-  // Multi-Document Hashing Effect (Gate 9.0 Hashing Coordination)
-  const debouncedHashingRef = useRef<Record<string, NodeJS.Timeout>>({});
-  const hashPromisesRef = useRef<Record<string, Promise<void> | null>>({});
-
-  const flushPendingHash = useCallback(async (id: string) => {
-    // 1. Clear timeout to prevent duplicate triggers
-    if (debouncedHashingRef.current[id]) {
-      clearTimeout(debouncedHashingRef.current[id]);
-      delete debouncedHashingRef.current[id];
-      
-      // 2. Perform immediate sync check
-      const doc = state.documentsById[id];
-      if (doc) {
-        const currentHash = await IntegrityService.generateManifestHash(doc.manifest);
-        const isNowDirty = currentHash !== doc.lastStableHash;
-        dispatch({ type: 'SET_DIRTY', id, isDirty: isNowDirty });
-      }
-    }
-
-    // 3. Wait for any in-flight async hash operation
-    if (hashPromisesRef.current[id]) {
-      await hashPromisesRef.current[id];
-    }
-  }, [state.documentsById]);
+  }, []);
 
   const restoreHistoricalRevision = useCallback(async (id: string, revisionId: string) => {
-    const graph = await HistoryRestoreEngine.prepareRestore(revisionId);
+    const doc = state.documentsById[id];
+    if (!doc) return;
+
+    const graph = await HistoryRestoreEngine.prepareRestore(revisionId, doc.manifest);
     if (!graph) return;
 
     // Promote historical state to active manifest
@@ -663,13 +525,25 @@ export const useDocumentOrchestrator = () => {
     });
 
     // Capture the restore action as a new recovery point in history
-    historyService.captureRevision(
-      graph,
-      'RECOVERY_POINT',
-      `restore_${Date.now()}_${revisionId}`,
-      `Restored Revision: ${revisionId}`
-    );
-  }, []);
+    dispatch({
+      type: 'PUSH_HISTORY',
+      id,
+      entry: {
+        id: `restore_${Date.now()}`,
+        type: 'RECOVERY_POINT',
+        label: `Restored Revision: ${revisionId}`,
+        timestamp: Date.now(),
+        correlationId: `restore_${Date.now()}_${revisionId}`,
+        manifest: doc.manifest,
+        uiState: {
+          selectedNodeId: null,
+          multiSelectedNodeIds: [],
+          pinnedNodeId: null,
+          layoutRatio: 0.5
+        }
+      }
+    });
+  }, [state.documentsById]);
 
   const captureStableSnapshot = useCallback(async (id: string) => {
     await flushPendingHash(id); // Ensure integrity before snapshot (Gate 9.0 requirement)
@@ -679,16 +553,24 @@ export const useDocumentOrchestrator = () => {
     dispatch({ type: 'CAPTURE_HASH', id, hash });
 
     // Phase 21.1: Capture as historical revision
-    historyService.captureRevision(
-      doc.manifest.nodes || [],
-      'SNAPSHOT_SYNC',
-      `sync_${Date.now()}_${hash.substring(0, 8)}`,
-      'Structural Sync Point'
-    );
+    pushHistory(id, {
+      id: `sync_${Date.now()}_${hash.substring(0, 8)}`,
+      type: 'SNAPSHOT',
+      label: 'Structural Sync Point',
+      timestamp: Date.now(),
+      correlationId: `sync_${Date.now()}`,
+      manifest: doc.manifest,
+      uiState: {
+        selectedNodeId: null,
+        multiSelectedNodeIds: [],
+        pinnedNodeId: null,
+        layoutRatio: 0.5
+      }
+    });
   }, [state.documentsById, flushPendingHash]);
 
   useEffect(() => {
-    Object.values(state.documentsById).forEach(doc => {
+    Object.values(state.documentsById).forEach((doc: DocumentState) => {
       if (doc.isInitializing) {
         // Capture baseline after a small delay
         const t = setTimeout(async () => {
@@ -777,6 +659,7 @@ export const useDocumentOrchestrator = () => {
     pushHistory,
     startTransaction,
     commitTransaction,
-    abortTransaction
+    abortTransaction,
+    restoreHistoricalRevision
   ]);
 };

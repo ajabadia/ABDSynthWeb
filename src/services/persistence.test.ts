@@ -1,4 +1,5 @@
 import { persistenceService } from './persistenceService';
+import type { OmegaNode } from '@/omega-ui-core/types/manifest';
 
 /**
  * PHASE 20.6 - PERSISTENCE TEST
@@ -8,7 +9,7 @@ function runPersistenceTest() {
   console.log('--- STARTING PHASE 20.6 PERSISTENCE TEST ---');
 
   const docId = 'test_doc';
-  const dummyGraph = { id: 'root', kind: 'group', children: [] } as unknown as any;
+  const dummyGraph: OmegaNode = { id: 'root', kind: 'group', layout: { pos: { x: 0, y: 0 } }, children: [] };
   const correlationId = 'tx_test_123';
   const hash = 'HASH_VALID_1';
 
@@ -49,11 +50,19 @@ function runPersistenceTest() {
 // Mock localStorage if running in Node (tsx)
 if (typeof localStorage === 'undefined') {
   const mockStorage: Record<string, string> = {};
-  (global as unknown as any).localStorage = {
+  const storageMock = {
     setItem: (key: string, val: string) => { mockStorage[key] = val; },
     getItem: (key: string) => mockStorage[key] || null,
-    removeItem: (key: string) => { delete mockStorage[key]; }
+    removeItem: (key: string) => { delete mockStorage[key]; },
+    clear: () => { for (const key in mockStorage) delete mockStorage[key]; },
+    length: 0,
+    key: (_index: number) => null
   };
+  
+  Object.defineProperty(global, 'localStorage', {
+    value: storageMock,
+    writable: true
+  });
 }
 
 runPersistenceTest();

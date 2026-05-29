@@ -32,8 +32,7 @@ export default function ColorGovernance({ values, capabilities, manifest, onChan
           <SmartColorPicker 
             key={cap}
             label={COLOR_MAP[cap]}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            value={(values as any)[cap] || ''}
+            value={(values as Record<string, unknown>)[cap] as string || ''}
             onChange={(val) => onChange({ [cap]: val })}
             manifest={manifest}
           />

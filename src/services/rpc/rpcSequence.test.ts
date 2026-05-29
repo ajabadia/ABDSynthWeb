@@ -1,5 +1,5 @@
 import { OmegaRPCBridge } from './omegaRPCBridge';
-import type { OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OmegaNode, OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import type { SnapshotParams, DeltaPatch } from './rpcTypes';
 
 /**
@@ -61,7 +61,7 @@ setTimeout(() => {
         graph: { id: 'root', kind: 'rack', layout: { pos: { x: 0, y: 0 }, size: { width: 400, height: 400 } } } as OmegaNode,
         modulations: []
     };
-    const dummyManifest = { id: 'primary', ui: { tree: [] } } as any;
+    const dummyManifest = { id: 'primary', ui: { tree: { id: 'root', kind: 'rack', layout: { pos: { x: 0, y: 0 } } } } } as unknown as OMEGA_Manifest;
     bridge.syncSnapshot(snapshot, dummyManifest);
     const sentMsg = JSON.parse(ws.lastSentMessage!);
     console.log('Sent Method:', sentMsg.method);

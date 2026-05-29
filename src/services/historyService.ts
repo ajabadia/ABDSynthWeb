@@ -1,70 +1,111 @@
-import type { HistoryEntry, HistoryCaptureReason, HistoryRevisionMeta } from './historyTypes';
-import type { OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { HistoryEntry, HistoryEventType } from '@/features/manifest-editor/types/history';
+import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
 import { observabilityService } from './observabilityService';
 
 /**
- * OMEGA ERA 7.2.3 - HISTORY SERVICE (Phase 21.1)
- * Manages the capture and retrieval of historical manifest revisions.
+ * OMEGA ERA 8.0.0 - INDUSTRIAL HISTORY ENGINE
+ * Specialized service for semantic history management with branching support.
  */
 class HistoryService {
   private history: HistoryEntry[] = [];
-  private lastRevisionId: string | null = null;
+  private future: HistoryEntry[] = [];
+  private maxEntries = 50;
 
   /**
-   * captureRevision
-   * Records a new point in the manifest's evolution.
+   * push
+   * Records a new semantic event. Clears future stack (branching).
    */
-  captureRevision(
-    graph: OmegaNode[], 
-    reason: HistoryCaptureReason, 
-    correlationId: string,
-    label?: string
-  ): string {
-    const revisionId = `rev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  push(entry: HistoryEntry) {
+    // Coalescing/Compression Logic
+    const lastEntry = this.history[this.history.length - 1];
     
-    const meta: HistoryRevisionMeta = {
-      revisionId,
-      parentRevisionId: this.lastRevisionId,
-      timestamp: Date.now(),
-      correlationId,
-      reason,
-      label: label || 'Untitled Revision',
-      schemaVersion: '7.2.3'
-    };
-
-    const entry: HistoryEntry = {
-      meta,
-      graph: JSON.parse(JSON.stringify(graph)) // Deep copy to isolate history
-    };
+    if (lastEntry && lastEntry.type === entry.type && lastEntry.label === entry.label) {
+      const timeDiff = entry.timestamp - lastEntry.timestamp;
+      
+      // Coalesce high-frequency UI events (e.g. selection jumps) within 1.5s
+      if (entry.type !== 'CONTENT_CHANGE' && timeDiff < 1500) {
+        this.history[this.history.length - 1] = entry; // Replace with latest
+        return;
+      }
+    }
 
     this.history.push(entry);
-    this.lastRevisionId = revisionId;
-
-    const durationMs = Date.now() - meta.timestamp;
+    this.future = []; // Branching rule
+    
+    if (this.history.length > this.maxEntries) {
+      this.history.shift();
+    }
 
     observabilityService.trackHistoryEvent(
-      correlationId,
+      entry.correlationId,
       'HISTORY_CAPTURED',
       'SUCCESS',
-      `Captured history revision: ${revisionId} (Reason: ${reason})`,
-      durationMs,
-      { revisionId, parentId: meta.parentRevisionId }
+      `Captured: ${entry.label} (${entry.type})`,
+      0,
+      { id: entry.id }
     );
-
-    return revisionId;
   }
 
-  getHistory(): HistoryEntry[] {
-    return [...this.history];
+  /**
+   * undo
+   * Moves last past entry to future and returns it.
+   */
+  undo(currentManifest: OMEGA_Manifest): { entry: HistoryEntry; currentState: HistoryEntry } | null {
+    if (this.history.length === 0) return null;
+
+    const entryToRestore = this.history.pop()!;
+    
+    const currentState: HistoryEntry = {
+      id: `redo_${Date.now()}`,
+      type: 'SNAPSHOT',
+      label: 'Pre-Undo State',
+      timestamp: Date.now(),
+      correlationId: 'undo_op',
+      manifest: JSON.parse(JSON.stringify(currentManifest))
+    };
+
+    this.future.unshift(currentState);
+
+    return { entry: entryToRestore, currentState };
   }
 
-  getRevision(revisionId: string): HistoryEntry | undefined {
-    return this.history.find(e => e.meta.revisionId === revisionId);
+  /**
+   * redo
+   * Moves first future entry to past and returns it.
+   */
+  redo(currentManifest: OMEGA_Manifest): { entry: HistoryEntry; currentState: HistoryEntry } | null {
+    if (this.future.length === 0) return null;
+
+    const entryToRestore = this.future.shift()!;
+    
+    const currentState: HistoryEntry = {
+      id: `undo_${Date.now()}`,
+      type: 'SNAPSHOT',
+      label: 'Pre-Redo State',
+      timestamp: Date.now(),
+      correlationId: 'redo_op',
+      manifest: JSON.parse(JSON.stringify(currentManifest))
+    };
+
+    this.history.push(currentState);
+
+    return { entry: entryToRestore, currentState };
   }
 
-  clearHistory() {
+  getHistory() {
+    return {
+      past: [...this.history],
+      future: [...this.future]
+    };
+  }
+
+  getRevision(id: string): HistoryEntry | undefined {
+    return this.history.find(e => e.id === id) || this.future.find(e => e.id === id);
+  }
+
+  clear() {
     this.history = [];
-    this.lastRevisionId = null;
+    this.future = [];
   }
 }
 

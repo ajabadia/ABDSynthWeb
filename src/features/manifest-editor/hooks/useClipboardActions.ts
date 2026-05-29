@@ -2,11 +2,11 @@
 
 import { useCallback } from 'react';
 import { ClipboardService } from '@/services/clipboardService';
-import type { OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OmegaNode, ManifestEntity } from '@/omega-ui-core/types/manifest';
 
 interface ClipboardDependencies {
-  findItem: (id: string) => OmegaNode | undefined;
-  pasteEntity: (entity: OmegaNode) => string;
+  findItem: (id: string) => OmegaNode | ManifestEntity | undefined;
+  pasteEntity: (entity: OmegaNode | ManifestEntity) => string;
   addLog: (msg: string) => void;
 }
 

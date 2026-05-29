@@ -1,5 +1,6 @@
 import type { LayoutContainer, OMEGA_Manifest, ManifestEntity } from '@/omega-ui-core/types/manifest';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
+import { adaptManifestEntityToNode } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
  
 interface IndustrialContainerProps {
   container: LayoutContainer;
@@ -73,8 +74,7 @@ export default function IndustrialContainer({
         position: 'relative',
       }}
       dangerouslySetInnerHTML={{
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        __html: CellRenderer.renderCellHTML(entity as any, {
+        __html: CellRenderer.renderCellHTML(adaptManifestEntityToNode(entity), {
           skin: 'industrial',
           zoom: 1.0,
           runtimeValue: 0,

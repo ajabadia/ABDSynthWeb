@@ -17,8 +17,8 @@ import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
  * Sovereign transport with ACK validation, Heartbeat, and Delta Buffering.
  */
 export class OmegaRPCBridge {
-  private ws: WebSocket | null = null;
-  private sessionId: string;
+  protected ws: WebSocket | null = null;
+  protected sessionId: string;
   private seq = 0;
   private status: SyncStatus = 'disconnected';
   private url: string;
@@ -26,7 +26,7 @@ export class OmegaRPCBridge {
   
   // Phase 20.3: Live Orchestration State
   private pendingAcks = new Map<number, { resolve: (val: unknown) => void, reject: (err: unknown) => void, timeout: ReturnType<typeof setTimeout> }>();
-  private deltaBuffer: DeltaPatch[] = [];
+  protected deltaBuffer: DeltaPatch[] = [];
   private isSyncingSnapshot = false;
   private lastHeartbeatAt = 0;
   private heartbeatInterval: ReturnType<typeof setTimeout> | null = null;

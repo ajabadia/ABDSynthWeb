@@ -1,15 +1,7 @@
-﻿OMEGA SYSTEM AUDIT REPORT - 05/14/2026 01:14:43
+﻿OMEGA SYSTEM AUDIT REPORT - 05/29/2026 11:00:47
 
-================================================================================
-
-SECTION 1: ARCHITECTURAL INTEGRITY (arch-audit)
-
-================================================================================
-
-
-> abd-ia_synths@0.1.0 arch-audit
-> node scripts/arch-guard.mjs
-
+[PHASE:SUCCESS] [1/6 Structural Integrity]: Passed successfully with 0 errors and 126 warnings.
+--- WARNING DETAILS START ---
 
 [OMEGA ARCH-GUARD] Auditing architectural precedence (ADR-014)...
 
@@ -31,7 +23,7 @@ SECTION 1: ARCHITECTURAL INTEGRITY (arch-audit)
 [ElementCatalog] src\features\manifest-editor\components\inspector\shared\aesthetic\UnifiedGraphicGovernance.tsx:5 -> import { getElementDefinition } from '@/omega-ui-core/governance/ElementCatalog'...
 ... and 19 more in this category.
 
-=== Ô£à LOW RISK HALLUCINATIONS (94) ===
+=== Ô£à LOW RISK HALLUCINATIONS (92) ===
 [validate] src\data\map.md:45 -> - **Schema Parity**: Any changes to instrument data structures MUST be reflected...
 [allowedFragments] src\omega-ui-core\governance\ElementCatalog.ts:10 -> * - 'capabilities' and 'allowedFragments' are soft suggestions for UI filtering.
 [allowedFragments] src\omega-ui-core\governance\ElementCatalog.ts:77 -> * `allowedFragments` is advisory only. Use it for editor UX suggestions (e.g. "+...
@@ -47,199 +39,23 @@ SECTION 1: ARCHITECTURAL INTEGRITY (arch-audit)
 [allowedFragments] src\omega-ui-core\governance\ElementCatalog.ts:184 -> allowedFragments: ['label']
 [allowedFragments] src\omega-ui-core\governance\ElementCatalog.ts:194 -> allowedFragments: ['label']
 [allowedFragments] src\omega-ui-core\governance\ElementCatalog.ts:204 -> allowedFragments: ['label']
-... and 79 more in this category.
+... and 77 more in this category.
 
 [SUMMARY] Audit complete.
 - High-risk:   0
 - Medium-risk: 34
-- Low-risk:    94
+- Low-risk:    92
 - JSON Report: docs/arch-audit-report.json
 - CSV Report:  docs/arch-audit-report.csv
 
 Ô£à ARCHITECTURAL INTEGRITY VERIFIED.
-
-================================================================================
-
-SECTION 2: TYPE SAFETY CHECK (tsc)
-
-================================================================================
+--- WARNING DETAILS END ---
 
 
-================================================================================
+[PHASE:SUCCESS] [2/6 Type Safety (TSC)   ]: Passed successfully with 0 errors and 0 warnings.
 
-SECTION 3: CODE LINTING (eslint)
-
-================================================================================
-
-
-> abd-ia_synths@0.1.0 lint
-> eslint
-
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\inspector\sections\AestheticSection.tsx
-  33:76  warning  'onHelp' is defined but never used         @typescript-eslint/no-unused-vars
-  33:84  warning  'containers' is defined but never used     @typescript-eslint/no-unused-vars
-  33:96  warning  'highlightPath' is defined but never used  @typescript-eslint/no-unused-vars
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\inspector\shared\AssetSelector.tsx
-  124:6  warning  React Hook React.useMemo has a missing dependency: 'resolveAsset'. Either include it or remove the dependency array. If 'resolveAsset' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\lab\CellStudioContainer.tsx
-  10:118  warning  'OmegaNode' is defined but never used  @typescript-eslint/no-unused-vars
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\mockup\MockupViewport.tsx
-  21:13  warning  'audit' is defined but never used      @typescript-eslint/no-unused-vars
-  21:55  warning  'activeTab' is defined but never used  @typescript-eslint/no-unused-vars
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\modals\EditorModals.tsx
-  68:10  warning  'STORAGE_KEYS' is defined but never used            @typescript-eslint/no-unused-vars
-  83:3   warning  'mockupOpen' is defined but never used              @typescript-eslint/no-unused-vars
-  84:3   warning  'setMockupOpen' is defined but never used           @typescript-eslint/no-unused-vars
-  90:3   warning  'isCellEditorOpen' is defined but never used        @typescript-eslint/no-unused-vars
-  91:3   warning  'setIsCellEditorOpen' is defined but never used     @typescript-eslint/no-unused-vars
-  92:3   warning  'isCellLibraryOpen' is defined but never used       @typescript-eslint/no-unused-vars
-  93:3   warning  'setIsCellLibraryOpen' is defined but never used    @typescript-eslint/no-unused-vars
-  94:3   warning  'onAddEntityFromLibrary' is defined but never used  @typescript-eslint/no-unused-vars
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\orbital\OrbitalNode.tsx
-  29:3  warning  'manifest' is defined but never used  @typescript-eslint/no-unused-vars
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\components\viewport\VirtualRack.tsx
-  42:3   warning  'zoom' is assigned a value but never used              @typescript-eslint/no-unused-vars
-  45:3   warning  'audit' is defined but never used                      @typescript-eslint/no-unused-vars
-  56:39  warning  'visibleElements' is assigned a value but never used   @typescript-eslint/no-unused-vars
-  56:56  warning  'containers' is assigned a value but never used        @typescript-eslint/no-unused-vars
-  57:11  warning  'runtimeValues' is assigned a value but never used     @typescript-eslint/no-unused-vars
-  57:26  warning  'activeContainers' is assigned a value but never used  @typescript-eslint/no-unused-vars
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\hooks\transaction.test.ts
-   7:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L7: function deepMerge(target: any, source: any) {
-   7:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L7: function deepMerge(target: any, source: any) {
-  11:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L11: function reducer(state: any, action: any) {
-  11:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L11: function reducer(state: any, action: any) {
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\hooks\useDocumentOrchestrator.ts
-  451:80  error    Unexpected any. Specify a different type                                                                                    @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L451: BlueprintValidator.validate(persisted.graph, { id: persisted.id } as any);
-  479:32  error    Unexpected any. Specify a different type                                                                                    @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L479: persisted.graph as any,
-  486:26  error    Unexpected any. Specify a different type                                                                                    @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L486: } catch (valErr: any) {
-  597:19  error    Unexpected any. Specify a different type                                                                                    @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L597: } catch (err: any) {
-  763:7   warning  React Hook useMemo has a missing dependency: 'restoreHistoricalRevision'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\features\manifest-editor\hooks\useManifestEditor.ts
-  38:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L38: contract as any,
-  63:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L63: findItem: entities.findItem as any,
-  71:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L71: contract: contract as any,
-  86:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L86: (u: any) => orchestrator.updateDocument(activeId, { contract: typeof u === 'function' ? u(contract) : u }),
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\omega-ui-core\renderers\CellRenderer.ts
-  270:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L270: const attachments = ((style as Record<string, unknown>)?.attachments as any[]) || [];
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\omega-ui-core\types\manifest.ts
-  388:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L388: assetBehavior?: string | any | undefined;
-  389:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L389: recipe?: any | undefined;
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\omega-ui-core\uca\blueprintResolver.ts
-   1:42  warning  'NodeRole' is defined but never used      @typescript-eslint/no-unused-vars
-  17:42  warning  'manifest' is defined but never used      @typescript-eslint/no-unused-vars
-  49:51  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L49: node.style = { [Symbol('empty')]: true } as any; // Temporary flag for empty style
-  50:29  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L50: delete (node.style as any)[Symbol('empty')];
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\auditService.ts
-  68:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L68: const infos = issues.filter(i => (i.severity as any) === 'info') as unknown as Diagnostic[];
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\history.test.ts
-  60:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L60: const badRev = historyService.captureRevision([{ id: 'bad-cell', kind: 'cell' } as any], 'MANUAL_SAVE', 'tx_bad');
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\historyRestore.ts
-  26:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L26: BlueprintValidator.validate(entry.graph, { id: 'restore_target' } as any);
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\historyTypes.ts
-  30:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L30: details?: any;
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\persistence.test.ts
-  11:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L11: const dummyGraph = { id: 'root', kind: 'group', children: [] } as unknown as any;
-  52:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L52: (global as unknown as any).localStorage = {
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\rpc\rpcSequence.test.ts
-  64:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L64: const dummyManifest = { id: 'primary', ui: { tree: [] } } as any;
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\rpc\rpcStress.test.ts
-   63:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L63: (globalThis as any).WebSocket = MockWebSocket;
-   71:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L71: const ws = (bridge as any).ws as MockWebSocket;
-   86:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L86: const dummyManifest = { id: 'stress-doc', ui: { tree: [] } } as any;
-   94:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L94: console.log('Buffered Deltas count (expected 2):', (bridge as any).deltaBuffer.length);
-   95:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L95: if ((bridge as any).deltaBuffer.length === 2) {
-  104:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L104: console.log('Buffered Deltas count (expected 0):', (bridge as any).deltaBuffer.length);
-  105:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L105: if ((bridge as any).deltaBuffer.length === 0 && ws.messagesSent.length >= 3) {
-  126:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L126: ws.simulateHeartbeat((bridge as any).sessionId);
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\rpc\validatorStress.test.ts
-   19:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L19: ui: { skin: 'standard' } as any,
-   59:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L59: } catch (err: any) {
-   94:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L94: style: { asset: 'non-existent-asset' } as any
-  101:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L101: const cycleNode: any = { id: 'cycle_1', kind: 'group', layout: { pos: { x: 0, y: 0 } } };
-  112:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L112: style: { asset: 'existing-asset' } as any
-
-D:\desarrollos\ABDSynthsWeb\abd-ia_synths\src\services\wasmRuntime.ts
-  154:38  warning  'graph' is defined but never used         @typescript-eslint/no-unused-vars
-  187:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  -> [REMEDIATION] L187: } catch (err: any) {
-  269:16  warning  'nodeId' is defined but never used        @typescript-eslint/no-unused-vars
-
-Ô£û 65 problems (38 errors, 27 warnings)
-
-
-================================================================================
-
-SECTION 4: CRITICAL FILE INTEGRITY
-
-================================================================================
-
+[PHASE:SUCCESS] [3/6 Code Linting (ESL)  ]: Passed successfully with 0 errors and 0 warnings.
 OK: package.json exists.
 OK: tsconfig.json exists.
 OK: src/omega-ui-core/governance/ElementCatalog.ts exists.
-
-================================================================================
-
-STATUS: ERRORS DETECTED
-
-================================================================================
-
-END OF REPORT
+STATUS: ALL CHECKS PASSED

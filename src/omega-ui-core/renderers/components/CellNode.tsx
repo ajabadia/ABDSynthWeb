@@ -11,6 +11,7 @@ import { GovernedOverlay } from './GovernedOverlay';
 import { UniversalRenderer } from '../UniversalRenderer';
 import type { UCADebugContext } from '../ucaTypes';
 import { useDesignTokens } from '../../hooks/useDesignTokens';
+import { IntegrityOverlay } from '@/features/manifest-editor/components/viewport/IntegrityOverlay';
 
 interface CellNodeProps {
   node: OmegaNode;
@@ -23,6 +24,7 @@ interface CellNodeProps {
   isLayoutGoverned: boolean;
   parentNode?: OmegaNode | null | undefined;
   handleDebugClick: (e: React.MouseEvent) => void;
+  audit?: import('@/services/auditService').AuditResult | undefined;
 }
 
 export function CellNode({
@@ -35,7 +37,8 @@ export function CellNode({
   worldPos,
   isLayoutGoverned,
   parentNode,
-  handleDebugClick
+  handleDebugClick,
+  audit
 }: CellNodeProps) {
   const labelRef = React.useRef<HTMLSpanElement>(null);
   const localLabelRef = React.useRef<HTMLSpanElement>(null);
@@ -91,9 +94,10 @@ export function CellNode({
         node={node} 
         debugContext={debugContext || { enabled: false, showLabels: false, onSelect: () => {}, selectedId: null, hideDecorative: false }} 
         worldPos={worldPos}
-        labelRef={labelRef}
-        localLabelRef={localLabelRef}
+        audit={audit}
       />
+
+      <IntegrityOverlay node={node} audit={audit} />
 
       <GovernedOverlay enabled={!!isLayoutGoverned} />
 
@@ -123,6 +127,7 @@ export function CellNode({
           resolveAsset={resolveAsset}
           parentWorldPos={worldPos}
           parentNode={node}
+          audit={audit}
         />
       ))}
     </motion.div>

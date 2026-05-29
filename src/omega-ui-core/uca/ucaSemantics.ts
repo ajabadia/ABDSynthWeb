@@ -25,7 +25,7 @@ export function resolveNodeSemantics(
 
   // Strategy A: Portable Snapshot (Highest Priority)
   if (node.snapshot) {
-    templateBase = JSON.parse(JSON.stringify(node.snapshot));
+    templateBase = JSON.parse(JSON.stringify(node.snapshot)) as Partial<OmegaNode>;
   } 
   // Strategy B: Module Template (Blueprint)
   else if (node.cellRef && ctx.moduleTemplates?.[node.cellRef]) {
@@ -49,7 +49,7 @@ export function resolveNodeSemantics(
     const ref = node.cellRef || node.templateRef;
     const template = ctx.catalog[ref!];
     if (template) {
-      templateBase = JSON.parse(JSON.stringify(template.baseNode));
+      templateBase = JSON.parse(JSON.stringify(template.baseNode)) as Partial<OmegaNode>;
     }
   }
 

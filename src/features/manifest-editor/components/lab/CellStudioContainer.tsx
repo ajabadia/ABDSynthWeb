@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { OMEGA_ELEMENT_CATALOG } from '@/omega-ui-core/governance/ElementCatalog';
 import { CellRenderer } from '@/omega-ui-core/renderers/CellRenderer';
-import type { ManifestEntity, OMEGA_Manifest, ComponentType, AttachmentType, CellTemplate, Attachment, Presentation, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, ComponentType, AttachmentType, CellTemplate, Attachment, Presentation } from '@/omega-ui-core/types/manifest';
 import ThemePaletteGovernance from '../inspector/aesthetic/governance/ThemePaletteGovernance';
 import IndustrialGovernanceConsole from '../inspector/shared/IndustrialGovernanceConsole';
 import AttachmentTypePrecisionOffsets from '../inspector/attachments/AttachmentPrecisionOffsets';
@@ -296,17 +296,13 @@ export default function CellStudioContainer({
     const template: CellTemplate = {
       id: cellData.id,
       label: cellData.label || 'Unnamed DNA',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      category: (cellData.role as any) || 'control',
+      category: (cellData.role as CellTemplate['category']) || 'control',
       baseNode: dna,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      assetBehavior: behavior as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recipe: recipe as any,
+      assetBehavior: behavior,
+      recipe: recipe,
       version: '1.0.0',
       description: description || 'Certified UCA Cell Template'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    };
     
     if (onFreeze) {
       onFreeze(template);
@@ -518,7 +514,7 @@ export default function CellStudioContainer({
             <button onClick={handleFreeze} className="px-6 py-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded text-[9px] font-black uppercase flex items-center gap-2 hover:bg-blue-500/20 transition-all">
               <Database className="w-3 h-3" /> Freeze as DNA Template
             </button>
-            <button onClick={() => onSave({ ...cellData, assetBehavior: behavior, recipe } as unknown as ManifestEntity)} className="px-8 py-2 bg-accent text-black rounded text-[9px] font-black uppercase ml-4">Finalize Cell</button>
+            <button onClick={() => onSave({ ...cellData, assetBehavior: behavior, recipe })} className="px-8 py-2 bg-accent text-black rounded text-[9px] font-black uppercase ml-4">Finalize Cell</button>
           </div>
         </div>
       </div>

@@ -27,6 +27,6 @@ export interface HistoryDiff {
   changes: {
     path: string;
     type: 'ADD' | 'REMOVE' | 'UPDATE' | 'MOVE';
-    details?: any;
+    details?: unknown;
   }[];
 }

@@ -14,6 +14,9 @@ export interface SelectProps {
   value: number;     // Normalized index (0.0 to 1.0)
   options?: (string | SelectOption)[]; // List of available options or labels
   id?: string;       // Canonical ID
+  inheritedFont?: string | undefined;
+  inheritedSize?: number | undefined;
+  inheritedColor?: string | undefined;
 }
 
 export const renderSelectHTML = (props: SelectProps): string => {

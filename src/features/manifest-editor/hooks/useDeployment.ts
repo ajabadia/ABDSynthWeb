@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback } from 'react';
-import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import type { OmegaContract } from '@/services/wasmLoader';
 import type { ValidationIssue } from '@/types/validation';
 
 interface DeploymentDependencies {
   manifest: OMEGA_Manifest;
-  contract: OmegaContract | null;
+  contract: (OmegaContract | OMEGA_Contract) | null;
   issues: ValidationIssue[];
   addLog: (msg: string) => void;
   captureStableSnapshot: () => void;
@@ -51,8 +51,10 @@ export const useDeployment = ({
       const hashAtStart = await IntegrityService.generateManifestHash(manifest);
 
       // 1. Coherence Check (Safety Lock)
-      if (contract?.firmwareHash && hashAtStart !== contract.firmwareHash) {
-        addLog(`[CRITICAL] Coherence Failure: Manifest Hash (${hashAtStart.slice(0, 8)}) mismatch with Binary Hash (${contract.firmwareHash.slice(0, 8)}).`);
+      const firmwareHash = contract && 'firmwareHash' in contract ? (contract as OmegaContract).firmwareHash : undefined;
+      
+      if (firmwareHash && hashAtStart !== firmwareHash) {
+        addLog(`[CRITICAL] Coherence Failure: Manifest Hash (${hashAtStart.slice(0, 8)}) mismatch with Binary Hash (${firmwareHash.slice(0, 8)}).`);
         const proceed = confirm("FIRMWARE_MISMATCH: The manifest structure has changed and no longer matches the loaded binary. This will cause simulation errors. Proceed anyway?");
         if (!proceed) {
           addLog(`[ABORT] Deployment cancelled by engineer due to integrity failure.`);

@@ -22,6 +22,7 @@ interface StructuralNodeProps {
   isLayoutGoverned: boolean;
   parentNode?: OmegaNode | null | undefined;
   handleDebugClick: (e: React.MouseEvent) => void;
+  audit?: import('@/services/auditService').AuditResult | undefined;
 }
 
 export function StructuralNode({
@@ -34,7 +35,8 @@ export function StructuralNode({
   worldPos,
   isLayoutGoverned,
   parentNode,
-  handleDebugClick
+  handleDebugClick,
+  audit
 }: StructuralNodeProps) {
   const labelRef = React.useRef<HTMLSpanElement>(null);
   const localLabelRef = React.useRef<HTMLSpanElement>(null);
@@ -114,6 +116,7 @@ export function StructuralNode({
           resolveAsset={resolveAsset}
           parentWorldPos={worldPos}
           parentNode={node}
+          audit={audit}
         />
       ))}
     </motion.div>

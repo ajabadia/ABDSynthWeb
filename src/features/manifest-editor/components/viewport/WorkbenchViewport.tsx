@@ -3,20 +3,22 @@ import NodeCanvas from './NodeCanvas';
 import VirtualRack from './VirtualRack';
 import SourceViewer from './SourceViewer';
 import ViewportControls from './ViewportControls';
-import type { OMEGA_Manifest, ManifestEntity, LayoutContainer, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, LayoutContainer, OMEGA_Contract, HybridEntityUpdate } from '@/omega-ui-core/types/manifest';
 import type { OmegaContract } from '@/services/wasmLoader';
 import type { AuditResult } from '@/services/auditService';
 
 import { HistoryPanel } from '../inspector/HistoryPanel';
-import type { HistoryEntry } from '../../hooks/useDocumentOrchestrator';
+import type { HistoryEntry } from '../../types/document';
 
 interface WorkbenchViewportProps {
   viewMode: 'orbital' | 'rack' | 'source' | 'history';
   manifest: OMEGA_Manifest;
   contract: (OmegaContract | OMEGA_Contract) | null;
   selectedItemId: string | null;
+  multiSelectedIds: string[];
   onSelectItem: (id: string | null) => void;
-  updateItem: (id: string, updates: Partial<ManifestEntity>) => void;
+  onSelectMultiple: (ids: string[]) => void;
+  updateItem: (id: string, updates: HybridEntityUpdate) => void;
   updateManifest: (updates: Partial<OMEGA_Manifest>) => void;
   updateContainer: (id: string, updates: Partial<LayoutContainer>) => void;
   auditResult: AuditResult;
@@ -84,7 +86,9 @@ export function WorkbenchViewport({
   pushParameterUpdate,
   past,
   onUndoTo,
-  onCompareWithHistory
+  onCompareWithHistory,
+  multiSelectedIds,
+  onSelectMultiple
 }: WorkbenchViewportProps) {
   
   return (
@@ -104,10 +108,11 @@ export function WorkbenchViewport({
           <ViewWrapper id="orbital" zoom={zoom} pan={pan}>
             <NodeCanvas 
               manifest={manifest} 
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              contract={contract as any} 
+              contract={contract} 
               selectedItemId={selectedItemId} 
               onSelectItem={onSelectItem} 
+              multiSelectedIds={multiSelectedIds}
+              onSelectMultiple={onSelectMultiple}
               audit={auditResult} 
             />
           </ViewWrapper>
@@ -119,6 +124,8 @@ export function WorkbenchViewport({
               manifest={manifest} 
               onSelectItem={onSelectItem} 
               selectedItemId={selectedItemId} 
+              multiSelectedIds={multiSelectedIds}
+              onSelectMultiple={onSelectMultiple}
               onUpdateItem={updateItem} 
               zoom={zoom} 
               isLiveMode={isLiveMode} 

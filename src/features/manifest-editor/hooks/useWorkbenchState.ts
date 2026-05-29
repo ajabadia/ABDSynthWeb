@@ -83,6 +83,12 @@ export function useWorkbenchState() {
       setSelectedNode: (nodeId: string | null) =>
         dispatch({ type: "SET_SELECTED_NODE", payload: { nodeId } }),
 
+      setMultiSelectedNodes: (nodeIds: string[]) =>
+        dispatch({ type: "SET_MULTI_SELECTED_NODES", payload: { nodeIds } }),
+
+      setPinnedNode: (nodeId: string | null) =>
+        dispatch({ type: "SET_PINNED_NODE", payload: { nodeId } }),
+
       setExpandedNodeIds: (nodeIds: string[]) =>
         dispatch({ type: "SET_EXPANDED_NODE_IDS", payload: { nodeIds } }),
 

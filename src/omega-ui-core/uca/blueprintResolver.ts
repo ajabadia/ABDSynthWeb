@@ -1,4 +1,4 @@
-import type { OmegaNode, OMEGA_Manifest, NodeRole, LayoutMode } from '../types/manifest';
+import type { OmegaNode, OMEGA_Manifest, LayoutMode } from '../types/manifest';
 
 /**
  * OMEGA UCA - Blueprint Resolver (Phase 20.4)
@@ -14,7 +14,7 @@ export class BlueprintResolver {
   /**
    * Resolves an OmegaNode (Blueprint) into its canonical form.
    */
-  public static resolve(node: OmegaNode, manifest: OMEGA_Manifest): OmegaNode {
+  public static resolve(node: OmegaNode, _manifest: OMEGA_Manifest): OmegaNode {
     // 1. Deep Clone
     const canonical = JSON.parse(JSON.stringify(node)) as OmegaNode;
 
@@ -46,8 +46,7 @@ export class BlueprintResolver {
 
     // C. Defaults for Style
     if (!node.style) {
-      node.style = { [Symbol('empty')]: true } as any; // Temporary flag for empty style
-      delete (node.style as any)[Symbol('empty')];
+      node.style = {} as OmegaNode['style'];
     }
 
     // D. Defaults for Visibility

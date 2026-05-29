@@ -1,11 +1,27 @@
 import { OmegaRPCBridge } from './omegaRPCBridge';
-import type { OmegaNode } from '../../omega-ui-core/types/manifest';
-import type { SnapshotParams } from './rpcTypes';
+import type { OmegaNode, OMEGA_Manifest } from '../../omega-ui-core/types/manifest';
+import type { SnapshotParams, DeltaPatch } from './rpcTypes';
 
 /**
  * OMEGA Phase 20.3 Stress Test
  * Validates ACK synchronization, delta buffering, and heartbeat health.
  */
+
+/**
+ * OmegaTestBridge
+ * Test-only subclass to expose protected members for stress validation.
+ */
+class OmegaTestBridge extends OmegaRPCBridge {
+  public get mockWS(): MockWebSocket {
+    return this.ws as unknown as MockWebSocket;
+  }
+  public get currentDeltaBuffer(): DeltaPatch[] {
+    return this.deltaBuffer;
+  }
+  public get currentSessionId(): string {
+    return this.sessionId;
+  }
+}
 
 class MockWebSocket {
   static CONNECTING = 0;
@@ -59,16 +75,19 @@ class MockWebSocket {
   }
 }
 
-// Global WebSocket Mock
-(globalThis as any).WebSocket = MockWebSocket;
+// Global WebSocket Mock (Industrial Root Fix)
+Object.defineProperty(globalThis, 'WebSocket', {
+  value: MockWebSocket,
+  writable: true
+});
 
 async function runStressTest() {
     console.log('--- STARTING PHASE 20.3 STRESS TEST ---');
     
-    const bridge = new OmegaRPCBridge('ws://stress-test');
+    const bridge = new OmegaTestBridge('ws://stress-test');
     bridge.connect((s) => { console.log(`[STATUS] -> ${s}`); });
 
-    const ws = (bridge as any).ws as MockWebSocket;
+    const ws = bridge.mockWS;
     ws.onopen!();
 
     // TEST 1: DELTA BUFFERING DURING SLOW SNAPSHOT
@@ -83,7 +102,7 @@ async function runStressTest() {
     };
 
     // Start sync (async)
-    const dummyManifest = { id: 'stress-doc', ui: { tree: [] } } as any;
+    const dummyManifest = { id: 'stress-doc', ui: { tree: { id: 'root', kind: 'rack', layout: { pos: { x: 0, y: 0 } } } } } as unknown as OMEGA_Manifest;
     const syncPromise = bridge.syncSnapshot(snapshot, dummyManifest);
     console.log('Snapshot sync started. Status:', bridge.getStatus());
 
@@ -91,8 +110,8 @@ async function runStressTest() {
     bridge.applyDelta({ targetId: 'osc/freq', value: 100, type: 'parameter' });
     bridge.applyDelta({ targetId: 'osc/freq', value: 200, type: 'parameter' });
     
-    console.log('Buffered Deltas count (expected 2):', (bridge as any).deltaBuffer.length);
-    if ((bridge as any).deltaBuffer.length === 2) {
+    console.log('Buffered Deltas count (expected 2):', bridge.currentDeltaBuffer.length);
+    if (bridge.currentDeltaBuffer.length === 2) {
         console.log('✅ Deltas successfully buffered during sync.');
     }
 
@@ -101,8 +120,8 @@ async function runStressTest() {
     console.log('Snapshot sync finished. Status:', bridge.getStatus());
     
     // Check if deltas were flushed
-    console.log('Buffered Deltas count (expected 0):', (bridge as any).deltaBuffer.length);
-    if ((bridge as any).deltaBuffer.length === 0 && ws.messagesSent.length >= 3) {
+    console.log('Buffered Deltas count (expected 0):', bridge.currentDeltaBuffer.length);
+    if (bridge.currentDeltaBuffer.length === 0 && ws.messagesSent.length >= 3) {
         console.log('✅ Deltas successfully flushed after ACK.');
     }
 
@@ -123,7 +142,7 @@ async function runStressTest() {
 
     // Recover with heartbeat
     console.log('Simulating heartbeat...');
-    ws.simulateHeartbeat((bridge as any).sessionId);
+    ws.simulateHeartbeat(bridge.currentSessionId);
     await new Promise(r => setTimeout(r, 500)); // Processing delay
     
     console.log('Status after heartbeat (expected in-sync):', bridge.getStatus());

@@ -26,8 +26,10 @@ interface VirtualRackProps {
   resolveAsset?: ((ref: string | undefined) => string | undefined) | undefined;
   pushParameterUpdate?: ((id: string, value: number) => void) | undefined;
   previewManifest?: OMEGA_Manifest | null;
+  multiSelectedIds: string[];
+  onSelectMultiple: (ids: string[]) => void;
 }
- 
+
 /**
  * VirtualRack (v7.2.3) - Aseptic Orchestrator
  * High-fidelity modular instrument viewport.
@@ -45,7 +47,9 @@ export default function VirtualRack({
   audit,
   resolveAsset,
   pushParameterUpdate,
-  previewManifest
+  previewManifest,
+  multiSelectedIds,
+  onSelectMultiple
 }: VirtualRackProps) {
   const rackRef = useRef<HTMLDivElement>(null);
   const skin = manifest.ui?.skin || 'industrial';
@@ -129,7 +133,9 @@ export default function VirtualRack({
               hideDecorative: manifest.ui?.ucaDebug?.hideDecorative || false,
               showCADOverlay: manifest.ui?.ucaDebug?.showCADOverlay || false,
               selectedId: selectedItemId,
+              multiSelectedIds: multiSelectedIds,
               onSelect: onSelectItem,
+              onSelectMultiple: onSelectMultiple,
               onUpdateNode: onUpdateItem
             }}
           />

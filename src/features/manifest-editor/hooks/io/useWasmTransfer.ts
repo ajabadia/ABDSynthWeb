@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import { WasmLoaderService, type OmegaContract } from '@/services/wasmLoader';
 import { wasmRuntime } from '@/services/wasmRuntime';
 import { ContractService } from '@/services/contractService';
@@ -10,7 +10,7 @@ import { ContractService } from '@/services/contractService';
 export const useWasmTransfer = (
   manifest: OMEGA_Manifest,
   setManifest: Dispatch<SetStateAction<OMEGA_Manifest>>,
-  setContract: Dispatch<SetStateAction<OmegaContract | null>>,
+  setContract: Dispatch<SetStateAction<(OmegaContract | OMEGA_Contract) | null>>,
   setWasmBuffer: Dispatch<SetStateAction<ArrayBuffer | null>>,
   addLog: (msg: string) => void
 ) => {

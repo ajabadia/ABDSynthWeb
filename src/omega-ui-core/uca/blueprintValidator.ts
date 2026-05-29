@@ -13,7 +13,7 @@ export class BlueprintValidator {
    * Validates a Blueprint against OMEGA industrial invariants.
    * Throws an error if validation fails.
    */
-  public static validate(nodes: OmegaNode | OmegaNode[], manifest: OMEGA_Manifest): void {
+  public static validate(nodes: OmegaNode | OmegaNode[], manifest: Partial<OMEGA_Manifest>): void {
     const ids = new Set<string>();
     const errors: string[] = [];
 
@@ -30,7 +30,7 @@ export class BlueprintValidator {
 
   private static traverseAndValidate(
     node: OmegaNode, 
-    manifest: OMEGA_Manifest, 
+    manifest: Partial<OMEGA_Manifest>, 
     ids: Set<string>, 
     errors: string[],
     path: string[]

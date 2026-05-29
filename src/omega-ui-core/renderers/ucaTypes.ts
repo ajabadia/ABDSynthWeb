@@ -4,6 +4,8 @@ export interface UCADebugContext {
   enabled: boolean;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  multiSelectedIds?: string[] | undefined;
+  onSelectMultiple?: ((ids: string[]) => void) | undefined;
   onUpdateNode?: ((id: string, updates: Partial<OmegaNode>) => void) | undefined;
   showLabels: boolean;
   hideDecorative: boolean;
@@ -20,4 +22,5 @@ export interface UniversalRendererProps {
   debugContext?: UCADebugContext | undefined;
   parentWorldPos?: Position | undefined;
   parentNode?: OmegaNode | null | undefined;
+  audit?: import('@/services/auditService').AuditResult | undefined;
 }

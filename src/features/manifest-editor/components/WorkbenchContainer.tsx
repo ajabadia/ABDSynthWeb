@@ -60,12 +60,13 @@ export default function WorkbenchContainer({
   setIsCellLibraryOpen: setIsCellLibraryOpenProp,
   isCellLibraryOpen: isCellLibraryOpenProp
 }: WorkbenchContainerProps) {
-  // 1. Core Data & Operations
-  const editor = useManifestEditor();
+  // 1. Workspace State
+  const { state, actions, derived } = useWorkbenchState();
+
+  // 2. Core Data & Operations
+  const editor = useManifestEditor(state, actions);
   const { manifest, contract, updateManifest } = editor;
 
-  // 2. Workspace State
-  const { state, actions, derived } = useWorkbenchState();
   const { auditResult } = useAudit(manifest, contract);
   
   // 3. Diff & History Operations (Consolidated in useWorkbenchState)
@@ -145,7 +146,8 @@ export default function WorkbenchContainer({
   
   const handleSelectItem = useCallback((id: string | null) => {
     actions.setSelectedNode(id);
-  }, [actions]);
+    if (id) editor.pushHistoryEntry('Select Node');
+  }, [actions, editor]);
 
   const selectedItemId = state.selectedNodeId;
 
@@ -252,7 +254,7 @@ export default function WorkbenchContainer({
   }, [editor]);
 
   const selectedItem = useMemo(() => 
-    (selectedItemId ? editor.findItem(selectedItemId) : state.selectedNodeId ? manifest.ui.controls?.find(c => c.id === state.selectedNodeId) || manifest.ui.jacks?.find(c => c.id === state.selectedNodeId) : manifest) || null
+    (selectedItemId ? editor.findItem(selectedItemId) : state.selectedNodeId ? (manifest.ui.controls as ManifestEntity[])?.find((c: ManifestEntity) => c.id === state.selectedNodeId) || (manifest.ui.jacks as ManifestEntity[])?.find((c: ManifestEntity) => c.id === state.selectedNodeId) : manifest) || null
   , [selectedItemId, state.selectedNodeId, editor, manifest]);
 
   const studioCell = useMemo(() => {
@@ -263,6 +265,10 @@ export default function WorkbenchContainer({
   const handleDragRatio = useCallback((delta: number) => {
     actions.setLayoutRatio(state.layout.ratio + delta);
   }, [actions, state.layout.ratio]);
+
+  const handleDragRatioEnd = useCallback(() => {
+    editor.pushHistoryEntry('Adjust Splitter');
+  }, [editor]);
 
   const handleDiagnosticClick = useCallback((tabId: string, diagRaw: unknown) => {
     const diag = diagRaw as Diagnostic;
@@ -323,8 +329,10 @@ export default function WorkbenchContainer({
         tabViewState={state.tabViewState}
         onCaptureViewState={handleCaptureViewState}
         onDiagnosticsUpdate={handleDiagnosticsUpdate}
-        selectedItemId={selectedItemId}
+        selectedItemId={state.selectedNodeId}
+        multiSelectedIds={state.multiSelectedNodeIds}
         onSelectItem={handleSelectItem}
+        onSelectMultiple={actions.setMultiSelectedNodes}
         updateItem={editor.updateItem}
         updateContainer={editor.updateContainer}
         auditResult={auditResult}
@@ -357,11 +365,14 @@ export default function WorkbenchContainer({
         onGenerateMockup={() => actions.toggleUIState('mockupOpen')} onDeploy={onDeploy}
         onToggleLogs={() => actions.toggleUIState('showLogs')} showLogs={state.showLogs}
         activeTabType={(activeTab?.type && ['orbital', 'rack', 'source', 'history'].includes(activeTab.type)) ? (activeTab.type as 'orbital' | 'rack' | 'source' | 'history') : 'rack'}
-        onTabFocus={(type) => actions.openTab({ 
-          id: `tab-${type}`,
-          type: type as WorkbenchTabType, 
-          title: type.charAt(0).toUpperCase() + type.slice(1) 
-        })}
+        onTabFocus={(type) => {
+          actions.openTab({ 
+            id: `tab-${type}`,
+            type: type as WorkbenchTabType, 
+            title: type.charAt(0).toUpperCase() + type.slice(1) 
+          });
+          editor.pushHistoryEntry(`Switch to ${type} view`);
+        }}
         uiTheme={state.uiTheme}
         setUiTheme={actions.setUiTheme}
         onHelp={() => actions.setHelpState(true)}
@@ -373,7 +384,11 @@ export default function WorkbenchContainer({
         onOpenCellEditor={() => actions.toggleUIState('isCellEditorOpen')}
         onOpenGallery={() => setIsGalleryOpen(true)}
         isSplit={derived.isSplit}
-        onToggleSplit={() => actions.setLayoutMode(derived.isSplit ? 'single' : 'vertical')}
+        onToggleSplit={() => {
+          const nextMode = derived.isSplit ? 'single' : 'vertical';
+          actions.setLayoutMode(nextMode);
+          editor.pushHistoryEntry(nextMode === 'vertical' ? 'Enable Split View' : 'Disable Split View');
+        }}
       />
 
       {isGalleryOpen && (
@@ -447,6 +462,16 @@ export default function WorkbenchContainer({
                   onOpenConfig={onOpenGovernance || (() => actions.toggleUIState('isConfigModalOpen'))}
                   onOpenLibrary={() => setIsCellLibraryOpen(true)}
                   onSelectBlueprint={editor.blueprintInjection.startInjection}
+                  pinnedNodeId={state.pinnedNodeId}
+                  onTogglePin={(id) => {
+                    actions.setPinnedNode(id);
+                    editor.pushHistoryEntry(id ? 'Pin Node' : 'Unpin Node');
+                  }}
+                  layout={state.layout}
+                  onSetLayoutRatio={actions.setLayoutRatio}
+                  onSetLayoutRatioEnd={handleDragRatioEnd}
+                  multiSelectedIds={state.multiSelectedNodeIds}
+                  onSelectMultiple={actions.setMultiSelectedNodes}
                 />
             </div>
           </>

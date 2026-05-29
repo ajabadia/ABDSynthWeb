@@ -27,14 +27,13 @@ export const useLayoutCRUD = (
 
   const updateContainer = useCallback((id: string, updates: Partial<LayoutContainer>) => {
     const nextContainers = manifest.ui.layout?.containers?.map(c => c.id === id ? { ...c, ...updates } : c) || [];
-    const nextLayout = {
-      width: manifest.ui.layout?.width || 800,
-      height: manifest.ui.layout?.height || 600,
+    const nextLayout: NonNullable<OMEGA_Manifest['ui']['layout']> = {
+      width: 800,
+      height: 600,
       ...(manifest.ui.layout || {}),
       containers: nextContainers
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateManifest({ ui: { ...manifest.ui, layout: nextLayout as any } }, `Update Container: ${id}`);
+    updateManifest({ ui: { ...manifest.ui, layout: nextLayout } }, `Update Container: ${id}`);
   }, [manifest, updateManifest]);
 
   const removeContainer = useCallback((id: string) => {

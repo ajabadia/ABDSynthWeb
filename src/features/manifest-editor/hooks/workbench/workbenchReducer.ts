@@ -24,6 +24,8 @@ export const createInitialState = (): WorkbenchState => ({
   focusedPaneId: "primary",
   layout: { mode: "single", ratio: WORKBENCH_LAYOUT_CONSTRAINTS.DEFAULT_RATIO },
   selectedNodeId: null,
+  multiSelectedNodeIds: [],
+  pinnedNodeId: null,
   expandedNodeIds: [],
   tabViewState: {},
   showLogs: false,
@@ -300,6 +302,23 @@ export function workbenchReducer(state: WorkbenchState, action: WorkbenchAction)
       return {
         ...state,
         selectedNodeId: action.payload.nodeId,
+        // Auto-sync multi-selection if only one item is selected normally
+        multiSelectedNodeIds: action.payload.nodeId ? [action.payload.nodeId] : []
+      };
+    
+    case "SET_MULTI_SELECTED_NODES":
+      return {
+        ...state,
+        multiSelectedNodeIds: action.payload.nodeIds,
+        // If multiple are selected, clear single selection or keep first?
+        // Standard OMEGA rule: last one selected is the "primary" focus for inspector details
+        selectedNodeId: action.payload.nodeIds.length > 0 ? action.payload.nodeIds[action.payload.nodeIds.length - 1] : null
+      };
+    
+    case "SET_PINNED_NODE":
+      return {
+        ...state,
+        pinnedNodeId: action.payload.nodeId,
       };
 
     case "SET_EXPANDED_NODE_IDS":

@@ -1,10 +1,35 @@
-import type { OMEGA_Manifest, ManifestEntity, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, ManifestEntity, OmegaNode, NodeKind, NodeRole } from '@/omega-ui-core/types/manifest';
 import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 import { moveChildInTree } from '@/omega-ui-core/uca/treeUtils';
 
 export type SelectionRef = 
   | { source: 'legacy'; id: string }
   | { source: 'uca'; id: string; path?: string[] };
+
+/**
+ * mapLegacyTypeToKind
+ * Root fix for Era 7.2.3 compliance. Formally maps legacy types to NodeKind.
+ */
+function mapLegacyTypeToKind(type: string): NodeKind {
+  const mapping: Record<string, NodeKind> = {
+    'container': 'container',
+    'group': 'group',
+    'face': 'face',
+    'rack': 'rack',
+    'port': 'port'
+  };
+  return mapping[type] || 'cell';
+}
+
+/**
+ * mapLegacyRoleToRole
+ * Resolves legacy roles to the modern NodeRole union.
+ */
+function mapLegacyRoleToRole(role?: string): NodeRole {
+  if (!role) return 'primitive';
+  // NodeRole allows string, so we just ensure it's not undefined
+  return role as NodeRole;
+}
 
 /**
  * findLegacyItem
@@ -46,6 +71,27 @@ export function adaptNodeToManifestEntity(node: OmegaNode): ManifestEntity {
     label: node.id,
     pos: node.layout?.pos || { x: 0, y: 0 },
     size: node.layout?.size || { width: 48, height: 48 },
+  };
+}
+
+/**
+ * adaptManifestEntityToNode
+ * ERA 7.2.3 - Canonical bridge from legacy ManifestEntity to modern OmegaNode.
+ * Used for static rendering and compatibility layers.
+ */
+export function adaptManifestEntityToNode(entity: ManifestEntity): OmegaNode {
+  return {
+    id: entity.id,
+    kind: mapLegacyTypeToKind(entity.type),
+    role: mapLegacyRoleToRole(entity.role),
+    cellRef: entity.type,
+    bind: entity.bind,
+    layout: {
+      pos: entity.pos,
+      size: entity.size
+    },
+    style: entity.presentation?.style,
+    meta: entity.meta
   };
 }
 

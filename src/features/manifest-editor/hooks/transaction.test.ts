@@ -3,13 +3,42 @@
  * Verifies the atomic commitment and rollback logic in the orchestrator reducer.
  */
 
+interface MockManifest {
+  id: string;
+  value: number;
+}
+
+interface MockTransaction {
+  label: string;
+  baseManifest: MockManifest;
+  correlationId: string;
+}
+
+interface MockDocument {
+  id: string;
+  manifest: MockManifest;
+  activeTransaction: MockTransaction | null;
+}
+
+interface MockState {
+  documentsById: Record<string, MockDocument>;
+}
+
+type MockAction = 
+  | { type: 'START_TRANSACTION'; id: string; label: string; correlationId: string }
+  | { type: 'UPDATE_DOCUMENT'; id: string; updates: { manifest: Partial<MockManifest> } }
+  | { type: 'COMMIT_TRANSACTION'; id: string }
+  | { type: 'ABORT_TRANSACTION'; id: string };
+
 // Mock deepMerge for the test
-function deepMerge(target: any, source: any) {
+function deepMerge(target: MockManifest, source: Partial<MockManifest>): MockManifest {
   return { ...target, ...source };
 }
 
-function reducer(state: any, action: any) {
+function reducer(state: MockState, action: MockAction): MockState {
   const doc = state.documentsById[action.id];
+  if (!doc) return state;
+
   switch (action.type) {
     case 'START_TRANSACTION':
       return {
@@ -46,6 +75,7 @@ function reducer(state: any, action: any) {
         }
       };
     case 'ABORT_TRANSACTION':
+      if (!doc.activeTransaction) return state;
       return {
         ...state,
         documentsById: {

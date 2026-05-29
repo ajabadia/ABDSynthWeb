@@ -9,6 +9,9 @@ export interface ScopeProps {
   size: { width: number; height: number };
   color?: string | undefined;
   font?: string | undefined;
+  inheritedFont?: string | undefined;
+  inheritedSize?: number | undefined;
+  inheritedColor?: string | undefined;
 }
 
 export function renderScopeHTML(props: ScopeProps): string {

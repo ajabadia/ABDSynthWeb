@@ -376,17 +376,23 @@ export interface OmegaNode {
   meta?: Record<string, unknown> | undefined;
 }
 
+/**
+ * PHASE 21 - HYBRID UPDATE CONTRACT
+ * Allows atomic updates to both legacy and modern entities.
+ */
+export type HybridEntityUpdate = Partial<OmegaNode> | Partial<ManifestEntity>;
+
 export interface ModuleTemplate {
   id: string;
   label: string;
-  category: 'primitive' | 'composite' | 'structure' | 'infrastructure' | 'signal' | 'io' | 'telemetry' | 'mechanical' | 'decor';
+  category: 'primitive' | 'composite' | 'structure' | 'infrastructure' | 'signal' | 'io' | 'telemetry' | 'mechanical' | 'decor' | 'control';
   baseNode: OmegaNode;
   policy?: OverridePolicy[] | undefined;
   slots?: { id: string; label: string; [key: string]: unknown }[] | undefined;
   metadata?: Record<string, unknown> | undefined;
   compatibility?: Record<string, string> | undefined;
-  assetBehavior?: string | any | undefined;
-  recipe?: any | undefined;
+  assetBehavior?: import('./assetBehavior').AssetBehavior | undefined;
+  recipe?: import('./assetBehavior').LayerRecipe | undefined;
   family?: string | undefined;
   description?: string | undefined;
   version?: string | undefined;

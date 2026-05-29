@@ -8,17 +8,15 @@ import { manifestToTree } from '@/omega-ui-core/uca/ucaBridge';
 
 interface MockupViewportProps {
   manifest: OMEGA_Manifest;
-  audit: AuditResult;
   resolveAsset?: ((id: string | undefined) => string | undefined) | undefined;
   width: number;
   height: number;
   skin: string;
-  activeTab: string;
   viewportRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const MockupViewport = ({ 
-  manifest, audit, resolveAsset, width, height, skin, activeTab, viewportRef 
+  manifest, resolveAsset, width, height, skin, viewportRef 
 }: MockupViewportProps) => {
   const getSkinConfig = () => {
     switch (skin) {

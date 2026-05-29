@@ -151,7 +151,7 @@ export class WasmRuntime {
    * Atomic construction of runtime objects from canonical graph.
    * Handles memory allocation, handle binding, and rollback on failure.
    */
-  private async instantiateBlueprint(graph: OmegaNode): Promise<{ success: boolean; error?: string }> {
+  private async instantiateBlueprint(_graph: OmegaNode): Promise<{ success: boolean; error?: string }> {
     const correlationId = observabilityService.generateCorrelationId();
     const startTime = Date.now();
     
@@ -184,7 +184,8 @@ export class WasmRuntime {
       });
 
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       const durationMs = Date.now() - startTime;
       observabilityService.trackEvent({
         correlationId,
@@ -193,11 +194,11 @@ export class WasmRuntime {
         state: 'FAILURE',
         durationMs,
         code: 'MATERIALIZATION_FAILED',
-        message: err.message
+        message: error.message
       });
 
       this.rollback(correlationId);
-      return { success: false, error: err.message };
+      return { success: false, error: error.message };
     }
   }
 
@@ -218,7 +219,7 @@ export class WasmRuntime {
 
   private computeManifestHash(manifest: OMEGA_Manifest): string {
     // Simple deterministic hash for UI/Audit tracking
-    const str = JSON.stringify(manifest.nodes?.[0] || {});
+    const str = JSON.stringify(manifest.ui?.tree || {});
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = ((hash << 5) - hash) + str.charCodeAt(i);
@@ -266,7 +267,7 @@ export class WasmRuntime {
    * getTelemetry
    * Real-time signal polling for HUD rendering.
    */
-  getTelemetry(nodeId: string): number {
+  getTelemetry(_nodeId: string): number {
     if (this.isMock) return Math.random(); // Simulation mode
     return 0; // Runtime value placeholder
   }

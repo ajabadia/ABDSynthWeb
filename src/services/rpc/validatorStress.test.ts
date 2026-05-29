@@ -1,6 +1,6 @@
 import { OmegaRPCBridge } from './omegaRPCBridge';
 import type { SnapshotParams } from './rpcTypes';
-import type { OMEGA_Manifest, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OmegaNode, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 
 /**
  * OMEGA Phase 20.4 - Validator Stress Test
@@ -16,7 +16,7 @@ async function runValidatorStressTest() {
     schemaVersion: '7.2.3',
     metadata: { name: 'Test Lab', version: '1.0.0', author: 'OMEGA' },
     resources: { assets: [{ id: 'existing-asset', path: 'lib:statics/knob.png', category: 'primitive', url: '', type: 'image' }] },
-    ui: { skin: 'standard' } as any,
+    ui: { skin: 'standard' } as unknown as OMEGA_Manifest['ui'],
     entities: []
   };
 
@@ -56,11 +56,12 @@ async function runValidatorStressTest() {
           }
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       if (expectedToFail) {
-        console.log(`✅ PASSED: Test "${name}" failed as expected (Hard Crash). Error: ${err.message}`);
+        console.log(`✅ PASSED: Test "${name}" failed as expected (Hard Crash). Error: ${error.message}`);
       } else {
-        console.error(`❌ FAILED: Test "${name}" was expected to pass but crashed with error: ${err.message}`);
+        console.error(`❌ FAILED: Test "${name}" was expected to pass but crashed with error: ${error.message}`);
       }
     }
   };
@@ -91,16 +92,16 @@ async function runValidatorStressTest() {
       { 
         id: 'decor_1', kind: 'cell', cellRef: 'image', role: 'decor', 
         layout: { pos: { x: 0, y: 0 } },
-        style: { asset: 'non-existent-asset' } as any
+        style: { asset: 'non-existent-asset' } as OmegaStyleNode
       }
     ]
   };
   await runTest('Missing Asset Reference', missingAssetGraph, true);
 
   // CASE 4: Structural Cycle
-  const cycleNode: any = { id: 'cycle_1', kind: 'group', layout: { pos: { x: 0, y: 0 } } };
-  cycleNode.children = [cycleNode]; // Direct cycle
-  await runTest('Structural Cycle', cycleNode as OmegaNode, true);
+  const cycleNode: OmegaNode = { id: 'cycle_1', kind: 'group', layout: { pos: { x: 0, y: 0 } }, children: [] };
+  (cycleNode.children as OmegaNode[]).push(cycleNode); // Direct cycle
+  await runTest('Structural Cycle', cycleNode, true);
 
   // CASE 5: Valid Blueprint
   const validGraph: OmegaNode = {
@@ -109,7 +110,7 @@ async function runValidatorStressTest() {
       { 
         id: 'osc_1', kind: 'cell', cellRef: 'knob', role: 'control', bind: 'osc.freq',
         layout: { pos: { x: 10, y: 10 } },
-        style: { asset: 'existing-asset' } as any
+        style: { asset: 'existing-asset' } as OmegaStyleNode
       }
     ]
   };

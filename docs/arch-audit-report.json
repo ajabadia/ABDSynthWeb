@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-05-13T23:14:44.510Z",
+  "timestamp": "2026-05-29T09:00:47.809Z",
   "counts": {
     "high": 0,
     "medium": 34,
-    "low": 94,
-    "total": 128
+    "low": 92,
+    "total": 126
   },
   "details": {
     "HIGH": [],
@@ -167,13 +167,13 @@
       },
       {
         "file": "src\\features\\manifest-editor\\hooks\\useDocumentOrchestrator.ts",
-        "line": 451,
-        "content": "BlueprintValidator.validate(persisted.graph, { id: persisted.id } as any);",
+        "line": 319,
+        "content": "BlueprintValidator.validate(persisted.graph, { id: persisted.id });",
         "pattern": "validate"
       },
       {
         "file": "src\\features\\manifest-editor\\hooks\\useDocumentOrchestrator.ts",
-        "line": 577,
+        "line": 459,
         "content": "BlueprintValidator.validate(doc.manifest.ui.tree, doc.manifest);",
         "pattern": "validate"
       },
@@ -368,7 +368,7 @@
       {
         "file": "src\\omega-ui-core\\uca\\blueprintValidator.ts",
         "line": 16,
-        "content": "public static validate(nodes: OmegaNode | OmegaNode[], manifest: OMEGA_Manifest): void {",
+        "content": "public static validate(nodes: OmegaNode | OmegaNode[], manifest: Partial<OMEGA_Manifest>): void {",
         "pattern": "validate"
       },
       {
@@ -456,18 +456,6 @@
         "pattern": "validate"
       },
       {
-        "file": "src\\services\\history.test.ts",
-        "line": 8,
-        "content": "* Verifies capture, diff, and validated restore.",
-        "pattern": "validate"
-      },
-      {
-        "file": "src\\services\\history.test.ts",
-        "line": 50,
-        "content": "console.log('[PASSED] Historical restore validated successfully.');",
-        "pattern": "validate"
-      },
-      {
         "file": "src\\services\\historyRestore.ts",
         "line": 13,
         "content": "* Loads a revision and validates it before promotion.",
@@ -475,8 +463,8 @@
       },
       {
         "file": "src\\services\\historyRestore.ts",
-        "line": 26,
-        "content": "BlueprintValidator.validate(entry.graph, { id: 'restore_target' } as any);",
+        "line": 29,
+        "content": "BlueprintValidator.validate(entry.manifest.ui.tree, entry.manifest);",
         "pattern": "validate"
       },
       {
@@ -613,7 +601,7 @@
       },
       {
         "file": "src\\services\\wasmLoader.ts",
-        "line": 103,
+        "line": 106,
         "content": "throw new Error(`LinkError: Binary requires host functions or is corrupted. Details: ${message}`);",
         "pattern": "throw new Error"
       },

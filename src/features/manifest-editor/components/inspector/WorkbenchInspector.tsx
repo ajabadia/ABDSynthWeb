@@ -8,6 +8,7 @@ import BlueprintLibraryPanel from './BlueprintLibraryPanel';
 import type { OMEGA_Manifest, LayoutContainer, ManifestEntity, OMEGA_Modulation, ExtraResource, OmegaNode, BlueprintDefinition } from '@/omega-ui-core/types/manifest';
 import type { AuditResult } from '@/features/manifest-editor/types/diagnostics';
 import { Zap, FileText } from 'lucide-react';
+import { findNodeInTree } from '@/features/manifest-editor/hooks/entities/ucaInspectorAdapter';
 
 interface WorkbenchInspectorProps {
   // isVisible: boolean; (unused)
@@ -40,51 +41,53 @@ interface WorkbenchInspectorProps {
   onOpenConfig?: (() => void) | undefined;
   onOpenLibrary?: (() => void) | undefined;
   onSelectBlueprint?: ((blueprint: BlueprintDefinition) => void) | undefined;
+  
+  // Pin & Route (Era 8)
+  pinnedNodeId: string | null;
+  onTogglePin: (id: string | null) => void;
+  layout: import('../../types/workbench').WorkbenchLayout;
+  onSetLayoutRatio: (ratio: number) => void;
+  onSetLayoutRatioEnd?: () => void;
+  multiSelectedIds: string[];
+  onSelectMultiple: (ids: string[]) => void;
 }
 
+import { HorizontalSplitDivider } from './layout/HorizontalSplitDivider';
+
 export function WorkbenchInspector({
-  // isVisible, (unused)
-  isLiveMode,
-  uiTheme,
-  manifest,
-  selectedItem,
-  selectedItemId,
-  highlightPath,
-  availableBinds,
-  extraResources,
-  onUpdateItem,
-  onUpdateManifest,
-  onSelectItem,
-  onAddEntity,
-  onDuplicateItem,
-  onRemoveItem,
-  onAddModulation,
-  onRemoveModulation,
-  onUpdateModulation,
-  onOpenModGrid,
-  addContainer,
-  updateContainer,
-  removeContainer,
-  onHelp,
-  onRemoveResource,
-  resolveAsset,
-  onTriggerUpload,
-  onOpenConfig,
-  onOpenLibrary,
-  onSelectBlueprint
+  pinnedNodeId,
+  onTogglePin,
+  layout,
+  onSetLayoutRatio,
+  onSetLayoutRatioEnd,
+  ...props
 }: WorkbenchInspectorProps) {
   const [activeTab, setActiveTab] = React.useState<'inspector' | 'blueprints'>('inspector');
-  // ASEPTIC HANDLERS
+  
+  // ASEPTIC HANDLERS...
   const handleUpdate = (updates: Partial<OMEGA_Manifest> | Partial<ManifestEntity> | Partial<OmegaNode>) => {
-    if (selectedItemId) {
-      onUpdateItem(selectedItemId, updates as unknown as Partial<OmegaNode>);
-      if (updates.id && updates.id !== selectedItemId) {
-        onSelectItem(updates.id);
+    if (props.selectedItemId) {
+      props.onUpdateItem(props.selectedItemId, updates as unknown as Partial<OmegaNode>);
+      if (updates.id && updates.id !== props.selectedItemId) {
+        props.onSelectItem(updates.id);
       }
     } else {
-      onUpdateManifest(updates as Partial<OMEGA_Manifest>);
+      props.onUpdateManifest(updates as Partial<OMEGA_Manifest>);
     }
   };
+
+  // Resolve Pinned Item (Era 8)
+  const pinnedItem = React.useMemo(() => {
+    if (!pinnedNodeId || !props.manifest) return null;
+    const tree = props.manifest.ui?.tree;
+    if (!tree) return null;
+    
+    // Industrial Resolution (UCA + Entities)
+    const treeNode = findNodeInTree(tree, pinnedNodeId);
+    if (treeNode) return treeNode;
+
+    return (props.manifest.entities as unknown as OmegaNode[])?.find(e => e.id === pinnedNodeId);
+  }, [pinnedNodeId, props.manifest]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[#0d0d0d]">
@@ -110,41 +113,57 @@ export function WorkbenchInspector({
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {activeTab === 'inspector' && !isLiveMode && (
-          <PropertyPanel 
-            uiTheme={uiTheme} 
-            manifest={manifest} 
-            item={selectedItem!} 
-            highlightPath={highlightPath}
-            onUpdate={handleUpdate}
-            onClose={() => onSelectItem(null)} 
-            availableBinds={availableBinds}
-            onSelectItem={onSelectItem} 
-            onAddEntity={onAddEntity} 
-            onDuplicateItem={onDuplicateItem} 
-            onRemoveItem={onRemoveItem}
-            onAddModulation={onAddModulation} 
-            onRemoveModulation={onRemoveModulation} 
-            onUpdateModulation={onUpdateModulation} 
-            onOpenModGrid={onOpenModGrid}
-            addContainer={addContainer} 
-            updateContainer={updateContainer} 
-            removeContainer={removeContainer}
-            onHelp={onHelp} 
-            extraResources={extraResources} 
-            onRemoveResource={onRemoveResource}
-            resolveAsset={resolveAsset}
-            onTriggerUpload={onTriggerUpload}
-            onOpenConfig={onOpenConfig}
-            onOpenLibrary={onOpenLibrary}
-          />
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {activeTab === 'inspector' && !props.isLiveMode && (
+          <div className="flex-1 flex flex-col overflow-hidden divide-y divide-white/5">
+            {/* PINNED PANEL (REFERENCE) */}
+            {pinnedItem && (
+               <div 
+                 className="overflow-hidden flex flex-col bg-amber-500/[0.02]"
+                 style={{ height: `${layout.ratio * 100}%` }}
+               >
+                  <PropertyPanel 
+                    {...props}
+                    item={pinnedItem}
+                    mode="reference"
+                    onClose={() => onTogglePin(null)}
+                    onPin={() => onTogglePin(null)}
+                    isPinned={true}
+                  />
+               </div>
+            )}
+
+            {/* RESIZABLE DIVIDER (Era 8) */}
+            {pinnedItem && (
+               <HorizontalSplitDivider 
+                 onDrag={(delta) => onSetLayoutRatio(Math.min(0.8, Math.max(0.2, layout.ratio + delta)))} 
+                 onDragEnd={onSetLayoutRatioEnd}
+               />
+            )}
+
+            {/* ACTIVE PANEL (SELECTION) */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <PropertyPanel 
+                {...props}
+                item={props.selectedItem!} 
+                multiSelectedIds={props.multiSelectedIds}
+                mode={props.multiSelectedIds.length > 1 ? "bulk" : "active"}
+                onClose={() => {
+                  props.onSelectItem(null);
+                  props.onSelectMultiple([]);
+                }}
+                onPin={() => onTogglePin(props.selectedItemId)}
+                isPinned={pinnedNodeId === props.selectedItemId}
+                onUpdate={handleUpdate}
+              />
+            </div>
+          </div>
         )}
 
         {activeTab === 'blueprints' && (
           <BlueprintLibraryPanel 
-            manifest={manifest}
-            onSelectBlueprint={onSelectBlueprint || (() => {})}
+            manifest={props.manifest}
+            onSelectBlueprint={props.onSelectBlueprint || (() => {})}
           />
         )}
       </div>

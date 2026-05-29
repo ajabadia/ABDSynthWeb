@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract } from '@/omega-ui-core/types/manifest';
 import type { OmegaContract } from '@/services/wasmLoader';
 import { wasmRuntime } from '@/services/wasmRuntime';
 import { ucaPathResolver } from '@/omega-ui-core/uca/utils/ucaPathResolver';
@@ -27,7 +27,7 @@ export interface SimulationBridgeState {
 export const useSimulationBridge = (
   activeId: string,
   manifest: OMEGA_Manifest,
-  contract: OmegaContract | null,
+  contract: (OmegaContract | OMEGA_Contract) | null,
   isReady: boolean,
   flushPendingHash: (id: string) => Promise<void>,
   captureStableSnapshot: (id: string) => Promise<void>

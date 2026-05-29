@@ -78,9 +78,11 @@ export function useWorkbenchPersistence(
         panesById: state.panesById,
         focusedPaneId: state.focusedPaneId,
         layout: state.layout,
-        tabViewState: state.tabViewState
+        tabViewState: state.tabViewState,
+        selectedNodeId: state.selectedNodeId,
+        pinnedNodeId: state.pinnedNodeId
       };
       window.localStorage.setItem(STORAGE_KEYS.WORKBENCH_SESSION, JSON.stringify(data));
     }
-  }, [state.tabsById, state.panesById, state.focusedPaneId, state.layout, state.tabViewState]);
+  }, [state.tabsById, state.panesById, state.focusedPaneId, state.layout, state.tabViewState, state.selectedNodeId, state.pinnedNodeId]);
 }

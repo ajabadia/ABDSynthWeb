@@ -2,7 +2,7 @@
  
 import React from 'react';
 import { Palette } from 'lucide-react';
-import type { ManifestEntity, OMEGA_Manifest, Presentation } from '@/omega-ui-core/types/manifest';
+import type { ManifestEntity, OMEGA_Manifest, Presentation, OmegaStyleNode } from '@/omega-ui-core/types/manifest';
 import StyleLibraryLink from '../shared/StyleLibraryLink';
  
 interface PortPropertiesProps {
@@ -19,12 +19,14 @@ export default function PortProperties({ item, manifest, onUpdate, setActiveSect
   const currentStyleId = pres.variant || 'default';
   const currentStyle = portStyles.find(s => s.id === currentStyleId) || { id: 'default', label: 'Default Port Style' };
  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateStyle = (styleId: string, aesthetics: any = {}) => {
+  const updateStyle = (styleId: string, aesthetics: Partial<OmegaStyleNode> = {}) => {
     onUpdate({ 
       presentation: { 
         ...pres, 
-        ...aesthetics,
+        style: {
+          ...pres.style,
+          ...aesthetics
+        } as OmegaStyleNode,
         variant: styleId 
       } 
     });
@@ -44,8 +46,7 @@ export default function PortProperties({ item, manifest, onUpdate, setActiveSect
             {portStyles.map(s => (
               <button
                 key={s.id}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                onClick={() => updateStyle(s.id, s.aesthetics as any)}
+                onClick={() => updateStyle(s.id, s.aesthetics)}
                 className={`group py-2.5 px-4 rounded-xs border text-[10px] font-black uppercase transition-all text-left flex items-center justify-between ${currentStyleId === s.id ? 'border-primary bg-primary/20 text-primary shadow-[0_0_20px_rgba(0,240,255,0.1)]' : 'wb-surface-subtle wb-outline wb-text-muted hover:wb-text hover:border-primary/30'}`}
               >
                 <div className="flex items-center gap-3">

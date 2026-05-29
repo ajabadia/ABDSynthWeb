@@ -65,7 +65,7 @@ export class AuditService {
 
     const errors = issues.filter(i => i.severity === 'critical' || i.severity === 'error') as unknown as Diagnostic[];
     const warnings = issues.filter(i => i.severity === 'warning' || i.severity === 'audit') as unknown as Diagnostic[];
-    const infos = issues.filter(i => (i.severity as any) === 'info') as unknown as Diagnostic[];
+    const infos = issues.filter(i => i.severity === 'info') as unknown as Diagnostic[];
 
     return {
       isCompliant,

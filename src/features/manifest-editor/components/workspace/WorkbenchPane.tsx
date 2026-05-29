@@ -5,11 +5,11 @@ import type { WorkbenchPaneId, WorkbenchTab } from '../../types/workbench';
 import MultiTabHeader from '../layout/MultiTabHeader';
 import { WorkbenchViewport } from '../viewport/WorkbenchViewport';
 import { SourceView } from '../views/SourceView';
-import type { OMEGA_Manifest, OMEGA_Contract, OmegaNode } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract, OmegaNode, HybridEntityUpdate } from '@/omega-ui-core/types/manifest';
 import type { SimulationBridgeState } from '../../hooks/useSimulationBridge';
 import type { AuditResult } from '@/services/auditService';
 import type { DocumentOrchestrator } from '../../types/document';
-
+ 
 interface WorkbenchPaneProps {
   paneId: WorkbenchPaneId;
   tabs: WorkbenchTab[];
@@ -35,7 +35,7 @@ interface WorkbenchPaneProps {
   // Operations
   selectedItemId: string | null;
   onSelectItem: (id: string | null) => void;
-  updateItem: (id: string, updates: Partial<OmegaNode>) => void;
+  updateItem: (id: string, updates: HybridEntityUpdate) => void;
   updateContainer: (id: string, updates: Record<string, unknown>) => void;
   auditResult: AuditResult;
   resolveAsset: (id: string | undefined) => string | undefined;
@@ -55,6 +55,8 @@ interface WorkbenchPaneProps {
   // History
   onUndoTo: (index: number) => void;
   onCompareWithHistory: (index: number) => void;
+  multiSelectedIds: string[];
+  onSelectMultiple: (ids: string[]) => void;
 }
 
 const WorkbenchPane = React.memo((props: WorkbenchPaneProps) => {
@@ -115,6 +117,8 @@ const WorkbenchPane = React.memo((props: WorkbenchPaneProps) => {
             past={tabDoc?.history.past || []}
             onUndoTo={props.onUndoTo}
             onCompareWithHistory={props.onCompareWithHistory}
+            multiSelectedIds={props.multiSelectedIds}
+            onSelectMultiple={props.onSelectMultiple}
           />
         )}
 

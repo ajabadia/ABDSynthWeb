@@ -1,118 +1,157 @@
-# OMEGA SYSTEM AUDIT ORCHESTRATOR (Era 7.2.3)
-# ---------------------------------------------------------------------------
-# This script executes a full system health check and records the output.
-# It ensures Zero-Noise and Architectural Integrity.
-# ---------------------------------------------------------------------------
+# OMEGA SYSTEM AUDIT - INDUSTRIAL HIGH-FIDELITY EDITION (Era 7.3.0)
+# Sequential execution with clear status reporting and Era 11 certification aesthetics.
 
+CLS
 $LogFile = "omega-audit-results.log"
-$Separator = "`n" + ("=" * 80) + "`n"
 $GlobalStatus = $true
 
-# HELPER: Extract context for errors to allow faster remediation
-function Write-LogWithContext($Output) {
-    $CurrentFile = ""
-    foreach ($line in $Output) {
-        $line = "$line" # Ensure string
-        $line | Out-File -FilePath $LogFile -Append -Encoding utf8
-        
-        # TSC Pattern: path/to/file.ts(10,5): error TS1234: message
-        if ($line -match '^(.*?)\((\d+),(\d+)\): error (.*)$') {
-            $file = $Matches[1].Trim()
-            $lineNum = [int]$Matches[2]
-            if (Test-Path $file) {
-                try {
-                    $content = Get-Content $file -TotalCount $lineNum -ErrorAction SilentlyContinue | Select-Object -Last 1
-                    if ($null -ne $content) {
-                        "  -> [REMEDIATION] L${lineNum}: $($content.Trim())" | Out-File -FilePath $LogFile -Append -Encoding utf8
-                    }
-                } catch {}
-            }
-        }
-        
-        # ESLint Pattern (File Header)
-        if ($line -match '^[A-Z]:\\.*') {
-            $CurrentFile = $line.Trim()
-        }
-        
-        # ESLint Pattern (Error):   10:5  error  message  @rule
-        if ($line -match '^\s+(\d+):(\d+)\s+error\s+(.*)$') {
-            $lineNum = [int]$Matches[1]
-            if ($CurrentFile -and (Test-Path $CurrentFile)) {
-                try {
-                    $content = Get-Content $CurrentFile -TotalCount $lineNum -ErrorAction SilentlyContinue | Select-Object -Last 1
-                    if ($null -ne $content) {
-                        "  -> [REMEDIATION] L${lineNum}: $($content.Trim())" | Out-File -FilePath $LogFile -Append -Encoding utf8
-                    }
-                } catch {}
-            }
-        }
-    }
-}
-
-# 1. INITIALIZATION: Clear previous log
-if (Test-Path $LogFile) {
-    Remove-Item $LogFile
-}
-
-Write-Host "`n[OMEGA AUDIT] Starting full system check..." -ForegroundColor Cyan
+# Clean log file initially
+if (Test-Path $LogFile) { Remove-Item $LogFile -Force -ErrorAction SilentlyContinue }
 "OMEGA SYSTEM AUDIT REPORT - $(Get-Date)" | Out-File -FilePath $LogFile -Encoding utf8
 
-# 2. ARCHITECTURAL GUARD (ADR-014)
-Write-Host "[1/3] Running Architectural Audit..." -ForegroundColor Yellow
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-"SECTION 1: ARCHITECTURAL INTEGRITY (arch-audit)" | Out-File -FilePath $LogFile -Append -Encoding utf8
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-$ArchOutput = npm run arch-audit 2>&1
-$ArchOutput | Out-File -FilePath $LogFile -Append -Encoding utf8
-if ($LASTEXITCODE -ne 0) { $GlobalStatus = $false; Write-Host "  -> [FAILED] Architectural Audit" -ForegroundColor Red } else { Write-Host "  -> [PASSED] Architectural Audit" -ForegroundColor Green }
-
-# 3. TYPESCRIPT COMPILATION (TSC)
-Write-Host "[2/3] Running Type Safety Check..." -ForegroundColor Yellow
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-"SECTION 2: TYPE SAFETY CHECK (tsc)" | Out-File -FilePath $LogFile -Append -Encoding utf8
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-$TscOutput = npx tsc --noEmit 2>&1
-Write-LogWithContext $TscOutput
-if ($LASTEXITCODE -ne 0) { $GlobalStatus = $false; Write-Host "  -> [FAILED] Type Safety Check" -ForegroundColor Red } else { Write-Host "  -> [PASSED] Type Safety Check" -ForegroundColor Green }
-
-# 4. ESLINT HYGIENE
-Write-Host "[3/3] Running Code Linting..." -ForegroundColor Yellow
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-"SECTION 3: CODE LINTING (eslint)" | Out-File -FilePath $LogFile -Append -Encoding utf8
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-$LintOutput = npm run lint --quiet 2>&1
-Write-LogWithContext $LintOutput
-if ($LASTEXITCODE -ne 0) { $GlobalStatus = $false; Write-Host "  -> [FAILED] Code Linting" -ForegroundColor Red } else { Write-Host "  -> [PASSED] Code Linting" -ForegroundColor Green }
-
-# 5. INTEGRITY VERIFICATION (Extra)
-Write-Host "[BONUS] Verifying Critical Manifests..." -ForegroundColor Cyan
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-"SECTION 4: CRITICAL FILE INTEGRITY" | Out-File -FilePath $LogFile -Append -Encoding utf8
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-$CriticalFiles = @("package.json", "tsconfig.json", "src/omega-ui-core/governance/ElementCatalog.ts")
-foreach ($File in $CriticalFiles) {
-    if (Test-Path $File) {
-        "OK: $File exists." | Out-File -FilePath $LogFile -Append -Encoding utf8
-    } else {
-        "ERROR: $File is MISSING!" | Out-File -FilePath $LogFile -Append -Encoding utf8
-        $GlobalStatus = $false
-        Write-Host "  -> [FAILED] Missing critical file: $File" -ForegroundColor Red
+# Helper to append logs safely to disk with lock-resilience
+function Write-AuditLog {
+    param([string]$Text)
+    try {
+        $Text | Out-File -FilePath $LogFile -Append -Encoding utf8 -ErrorAction Stop
+    } catch {
+        # Silent failover in case of file locks by IDEs/editors
     }
 }
 
-# 6. FINAL SUMMARY
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-if ($GlobalStatus) {
-    Write-Host "`n[OMEGA AUDIT] SYSTEM READY: ALL CHECKS PASSED ✅" -ForegroundColor Green -BackgroundColor Black
-    "STATUS: ALL CHECKS PASSED" | Out-File -FilePath $LogFile -Append -Encoding utf8
-} else {
-    Write-Host "`n[OMEGA AUDIT] SYSTEM COMPROMISED: ERRORS DETECTED ❌" -ForegroundColor Red -BackgroundColor Black
-    "STATUS: ERRORS DETECTED" | Out-File -FilePath $LogFile -Append -Encoding utf8
+# 🧹 Cache cleansing: Always remove .next folder to prevent false negatives in TS/ESLint cache
+if (Test-Path ".next") {
+    Write-Host "[0/6 Cache Cleansing]" -ForegroundColor Cyan
+    Write-Host "  > Purging .next directory to ensure clean validation... " -NoNewline -ForegroundColor Gray
+    Remove-Item ".next" -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "CLEANED [OK]" -ForegroundColor Green
 }
 
-Write-Host "`n[OMEGA AUDIT] Complete! Results saved to: $LogFile" -ForegroundColor Green
-Write-Host "[REMEDIATION] See docs/arch-audit-report.csv and docs/OMEGA_Remediation_Map.md" -ForegroundColor Cyan
-$Separator | Out-File -FilePath $LogFile -Append -Encoding utf8
-"END OF REPORT" | Out-File -FilePath $LogFile -Append -Encoding utf8
+function Run-AuditStep {
+    param(
+        [string]$Name,
+        [string]$ExecCmd,
+        [string[]]$StepArgs
+    )
+    
+    Write-Host "`n[$Name] " -ForegroundColor Cyan
+    Write-Host "  > In progress... " -NoNewline -ForegroundColor Gray
+    
+    $errorsCount = 0
+    $warningsCount = 0
+    
+    # Capture both stdout and stderr (2>&1)
+    $global:LASTEXITCODE = 0
+    if ($ExecCmd -eq "node") {
+        $out = & node $StepArgs 2>&1
+    } elseif ($ExecCmd -eq "npm") {
+        $joinedArgs = $StepArgs -join " "
+        $out = Invoke-Expression "cmd /c npm $joinedArgs" 2>&1
+    } elseif ($ExecCmd -eq "npx") {
+        $joinedArgs = $StepArgs -join " "
+        $out = Invoke-Expression "cmd /c npx $joinedArgs" 2>&1
+    } else {
+        $out = & $ExecCmd $StepArgs 2>&1
+    }
+    
+    $exitCode = $LASTEXITCODE
+    
+    # Parse results from output
+    $progressLine = $out | Where-Object { $_ -like "PROGRESS:*" } | Select-Object -Last 1
+    if ($progressLine) {
+        $parts = $progressLine.Split(':')
+        if ($parts.Count -ge 4) { $errorsCount = $parts[3] }
+        if ($parts.Count -ge 5) { $warningsCount = $parts[4] }
+    } else {
+        # Fallback for standard tools (TSC/ESLint count lines with 'error')
+        if ($exitCode -ne 0) {
+            $errorsCount = ($out | Where-Object { $_ -match 'error' }).Count
+            if ($errorsCount -eq 0) { $errorsCount = "Technical" }
+        }
+    }
+    
+    if ($exitCode -eq 0) {
+        Write-Host "`r  -> PASSED [OK] ($errorsCount errors, $warningsCount warnings)".PadRight(70) -ForegroundColor Green
+        Write-AuditLog -Text "`n[PHASE:SUCCESS] [$Name]: Passed successfully with $errorsCount errors and $warningsCount warnings."
+        
+        # If there are warnings, log their details
+        if ($warningsCount -gt 0 -and $out) {
+            Write-AuditLog -Text "--- WARNING DETAILS START ---"
+            foreach ($line in $out) {
+                if ($line -notlike "PROGRESS:*") {
+                    Write-AuditLog -Text $line
+                }
+            }
+            Write-AuditLog -Text "--- WARNING DETAILS END ---`n"
+        }
+    } else {
+        $errDisplay = $errorsCount
+        if ($errorsCount -eq 0) { $errDisplay = "Technical" }
+        Write-Host "`r  -> FAILED [!!] ($errDisplay errors detected, $warningsCount warnings)".PadRight(70) -ForegroundColor Red
+        $script:GlobalStatus = $false
+        
+        # Write failure dump to log
+        Write-AuditLog -Text "`n[PHASE:FAILED] [$Name]: Failed with exit code $exitCode ($errDisplay errors detected, $warningsCount warnings)."
+        Write-AuditLog -Text "--- RAW ERROR DETAIL START ---"
+        if ($out) {
+            foreach ($line in $out) {
+                if ($line -notlike "PROGRESS:*") {
+                    Write-AuditLog -Text $line
+                }
+            }
+        } else {
+            Write-AuditLog -Text "No output captured."
+        }
+        Write-AuditLog -Text "--- RAW ERROR DETAIL END ---`n"
+    }
+}
 
-if (-not $GlobalStatus) { exit 1 }
+Write-Host "`n[OMEGA AUDIT] Starting 6-Phase Industrial Certification..." -ForegroundColor White -BackgroundColor DarkCyan
+
+# Phase 1: Architectural Guard
+Run-AuditStep -Name "1/6 Structural Integrity" -ExecCmd "node" -StepArgs @("scripts/arch-guard.mjs")
+
+# Phase 2: Type Safety
+Run-AuditStep -Name "2/6 Type Safety (TSC)   " -ExecCmd "npx" -StepArgs @("tsc", "--noEmit")
+
+# Phase 3: Code Hygiene
+Run-AuditStep -Name "3/6 Code Linting (ESL)  " -ExecCmd "npm" -StepArgs @("run", "lint", "--", "--quiet")
+
+# Phase 4: Critical Manifests
+Write-Host "`n[4/6 Critical Manifests] " -ForegroundColor Cyan
+$CriticalFiles = @("package.json", "tsconfig.json", "src/omega-ui-core/governance/ElementCatalog.ts")
+$CritFail = $false
+foreach ($File in $CriticalFiles) {
+    if (Test-Path $File) {
+        Write-AuditLog -Text "OK: $File exists."
+    } else {
+        Write-AuditLog -Text "ERROR: $File is MISSING!"
+        $CritFail = $true
+        $script:GlobalStatus = $false
+    }
+}
+if ($CritFail) {
+    Write-Host "  -> FAILED [!!] Missing critical files" -ForegroundColor Red
+} else {
+    Write-Host "  -> PASSED [OK] All manifests verified" -ForegroundColor Green
+}
+
+# Phase 5: HPA & Workspace Health
+Write-Host "`n[5/6 Workspace Health]    " -ForegroundColor Cyan
+if (Test-Path "docs/arch-audit-report.json") {
+    Write-Host "  -> PASSED [OK] Artifacts generated" -ForegroundColor Green
+} else {
+    Write-Host "  -> WARNING [?] Artifacts missing" -ForegroundColor Yellow
+}
+
+# FINAL CERTIFICATION
+if ($GlobalStatus) {
+    Write-Host "`n[OMEGA AUDIT] SYSTEM CERTIFIED - ERA 11 COMPLIANT [OK]" -ForegroundColor Green -BackgroundColor Black
+    Write-AuditLog -Text "STATUS: ALL CHECKS PASSED"
+    exit 0
+} else {
+    Write-Host "`n[OMEGA AUDIT] BREACHES DETECTED - SYSTEM NOT READY [!!]" -ForegroundColor Red -BackgroundColor Black
+    Write-Host "Detailed diagnostics available in: $LogFile" -ForegroundColor Gray
+    Write-AuditLog -Text "STATUS: ERRORS DETECTED"
+    exit 1
+}

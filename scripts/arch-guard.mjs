@@ -153,8 +153,10 @@ console.log(`- CSV Report:  docs/arch-audit-report.csv`);
 
 if (findings.HIGH.length > 0) {
   console.log(`\n❌ ARCHITECTURAL BREACH: ADR-014 Violation.`);
+  console.log(`PROGRESS:Structural Audit:COMPLETE:${findings.HIGH.length}:${findings.MEDIUM.length + findings.LOW.length}`);
   process.exit(2);
 } else {
   console.log(`\n✅ ARCHITECTURAL INTEGRITY VERIFIED.`);
+  console.log(`PROGRESS:Structural Audit:COMPLETE:0:${findings.MEDIUM.length + findings.LOW.length}`);
   process.exit(0);
 }

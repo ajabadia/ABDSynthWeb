@@ -12,10 +12,10 @@ The OMEGA History Architecture is designed to provide both high-frequency intera
 - **Relation**: Should treat the History Engine as its backend for "Deep Undo" or session restoration.
 
 ### 2. Semantic Layer (History Engine)
-- **Files**: `historyService.ts`, `historyDiff.ts`, `historyRestore.ts`.
-- **Role**: The canonical source of truth for the manifest's evolution.
-- **Behavior**: Durable, versioned, and semantically aware. Captures "Signficiant Events" (commits, syncs, recovery).
-- **Rule**: Every entry must be valid according to the `BlueprintValidator`.
+- **Files**: `historyService.ts`, `historyDiff.ts`, `historyRestore.ts`, `types/history.ts`.
+- **Role**: The canonical source of truth for the manifest's evolution and workspace context.
+- **Behavior**: Durable, versioned, and semantically aware. Captures "Significant Events" (commits, syncs, recovery) and **UI Intentions**.
+- **Rule**: Every entry must be valid according to the `BlueprintValidator` and include `uiState` context.
 
 ### 3. Execution Layer (Orchestrator & Runtime)
 - **Files**: `useDocumentOrchestrator.ts`, `wasmRuntime.ts`, `persistenceService.ts`.
@@ -47,6 +47,18 @@ The OMEGA History Architecture is designed to provide both high-frequency intera
 4. If valid, `useDocumentOrchestrator` receives the graph.
 5. Orchestrator triggers an `UPDATE_DOCUMENT`.
 6. System activates the historical state and records a new `RECOVERY_POINT`.
+
+## UI State Synchronization (Era 8)
+Starting with Phase 22, the History Engine synchronizes the manifest state with the workspace environment.
+
+### Tracked UI Context
+- **Selection**: `selectedNodeId` ensures the user returns to the specific focus of their edit.
+- **Pinning**: `pinnedNodeId` maintains reference panels across undo steps.
+- **Layout**: `layoutRatio` and `isSplit` preserve the physical organization of the workspace.
+
+### Capture Policy
+- **Coalescing**: UI-only transitions are debounced/coalesced to prevent "focus noise" in the history stack.
+- **Stability**: Interaction events (like dragging a splitter) only enter the history upon **Release** (`onDragEnd`).
 
 ## File Responsibilities
 | Responsibility | Primary File |

@@ -4,7 +4,8 @@ import { useDocumentOrchestrator } from './useDocumentOrchestrator';
 import { useAuditEngine } from './useAuditEngine';
 import { useEntityManager } from './useEntityManager';
 import { useFileOps } from './useFileOps';
-import type { OMEGA_Manifest } from '@/omega-ui-core/types/manifest';
+import type { OMEGA_Manifest, OMEGA_Contract, OmegaNode, ManifestEntity } from '@/omega-ui-core/types/manifest';
+import type { OmegaContract } from '@/services/wasmLoader';
 import { useAssetManager } from './useAssetManager';
 import { useSimulationBridge } from './useSimulationBridge';
 import { useBlueprintInjection } from './useBlueprintInjection';
@@ -17,7 +18,10 @@ import { useClipboardActions } from './useClipboardActions';
  * This hook composes specialized sub-hooks for state, I/O, entities, and auditing.
  * Following Aseptic Engineering Standards.
  */
-export const useManifestEditor = () => {
+export const useManifestEditor = (
+  workbenchState: import('../types/workbench').WorkbenchState,
+  workbenchActions: ReturnType<typeof import('./useWorkbenchState').useWorkbenchState>['actions']
+) => {
   // 1. Core State
   const orchestrator = useDocumentOrchestrator();
   const activeDoc = orchestrator.activeDocument;
@@ -35,7 +39,7 @@ export const useManifestEditor = () => {
   const simulationBridge = useSimulationBridge(
     activeId,
     manifest,
-    contract as any,
+    contract,
     !!wasmBuffer,
     orchestrator.flushPendingHash,
     orchestrator.captureStableSnapshot
@@ -52,7 +56,9 @@ export const useManifestEditor = () => {
     activeId,
     manifest,
     simulationBridge,
-    addLog
+    addLog,
+    workbenchState,
+    workbenchActions
   });
 
   // 3.2. Entity & Modulation Management
@@ -60,7 +66,7 @@ export const useManifestEditor = () => {
 
   // 3.3. Clipboard Actions
   const clipboard = useClipboardActions({
-    findItem: entities.findItem as any,
+    findItem: entities.findItem as (id: string) => (OmegaNode | ManifestEntity | undefined),
     pasteEntity: entities.pasteEntity,
     addLog
   });
@@ -68,7 +74,7 @@ export const useManifestEditor = () => {
   // 3.4. Deployment & HIL Bridge
   const deployment = useDeployment({
     manifest,
-    contract: contract as any,
+    contract: contract as (OmegaContract | OMEGA_Contract | null),
     issues,
     addLog,
     captureStableSnapshot: () => orchestrator.captureStableSnapshot(activeId),
@@ -83,7 +89,8 @@ export const useManifestEditor = () => {
   const fileOps = useFileOps(
     manifest, 
     (u) => orchestrator.updateDocument(activeId, { manifest: typeof u === 'function' ? u(manifest) : u }),
-    (u: any) => orchestrator.updateDocument(activeId, { contract: typeof u === 'function' ? u(contract) : u }),
+    (u: (OmegaContract | OMEGA_Contract) | null | ((prev: (OmegaContract | OMEGA_Contract) | null) => (OmegaContract | OMEGA_Contract) | null)) => 
+      orchestrator.updateDocument(activeId, { contract: typeof u === 'function' ? u(contract as (OmegaContract | OMEGA_Contract | null)) : u }),
     (u) => orchestrator.updateDocument(activeId, { wasmBuffer: typeof u === 'function' ? u(wasmBuffer) : u }),
     wasmBuffer, 
     (u) => orchestrator.updateDocument(activeId, { extraResources: typeof u === 'function' ? u(extraResources) : u }),
