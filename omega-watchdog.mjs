@@ -13,14 +13,24 @@ console.log(`[OMEGA WATCHDOG] Port: ${PORT}\n`);
 
 let clients = [];
 
-// SSE SERVER
+// SSE & SAVE SERVER
 const server = http.createServer((req, res) => {
-  if (req.url === '/events') {
+  // Set global CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.url === '/events' && req.method === 'GET') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
       'X-Accel-Buffering': 'no'
     });
 
@@ -36,6 +46,36 @@ const server = http.createServer((req, res) => {
     req.on('close', () => {
       clients = clients.filter(c => c.id !== clientId);
       console.log(`[WATCHDOG] Client disconnected: ${clientId}`);
+    });
+    return;
+  }
+
+  if (req.url === '/save' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        if (!payload.filename || payload.content === undefined) {
+          throw new Error('Missing filename or content in payload.');
+        }
+
+        // Sanitize path to prevent directory traversal
+        const safeName = path.basename(payload.filename);
+        const targetPath = path.join(WATCH_DIR, safeName);
+
+        fs.writeFileSync(targetPath, payload.content, 'utf8');
+        console.log(`[WATCHDOG] Saved file from web editor: ${safeName}`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, path: targetPath }));
+      } catch (err) {
+        console.error(`[WATCHDOG] Save error: ${err.message}`);
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
     });
     return;
   }

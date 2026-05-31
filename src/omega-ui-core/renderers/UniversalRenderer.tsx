@@ -65,6 +65,7 @@ export function UniversalRenderer({
         worldPos={worldPos}
         isLayoutGoverned={isLayoutGoverned}
         handleDebugClick={handleDebugClick}
+        parentNode={parentNode}
       />
     );
   }
@@ -82,6 +83,7 @@ export function UniversalRenderer({
         worldPos={worldPos}
         isLayoutGoverned={isLayoutGoverned}
         handleDebugClick={handleDebugClick}
+        parentNode={parentNode}
       />
     );
   }

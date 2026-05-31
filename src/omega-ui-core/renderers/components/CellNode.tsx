@@ -11,7 +11,6 @@ import { GovernedOverlay } from './GovernedOverlay';
 import { UniversalRenderer } from '../UniversalRenderer';
 import type { UCADebugContext } from '../ucaTypes';
 import { useDesignTokens } from '../../hooks/useDesignTokens';
-import { IntegrityOverlay } from '@/features/manifest-editor/components/viewport/IntegrityOverlay';
 
 interface CellNodeProps {
   node: OmegaNode;
@@ -67,12 +66,20 @@ export function CellNode({
 
   const isSelected = debugContext?.selectedId === node.id;
 
+  const parentIsDraggableContainer = !!(
+    parentNode && 
+    parentNode.id !== 'root' &&
+    parentNode.kind !== 'rack' &&
+    (parentNode.kind === 'container' || parentNode.kind === 'face') &&
+    !(debugContext?.lockedNodeIds?.includes(parentNode.id))
+  );
+
   return (
     <motion.div 
       id={`uca-${node.id}`}
       className="uca-node uca-cell group"
       onClick={handleDebugClick}
-      drag={debugContext?.enabled || false}
+      drag={(debugContext?.enabled && !debugContext?.lockedNodeIds?.includes(node.id) && !parentIsDraggableContainer) || false}
       dragMomentum={false}
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}
@@ -96,8 +103,6 @@ export function CellNode({
         worldPos={worldPos}
         audit={audit}
       />
-
-      <IntegrityOverlay node={node} audit={audit} />
 
       <GovernedOverlay enabled={!!isLayoutGoverned} />
 
