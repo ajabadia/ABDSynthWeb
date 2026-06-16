@@ -29,7 +29,7 @@ export function UCADebugHUD({
         node.kind === 'rack' ? 'bg-purple-600' : node.kind === 'face' ? 'bg-blue-600' : 'bg-amber-600'
       }`}>
         {node.kind}:{node.id} [<span ref={labelRef}>W: {Math.round(worldPos?.x || 0)}, {Math.round(worldPos?.y || 0)}</span>]
-        {audit?.issues?.some(i => (i.path ?? '').includes(node.id)) && (
+        {audit?.issues?.some((i: any) => (i.path ?? '').includes(node.id)) && (
           <span className="ml-1 text-red-400 animate-pulse">●</span>
         )}
       </div>

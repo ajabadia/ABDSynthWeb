@@ -339,8 +339,8 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
         {/* Audio Showcase */}
         <AudioShowcase instrumentId={instrument.id} />
 
-        {/* Emulated Components Details Section (Juno 601 only) */}
-        {instrument.id === 'abd-junio-601' && (
+        {/* Emulated Components Details Section (Juno family) */}
+        {instrument.id.startsWith('abd-junio-') && (
           <EmulatedComponents locale={locale} />
         )}
 
@@ -348,7 +348,7 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
         {galleryItems.length > 0 && (
           <ImageGallery 
             items={galleryItems} 
-            title={instrument.id === 'abd-junio-601' ? (locale === 'es' ? "Personalización de Skins" : "Skins & Custom Themes") : "Interface Modules"}
+            title={instrument.id.startsWith('abd-junio-') ? (locale === 'es' ? "Personalización de Skins" : "Skins & Custom Themes") : "Interface Modules"}
             altBase={instrument.name} 
           />
         )}
@@ -362,8 +362,8 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
           />
         )}
 
-        {/* Calibration & Circuit Bending Panel (Juno 601 only) */}
-        {instrument.id === 'abd-junio-601' && (
+        {/* Calibration & Circuit Bending Panel (Juno family) */}
+        {instrument.id.startsWith('abd-junio-') && (
           <CalibrationPanel />
         )}
       </section>

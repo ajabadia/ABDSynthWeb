@@ -3,6 +3,18 @@
     "tagline": "Authentic 80017A VCF/VCA Emulation",
     "description": "The definitive restoration of the 1984 legend. Meticulously modeled circuit-by-circuit, featuring the unique 4-step HPF logic and dual-mode BBD chorus with authentic background hiss."
   },
+  "juniosix": {
+    "tagline": "Pure Analog Hands-On Experience",
+    "description": "The raw power of the 1982 classic. Featuring the continuous High Pass Filter and 100% direct analog control without preset memory. Pure hands-on synthesis in its most immediate form."
+  },
+  "junio06": {
+    "tagline": "The Definitive 1982 Vintage Poly",
+    "description": "The pristine emulation of the 1982 legend. Retaining the fast RC hardware envelopes, IR3109 filter design, 4-step HPF, and classic arpeggiator, combined with 56 preset memories."
+  },
+  "juniosupersix": {
+    "tagline": "The Ultimate Hybrid Juno Engine",
+    "description": "The ultimate manifestation of the series. An interchangeable modular engine allowing you to swap filters, HPF models, envelope types, and BBD character at will, plus the legendary RE-201 Space Delay."
+  },
   "omega": {
     "tagline": "Aseptic Contract Runtime Platform",
     "description": "Hyper-modular synthesis engine for Era 6. Featuring the Patchbay Matrix 2.0 and the Aseptic UI architecture, Omega delivers spectral synthesis with zero-coupling integrity."

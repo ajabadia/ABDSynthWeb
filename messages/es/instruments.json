@@ -3,6 +3,18 @@
     "tagline": "Emulación Auténtica de VCF/VCA 80017A",
     "description": "La restauración definitiva de la leyenda de 1984. Modelado meticulosamente circuito por circuito, con la lógica única de HPF de 4 pasos y chorus BBD de modo dual con siseo auténtico."
   },
+  "juniosix": {
+    "tagline": "Experiencia Analógica Directa y Pura",
+    "description": "La potencia pura del clásico de 1982. Con un filtro de paso alto continuo y control analógico 100% directo y sin memoria. Síntesis pura en su forma más inmediata."
+  },
+  "junio06": {
+    "tagline": "El Sintetizador Polifónico Vintage Definitivo de 1982",
+    "description": "La emulación definitiva de la leyenda de 1982. Conserva las veloces envolventes de hardware RC, el diseño de filtro IR3109, el HPF de 4 pasos y el clásico arpegiador, combinado con memoria para 56 presets."
+  },
+  "juniosupersix": {
+    "tagline": "El Motor Híbrido Definitivo de la Serie Juno",
+    "description": "La máxima manifestación de la serie. Un motor modular e intercambiable que te permite alternar filtros, modelos de HPF, tipos de envolventes y el carácter del Chorus BBD a voluntad, sumado al legendario delay de cinta RE-201 Space Delay."
+  },
   "omega": {
     "tagline": "Plataforma de Ejecución de Contratos Asépticos",
     "description": "Motor de síntesis hiper-modular para la Era 6. Con la Matriz Patchbay 2.0 y la arquitectura de UI aséptica, Omega ofrece síntesis espectral con integridad de acoplamiento cero."
