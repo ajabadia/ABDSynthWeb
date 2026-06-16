@@ -6,7 +6,7 @@ export const junioSuperSix: Instrument = {
   tagline: "The Ultimate Hybrid Juno Engine",
   description: "The ultimate manifestation of the series. An interchangeable modular engine allowing you to swap filters, HPF models, envelope types, and BBD character at will, plus the legendary RE-201 Space Delay.",
   version: "V1.2.0 (Stabilized)",
-  image: "/images/instruments/hero_junio_supersix_render.png",
+  image: "/images/renders/junio-supersix/black_diagonal.png",
   category: "Analog",
   price: "Free / Alpha-Beta",
   colors: {

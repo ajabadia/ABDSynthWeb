@@ -1,0 +1,104 @@
+{
+  "images": {
+    "junio supersix-000.png": {
+      "es": {
+        "caption": "Diseño del Panel Principal",
+        "description": "Vista detallada de la interfaz unificada del Super SIX."
+      },
+      "en": {
+        "caption": "Main Panel Layout",
+        "description": "Detailed view of the unified interface of the Super SIX."
+      }
+    },
+    "junio supersix-001.png": {
+      "es": {
+        "caption": "Sección del Filtro Conmutable",
+        "description": "Controles para alternar entre el filtro IR3109 y el 80017A."
+      },
+      "en": {
+        "caption": "Selectable Filter Section",
+        "description": "Controls to switch between the IR3109 and 80017A filters."
+      }
+    },
+    "junio supersix-002.png": {
+      "es": {
+        "caption": "Ruteo Modular Interno",
+        "description": "Pantalla dedicada para cambiar los modelos de DCO, VCF, HPF y ADSR."
+      },
+      "en": {
+        "caption": "Internal Modular Routing",
+        "description": "Dedicated screen to swap DCO, VCF, HPF, and ADSR models."
+      }
+    },
+    "junio supersix-003.png": {
+      "es": {
+        "caption": "Módulo RE-201 Space Delay",
+        "description": "El nuevo efecto de retardo de cinta integrado para texturas espaciales."
+      },
+      "en": {
+        "caption": "RE-201 Space Delay Module",
+        "description": "The new integrated tape delay effect for spacey textures."
+      }
+    },
+    "junio supersix-004.png": {
+      "es": {
+        "caption": "Controles del Chorus BBD",
+        "description": "Ajustes de desgaste (Wear) y siseo de fondo del Chorus."
+      },
+      "en": {
+        "caption": "BBD Chorus Controls",
+        "description": "Adjustments for Chorus wear and background analog hiss."
+      }
+    },
+    "junio supersix-005.png": {
+      "es": {
+        "caption": "Panel de Circuit Bending",
+        "description": "Ajuste fino de componentes, voltajes e inestabilidades analógicas."
+      },
+      "en": {
+        "caption": "Circuit Bending Panel",
+        "description": "Fine-tuning of components, voltages, and analogue instabilities."
+      }
+    },
+    "junio supersix-006.png": {
+      "es": {
+        "caption": "Arpegiador & Sincronización",
+        "description": "Controles de ritmo, modos de octava y sincronización al tempo."
+      },
+      "en": {
+        "caption": "Arpeggiator & Sync",
+        "description": "Controls for rate, octave modes, and tempo synchronization."
+      }
+    },
+    "junio supersix-007.png": {
+      "es": {
+        "caption": "Teclado Virtual Interactivo",
+        "description": "Teclado integrado para preescuchar parches directamente desde el navegador."
+      },
+      "en": {
+        "caption": "Interactive Virtual Keyboard",
+        "description": "Integrated keyboard to audition patches directly from the browser."
+      }
+    },
+    "junio supersix-008.png": {
+      "es": {
+        "caption": "Gestión de Presets",
+        "description": "Navegador de presets y banco de 128 parches históricos de la serie."
+      },
+      "en": {
+        "caption": "Preset Management",
+        "description": "Preset browser and bank containing 128 historical patches."
+      }
+    },
+    "junio supersix-009.png": {
+      "es": {
+        "caption": "Calibración de Frecuencia",
+        "description": "Opciones avanzadas para ajustar la deriva térmica del oscilador."
+      },
+      "en": {
+        "caption": "Frequency Calibration",
+        "description": "Advanced options to adjust oscillator thermal drift."
+      }
+    }
+  }
+}
