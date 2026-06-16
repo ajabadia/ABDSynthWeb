@@ -341,7 +341,7 @@ export default async function InstrumentDetail({ params }: { params: Promise<{ l
 
         {/* Emulated Components Details Section (Juno family) */}
         {instrument.id.startsWith('abd-junio-') && (
-          <EmulatedComponents locale={locale} />
+          <EmulatedComponents locale={locale} instrumentId={instrument.id} />
         )}
 
         {/* Gallery Section */}
