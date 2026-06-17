@@ -1,0 +1,64 @@
+{
+  "images": {
+    "six-000.png": {
+      "es": {
+        "caption": "Diseño del Panel Principal",
+        "description": "El panel de control directo inspirado en el Juno-6 clásico de 1982."
+      },
+      "en": {
+        "caption": "Main Panel Layout",
+        "description": "The direct control interface inspired by the classic 1982 Juno-6."
+      }
+    },
+    "six-001.png": {
+      "es": {
+        "caption": "Barrido de HPF Continuo",
+        "description": "Controles deslizantes dedicados que permiten un barrido analógico continuo en lugar de interruptores fijos."
+      },
+      "en": {
+        "caption": "Continuous HPF Sweep",
+        "description": "Dedicated sliders allowing a continuous analogue sweep instead of stepped switches."
+      }
+    },
+    "six-002.png": {
+      "es": {
+        "caption": "Calibración del Filtro IR3109",
+        "description": "Panel de calibración detallada para ajustar la resonancia y feedback del filtro IR3109."
+      },
+      "en": {
+        "caption": "IR3109 Filter Calibration",
+        "description": "Detailed calibration panel to tune resonance and feedback of the IR3109 filter."
+      }
+    },
+    "six-003.png": {
+      "es": {
+        "caption": "Arpegiador por Reloj Analógico",
+        "description": "Interfaz de control del arpegiador con modos Up/Down y control de división analógica."
+      },
+      "en": {
+        "caption": "Analog Clock Arpeggiator",
+        "description": "Arpeggiator control interface with Up/Down modes and analog division control."
+      }
+    },
+    "six-004.png": {
+      "es": {
+        "caption": "Panel de Circuit Bending",
+        "description": "Modificaciones de componentes internos y ajuste de la deriva térmica de los DCO."
+      },
+      "en": {
+        "caption": "Circuit Bending Panel",
+        "description": "Internal component modifications and DCO thermal drift tuning."
+      }
+    },
+    "six-005.png": {
+      "es": {
+        "caption": "Diseño de Envolventes Rápidas RC",
+        "description": "Visualización del comportamiento de carga del condensador en el generador de envolventes analógico."
+      },
+      "en": {
+        "caption": "Fast RC Envelope Modeling",
+        "description": "Visualization of capacitor charge behavior in the analogue envelope generator."
+      }
+    }
+  }
+}
